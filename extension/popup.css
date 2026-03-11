@@ -1,0 +1,229 @@
+/*
+ * ProtoConsent browser extension
+ * Copyright (C) 2026 ProtoConsent contributors
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * For more details see <https://www.gnu.org/licenses/>.
+ */
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: #111827;
+  background-color: #f3f4f6;
+}
+
+#popup-root {
+  width: 320px;
+  max-width: 320px;
+  box-sizing: border-box;
+  padding: 8px;
+}
+
+/* Header */
+.pc-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.pc-site {
+  flex: 1 1 auto;
+}
+
+.pc-site-label,
+.pc-profile-label {
+  font-size: 11px;
+  color: #1e3a8a;
+  font-weight: 500;
+}
+
+.pc-site-domain {
+  font-weight: 600;
+  font-size: 13px;
+  color: #111827;
+}
+
+.pc-profile {
+  flex: 0 0 120px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pc-profile-select {
+  width: 100%;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+/* Purposes */
+.pc-main {
+  margin-bottom: 8px;
+}
+
+.pc-purposes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pc-purpose-item {
+  background-color: #ffffff;
+  border-radius: 6px;
+  padding: 6px 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.pc-purpose-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Title area (icon + text) clickable for expand/collapse */
+.pc-purpose-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.pc-purpose-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+.pc-purpose-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Toggle area clickable for Allowed/Blocked */
+.pc-purpose-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* Simple toggle styling based on checkbox */
+.pc-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  color: #4b5563;
+}
+
+.pc-toggle-switch {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  border-radius: 999px;
+  background-color: #d1d5db;
+  transition: background-color 0.15s ease;
+}
+
+.pc-toggle-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  transition: transform 0.15s ease;
+}
+
+/* Checkbox hidden */
+.pc-toggle-checkbox {
+  position: absolute;
+  opacity: 0;
+  /* allow it to receive clicks via the label association */
+  pointer-events: auto;
+}
+
+/* ON state via class */
+.pc-toggle-switch.is-on {
+  background-color: #22c55e;
+}
+
+.pc-toggle-switch.is-on .pc-toggle-switch-knob {
+  transform: translateX(14px);
+}
+
+/* Description (expandable) */
+.pc-purpose-description {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* Footer */
+.pc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 4px;
+}
+
+.pc-footer-text {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.pc-footer-link {
+  font-size: 10px;
+  color: #1e3a8a;
+  text-decoration: none;
+}
+
+.pc-footer-link:hover {
+  text-decoration: underline;
+}
+
+/* Error state */
+.pc-popup-error {
+  padding: 8px 10px;
+  margin: 6px 0;
+  border-radius: 4px;
+  background-color: #ffe6e6;
+  color: #b00020;
+  font-size: 13px;
+  line-height: 1.4;
+  border: 1px solid #ffc2c2;
+}
+
+/* Collapsed description state */
+.pc-purpose-description.is-collapsed {
+  display: none;
+}
+
+
+

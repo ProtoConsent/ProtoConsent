@@ -1,0 +1,35 @@
+{
+  "strict": {
+    "label": "Strict",
+    "purposes": {
+      "functional": true,
+      "analytics": false,
+      "ads": false,
+      "personalization": false,
+      "third_parties": false,
+      "advanced_tracking": false
+    }
+  },
+  "balanced": {
+    "label": "Balanced",
+    "purposes": {
+      "functional": true,
+      "analytics": true,
+      "ads": false,
+      "personalization": true,
+      "third_parties": false,
+      "advanced_tracking": false
+    }
+  },
+  "permissive": {
+    "label": "Permissive",
+    "purposes": {
+      "functional": true,
+      "analytics": true,
+      "ads": true,
+      "personalization": true,
+      "third_parties": true,
+      "advanced_tracking": false
+    }
+  }
+}

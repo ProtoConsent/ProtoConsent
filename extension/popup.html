@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  For more details see <https://www.gnu.org/licenses/>.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ProtoConsent</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/protoconsent_icon_32.png">
+</head>
+<body>
+  <div id="popup-root">
+    <header class="pc-header">
+      <div class="pc-site">
+        <div class="pc-site-label">Site</div>
+        <div id="pc-site-domain" class="pc-site-domain">loading...</div>
+      </div>
+      <div class="pc-profile">
+        <label for="pc-profile-select" class="pc-profile-label">Profile</label>
+        <select id="pc-profile-select" class="pc-profile-select">
+          <option value="strict">Strict</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="permissive">Permissive</option>
+        </select>
+      </div>
+    </header>
+
+    <main class="pc-main">
+      <div id="pc-purposes-list" class="pc-purposes-list">
+        <!-- Purposes will be injected here by popup.js -->
+      </div>
+    </main>
+
+    <footer class="pc-footer">
+      <div class="pc-footer-text">
+        Changes apply only to this site.
+      </div>
+      <a href="https://github.com/ProtoConsent/ProtoConsent" class="pc-footer-link" target="_blank" rel="noopener noreferrer">
+        Learn more
+      </a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

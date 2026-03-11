@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "ProtoConsent",
+  "description": "A browser-side consent control panel that enforces your data-use preferences per site and purpose.",
+  "version": "0.1.0",
+
+  "icons": {
+    "16": "icons/protoconsent_icon_16.png",
+    "24": "icons/protoconsent_icon_24.png",
+    "32": "icons/protoconsent_icon_32.png",
+    "48": "icons/protoconsent_icon_48.png",
+    "64": "icons/protoconsent_icon_64.png",
+    "128": "icons/protoconsent_icon_128.png",
+    "256": "icons/protoconsent_icon_256.png"    
+  },
+
+  "action": {
+    "default_title": "ProtoConsent",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/protoconsent_icon_16.png",
+      "24": "icons/protoconsent_icon_24.png",
+      "32": "icons/protoconsent_icon_32.png",
+      "48": "icons/protoconsent_icon_48.png",
+      "64": "icons/protoconsent_icon_64.png",
+      "128": "icons/protoconsent_icon_128.png",
+      "256": "icons/protoconsent_icon_256.png" 
+    }
+  },
+
+  "permissions": [
+    "tabs",
+    "storage",
+    "declarativeNetRequest"
+  ],
+
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "declarative_net_request": {
+    "rule_resources": []
+  }
+}

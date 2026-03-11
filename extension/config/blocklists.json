@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "version": 1,
+    "note": "Small demo subset of public blocklists. Not a full ad/tracking blocker.",
+    "sources": [
+      "OISD big/small",
+      "HaGeZi Pro / Light",
+      "HaGeZi Ultimate (wildcard)",
+      "EasyPrivacy / EasyList"
+    ]
+  },
+
+  "functional": {
+    "description": "Core service functionality. No blocking rules by default.",
+    "domains": []
+  },
+
+  "analytics": {
+    "description": "Common web analytics and usage tracking services (inspired by OISD and HaGeZi lists).",
+    "domains": [
+      "google-analytics.com",
+      "www.google-analytics.com",
+      "analytics.google.com",
+      "stats.g.doubleclick.net",
+      "cdn.segment.com"
+    ]
+  },
+
+  "ads": {
+    "description": "Online advertising and ad-serving domains (subset from OISD / HaGeZi).",
+    "domains": [
+      "doubleclick.net",
+      "pagead2.googlesyndication.com",
+      "securepubads.g.doubleclick.net",
+      "adservice.google.com",
+      "ads.yahoo.com"
+    ]
+  },
+
+  "personalization": {
+    "description": "Example personalization / affiliate domains (from popular blocklists).",
+    "domains": [
+      "ad.doubleclick.net",
+      "cm.g.doubleclick.net",
+      "secure.adnxs.com",
+      "idsync.rlcdn.com",
+      "match.adsrvr.org"
+    ]
+  },
+
+  "third_parties": {
+    "description": "Third-party data sharing / sync endpoints.",
+    "domains": [
+      "connect.facebook.net",
+      "static.hotjar.com",
+      "script.hotjar.com",
+      "analytics.twitter.com",
+      "bat.bing.com"
+    ]
+  },
+
+  "advanced_tracking": {
+    "description": "Advanced tracking / fingerprinting or cross-site identification services.",
+    "domains": [
+      "js-agent.newrelic.com",
+      "bam.nr-data.net",
+      "cdn.perfdrive.com",
+      "cdn.heapanalytics.com",
+      "cdn.optimizely.com"
+    ]
+  }
+}
