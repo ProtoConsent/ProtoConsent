@@ -41,11 +41,11 @@ This first test checks that site rules are stored locally and correctly associat
 
 Example popup view with profile and per‑purpose summary:
 
-![ProtoConsent popup with per-site profile](assets/screenshots/popup-profile.png)
+![ProtoConsent popup with per-site profile](../docs/assets/screenshots/popup-profile.png)
 
 Expanded view with purpose toggles visible:
 
-![ProtoConsent popup with purpose toggles](assets/screenshots/popup-toggles.png)
+![ProtoConsent popup with purpose toggles](../docs/assets/screenshots/popup-toggles.png)
 
 ## 4. Purpose Toggles and Visible Effects
 
