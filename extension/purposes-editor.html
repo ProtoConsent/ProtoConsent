@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  For more details see <https://www.gnu.org/licenses/>.
+-->
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ProtoConsent Purpose Editor (Prototype)</title>
+  	<link rel="icon" type="image/png" sizes="32x32" href="icons/protoconsent_icon_32.png">	
+	<style>
+		body {
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			font-size: 13px;
+			color: #111827;
+			background-color: #f3f4f6;
+			margin: 2em;
+		}
+		h1 {
+			color: #1e3a8a;
+			font-size: 1.5em;
+			margin-bottom: 1em;
+		}
+		.purpose-list {
+			margin: 1em 0;
+			padding: 0;
+			list-style: none;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+		.purpose-item {
+			background: #fff;
+			border: 1px solid #e5e7eb;
+			margin-bottom: 0;
+			padding: 1em;
+			border-radius: 6px;
+			box-shadow: none;
+		}
+		.purpose-label {
+			font-weight: 600;
+			color: #1e3a8a;
+			font-size: 13px;
+		}
+		.purpose-desc {
+			color: #6b7280;
+			margin-top: 0.2em;
+			font-size: 11px;
+			line-height: 1.4;
+		}
+		.children {
+			margin-left: 2em;
+		}
+		.add-btn, .export-btn {
+			margin-top: 1em;
+			padding: 0.5em 1em;
+			border: none;
+			border-radius: 6px;
+			background: #1e3a8a;
+			color: #fff;
+			cursor: pointer;
+			font-size: 13px;
+			font-weight: 500;
+			transition: background 0.15s;
+		}
+		.add-btn:hover, .export-btn:hover {
+			background: #2563eb;
+		}
+		.import-section {
+			margin-top: 2em;
+			background: #f9fafb;
+			border: 1px solid #e5e7eb;
+			border-radius: 6px;
+			padding: 1em;
+		}
+		textarea {
+			width: 100%;
+			min-height: 80px;
+			margin-top: 0.5em;
+			border: 1px solid #e5e7eb;
+			border-radius: 4px;
+			font-family: inherit;
+			font-size: 13px;
+			background: #fff;
+			color: #111827;
+			padding: 0.5em;
+			box-sizing: border-box;
+		}
+	</style>
+</head>
+<body>
+	<header style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1em;">
+		<label for="langSelect" style="margin-right: 0.5em;">Language:</label>
+		<select id="langSelect" onchange="setLang(this.value)">
+			<option value="en">EN</option>
+			<option value="es">ES</option>
+		</select>
+	</header>
+	<h1 id="titleLabel">ProtoConsent Purpose Editor (Prototype)</h1>
+	<ul id="purposeList" class="purpose-list"></ul>
+
+	<button class="add-btn" onclick="addPurpose()">Add Purpose</button>
+	<button class="export-btn" onclick="exportConfig('json')">Export JSON</button>
+	<button class="export-btn" onclick="exportConfig('yaml')">Export YAML</button>
+	<button class="export-btn" onclick="exportConfig('csv')">Export CSV</button>
+
+	<div class="import-section">
+		<h3>Import (JSON, YAML, CSV)</h3>
+		<textarea id="importArea" placeholder="Paste configuration here..."></textarea>
+		<button class="add-btn" onclick="importConfig()">Import</button>
+	</div>
+</body>
+</html>
