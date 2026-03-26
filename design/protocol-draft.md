@@ -43,25 +43,33 @@ Canonical source: `extension/config/presets.json`
 
 ### 2.3 Per-domain rules
 
-The core data structure stored in the browser's extension storage (`chrome.storage.local`):
+The core data structure stored in the browser's extension storage (`chrome.storage.local`). The `purposes` object contains only explicit overrides; purposes not listed inherit their value from the selected profile:
 
 ```json
 {
   "example.com": {
     "profile": "balanced",
     "purposes": {
-      "functional": true,
-      "analytics": true,
-      "ads": false,
-      "personalization": true,
-      "third_parties": false,
-      "advanced_tracking": false
+      "analytics": false
     }
   }
 }
 ```
 
-Each domain has exactly one rule entry. Purpose values are booleans: `true` = allowed, `false` = denied.
+In this example, `analytics` is explicitly denied. The remaining five purposes (`functional`, `ads`, `personalization`, `third_parties`, `advanced_tracking`) inherit their values from the "balanced" profile. The resolved state is equivalent to:
+
+```json
+{
+  "functional": true,
+  "analytics": false,
+  "ads": false,
+  "personalization": true,
+  "third_parties": false,
+  "advanced_tracking": false
+}
+```
+
+Each domain has exactly one rule entry. Purpose values are booleans: `true` = allowed, `false` = denied. When a domain has no explicit rule, all purpose values are inherited from the active profile (preset).
 
 ## 3. Communication Model
 

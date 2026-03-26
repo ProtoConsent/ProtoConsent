@@ -1,14 +1,6 @@
 // ProtoConsent browser extension
 // Copyright (C) 2026 ProtoConsent contributors
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-// For more details see <https://www.gnu.org/licenses/>.
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 // background.js - ProtoConsent enforcement using declarativeNetRequest
 
@@ -31,6 +23,9 @@ const PURPOSES_FOR_ENFORCEMENT = [
 // Cached in-memory copy of blocklists.json; loaded once per SW lifetime.
 let blocklistsConfig = null;
 
+// Cached in-memory copy of presets.json; loaded once per SW lifetime.
+let presetsConfig = null;
+
 /**
  * Load blocklists.json once when the service worker starts.
  * Subsequent calls return the cached in-memory version.
@@ -51,6 +46,47 @@ async function loadBlocklistsConfig() {
     };
     return blocklistsConfig;
   }
+}
+
+/**
+ * Load presets.json once when the service worker starts.
+ * Subsequent calls return the cached in-memory version.
+ */
+async function loadPresetsConfig() {
+  if (presetsConfig) return presetsConfig;
+
+  try {
+    const url = chrome.runtime.getURL("config/presets.json");
+    const res = await fetch(url);
+    presetsConfig = await res.json();
+    return presetsConfig;
+  } catch (e) {
+    console.error("Failed to load presets.json:", e);
+    presetsConfig = {};
+    return presetsConfig;
+  }
+}
+
+/**
+ * Resolve purpose states for a site rule by applying profile defaults
+ * and then any explicit overrides.
+ * Returns an object with all purpose keys mapped to booleans.
+ */
+function resolvePurposes(siteConfig, presets) {
+  const resolved = {};
+  const profileName = siteConfig.profile || "balanced";
+  const profileDef = presets[profileName];
+  const profilePurposes = (profileDef && profileDef.purposes) || {};
+  const overrides = siteConfig.purposes || {};
+
+  for (const key of PURPOSES_FOR_ENFORCEMENT) {
+    if (key in overrides) {
+      resolved[key] = overrides[key];
+    } else {
+      resolved[key] = profilePurposes[key] !== false;
+    }
+  }
+  return resolved;
 }
 
 /**
@@ -81,9 +117,10 @@ async function rebuildAllDynamicRules() {
   }
 
   try {
-    const [rulesByDomain, blocklists] = await Promise.all([
+    const [rulesByDomain, blocklists, presets] = await Promise.all([
       getAllRulesFromStorage(),
       loadBlocklistsConfig(),
+      loadPresetsConfig(),
     ]);
 
     // First, remove all existing dynamic rules
@@ -100,12 +137,12 @@ async function rebuildAllDynamicRules() {
     const newRules = [];
     let nextRuleId = BASE_RULE_ID;
 
-    // For each site (domain) with rules
+    // For each site (domain) with rules, resolve profile inheritance
     for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
-      const purposes = siteConfig.purposes || {};
+      const purposes = resolvePurposes(siteConfig, presets);
 
       for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
-        const isAllowed = purposes[purposeKey] !== false; // default allowed
+        const isAllowed = purposes[purposeKey]; // resolved boolean from profile + overrides
         if (isAllowed) continue; // only create block rules when user says NO
 
         const blocklist = blocklists[purposeKey];
