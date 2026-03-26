@@ -208,6 +208,11 @@ body {
   text-decoration: underline;
 }
 
+.pc-footer-links {
+  display: flex;
+  gap: 10px;
+}
+
 /* Error state */
 .pc-popup-error {
   padding: 8px 10px;
