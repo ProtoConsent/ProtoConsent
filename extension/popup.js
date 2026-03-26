@@ -47,6 +47,14 @@ async function initPopup() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initPopup();
+
+  const purposesLink = document.getElementById("pc-purposes-link");
+  if (purposesLink) {
+    purposesLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      chrome.tabs.create({ url: chrome.runtime.getURL("purposes-editor.html") });
+    });
+  }
 });
 
 // Load purposes and presets from config/

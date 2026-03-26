@@ -89,6 +89,7 @@ ProtoConsent comes with a small set of public documents that describe the projec
 - **Technical architecture** – components, data model, main flows, and design choices: see [architecture.md](design/architecture.md).
 - **Icons and layers** – visual representation of profiles, purposes, and UI layers: see [icons-and-layers.md](design/icons-and-layers.md).
 - **How to test the extension** – practical steps to install the extension in developer mode and try it on real sites: see [testing-guide.md](design/testing-guide.md).
+- **Purpose-signalling protocol** – data model, communication mechanism, and SDK API surface: see [protocol-draft.md](design/protocol-draft.md).
 
 ## Use of Generative AI
 
