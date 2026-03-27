@@ -1,14 +1,6 @@
 // ProtoConsent browser extension
 // Copyright (C) 2026 ProtoConsent contributors
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-// For more details see <https://www.gnu.org/licenses/>.
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 // popup.js with safe chrome.storage.local
 
@@ -123,18 +115,28 @@ function initProfileSelect() {
   });
 }
 
-// Init currentPurposesState for this domain
+// Init currentPurposesState for this domain, resolving profile inheritance
 function initStateForDomain() {
   if (!currentDomain) return;
 
   const existing = allRules[currentDomain];
 
-  if (existing && existing.purposes) {
-    currentPurposesState = { ...existing.purposes };
-    if (existing.profile) {
-      currentProfile = existing.profile;
-      const selectEl = document.getElementById("pc-profile-select");
-      selectEl.value = currentProfile;
+  if (existing && existing.profile) {
+    currentProfile = existing.profile;
+    const selectEl = document.getElementById("pc-profile-select");
+    selectEl.value = currentProfile;
+
+    // Start from profile defaults
+    const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
+    PURPOSES_TO_SHOW.forEach((key) => {
+      currentPurposesState[key] = profilePurposes[key] !== false;
+    });
+
+    // Apply explicit overrides on top
+    if (existing.purposes) {
+      Object.keys(existing.purposes).forEach((key) => {
+        currentPurposesState[key] = existing.purposes[key];
+      });
     }
   } else {
     applyPresetToCurrentDomain();
@@ -278,13 +280,24 @@ function renderPurposesList() {
 }
 
 // Safe wrapper around chrome.storage.local.set
+// Stores only purpose overrides that differ from the active profile defaults
 function saveCurrentDomainRulesSafe() {
   if (!currentDomain) return;
   if (!chrome.storage || !chrome.storage.local) return;
 
+  // Compute overrides: only purposes that differ from the profile
+  const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
+  const overrides = {};
+  PURPOSES_TO_SHOW.forEach((key) => {
+    const profileDefault = profilePurposes[key] !== false;
+    if (currentPurposesState[key] !== profileDefault) {
+      overrides[key] = currentPurposesState[key];
+    }
+  });
+
   allRules[currentDomain] = {
     profile: currentProfile,
-    purposes: { ...currentPurposesState }
+    purposes: overrides
   };
 
   chrome.storage.local.set({ rules: allRules }, () => {

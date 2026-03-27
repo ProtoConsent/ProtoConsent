@@ -1,5 +1,5 @@
 // Copyright (C) 2026 ProtoConsent contributors
-// Licensed under the MIT License. See the LICENSE file in this directory for details.
+// SPDX-License-Identifier: MIT
 
 // ProtoConsent SDK v0.1.0-alpha
 //
@@ -16,7 +16,8 @@
 //     const allowed = await window.ProtoConsent.get('analytics');
 //   </script>
 //
-// Status: alpha — API surface defined, messaging not yet implemented.
+// Status: alpha — API surface defined, messaging defined.
+// Content script bridge pending; without it, all queries resolve to null.
 // See design/protocol-draft.md for the protocol specification.
 
 const VERSION = '0.1.0-alpha';
@@ -31,23 +32,69 @@ const PURPOSES = Object.freeze([
 ]);
 
 /**
+ * Pending queries awaiting a response from the extension content script.
+ * Maps message ID → { resolve, timer }.
+ */
+const PENDING = new Map();
+
+/**
+ * Time in milliseconds to wait for a response before assuming
+ * the extension is not installed or not responding.
+ */
+const TIMEOUT_MS = 500;
+
+/**
  * Query the ProtoConsent extension via window.postMessage.
  *
- * The intended protocol (not yet implemented):
+ * Protocol:
  * 1. SDK posts { type: 'PROTOCONSENT_QUERY', id, action, ...payload }
  * 2. Extension content script receives it and reads chrome.storage.local
  * 3. Content script posts { type: 'PROTOCONSENT_RESPONSE', id, data }
  * 4. SDK resolves the matching promise
  *
- * TODO: Implement postMessage query with timeout and response matching.
- * TODO: Implement extension content script that bridges page <-> storage.
+ * If no response arrives within TIMEOUT_MS, resolves to null
+ * (extension not installed or content script not present).
  *
- * @param {string} _action - 'get', 'getAll', or 'getProfile'
- * @param {object} _payload - additional fields (e.g. { purpose: 'analytics' })
- * @returns {Promise<*>} Currently resolves to null (extension not detected).
+ * @param {string} action - 'get', 'getAll', or 'getProfile'
+ * @param {object} payload - additional fields (e.g. { purpose: 'analytics' })
+ * @returns {Promise<*>} The response data, or null on timeout.
  */
-function _queryExtension(_action, _payload) {
-	return Promise.resolve(null);
+function _queryExtension(action, payload) {
+	try {
+		return new Promise((resolve) => {
+			const id = crypto.randomUUID();
+			const timer = setTimeout(() => {
+				PENDING.delete(id);
+				resolve(null);
+			}, TIMEOUT_MS);
+
+			PENDING.set(id, { resolve, timer });
+
+			window.postMessage({
+				type: 'PROTOCONSENT_QUERY',
+				id,
+				action,
+				...payload
+			}, window.location.origin);
+		});
+	} catch (_) {
+		return Promise.resolve(null);
+	}
+}
+
+// Listen for responses from the extension content script
+if (typeof window !== 'undefined') {
+	window.addEventListener('message', (event) => {
+		if (event.source !== window) return;
+		if (!event.data || event.data.type !== 'PROTOCONSENT_RESPONSE') return;
+
+		const pending = PENDING.get(event.data.id);
+		if (pending) {
+			clearTimeout(pending.timer);
+			PENDING.delete(event.data.id);
+			pending.resolve(event.data.data);
+		}
+	});
 }
 
 /**

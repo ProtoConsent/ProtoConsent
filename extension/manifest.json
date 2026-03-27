@@ -42,6 +42,8 @@
     "service_worker": "background.js"
   },
 
+  "options_page": "purposes-editor.html",
+
   "declarative_net_request": {
     "rule_resources": []
   }
