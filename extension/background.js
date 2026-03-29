@@ -96,7 +96,8 @@ function resolvePurposes(siteConfig, presets, defaultConfig) {
   if (!siteConfig.profile && profileName === "custom" && defaultConfig && defaultConfig.purposes) {
     profilePurposes = defaultConfig.purposes;
   } else {
-    const profileDef = presets[profileName];
+    // Fall back to "balanced" if the named profile doesn't exist (e.g. "custom" without saved purposes)
+    const profileDef = presets[profileName] || presets["balanced"];
     profilePurposes = (profileDef && profileDef.purposes) || {};
   }
   const overrides = siteConfig.purposes || {};
@@ -123,6 +124,10 @@ function getAllRulesFromStorage() {
   });
 }
 
+// Serialization guard: if a rebuild is already running, queue one re-run at the end.
+let _rebuildRunning = false;
+let _rebuildQueued = false;
+
 /**
  * Main function: rebuild all dynamic DNR rules from current storage + blocklists.
  * This function:
@@ -131,6 +136,24 @@ function getAllRulesFromStorage() {
  * 3) Installs the new set of rules.
  */
 async function rebuildAllDynamicRules() {
+  if (_rebuildRunning) {
+    _rebuildQueued = true;
+    return;
+  }
+  _rebuildRunning = true;
+
+  try {
+    await _rebuildAllDynamicRulesImpl();
+  } finally {
+    _rebuildRunning = false;
+    if (_rebuildQueued) {
+      _rebuildQueued = false;
+      rebuildAllDynamicRules();
+    }
+  }
+}
+
+async function _rebuildAllDynamicRulesImpl() {
   if (!chrome.declarativeNetRequest?.updateDynamicRules) {
     if (DEBUG_RULES) {
       console.warn("ProtoConsent: declarativeNetRequest not available in this browser.");
@@ -160,53 +183,82 @@ async function rebuildAllDynamicRules() {
     const newRules = [];
     let nextRuleId = BASE_RULE_ID;
 
-    // For each site (domain) with rules, resolve profile inheritance
+    // 1. Resolve global default purposes (what applies to unconfigured sites)
+    const globalPurposes = resolvePurposes({}, presets, defaultConfig);
+
+    // 2. Global block rules (priority 1, no initiatorDomains — apply to ALL sites)
+    for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
+      if (globalPurposes[purposeKey]) continue; // allowed globally, no block
+
+      const blocklist = blocklists[purposeKey];
+      if (!blocklist || !Array.isArray(blocklist.domains)) continue;
+
+      for (const blockedDomain of blocklist.domains) {
+        newRules.push({
+          id: nextRuleId++,
+          priority: 1,
+          action: { type: "block" },
+          condition: {
+            urlFilter: "||" + blockedDomain,
+            resourceTypes: ["script", "xmlhttprequest", "image", "sub_frame", "ping", "other"],
+          },
+        });
+      }
+    }
+
+    // 3. Per-site overrides (priority 2 — override global rules where site differs)
     for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
-      const purposes = resolvePurposes(siteConfig, presets, defaultConfig);
+      const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
 
       for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
-        const isAllowed = purposes[purposeKey]; // resolved boolean from profile + overrides
-        if (isAllowed) continue; // only create block rules when user says NO
+        const siteAllows = sitePurposes[purposeKey];
+        const globalAllows = globalPurposes[purposeKey];
+
+        if (siteAllows === globalAllows) continue; // same as global, no override needed
 
         const blocklist = blocklists[purposeKey];
         if (!blocklist || !Array.isArray(blocklist.domains)) continue;
 
-        // Create one DNR rule per blockedDomain for this initiator domain
         for (const blockedDomain of blocklist.domains) {
-          const rule = {
-            id: nextRuleId++,
-            priority: 1,
-            action: { type: "block" },
-            condition: {
-              // Simple urlFilter; can be refined later if needed
-              urlFilter: blockedDomain,
-              initiatorDomains: [domain],
-              resourceTypes: [
-                "script",
-                "xmlhttprequest",
-                "image",
-                "sub_frame",
-              ],
-            },
-          };
-          newRules.push(rule);
+          if (siteAllows && !globalAllows) {
+            // Site allows what global blocks → allow rule to override
+            newRules.push({
+              id: nextRuleId++,
+              priority: 2,
+              action: { type: "allow" },
+              condition: {
+                urlFilter: "||" + blockedDomain,
+                initiatorDomains: [domain],
+                resourceTypes: ["script", "xmlhttprequest", "image", "sub_frame", "ping", "other"],
+              },
+            });
+          } else {
+            // Site blocks what global allows → block rule for this site
+            newRules.push({
+              id: nextRuleId++,
+              priority: 2,
+              action: { type: "block" },
+              condition: {
+                urlFilter: "||" + blockedDomain,
+                initiatorDomains: [domain],
+                resourceTypes: ["script", "xmlhttprequest", "image", "sub_frame", "ping", "other"],
+              },
+            });
+          }
         }
       }
     }
 
     if (DEBUG_RULES) {
-      console.log("ProtoConsent: dynamic rules input (by domain):");
-      for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
-        console.log("  ", domain, siteConfig.purposes || {});
-      }
+      const globalCount = newRules.filter(r => !r.condition.initiatorDomains).length;
+      const perSiteCount = newRules.filter(r => r.condition.initiatorDomains).length;
+      console.log("ProtoConsent: rebuilt", newRules.length, "rules (" +
+        globalCount + " global, " + perSiteCount + " per-site overrides)");
+    }
 
-      console.log(
-        "ProtoConsent: rebuilt",
-        newRules.length,
-        "rules for",
-        Object.keys(rulesByDomain).length,
-        "domains"
-      );
+    // Chrome allows max 5000 dynamic rules; warn if approaching
+    if (newRules.length > 4500) {
+      console.warn("ProtoConsent: approaching dynamic rule limit (" + newRules.length + "/5000).");
     }
 
     if (newRules.length > 0) {
