@@ -42,6 +42,15 @@
     "service_worker": "background.js"
   },
 
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+
   "options_page": "purposes-editor.html",
 
   "declarative_net_request": {

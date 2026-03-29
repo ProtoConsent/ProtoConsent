@@ -10,7 +10,7 @@ This document describes the protocol by which web pages can query the user's con
 
 **Scope:** data model, communication model, and SDK API surface.
 
-**Status:** early draft. The communication mechanism is not yet implemented; this document defines the target architecture.
+**Status:** early draft. The communication mechanism is implemented via a content script bridge; this document defines the architecture.
 
 ## 2. Data Model
 
@@ -121,10 +121,10 @@ The SDK exposes a minimal read-only API for web pages:
 | Member | Type | Returns |
 |--------|------|---------|
 | `ProtoConsent.get(purpose)` | method | `Promise<boolean\|null>` — `true` = allowed, `false` = denied, `null` = extension not present |
-| `ProtoConsent.getAll()` | method | `Promise<object\|null>` — all 6 purpose states, or `null` |
+| `ProtoConsent.getAll()` | method | `Promise<object\|null>` — all purpose states, or `null` |
 | `ProtoConsent.getProfile()` | method | `Promise<string\|null>` — `"strict"`, `"balanced"`, `"permissive"`, or `null` |
 | `ProtoConsent.version` | property | `string` — SDK version |
-| `ProtoConsent.purposes` | property | `string[]` — the 6 valid purpose keys |
+| `ProtoConsent.purposes` | property | `string[]` — the valid purpose keys |
 
 Reference implementation: `sdk/protoconsent.js` (MIT licensed)
 
@@ -148,9 +148,9 @@ Status: not yet created. This is the next planned step for protocol formalizatio
 | Per-domain rules in storage | Implemented (v0.1.0) |
 | Extension enforcement (DNR) | Implemented (v0.1.0) |
 | Extension popup UI | Implemented (v0.1.0) |
-| SDK skeleton (API surface defined) | Skeleton |
-| SDK messaging (actual communication) | Planned |
-| Content script bridge | Planned |
+| SDK skeleton (API surface defined) | Implemented (v0.1.0) |
+| SDK messaging (actual communication) | Implemented (v0.1.0) |
+| Content script bridge | Implemented (v0.1.0) |
 | JSON Schemas | Planned |
 | Demo sites using SDK | Planned |
 

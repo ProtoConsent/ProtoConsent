@@ -177,3 +177,75 @@ Below are example scenarios for each purpose.
   4. Reload and check whether those requests are blocked; then switch Advanced tracking back to *Allowed* and confirm that they return to 200 responses.
 
 These scenarios are not meant to be exhaustive, but to show that ProtoConsent already offers a consistent, browser‑level way to express and enforce purpose‑based preferences across real websites.
+
+## 7. Testing the SDK query flow (content script bridge)
+
+This test verifies that a web page can query the user's consent preferences through the ProtoConsent SDK protocol. The extension injects a content script on every page that bridges SDK queries to the extension's storage.
+
+### 7.1 Setup
+
+1. Make sure the extension is loaded and reloaded after any code changes (see section 2).
+2. Open any website (for example `wikipedia.org`).
+3. Use the ProtoConsent popup to set a profile and adjust purposes for this site.
+
+### 7.2 Querying from the browser console
+
+Open DevTools (F12) and go to the **Console** tab. Paste the following helper function:
+
+```
+function testQuery(action, purpose) {
+  const id = crypto.randomUUID();
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve('TIMEOUT'), 600);
+    window.addEventListener('message', function handler(event) {
+      if (event.data && event.data.type === 'PROTOCONSENT_RESPONSE' && event.data.id === id) {
+        clearTimeout(timer);
+        window.removeEventListener('message', handler);
+        resolve(event.data.data);
+      }
+    });
+    window.postMessage({ type: 'PROTOCONSENT_QUERY', id, action, purpose }, window.location.origin);
+  });
+}
+```
+
+Then run these queries one at a time:
+
+```
+await testQuery('get', 'analytics')
+```
+
+You can replace `'analytics'` with any valid purpose key: `functional`, `analytics`, `ads`, `personalization`, `third_parties`, `advanced_tracking`.
+
+```
+await testQuery('getAll')
+```
+
+```
+await testQuery('getProfile')
+```
+
+### 7.3 Expected results
+
+- `get('analytics')` returns `true` or `false` depending on the purpose state for this site.
+- `getAll()` returns an object with a boolean property per purpose, resolved from the active profile plus any overrides.
+- `getProfile()` returns the profile name (`"strict"`, `"balanced"` or `"permissive"`).
+
+On a site with no explicit configuration, the results reflect the default profile (currently balanced).
+
+### 7.4 Security validation
+
+These queries should be rejected by the content script:
+
+```
+await testQuery('delete', null)
+```
+
+Expected: `TIMEOUT` (invalid action, ignored by the content script).
+
+```
+await testQuery('get', 'malware')
+```
+
+Expected: `null` (invalid purpose, the extension has no data for it).
+
