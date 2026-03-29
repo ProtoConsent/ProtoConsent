@@ -72,6 +72,8 @@
 			border-radius: 6px;
 			padding: 12px 14px;
 			margin-bottom: 16px;
+		}
+		.default-profile-row {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
@@ -79,13 +81,13 @@
 		}
 		.default-profile-label { font-weight: 600; color: #111827; font-size: 13px; }
 		.default-profile-desc { color: #6b7280; font-size: 11px; margin-top: 2px; }
+		.default-profile-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 		.default-profile-select {
 			font-size: 13px; padding: 4px 8px;
 			border: 1px solid #d1d5db; border-radius: 4px;
 			color: #111827; background: #ffffff;
 			cursor: pointer;
 		}
-		.default-profile-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 		.reset-all-btn {
 			font-size: 11px; padding: 4px 10px;
 			border: 1px solid #d1d5db; border-radius: 4px;
@@ -93,6 +95,13 @@
 			cursor: pointer; white-space: nowrap;
 		}
 		.reset-all-btn:hover { background: #fef2f2; border-color: #fca5a5; }
+		.custom-toggles { margin-top: 10px; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+		.custom-toggle-row {
+			display: flex; align-items: center; justify-content: space-between;
+			padding: 4px 0;
+		}
+		.custom-toggle-label { font-size: 12px; color: #111827; }
+		.custom-toggle-row input[type="checkbox"] { cursor: pointer; }
 	</style>
 </head>
 <body>
@@ -105,17 +114,23 @@
 		<div id="status-msg" class="status-msg">Loading configuration...</div>
 
 		<section id="default-profile-section" class="default-profile-section" style="display:none;">
-			<div>
-				<div class="default-profile-label">Default profile</div>
-				<div class="default-profile-desc">Applied to sites you haven't configured yet</div>
+			<div class="default-profile-row">
+				<div>
+					<div class="default-profile-label">Default profile</div>
+					<div class="default-profile-desc">Applied to sites you haven't configured yet</div>
+				</div>
+				<div class="default-profile-controls">
+					<select id="default-profile-select" class="default-profile-select">
+						<option value="strict">Strict</option>
+						<option value="balanced" selected>Balanced</option>
+						<option value="permissive">Permissive</option>
+						<option value="custom">Custom</option>
+					</select>
+					<button id="reset-all-sites" class="reset-all-btn">Reset all sites</button>
+				</div>
 			</div>
-			<div class="default-profile-controls">
-				<select id="default-profile-select" class="default-profile-select">
-					<option value="strict">Strict</option>
-					<option value="balanced" selected>Balanced</option>
-					<option value="permissive">Permissive</option>
-				</select>
-				<button id="reset-all-sites" class="reset-all-btn">Reset all sites</button>
+			<div id="custom-toggles" class="custom-toggles" style="display:none;">
+				<!-- Dynamic toggles injected by JS -->
 			</div>
 		</section>
 
