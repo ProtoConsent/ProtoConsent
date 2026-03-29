@@ -23,21 +23,9 @@
     advanced_tracking: 'Advanced tracking'
   };
 
-  /**
-   * Generate a unique ID. Falls back to Math.random if crypto.randomUUID
-   * is not available (e.g. non-secure contexts like file://).
-   */
-  function generateId() {
-    try {
-      return crypto.randomUUID();
-    } catch (_) {
-      return 'pc-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    }
-  }
-
   function queryExtension(action, purpose) {
     try {
-      var id = generateId();
+      var id = crypto.randomUUID();
       return new Promise(function (resolve) {
         var timer = setTimeout(function () { resolve(null); }, TIMEOUT_MS);
         window.addEventListener('message', function handler(event) {
