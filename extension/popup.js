@@ -73,6 +73,11 @@ async function initDomain() {
 
   try {
     const url = new URL(tabs[0].url);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      currentDomain = null;
+      showUnsupportedPage();
+      return;
+    }
     const hostname = url.hostname.replace(/^www\./, "");
     currentDomain = hostname;
     document.getElementById("pc-site-domain").textContent = hostname;
@@ -105,10 +110,27 @@ function initProfileSelect() {
     currentProfile = allRules[currentDomain].profile;
   }
 
+  // Show the custom option if the stored profile is custom
+  if (currentProfile === "custom") {
+    const customOption = selectEl.querySelector('option[value="custom"]');
+    if (customOption) {
+      customOption.disabled = false;
+      customOption.hidden = false;
+    }
+  }
+
   selectEl.value = currentProfile;
 
   selectEl.addEventListener("change", () => {
     currentProfile = selectEl.value;
+    // When switching to a named preset, hide the custom option
+    if (currentProfile !== "custom") {
+      const customOption = selectEl.querySelector('option[value="custom"]');
+      if (customOption) {
+        customOption.disabled = true;
+        customOption.hidden = true;
+      }
+    }
     applyPresetToCurrentDomain();
     renderPurposesList();
     saveCurrentDomainRulesSafe();
@@ -124,9 +146,19 @@ function initStateForDomain() {
   if (existing && existing.profile) {
     currentProfile = existing.profile;
     const selectEl = document.getElementById("pc-profile-select");
+
+    // Show the custom option if this domain uses it
+    if (currentProfile === "custom") {
+      const customOption = selectEl.querySelector('option[value="custom"]');
+      if (customOption) {
+        customOption.disabled = false;
+        customOption.hidden = false;
+      }
+    }
+
     selectEl.value = currentProfile;
 
-    // Start from profile defaults
+    // Start from profile defaults (if named preset) or empty (if custom)
     const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
     PURPOSES_TO_SHOW.forEach((key) => {
       currentPurposesState[key] = profilePurposes[key] !== false;
@@ -152,6 +184,27 @@ function applyPresetToCurrentDomain() {
     const presetValue = profilePurposes[purposeKey];
     currentPurposesState[purposeKey] = presetValue !== false;
   });
+}
+
+// Check if current toggles match the active preset; if not, switch to "custom"
+function detectCustomProfile() {
+  if (currentProfile === "custom") return;
+
+  const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
+  const matchesPreset = PURPOSES_TO_SHOW.every((key) => {
+    return currentPurposesState[key] === (profilePurposes[key] !== false);
+  });
+
+  if (!matchesPreset) {
+    currentProfile = "custom";
+    const selectEl = document.getElementById("pc-profile-select");
+    const customOption = selectEl.querySelector('option[value="custom"]');
+    if (customOption) {
+      customOption.disabled = false;
+      customOption.hidden = false;
+    }
+    selectEl.value = "custom";
+  }
 }
 
 // Create a single purpose item element (data + DOM)
@@ -222,6 +275,7 @@ function createPurposeItemElement(purposeKey, cfg) {
     const newValue = checkboxEl.checked;
     currentPurposesState[purposeKey] = newValue;
     updateSwitchVisual();
+    detectCustomProfile();
     saveCurrentDomainRulesSafe();
   });
 
@@ -280,24 +334,34 @@ function renderPurposesList() {
 }
 
 // Safe wrapper around chrome.storage.local.set
-// Stores only purpose overrides that differ from the active profile defaults
+// When profile is custom, stores all purposes explicitly (no inheritance).
+// For named presets, stores only overrides that differ from the profile defaults.
 function saveCurrentDomainRulesSafe() {
   if (!currentDomain) return;
   if (!chrome.storage || !chrome.storage.local) return;
 
-  // Compute overrides: only purposes that differ from the profile
-  const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
-  const overrides = {};
-  PURPOSES_TO_SHOW.forEach((key) => {
-    const profileDefault = profilePurposes[key] !== false;
-    if (currentPurposesState[key] !== profileDefault) {
-      overrides[key] = currentPurposesState[key];
-    }
-  });
+  let purposes;
+  if (currentProfile === "custom") {
+    // Custom: store all purposes explicitly
+    purposes = {};
+    PURPOSES_TO_SHOW.forEach((key) => {
+      purposes[key] = currentPurposesState[key] !== false;
+    });
+  } else {
+    // Named preset: only store overrides that differ from profile
+    const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
+    purposes = {};
+    PURPOSES_TO_SHOW.forEach((key) => {
+      const profileDefault = profilePurposes[key] !== false;
+      if (currentPurposesState[key] !== profileDefault) {
+        purposes[key] = currentPurposesState[key];
+      }
+    });
+  }
 
   allRules[currentDomain] = {
     profile: currentProfile,
-    purposes: overrides
+    purposes: purposes
   };
 
   chrome.storage.local.set({ rules: allRules }, () => {
@@ -324,6 +388,23 @@ function notifyBackgroundRulesUpdated() {
       console.debug("ProtoConsent: background may be sleeping:", err.message);
     }
   });
+}
+
+// Show a message when the active tab is not an http(s) page
+function showUnsupportedPage() {
+  document.getElementById("pc-site-domain").textContent = "—";
+  const listEl = document.getElementById("pc-purposes-list");
+  if (!listEl) return;
+  listEl.innerHTML = "";
+
+  const msgEl = document.createElement("div");
+  msgEl.className = "pc-unsupported-msg";
+  msgEl.textContent = "ProtoConsent only works on regular web pages (http/https).";
+  listEl.appendChild(msgEl);
+
+  // Disable profile selector
+  const selectEl = document.getElementById("pc-profile-select");
+  if (selectEl) selectEl.disabled = true;
 }
 
 // Simple UI error helper
