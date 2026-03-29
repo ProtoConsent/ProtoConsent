@@ -84,7 +84,8 @@ async function loadDefaultProfile() {
 async function initDomain() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tabs || !tabs[0] || !tabs[0].url) {
-    document.getElementById("pc-site-domain").textContent = "unknown";
+    currentDomain = null;
+    showUnsupportedPage();
     return;
   }
 
@@ -99,7 +100,8 @@ async function initDomain() {
     currentDomain = hostname;
     document.getElementById("pc-site-domain").textContent = hostname;
   } catch (e) {
-    document.getElementById("pc-site-domain").textContent = "unknown";
+    currentDomain = null;
+    showUnsupportedPage();
   }
 }
 
@@ -209,9 +211,30 @@ function applyPresetToCurrentDomain() {
   });
 }
 
-// Check if current toggles match the active preset; if not, switch to "custom"
+// Check if current toggles match the active preset; if not, switch to "custom".
+// If already "custom", check if toggles match any named preset and revert.
 function detectCustomProfile() {
-  if (currentProfile === "custom") return;
+  if (currentProfile === "custom") {
+    // Try to match a named preset
+    for (const [presetKey, presetDef] of Object.entries(presetsConfig)) {
+      const purposes = presetDef.purposes || {};
+      const matches = PURPOSES_TO_SHOW.every((key) => {
+        return currentPurposesState[key] === (purposes[key] !== false);
+      });
+      if (matches) {
+        currentProfile = presetKey;
+        const selectEl = document.getElementById("pc-profile-select");
+        const customOption = selectEl.querySelector('option[value="custom"]');
+        if (customOption) {
+          customOption.disabled = true;
+          customOption.hidden = true;
+        }
+        selectEl.value = presetKey;
+        return;
+      }
+    }
+    return;
+  }
 
   const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
   const matchesPreset = PURPOSES_TO_SHOW.every((key) => {
@@ -344,6 +367,8 @@ function createPurposeItemElement(purposeKey, cfg) {
 
 // Render purposes list
 function renderPurposesList() {
+  if (!currentDomain) return;
+
   const listEl = document.getElementById("pc-purposes-list");
   listEl.innerHTML = "";
 
@@ -382,23 +407,27 @@ function saveCurrentDomainRulesSafe() {
     });
   }
 
-  allRules[currentDomain] = {
-    profile: currentProfile,
-    purposes: purposes
-  };
+  // Re-read rules from storage to avoid overwriting concurrent changes (e.g. Reset all sites)
+  chrome.storage.local.get(["rules"], (result) => {
+    allRules = result && result.rules ? result.rules : {};
+    allRules[currentDomain] = {
+      profile: currentProfile,
+      purposes: purposes
+    };
 
-  chrome.storage.local.set({ rules: allRules }, () => {
-    if (chrome.runtime.lastError) {
-      console.error("ProtoConsent: error saving rules:", chrome.runtime.lastError);
-    } else {
-      if (DEBUG_RULES) {
-        console.debug("ProtoConsent: saved rules for", currentDomain, {
-          profile: currentProfile,
-          purposes: currentPurposesState
-        });
+    chrome.storage.local.set({ rules: allRules }, () => {
+      if (chrome.runtime.lastError) {
+        console.error("ProtoConsent: error saving rules:", chrome.runtime.lastError);
+      } else {
+        if (DEBUG_RULES) {
+          console.debug("ProtoConsent: saved rules for", currentDomain, {
+            profile: currentProfile,
+            purposes: currentPurposesState
+          });
+        }
+        notifyBackgroundRulesUpdated();
       }
-      notifyBackgroundRulesUpdated();
-    }
+    });
   });
 }
 

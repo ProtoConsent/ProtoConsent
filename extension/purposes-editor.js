@@ -2,10 +2,8 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// TODO: Add purpose editing (add/remove/reorder purposes)
 // TODO: Add import/export (JSON)
 // TODO: Add i18n support (load labels from localized config)
-// TODO: Connect to extension settings (save edits to chrome.storage.local)
 
 async function init() {
 	const statusEl = document.getElementById('status-msg');
@@ -84,7 +82,7 @@ function initDefaultProfile(purposes) {
 		for (const key of purposeKeys) {
 			dp[key] = checkboxes[key].checked;
 		}
-		chrome.storage.local.set({ defaultPurposes: dp });
+		chrome.storage.local.set({ defaultPurposes: dp }, notifyBackground);
 		updateCustomPresetCard();
 	}
 
@@ -105,13 +103,19 @@ function initDefaultProfile(purposes) {
 	// Toggle visibility and save on dropdown change
 	selectEl.addEventListener('change', () => {
 		const value = selectEl.value;
-		chrome.storage.local.set({ defaultProfile: value });
 
 		if (value === 'custom') {
 			togglesContainer.style.display = '';
-			saveCustomPurposes();
+			// Atomic write: both keys together to avoid inconsistent state
+			const dp = {};
+			for (const key of purposeKeys) {
+				dp[key] = checkboxes[key].checked;
+			}
+			chrome.storage.local.set({ defaultProfile: value, defaultPurposes: dp }, notifyBackground);
+			updateCustomPresetCard();
 		} else {
 			togglesContainer.style.display = 'none';
+			chrome.storage.local.set({ defaultProfile: value }, notifyBackground);
 		}
 	});
 
@@ -222,6 +226,12 @@ function renderPresets(presets, purposes) {
 	customPills.id = 'custom-preset-pills';
 	customCard.appendChild(customPills);
 	container.appendChild(customCard);
+}
+
+function notifyBackground() {
+	chrome.runtime.sendMessage({ type: 'PROTOCONSENT_RULES_UPDATED' }, () => {
+		void chrome.runtime.lastError; // suppress warning if background is inactive
+	});
 }
 
 document.addEventListener('DOMContentLoaded', init);
