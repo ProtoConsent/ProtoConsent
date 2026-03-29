@@ -18,6 +18,7 @@ async function init() {
 		const presets = await presetsRes.json();
 
 		statusEl.style.display = 'none';
+		initDefaultProfile(purposes);
 		renderPurposes(purposes);
 		renderPresets(presets, purposes);
 
@@ -29,6 +30,109 @@ async function init() {
 		statusEl.textContent = 'Error loading configuration: ' + err.message;
 		statusEl.classList.add('error');
 	}
+}
+
+function initDefaultProfile(purposes) {
+	const section = document.getElementById('default-profile-section');
+	const selectEl = document.getElementById('default-profile-select');
+	const resetBtn = document.getElementById('reset-all-sites');
+	const togglesContainer = document.getElementById('custom-toggles');
+
+	// Build dynamic toggle rows from purposes config
+	const purposeKeys = Object.keys(purposes);
+	const checkboxes = {};
+	for (const key of purposeKeys) {
+		const row = document.createElement('div');
+		row.className = 'custom-toggle-row';
+
+		const label = document.createElement('label');
+		label.className = 'custom-toggle-label';
+		label.textContent = purposes[key].label || key;
+		label.setAttribute('for', 'dp-' + key);
+
+		const cb = document.createElement('input');
+		cb.type = 'checkbox';
+		cb.id = 'dp-' + key;
+		cb.checked = true;
+
+		row.appendChild(label);
+		row.appendChild(cb);
+		togglesContainer.appendChild(row);
+		checkboxes[key] = cb;
+	}
+
+	// Load stored values
+	chrome.storage.local.get(['defaultProfile', 'defaultPurposes'], (result) => {
+		const profile = result.defaultProfile || 'balanced';
+		selectEl.value = profile;
+
+		if (profile === 'custom') {
+			togglesContainer.style.display = '';
+			if (result.defaultPurposes) {
+				for (const key of purposeKeys) {
+					if (key in result.defaultPurposes) {
+						checkboxes[key].checked = result.defaultPurposes[key];
+					}
+				}
+			}
+		}
+		updateCustomPresetCard();
+	});
+
+	function saveCustomPurposes() {
+		const dp = {};
+		for (const key of purposeKeys) {
+			dp[key] = checkboxes[key].checked;
+		}
+		chrome.storage.local.set({ defaultPurposes: dp });
+		updateCustomPresetCard();
+	}
+
+	// Update the custom preset card pills to reflect current toggles
+	function updateCustomPresetCard() {
+		const pillsEl = document.getElementById('custom-preset-pills');
+		if (!pillsEl) return;
+		pillsEl.innerHTML = '';
+		for (const key of purposeKeys) {
+			const allowed = checkboxes[key].checked;
+			const pill = document.createElement('span');
+			pill.className = 'preset-pill ' + (allowed ? 'allowed' : 'denied');
+			pill.textContent = (purposes[key] ? purposes[key].short : key) + (allowed ? ' \u2713' : ' \u2717');
+			pillsEl.appendChild(pill);
+		}
+	}
+
+	// Toggle visibility and save on dropdown change
+	selectEl.addEventListener('change', () => {
+		const value = selectEl.value;
+		chrome.storage.local.set({ defaultProfile: value });
+
+		if (value === 'custom') {
+			togglesContainer.style.display = '';
+			saveCustomPurposes();
+		} else {
+			togglesContainer.style.display = 'none';
+		}
+	});
+
+	// Save on each checkbox change
+	for (const key of purposeKeys) {
+		checkboxes[key].addEventListener('change', saveCustomPurposes);
+	}
+
+	// Reset all sites
+	resetBtn.addEventListener('click', () => {
+		if (!confirm('Remove all per-site settings? Every site will use the default profile.')) return;
+		chrome.storage.local.set({ rules: {} }, () => {
+			chrome.runtime.sendMessage({ type: 'PROTOCONSENT_RULES_UPDATED' }, () => {
+				void chrome.runtime.lastError; // suppress warning if background is inactive
+			});
+			resetBtn.textContent = 'Done';
+			setTimeout(() => { resetBtn.textContent = 'Reset all sites'; }, 1500);
+		});
+	});
+
+	section.style.display = '';
 }
 
 function renderPurposes(purposes) {
@@ -102,6 +206,22 @@ function renderPresets(presets, purposes) {
 		container.appendChild(card);
 	}
 	section.style.display = '';
+
+	// Always render custom preset card (updated live by initDefaultProfile)
+	const customCard = document.createElement('div');
+	customCard.className = 'preset-card';
+	customCard.id = 'custom-preset-card';
+
+	const customName = document.createElement('div');
+	customName.className = 'preset-name';
+	customName.textContent = 'Custom (your default)';
+	customCard.appendChild(customName);
+
+	const customPills = document.createElement('div');
+	customPills.className = 'preset-purposes';
+	customPills.id = 'custom-preset-pills';
+	customCard.appendChild(customPills);
+	container.appendChild(customCard);
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -19,6 +19,8 @@ const PURPOSES_TO_SHOW = [
 let purposesConfig = {};
 let presetsConfig = {};
 let currentDomain = null;
+let defaultProfile = "balanced";
+let defaultPurposes = null;
 let currentProfile = "balanced";
 let currentPurposesState = {};
 let allRules = {};
@@ -26,6 +28,7 @@ let allRules = {};
 async function initPopup() {
   try {
     await loadConfigs();
+    await loadDefaultProfile();
     await initDomain();
     await loadRulesFromStorageSafe();
     initProfileSelect();
@@ -61,6 +64,20 @@ async function loadConfigs() {
 
   purposesConfig = await purposesRes.json();
   presetsConfig = await presetsRes.json();
+}
+
+// Load the user's default profile from storage
+async function loadDefaultProfile() {
+  if (!chrome.storage || !chrome.storage.local) return;
+
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["defaultProfile", "defaultPurposes"], (result) => {
+      defaultProfile = result.defaultProfile || "balanced";
+      defaultPurposes = result.defaultPurposes || null;
+      currentProfile = defaultProfile;
+      resolve();
+    });
+  });
 }
 
 // Get current tab domain
@@ -177,8 +194,14 @@ function initStateForDomain() {
 
 // Apply preset values for currentProfile into currentPurposesState
 function applyPresetToCurrentDomain() {
-  const profile = presetsConfig[currentProfile];
-  const profilePurposes = (profile && profile.purposes) || {};
+  let profilePurposes;
+  if (currentProfile === "custom" && defaultPurposes) {
+    // Custom global default: use stored default purposes
+    profilePurposes = defaultPurposes;
+  } else {
+    const profile = presetsConfig[currentProfile];
+    profilePurposes = (profile && profile.purposes) || {};
+  }
 
   PURPOSES_TO_SHOW.forEach((purposeKey) => {
     const presetValue = profilePurposes[purposeKey];
@@ -429,4 +452,3 @@ function showPopupError(message) {
   listEl.appendChild(errorEl);
   listEl.appendChild(buttonEl);
 }
-
