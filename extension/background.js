@@ -197,12 +197,51 @@ async function rebuildAllDynamicRules() {
   }
 }
 
-// Listen for messages from the popup to trigger rule rebuild
+/**
+ * Handle a bridge query from the content script.
+ * Reads storage, resolves purposes for the requested domain,
+ * and returns the appropriate data based on the action.
+ */
+async function handleBridgeQuery(message) {
+  const { domain, action, purpose } = message;
+
+  const [rules, presets] = await Promise.all([
+    getAllRulesFromStorage(),
+    loadPresetsConfig()
+  ]);
+
+  const siteConfig = rules[domain] || {};
+  const resolved = resolvePurposes(siteConfig, presets);
+
+  switch (action) {
+    case 'get':
+      return (purpose in resolved) ? resolved[purpose] : null;
+    case 'getAll':
+      return resolved;
+    case 'getProfile':
+      return siteConfig.profile || 'balanced';
+    default:
+      return null;
+  }
+}
+
+// Listen for messages from popup and content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message && message.type === "PROTOCONSENT_RULES_UPDATED") {
-    // Fire and forget
+  if (!message) return;
+
+  // Popup notifies that rules were changed by the user
+  if (message.type === "PROTOCONSENT_RULES_UPDATED") {
     rebuildAllDynamicRules();
     sendResponse({ ok: true });
+    return;
+  }
+
+  // Content script forwards an SDK query
+  if (message.type === "PROTOCONSENT_BRIDGE_QUERY") {
+    handleBridgeQuery(message)
+      .then((data) => sendResponse({ data }))
+      .catch(() => sendResponse({ data: null }));
+    return true; // keep message channel open for async response
   }
 });
 

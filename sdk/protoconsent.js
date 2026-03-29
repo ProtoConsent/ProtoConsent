@@ -16,8 +16,9 @@
 //     const allowed = await window.ProtoConsent.get('analytics');
 //   </script>
 //
-// Status: alpha — API surface defined, messaging defined.
-// Content script bridge pending; without it, all queries resolve to null.
+// Status: alpha — API surface defined, messaging implemented.
+// When the ProtoConsent extension is installed, queries are answered
+// via the content script bridge. Without it, all queries resolve to null.
 // See design/protocol-draft.md for the protocol specification.
 
 const VERSION = '0.1.0-alpha';
@@ -100,7 +101,7 @@ if (typeof window !== 'undefined') {
 /**
  * Check whether a specific purpose is allowed for the current domain.
  *
- * @param {string} purpose - One of the 6 valid purpose keys.
+ * @param {string} purpose - One of the valid purpose keys.
  * @returns {Promise<boolean|null>} true = allowed, false = denied, null = unknown.
  * @throws {Error} If purpose is not a valid key.
  */
@@ -116,7 +117,7 @@ function get(purpose) {
 /**
  * Get all purpose states for the current domain.
  *
- * @returns {Promise<object|null>} Object with 6 boolean properties, or null.
+ * @returns {Promise<object|null>} Object with a boolean property per purpose, or null.
  */
 function getAll() {
 	return _queryExtension('getAll', {});
