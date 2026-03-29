@@ -68,13 +68,25 @@ async function loadPresetsConfig() {
 }
 
 /**
+ * Utility: get the user's default profile from storage.
+ * Falls back to "balanced" if not set.
+ */
+function getDefaultProfile() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["defaultProfile"], (result) => {
+      resolve(result.defaultProfile || "balanced");
+    });
+  });
+}
+
+/**
  * Resolve purpose states for a site rule by applying profile defaults
  * and then any explicit overrides.
  * Returns an object with all purpose keys mapped to booleans.
  */
-function resolvePurposes(siteConfig, presets) {
+function resolvePurposes(siteConfig, presets, defaultProfile) {
   const resolved = {};
-  const profileName = siteConfig.profile || "balanced";
+  const profileName = siteConfig.profile || defaultProfile || "balanced";
   const profileDef = presets[profileName];
   const profilePurposes = (profileDef && profileDef.purposes) || {};
   const overrides = siteConfig.purposes || {};
@@ -117,10 +129,11 @@ async function rebuildAllDynamicRules() {
   }
 
   try {
-    const [rulesByDomain, blocklists, presets] = await Promise.all([
+    const [rulesByDomain, blocklists, presets, defaultProfile] = await Promise.all([
       getAllRulesFromStorage(),
       loadBlocklistsConfig(),
       loadPresetsConfig(),
+      getDefaultProfile(),
     ]);
 
     // First, remove all existing dynamic rules
@@ -139,7 +152,7 @@ async function rebuildAllDynamicRules() {
 
     // For each site (domain) with rules, resolve profile inheritance
     for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
-      const purposes = resolvePurposes(siteConfig, presets);
+      const purposes = resolvePurposes(siteConfig, presets, defaultProfile);
 
       for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
         const isAllowed = purposes[purposeKey]; // resolved boolean from profile + overrides
@@ -205,13 +218,14 @@ async function rebuildAllDynamicRules() {
 async function handleBridgeQuery(message) {
   const { domain, action, purpose } = message;
 
-  const [rules, presets] = await Promise.all([
+  const [rules, presets, defaultProfile] = await Promise.all([
     getAllRulesFromStorage(),
-    loadPresetsConfig()
+    loadPresetsConfig(),
+    getDefaultProfile()
   ]);
 
   const siteConfig = rules[domain] || {};
-  const resolved = resolvePurposes(siteConfig, presets);
+  const resolved = resolvePurposes(siteConfig, presets, defaultProfile);
 
   switch (action) {
     case 'get':
@@ -219,7 +233,7 @@ async function handleBridgeQuery(message) {
     case 'getAll':
       return resolved;
     case 'getProfile':
-      return siteConfig.profile || 'balanced';
+      return siteConfig.profile || defaultProfile || 'balanced';
     default:
       return null;
   }

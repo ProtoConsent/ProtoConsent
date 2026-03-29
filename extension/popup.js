@@ -19,6 +19,7 @@ const PURPOSES_TO_SHOW = [
 let purposesConfig = {};
 let presetsConfig = {};
 let currentDomain = null;
+let defaultProfile = "balanced";
 let currentProfile = "balanced";
 let currentPurposesState = {};
 let allRules = {};
@@ -26,6 +27,7 @@ let allRules = {};
 async function initPopup() {
   try {
     await loadConfigs();
+    await loadDefaultProfile();
     await initDomain();
     await loadRulesFromStorageSafe();
     initProfileSelect();
@@ -61,6 +63,19 @@ async function loadConfigs() {
 
   purposesConfig = await purposesRes.json();
   presetsConfig = await presetsRes.json();
+}
+
+// Load the user's default profile from storage
+async function loadDefaultProfile() {
+  if (!chrome.storage || !chrome.storage.local) return;
+
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["defaultProfile"], (result) => {
+      defaultProfile = result.defaultProfile || "balanced";
+      currentProfile = defaultProfile;
+      resolve();
+    });
+  });
 }
 
 // Get current tab domain

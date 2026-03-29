@@ -18,6 +18,7 @@ async function init() {
 		const presets = await presetsRes.json();
 
 		statusEl.style.display = 'none';
+		initDefaultProfile();
 		renderPurposes(purposes);
 		renderPresets(presets, purposes);
 
@@ -29,6 +30,33 @@ async function init() {
 		statusEl.textContent = 'Error loading configuration: ' + err.message;
 		statusEl.classList.add('error');
 	}
+}
+
+function initDefaultProfile() {
+	const section = document.getElementById('default-profile-section');
+	const selectEl = document.getElementById('default-profile-select');
+	const resetBtn = document.getElementById('reset-all-sites');
+
+	chrome.storage.local.get(['defaultProfile'], (result) => {
+		selectEl.value = result.defaultProfile || 'balanced';
+	});
+
+	selectEl.addEventListener('change', () => {
+		chrome.storage.local.set({ defaultProfile: selectEl.value });
+	});
+
+	resetBtn.addEventListener('click', () => {
+		if (!confirm('Remove all per-site settings? Every site will use the default profile.')) return;
+		chrome.storage.local.set({ rules: {} }, () => {
+			chrome.runtime.sendMessage({ type: 'PROTOCONSENT_RULES_UPDATED' }, () => {
+				void chrome.runtime.lastError; // suppress warning if background is inactive
+			});
+			resetBtn.textContent = 'Done';
+			setTimeout(() => { resetBtn.textContent = 'Reset all sites'; }, 1500);
+		});
+	});
+
+	section.style.display = '';
 }
 
 function renderPurposes(purposes) {
