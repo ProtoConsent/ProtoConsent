@@ -13,7 +13,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="ProtoConsent is a user-side browser extension to control how websites may use your data, expressed in terms of purposes, from inside your browser.">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -65,6 +65,9 @@
 			</a>
 			<a class="btn-secondary" href="#how-it-works">
 			  Read the technical overview →
+			</a>
+			<a class="btn-secondary" href="#live-test">
+			  Try it live ↓
 			</a>
 		  </div>
       		  
@@ -126,12 +129,11 @@
               comfortable installing early-stage browser extensions and reading code.
             </p>
             <ul>
-              <br />
               <li>Install the extension locally and define purpose profiles on a few test sites.</li>
               <li>See how declarative rules apply to real network requests in the browser.</li>
+              <li><a href="#live-test">Try the live SDK test</a> on this page to see your preferences in action.</li>
               <li>Use the code and data model as a starting point for experiments or internal demos.</li>
               <li>Open issues or pull requests to discuss purpose categories or enforcement strategies.</li>
-              <br />
             </ul>
 
             <div class="pill-row">
@@ -203,6 +205,17 @@
           </article>
         </section>
 
+        <!-- LIVE SDK TEST -->
+        <section class="card card-spaced sdk-demo-card" id="live-test">
+          <div class="card-title">Live test</div>
+          <h3>Your preferences for this site</h3>
+          <p>
+            This section queries the ProtoConsent extension in real time using the SDK protocol.
+            If the extension is installed, your current preferences for protoconsent.org are shown below.
+          </p>
+          <div id="sdk-demo-result"></div>
+        </section>
+
         <!-- OPTIONAL CONTACT / CTA -->
         <section class="card card-spaced">
           <div class="card-title">Get involved</div>
@@ -230,5 +243,6 @@
       </footer>
     </div>
   </div>
+  <script src="assets/sdk-demo.js"></script>
 </body>
 </html>
