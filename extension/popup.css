@@ -1,15 +1,7 @@
 /*
  * ProtoConsent browser extension
  * Copyright (C) 2026 ProtoConsent contributors
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * For more details see <https://www.gnu.org/licenses/>.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 html, body {
@@ -58,6 +50,10 @@ body {
   font-weight: 600;
   font-size: 13px;
   color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 170px;
 }
 
 .pc-profile {
@@ -228,6 +224,19 @@ body {
 /* Collapsed description state */
 .pc-purpose-description.is-collapsed {
   display: none;
+}
+
+/* Unsupported page (non http/https) */
+.pc-unsupported-msg {
+  padding: 8px 10px;
+  margin: 6px 0;
+  border-radius: 4px;
+  background-color: #f9fafb;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.4;
+  border: 1px solid #e5e7eb;
+  text-align: center;
 }
 
 
