@@ -71,6 +71,10 @@ Notice the missing ad slots in the page header and `ERR_BLOCKED_BY_CLIENT` entri
 
 ![Blocking analytics on elpais.com](design/assets/screenshots/test-elpais-blocked.png)
 
+The project website ([protoconsent.org](https://protoconsent.org)) includes a live SDK test that shows your current preferences when the extension is installed:
+
+![SDK live test on protoconsent.org](docs/assets/screenshots/sdk-demo-detected.png)
+
 ## Getting started (developer mode)
 
 For now ProtoConsent is only available as an unpacked extension.
