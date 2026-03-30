@@ -249,3 +249,41 @@ await testQuery('get', 'malware')
 
 Expected: `null` (invalid purpose, the extension has no data for it).
 
+## 8. Testing Global Privacy Control (Sec-GPC header)
+
+ProtoConsent conditionally sends a `Sec-GPC: 1` HTTP request header when privacy-relevant purposes are denied for a site. The purposes that trigger GPC are marked with `triggers_gpc: true` in `extension/config/purposes.json` (currently: ads, third_parties, advanced_tracking).
+
+### 8.1 GPC active (default with Balanced or Strict)
+
+1. Open a site (for example `elpais.com`) with the default Balanced profile.
+2. Open DevTools → **Network**, reload the page.
+3. Click the first request (the HTML document).
+4. In **Request Headers**, look for `Sec-GPC: 1`. It should be present because Balanced denies ads, third_parties and advanced_tracking.
+
+### 8.2 GPC inactive (all privacy purposes allowed)
+
+1. In the ProtoConsent popup, set the site to a custom profile with all purposes allowed.
+2. Reload the page.
+3. Check **Request Headers** again. `Sec-GPC` should **not** appear.
+
+### 8.3 Verifying rules from the service worker console
+
+Open the service worker console for the extension and run:
+
+```js
+chrome.declarativeNetRequest.getDynamicRules().then(r => {
+  const gpc = r.filter(x => x.action.type === 'modifyHeaders');
+  const block = r.filter(x => x.action.type === 'block');
+  console.log('Block:', block.length, '| GPC:', gpc.length);
+  gpc.forEach(x => console.log(' ',
+    x.action.requestHeaders[0].operation,
+    x.condition.requestDomains || 'GLOBAL'));
+})
+```
+
+With Balanced as the default and one site set to custom (all allowed), the expected output is:
+
+- `Block: 90 | GPC: 2`
+- `set GLOBAL` — the global GPC rule
+- `remove ["example.com"]` — the per-site override that suppresses GPC
+

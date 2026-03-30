@@ -45,6 +45,7 @@ ProtoConsent is in early alpha (v0.1.0), meant for exploration and feedback, not
 - Global default profile with per-site overrides via a browser action popup.
 - Purpose toggles for six categories: functional, analytics, ads, personalisation, third-party services, and advanced tracking.
 - Network-level enforcement using declarative net request rules (150 curated domains from public blocklists).
+- Conditional [Global Privacy Control](https://globalprivacycontrol.org/) (Sec-GPC) header, sent only when privacy-relevant purposes are denied.
 - Content script bridge and JavaScript SDK for web pages to query user preferences.
 - TypeScript type declarations for SDK consumers.
 - Live SDK test on [protoconsent.org](https://protoconsent.org).
@@ -73,6 +74,10 @@ Notice the missing ad slots in the page header and `ERR_BLOCKED_BY_CLIENT` entri
 The project website ([protoconsent.org](https://protoconsent.org)) includes a live SDK test that shows your current preferences when the extension is installed:
 
 ![SDK live test on protoconsent.org](docs/assets/screenshots/sdk-demo-detected.png)
+
+ProtoConsent sends a conditional [Sec-GPC](https://globalprivacycontrol.org/) header and sets `navigator.globalPrivacyControl` only when privacy-relevant purposes are denied — per site, not globally:
+
+![GPC signal detected on globalprivacycontrol.org](docs/assets/screenshots/gpc-demo-detected.png)
 
 ## Getting started (developer mode)
 

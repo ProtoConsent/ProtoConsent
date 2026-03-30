@@ -18,7 +18,7 @@ ProtoConsent is a purpose‑based privacy control that lives in the browser and 
 
 **Local‑only storage:** All rules are stored locally in the browser, without any remote server or central account, which simplifies deployment and avoids creating another privacy‑sensitive backend.
 
-**Minimal technical enforcement:** The current design uses the browser’s declarativeNetRequest API to block network requests that correspond to disallowed purposes (for example, common analytics and ads domains), providing users with real, observable effects instead of purely symbolic settings.
+**Minimal technical enforcement:** The current design uses the browser’s declarativeNetRequest API to block network requests that correspond to disallowed purposes (for example, common analytics and ads domains), providing users with real, observable effects instead of purely symbolic settings. When privacy‑relevant purposes are denied, the extension also sends a conditional [Global Privacy Control](https://globalprivacycontrol.org/) (Sec‑GPC) header to signal the user’s opt‑out to the receiving server.
 
 **Lightweight user interface:** A compact popup UI lets users see the active profile and purposes for the current site at a glance, and change them with a few clicks instead of reconfiguring each consent banner from scratch.
 

@@ -1,11 +1,12 @@
 /**
+ * Copyright (C) 2026 ProtoConsent contributors
+ * SPDX-License-Identifier: MIT
+ * 
  * ProtoConsent SDK type declarations.
  *
  * Provides TypeScript types for the ProtoConsent browser extension SDK.
  * Use alongside protoconsent.js (ES module or script tag).
  *
- * Copyright (C) 2026 ProtoConsent contributors
- * SPDX-License-Identifier: MIT
  */
 
 /** Valid purpose keys recognised by ProtoConsent. */

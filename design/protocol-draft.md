@@ -177,6 +177,7 @@ Status: not yet created. This is the next planned step for protocol formalizatio
 | SDK messaging (actual communication) | Implemented (v0.1.0) |
 | Content script bridge | Implemented (v0.1.0) |
 | TypeScript type declarations | Implemented (v0.1.0) |
+| Conditional GPC header (Sec-GPC) | Implemented — per-site, driven by `triggers_gpc` in purposes.json |
 | JSON Schemas | Planned (protocol formalization) |
 | Demo sites using SDK | protoconsent.org live test (v0.1.0); additional demos planned |
 
