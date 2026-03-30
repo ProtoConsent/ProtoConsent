@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ProtoConsent – user-side, purpose-based consent for the web</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/logo/protoconsent_logo_bold.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/protoconsent_logo_32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ProtoConsent is a user-side browser extension to control how websites may use your data, expressed in terms of purposes, from inside your browser.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="ProtoConsent – user-side, purpose-based consent for the web">
+  <meta property="og:description" content="A browser extension to control how websites may use your data, expressed in terms of purposes, from inside your browser.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://protoconsent.org/">
+  <meta property="og:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="ProtoConsent – user-side, purpose-based consent for the web">
+  <meta name="twitter:description" content="A browser extension to control how websites may use your data, expressed in terms of purposes, from inside your browser.">
+  <meta name="twitter:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <header>
+        <div class="brand">
+          <img src="assets/logo/protoconsent_logo_bold.svg" alt="PC" class="brand-mark" width="28" height="28">
+          <div class="brand-name">ProtoConsent</div>
+        </div>
+        <div class="header-links-nav">
+          <a class="header-link" href="why.html">Why ProtoConsent</a>
+          <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        </div>
+      </header>
+
+      <main>
+        <!-- HERO -->
+		<section class="hero">
+		  <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent logo" class="hero-logo" width="72" height="72">
+		  <h1 class="hero-title">ProtoConsent</h1>
+		  <p class="hero-subtitle">
+			User‑side, purpose‑based consent for the web.
+		  </p>
+	    <p class="hero-subtitle">
+			ProtoConsent is a browser extension to control how websites may use your data, expressed in terms of purposes, from inside your browser.
+		  </p>      
+
+		  <p class="hero-subtitle">
+			No central server, no tracking, no sharing of personal data — everything stays in your browser by default.
+		  </p>
+
+      <div class="hero-badges">
+			<div class="badge">
+			  <span class="badge-dot"></span>
+			  <span>Browser‑level, purpose‑based controls</span>
+			</div>
+			<div class="badge">
+			  <span class="badge-dot"></span>
+			  <span>No backend, local‑only storage</span>
+			</div>
+			<div class="badge">
+			  <span class="badge-dot"></span>
+			  <span>Early-alpha research prototype</span>
+			</div>
+		  </div>
+
+		  <div class="hero-actions">
+			<a class="btn-primary" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">
+			  View the code on GitHub
+			</a>
+			<a class="btn-secondary" href="why.html">
+			  Why ProtoConsent →
+			</a>
+			<a class="btn-secondary" href="#how-it-works">
+			  Technical overview →
+			</a>
+			<a class="btn-secondary" href="#live-test">
+			  Try it live ↓
+			</a>
+		  </div>
+      		  
+		  <p class="hero-footnote">
+			ProtoConsent complements existing consent and tracking solutions. It is not a production consent platform or legal product.
+		  </p>
+		</section>
+
+    <section class="hero-meta">
+      <div class="hero-meta-inner">
+        <p>
+          ProtoConsent doesn’t invent new tracking or blocking mechanisms.
+          It builds on existing browser APIs, but organises everything around
+          user‑defined, purpose‑based preferences instead of vendors or individual trackers.
+        </p>
+      </div>
+    </section>    
+
+        <!-- MAIN GRID -->
+        <section class="grid">
+          <!-- LEFT COLUMN: WHY + HOW -->
+          <article class="card">
+            <div class="card-title">Why ProtoConsent?</div>
+            <h3>Moving purpose‑based controls into the browser</h3>
+            <p>
+              Today, consent banners often put all the work on the user and all the power on each individual website. ProtoConsent explores a different approach: giving users a single place to manage data‑use purposes across sites, and enforcing those choices at the browser level.
+            </p>
+            <ul>
+              <li>Give users one place to express their data‑purpose choices across sites.</li>
+              <li>Complement existing consent and tag setups instead of replacing them.</li>
+              <li>Turn abstract “tracking” into concrete, per‑purpose decisions.</li>
+              <li>Enforce choices with browser‑level rules, not one more on‑page script.</li>
+            </ul>
+          </article>
+
+          <article class="card" id="how-it-works">
+            <div class="card-title">How it works</div>
+            <h3>What ProtoConsent actually does</h3>
+            <p>
+				ProtoConsent is a browser extension that lets users define how different data‑use purposes should be treated on each site, then applies those rules locally in the browser. All preferences and enforcement happen on the user’s device.
+            </p>
+            <ul>
+              <li><strong>Per‑site purpose profiles</strong>: choose how to treat functional, analytics, advertising, personalisation and advanced tracking for each domain.</li>
+              <li><strong>Local‑only storage</strong>: no backend service and no external preference store.</li>
+              <li><strong>Network‑level enforcement</strong>: uses browser extension APIs (such as declarative network rules) to block or allow requests related to specific purposes.</li>
+              <li><strong>Composable with CMPs</strong>: designed to sit alongside existing consent mechanisms and tag configurations.</li>
+            </ul>
+          </article>
+        </section>
+
+        <!-- SECOND ROW: WHO + WHAT YOU CAN DO -->
+        <section class="grid grid-spaced">
+          <article class="card">
+            <div class="card-title">What you can do today</div>
+            <h3>Early alpha, meant for exploration</h3>
+            <p>
+              ProtoConsent is an early alpha, meant for exploration and feedback, 
+              not production use yet (v0.1.0). It’s best suited for people
+              comfortable installing early-stage browser extensions and reading code.
+            </p>
+            <ul>
+              <li>Install the extension locally and define purpose profiles on a few test sites.</li>
+              <li>See how declarative rules apply to real network requests in the browser.</li>
+              <li><a href="#live-test">Try the live SDK test</a> on this page to see your preferences in action.</li>
+              <li>Use the code and data model as a starting point for experiments or internal demos.</li>
+              <li>Open issues or pull requests to discuss purpose categories or enforcement strategies.</li>
+            </ul>
+
+            <div class="pill-row">
+              <span class="pill">Alpha · code‑first</span>
+              <span class="pill">Feedback welcome</span>
+              <span class="pill">Open to collaboration</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-title">Who it’s for today</div>
+
+            <div class="audience-block">
+              <div class="audience-label">Product, data &amp; privacy teams</div>
+              <p>
+                Explore what browser‑level, purpose‑based controls could look like in practice, beyond today’s consent banners and tracking settings. Use the prototype to discuss future consent flows, analytics and ads choices, and browser signals with stakeholders.
+              </p>
+            </div>
+
+            <div class="audience-block">
+              <div class="audience-label">Developers &amp; implementation engineers</div>
+              <p>
+                Inspect the extension’s architecture, rules, and data model. Experiment with how browser APIs can express and enforce purpose‑based preferences for analytics, advertising, personalisation and third‑party services, and how sites or SDKs might consume those signals.
+              </p>
+            </div>
+
+            <div class="audience-block">
+              <div class="audience-label">Researchers &amp; open‑web standards folks</div>
+              <p>
+                Use ProtoConsent as a sandbox to test ideas around browser‑mediated consent, purpose labelling, and open‑web preference signals. Connect those experiments with ongoing work on web privacy, permissions, and consent‑related standards.
+              </p>
+            </div>
+          </article>
+        </section>
+
+        <!-- THIRD ROW: HOW IT LOOKS -->
+        <section class="grid grid-spaced">
+          <article class="card">
+            <div class="card-title">What it looks like</div>
+            <h3>Per-site profiles and purpose toggles</h3>
+            <p>
+              ProtoConsent adds a browser popup where you can pick a profile for each site
+              (for example Strict, Balanced or Permissive) and adjust purpose toggles
+              (functional, analytics, ads, personalisation, third‑party services, advanced tracking).
+            </p>
+
+            <figure class="screenshot">
+              <img src="assets/screenshots/popup-profile.png" alt="ProtoConsent popup with per-site profile and purpose toggles">
+              <figcaption>
+                Compact view of the popup when sections are collapsed.
+              </figcaption>
+            </figure>
+          </article>
+
+          <article class="card">
+            <div class="card-title">What it looks like</div>
+            <h3>Network‑level rules, no on‑page scripts</h3>
+            <p>
+              The extension applies simple, declarative network rules based on those toggles,
+              without injecting scripts into pages or sending your data to a backend.
+            </p>            
+            <figure class="screenshot">
+              <img src="assets/screenshots/popup-toggles.png" alt="ProtoConsent popup in compact view">
+              <figcaption>
+                Popup with per-site profile and purpose toggles for common data-use categories.                
+              </figcaption>
+            </figure>
+          </article>
+        </section>
+
+        <!-- SDK INTEGRATION EXAMPLE -->
+        <section class="card card-spaced">
+          <div class="card-title">Integrate the SDK</div>
+          <h3>Read user preferences in 3 lines</h3>
+          <p>
+            The optional JavaScript SDK (MIT licensed) lets your site query the user's consent choices. If the extension is installed, you get a direct answer. If not, every call returns <code>null</code> — no errors, no side effects.
+          </p>
+          <pre class="code-block"><span class="code-comment">// Load the SDK (ES module, MIT licensed)</span>
+import ProtoConsent from 'protoconsent.js';
+
+<span class="code-comment">// Check a single purpose</span>
+const allowed = await ProtoConsent.get('analytics');
+if (allowed) {
+  <span class="code-comment">// user allows analytics on this site — load your scripts</span>
+}
+
+<span class="code-comment">// Or read all purposes at once</span>
+const all = await ProtoConsent.getAll();
+<span class="code-comment">// { functional: true, analytics: false, ads: false, ... }</span></pre>
+          <p>
+            Full API: <code>get(purpose)</code>, <code>getAll()</code>, <code>getProfile()</code>.
+            See the <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/protocol-draft.md#4-sdk-api-surface" target="_blank" rel="noopener noreferrer">protocol spec</a> and <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/sdk/protoconsent.js" target="_blank" rel="noopener noreferrer">SDK source</a>.
+          </p>
+        </section>
+
+        <!-- LIVE SDK TEST -->
+        <section class="card card-spaced sdk-demo-card" id="live-test">
+          <div class="card-title">Live test</div>
+          <h3>Your preferences for this site</h3>
+          <p>
+            This section queries the ProtoConsent extension in real time using the SDK protocol.
+            If the extension is installed, your current preferences for protoconsent.org are shown below.
+          </p>
+          <div id="sdk-demo-result"></div>
+        </section>
+
+        <!-- OPTIONAL CONTACT / CTA -->
+        <section class="card card-spaced">
+          <div class="card-title">Get involved</div>
+          <p class="cta-text">
+            If you work around privacy, consent UX, tracking, or browser internals and feel like taking a look or sharing thoughts, I’d really appreciate it.
+          </p>	  
+          <ul>
+            <li>Star or fork the GitHub repo.</li>
+            <li>Open an issue with feedback or questions.</li>
+            <li>Reach out by email at <a href="mailto:contact@protoconsent.org">contact@protoconsent.org</a> with “ProtoConsent” in the subject.</li>
+          </ul>
+        </section>
+      </main>
+
+      <footer>
+        <div>
+          ProtoConsent is a browser extension exploring browser‑level, purpose‑based consent controls for the open web.
+        </div>
+        <div class="footer-links">
+          <a href="why.html">Why ProtoConsent</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">GitHub repo</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent#readme" target="_blank" rel="noopener noreferrer">Technical README</a>
+          <a href="mailto:contact@protoconsent.org">Contact</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <script src="assets/sdk-demo.js"></script>
+</body>
+</html>

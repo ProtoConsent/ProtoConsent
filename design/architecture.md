@@ -1,0 +1,53 @@
+# ProtoConsent – Technical architecture
+
+This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../LICENSE-CC-BY-SA) file for details.
+
+## 1. Overview
+
+ProtoConsent is a client‑side system that adds purpose‑based privacy controls to the browser. It is implemented as a browser extension that stores all user rules locally and uses standard browser capabilities to enforce them. There is no central server: everything happens on the user’s device.
+
+The extension provides a popup interface to manage profiles and purposes per site, and a background component that translates those choices into declarative network rules. A JavaScript SDK and a content script bridge allow websites to read and react to the user’s choices via a local purpose‑signalling protocol.
+
+## 2. Components
+
+**Popup UI** – The main user‑facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. The popup does not enforce anything directly; it sends messages to the background component when settings change.
+
+**Background script (service worker)** – Maintains per‑site rules, computes defaults for new domains, and translates user choices into declarative network rules. Enforcement stays in the browser; policy and UI logic stay in the extension.
+
+**Local storage** – All configuration lives in the browser’s extension storage: the mapping from domains to site rules (profile plus purpose overrides) and predefined profiles. No backend, no remote calls.
+
+**Enforcement (declarativeNetRequest)** – The background component maintains rules that match requests associated with specific purposes (analytics, ads, etc.) and blocks them when the corresponding purpose is disabled. The core idea: express user intent as purposes, let the browser enforce it.
+
+**protoconsent.js SDK** – A small, optional JavaScript library for web pages to read the user’s ProtoConsent preferences (e.g. whether analytics is allowed) via the content script bridge. The extension works without it; the SDK is for sites that want to adapt their behaviour to the user’s choices. TypeScript type declarations are also provided (`sdk/protoconsent.d.ts`).
+
+![ProtoConsent technical diagram](assets/diagrams/protoconsent-technical-diagram.png)
+
+## 3. Data model
+
+For each domain, the extension stores a rule that combines a profile with purpose‑level overrides:
+
+`rules[domain] = { profile, purposes: { functional, analytics, ads, personalization, third_parties, advanced_tracking } }`
+
+where each purpose resolves to “allowed” or “denied”. By default, all purpose values are inherited from the active profile (preset). When the user overrides a specific purpose for a domain, only that override is stored; the rest continue to inherit from the profile. In storage, purpose values are booleans (`true` = allowed, `false` = denied). All data is stored locally in the browser’s extension storage in a compact format that can evolve over time through straightforward migrations.
+
+Three predefined profiles (“Strict”, “Balanced”, “Permissive”) map directly to purpose states and act as templates. When the user selects a profile, its values fill in the purposes; any per‑purpose change after that is tracked as an explicit override.
+
+## 4. Main flows
+
+**User updates settings for a site** – The user opens the popup, changes the profile or individual purposes. The popup sends an update to the background, which saves the new rule and rebuilds the declarative network rules. Changes take effect immediately for new requests, usually without a page reload.
+
+**Page loads and makes network requests** – As the user navigates, third‑party requests are evaluated against the active rules for the current site. Requests tied to disabled purposes are blocked by the browser’s declarative rules; allowed purposes proceed normally.
+
+**(Future) Page reads preferences via SDK** – On sites that integrate the optional SDK, page code can query the user’s preferences (e.g. `get("analytics")`) and decide whether to load scripts or simplify consent prompts. This complements browser‑level enforcement — it does not replace it.
+
+## 5. Security and privacy by design (non-normative)
+
+All configuration is stored locally; the extension does not rely on remote servers, which reduces the attack surface and avoids creating central points where preferences would accumulate. The extension requests only the permissions it needs and keeps a clear separation between UI and enforcement logic.
+
+Enforcement is based on built‑in browser APIs (declarativeNetRequest), so ProtoConsent benefits from the browser’s own sandboxing and update mechanisms. The data model is intentionally small, which makes edge cases easier to reason about. Additional safeguards (input validation, automated tests, storage hardening) can be added over time without changing the core design.
+
+## 6. Extensibility
+
+New purposes can be added as fields in the site rule without breaking existing preferences. Support for more browsers reuses the same concepts (popup, background, local storage, enforcement) and adapts only platform‑specific details.
+
+The optional SDK and purpose‑signalling protocol are documented layers on top of the extension, not hard dependencies. Websites can adopt them at their own pace while the extension continues to work on its own. This lets ProtoConsent evolve as an open building block that others can adapt or embed without adopting the entire stack.

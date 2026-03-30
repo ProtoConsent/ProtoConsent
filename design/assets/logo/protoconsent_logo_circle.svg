@@ -1,0 +1,17 @@
+<!--
+  This file is part of the ProtoConsent project and is licensed under
+  the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license.
+  See the repository README and the LICENSE-CC-BY-SA file for details.
+  © ProtoConsent contributors
+-->
+<!-- ProtoConsent circle logo (no text) -->
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <circle
+    cx="32"
+    cy="32"
+    r="30"
+    fill="#dbeafe"
+    stroke="#1e3a8a"
+    stroke-width="3"
+  />
+</svg>

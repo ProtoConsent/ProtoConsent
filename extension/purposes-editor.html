@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ProtoConsent Purposes</title>
+	<link rel="icon" type="image/png" sizes="32x32" href="icons/protoconsent_icon_32.png">
+	<style>
+		body {
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			font-size: 13px;
+			color: #111827;
+			background-color: #f3f4f6;
+			margin: 0;
+			padding: 16px;
+		}
+		.viewer-root { max-width: 640px; margin: 0 auto; }
+		h1 { color: #1e3a8a; font-size: 1.4em; margin: 0 0 4px 0; }
+		.subtitle { color: #6b7280; font-size: 12px; margin: 0 0 20px 0; }
+		h2 { color: #1e3a8a; font-size: 1.1em; margin: 20px 0 10px 0; }
+		.purpose-card, .preset-card {
+			background: #ffffff;
+			border: 1px solid #e5e7eb;
+			border-radius: 6px;
+			padding: 12px 14px;
+			margin-bottom: 8px;
+		}
+		.purpose-header { display: flex; align-items: center; gap: 8px; }
+		.purpose-short {
+			display: inline-flex; align-items: center; justify-content: center;
+			min-width: 26px; height: 22px; padding: 0 6px;
+			background-color: #dbeafe; color: #1e3a8a;
+			border-radius: 999px; font-size: 11px; font-weight: 600;
+		}
+		.purpose-label { font-weight: 600; color: #1e3a8a; font-size: 13px; }
+		.purpose-desc { color: #6b7280; font-size: 12px; margin-top: 4px; line-height: 1.4; }
+		.purpose-keys { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+		.purpose-key {
+			font-size: 10px; padding: 2px 7px;
+			background: #f3f4f6; color: #6b7280;
+			border-radius: 999px; border: 1px solid #e5e7eb;
+		}
+		.preset-name { font-weight: 600; color: #111827; margin-bottom: 6px; }
+		.preset-purposes { display: flex; flex-wrap: wrap; gap: 6px; }
+		.preset-pill {
+			font-size: 11px; padding: 2px 8px;
+			border-radius: 999px; font-weight: 500;
+		}
+		.preset-pill.allowed { background: #dcfce7; color: #166534; }
+		.preset-pill.denied { background: #f3f4f6; color: #9ca3af; }
+		.status-msg { color: #6b7280; font-size: 12px; padding: 12px 0; }
+		.status-msg.error { color: #dc2626; }
+		.viewer-footer {
+			margin-top: 24px; padding-top: 12px;
+			border-top: 1px solid #e5e7eb;
+			display: flex; justify-content: space-between; align-items: center;
+			font-size: 11px; color: #6b7280;
+		}
+		.viewer-footer a {
+			font-size: 10px; color: #1e3a8a;
+			text-decoration: none;
+		}
+		.viewer-footer a:hover { text-decoration: underline; }
+		.viewer-footer-links { display: flex; gap: 10px; }
+		.default-profile-section {
+			background: #ffffff;
+			border: 1px solid #e5e7eb;
+			border-radius: 6px;
+			padding: 12px 14px;
+			margin-bottom: 16px;
+		}
+		.default-profile-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+		}
+		.default-profile-label { font-weight: 600; color: #111827; font-size: 13px; }
+		.default-profile-desc { color: #6b7280; font-size: 11px; margin-top: 2px; }
+		.default-profile-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+		.default-profile-select {
+			font-size: 13px; padding: 4px 8px;
+			border: 1px solid #d1d5db; border-radius: 4px;
+			color: #111827; background: #ffffff;
+			cursor: pointer;
+		}
+		.reset-all-btn {
+			font-size: 11px; padding: 4px 10px;
+			border: 1px solid #d1d5db; border-radius: 4px;
+			color: #dc2626; background: #ffffff;
+			cursor: pointer; white-space: nowrap;
+		}
+		.reset-all-btn:hover { background: #fef2f2; border-color: #fca5a5; }
+		.custom-toggles { margin-top: 10px; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+		.custom-toggle-row {
+			display: flex; align-items: center; justify-content: space-between;
+			padding: 4px 0;
+		}
+		.custom-toggle-label { font-size: 12px; color: #111827; }
+		.custom-toggle-row input[type="checkbox"] { cursor: pointer; }
+	</style>
+</head>
+<body>
+	<div class="viewer-root">
+		<header>
+			<h1>ProtoConsent Purpose Definitions</h1>
+			<p class="subtitle">Manage your default consent profile, purposes, and presets</p>
+		</header>
+
+		<div id="status-msg" class="status-msg">Loading configuration...</div>
+
+		<section id="default-profile-section" class="default-profile-section" style="display:none;">
+			<div class="default-profile-row">
+				<div>
+					<div class="default-profile-label">Default profile</div>
+					<div class="default-profile-desc">Applied to sites you haven't configured yet</div>
+				</div>
+				<div class="default-profile-controls">
+					<select id="default-profile-select" class="default-profile-select">
+						<option value="strict">Strict</option>
+						<option value="balanced" selected>Balanced</option>
+						<option value="permissive">Permissive</option>
+						<option value="custom">Custom</option>
+					</select>
+					<button id="reset-all-sites" class="reset-all-btn">Reset all sites</button>
+				</div>
+			</div>
+			<div id="custom-toggles" class="custom-toggles" style="display:none;">
+				<!-- Dynamic toggles injected by JS -->
+			</div>
+		</section>
+
+		<section id="purposes-section" style="display:none;">
+			<h2>Purposes</h2>
+			<div id="purpose-list"></div>
+		</section>
+
+		<section id="presets-section" style="display:none;">
+			<h2>Presets</h2>
+			<div id="preset-list"></div>
+		</section>
+		<footer class="viewer-footer">
+			<span id="viewer-version">ProtoConsent</span>
+			<div class="viewer-footer-links">
+				<a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">GitHub</a>
+				<a href="https://protoconsent.org" target="_blank" rel="noopener noreferrer">Website</a>
+			</div>
+		</footer>
+	</div>
+
+	<script src="purposes-editor.js"></script>
+</body>
+</html>

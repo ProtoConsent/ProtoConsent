@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ProtoConsent</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/protoconsent_icon_32.png">
+</head>
+<body>
+  <div id="popup-root">
+    <header class="pc-header">
+      <div class="pc-site">
+        <div class="pc-site-label">Site</div>
+        <div id="pc-site-domain" class="pc-site-domain">loading...</div>
+      </div>
+      <div class="pc-profile">
+        <label for="pc-profile-select" class="pc-profile-label">Profile</label>
+        <select id="pc-profile-select" class="pc-profile-select">
+          <option value="strict">Strict</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="permissive">Permissive</option>
+          <option value="custom" disabled hidden>Custom</option>
+        </select>
+      </div>
+    </header>
+
+    <main class="pc-main">
+      <div id="pc-purposes-list" class="pc-purposes-list">
+        <!-- Purposes will be injected here by popup.js -->
+      </div>
+    </main>
+
+    <footer class="pc-footer">
+      <div class="pc-footer-text">
+        Changes apply only to this site.
+      </div>
+      <div class="pc-footer-links">
+        <a href="purposes-editor.html" class="pc-footer-link" id="pc-purposes-link">Purposes</a>
+        <a href="https://github.com/ProtoConsent/ProtoConsent" class="pc-footer-link" target="_blank" rel="noopener noreferrer">
+          Learn more
+        </a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
