@@ -1,0 +1,16 @@
+{
+  "protoconsent": "0.1",
+  "purposes": {
+    "functional": { "used": true, "legal_basis": "legitimate_interest", "provider": "ProtoConsent" },
+    "analytics": { "used": false },
+    "ads": { "used": false },
+    "personalization": { "used": false },
+    "third_parties": { "used": false },
+    "advanced_tracking": { "used": false }
+  },
+  "data_handling": {
+    "storage_region": "eu",
+    "international_transfers": false
+  },
+  "rights_url": "https://protoconsent.org/#privacy"
+}
