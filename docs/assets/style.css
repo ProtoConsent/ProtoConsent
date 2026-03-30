@@ -63,17 +63,10 @@ header {
 }
 
 .brand-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  background-color: var(--pc-bg-light);
-  border: 1px solid var(--pc-blue);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  color: var(--pc-blue);
-  font-weight: 600;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  object-fit: contain;
 }
 
 .brand-name {
@@ -97,6 +90,12 @@ main {
   border: 1px solid var(--pc-border);
   padding: 24px 20px 22px;
   margin-bottom: 18px;
+}
+
+.hero-logo {
+  display: block;
+  margin: 0 auto 12px;
+  border-radius: 8px;
 }
 
 .hero-title {
