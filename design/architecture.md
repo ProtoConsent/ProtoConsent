@@ -44,11 +44,26 @@ Three predefined profiles (“Strict”, “Balanced”, “Permissive”) map d
 
 ## 5. Security and privacy by design (non-normative)
 
-All configuration is stored locally; the extension does not rely on remote servers, which reduces the attack surface and avoids creating central points where preferences would accumulate. The extension requests only the permissions it needs and keeps a clear separation between UI and enforcement logic.
+All configuration is stored locally; the extension does not rely on remote servers, which reduces the attack surface and avoids creating central points where preferences would accumulate. The extension requests only the permissions it needs (see §6 for the full rationale) and keeps a clear separation between UI and enforcement logic.
 
 Enforcement is based on built‑in browser APIs (declarativeNetRequest), so ProtoConsent benefits from the browser’s own sandboxing and update mechanisms. The data model is intentionally small, which makes edge cases easier to reason about. Additional safeguards (input validation, automated tests, storage hardening) can be added over time without changing the core design.
 
-## 6. Extensibility
+## 6. Permissions rationale
+
+The extension requests only the permissions it needs. Each one has a specific purpose:
+
+| Permission | Why it is needed |
+|---|---|
+| `tabs` | Read the active tab's URL so the popup can identify which domain the user is managing and apply per‑site rules. |
+| `storage` | Persist user rules, profiles, and preferences locally in the browser's extension storage. No remote storage is used. |
+| `scripting` | Register the GPC content script (`gpc-signal.js`) into the MAIN world at runtime via `chrome.scripting.registerContentScripts`, so that `navigator.globalPrivacyControl` is set only on pages where the user's preferences require it. |
+| `declarativeNetRequest` | Create and manage dynamic blocking rules that enforce the user's purpose choices by blocking third‑party requests associated with denied purposes. Also used for conditional `Sec-GPC: 1` header injection via `modifyHeaders` rules. |
+| `declarativeNetRequestFeedback` | Query which DNR rules matched on the current tab (`getMatchedRules`) so the popup can display how many requests were blocked and how many received the GPC signal. This is a read‑only, diagnostic permission — it does not change enforcement behaviour. |
+| `host_permissions: <all_urls>` | Required by `declarativeNetRequest` to apply blocking and header rules across all domains, and by `scripting` to inject the GPC content script on any site. Without broad host access, per‑site enforcement would not work. |
+
+The content script declared in the manifest (`content-script.js`) runs in the ISOLATED world and acts as a message bridge between the page‑level SDK and the extension's background. It does not access or modify page content.
+
+## 7. Extensibility
 
 New purposes can be added as fields in the site rule without breaking existing preferences. Support for more browsers reuses the same concepts (popup, background, local storage, enforcement) and adapts only platform‑specific details.
 

@@ -1,5 +1,6 @@
 {
   "functional": {
+    "order": 1,
     "label": "Functional (service)",
     "short": "F",
     "consent_commons_keys": [
@@ -9,6 +10,7 @@
     "description": "Everything strictly necessary to provide the service (login, basic UX, billing, support)."
   },
   "analytics": {
+    "order": 2,
     "label": "Analytics",
     "short": "An",
     "consent_commons_keys": [
@@ -17,6 +19,7 @@
     "description": "Measurement, statistics and usage analytics, even when not directly linked to marketing."
   },
   "ads": {
+    "order": 3,
     "label": "Ads / Marketing",
     "short": "Ad",
     "consent_commons_keys": [
@@ -27,6 +30,7 @@
     "description": "Ads/advertising, remarketing and affiliation campaigns; may include behavioural profiling."
   },
   "personalization": {
+    "order": 4,
     "label": "Personalization / Profiling",
     "short": "P",
     "consent_commons_keys": [
@@ -35,6 +39,7 @@
     "description": "Content/UX personalization, recommendations, profiling and behavioural A/B testing."
   },
   "third_parties": {
+    "order": 5,
     "label": "Third-party sharing",
     "short": "3P",
     "consent_commons_keys": [
@@ -45,6 +50,7 @@
     "description": "Sharing or combining data with third parties, partners or group companies beyond the core service."
   },
   "advanced_tracking": {
+    "order": 6,
     "label": "Advanced tracking / fingerprinting",
     "short": "T",
     "consent_commons_keys": [

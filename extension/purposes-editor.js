@@ -36,8 +36,9 @@ function initDefaultProfile(purposes) {
 	const resetBtn = document.getElementById('reset-all-sites');
 	const togglesContainer = document.getElementById('custom-toggles');
 
-	// Build dynamic toggle rows from purposes config
-	const purposeKeys = Object.keys(purposes);
+	// Build dynamic toggle rows from purposes config, sorted by order
+	const purposeKeys = Object.keys(purposes)
+		.sort((a, b) => (purposes[a].order || 0) - (purposes[b].order || 0));
 	const checkboxes = {};
 	for (const key of purposeKeys) {
 		const row = document.createElement('div');
@@ -143,7 +144,10 @@ function renderPurposes(purposes) {
 	const container = document.getElementById('purpose-list');
 	const section = document.getElementById('purposes-section');
 
-	for (const [key, p] of Object.entries(purposes)) {
+	const purposeEntries = Object.entries(purposes)
+		.sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+
+	for (const [key, p] of purposeEntries) {
 		const card = document.createElement('div');
 		card.className = 'purpose-card';
 
@@ -225,18 +229,20 @@ function renderPresets(presets, purposes) {
 
 	const gpcDesc = document.createElement('span');
 	gpcDesc.className = 'gpc-info-desc';
-	gpcDesc.textContent = '— privacy signal sent to websites when these purposes are denied';
+	gpcDesc.textContent = '— privacy signal sent to websites when any of these purposes are denied';
 	gpcInfo.appendChild(gpcDesc);
 
 	gpcCard.appendChild(gpcInfo);
 
 	const gpcPills = document.createElement('div');
 	gpcPills.className = 'preset-purposes';
-	for (const [pKey, pDef] of Object.entries(purposes)) {
+	const gpcEntries = Object.entries(purposes)
+		.sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+	for (const [pKey, pDef] of gpcEntries) {
 		if (!pDef.triggers_gpc) continue;
 		const pill = document.createElement('span');
-		pill.className = 'preset-pill allowed';
-		pill.textContent = pDef.short + ' \u2713';
+		pill.className = 'preset-pill gpc';
+		pill.textContent = pDef.short + ' \u2717';
 		gpcPills.appendChild(pill);
 	}
 	gpcCard.appendChild(gpcPills);
