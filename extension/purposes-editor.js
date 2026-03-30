@@ -211,6 +211,37 @@ function renderPresets(presets, purposes) {
 	}
 	section.style.display = '';
 
+	// GPC signal info row — read-only, shows which purposes trigger Sec-GPC
+	const gpcCard = document.createElement('div');
+	gpcCard.className = 'preset-card';
+
+	const gpcInfo = document.createElement('div');
+	gpcInfo.className = 'gpc-info-row';
+
+	const gpcName = document.createElement('span');
+	gpcName.className = 'gpc-info-name';
+	gpcName.textContent = 'GPC (Global Privacy Control)';
+	gpcInfo.appendChild(gpcName);
+
+	const gpcDesc = document.createElement('span');
+	gpcDesc.className = 'gpc-info-desc';
+	gpcDesc.textContent = '— privacy signal sent to websites when these purposes are denied';
+	gpcInfo.appendChild(gpcDesc);
+
+	gpcCard.appendChild(gpcInfo);
+
+	const gpcPills = document.createElement('div');
+	gpcPills.className = 'preset-purposes';
+	for (const [pKey, pDef] of Object.entries(purposes)) {
+		if (!pDef.triggers_gpc) continue;
+		const pill = document.createElement('span');
+		pill.className = 'preset-pill allowed';
+		pill.textContent = pDef.short + ' \u2713';
+		gpcPills.appendChild(pill);
+	}
+	gpcCard.appendChild(gpcPills);
+	container.appendChild(gpcCard);
+
 	// Always render custom preset card (updated live by initDefaultProfile)
 	const customCard = document.createElement('div');
 	customCard.className = 'preset-card';
