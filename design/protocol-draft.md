@@ -75,7 +75,7 @@ Each domain has exactly one rule entry. Purpose values are booleans: `true` = al
 
 ### 3.1 Architecture
 
-```
+```text
  Page context                Extension context
  ┌──────────┐  postMessage  ┌────────────────┐    chrome.storage   ┌─────────┐
  │  SDK     │ ←──────────→  │ Content script │ ←────────────────→  │ Storage │
@@ -146,13 +146,14 @@ Status: not yet created. This is the next planned step for protocol formalizatio
 | Purposes data model (`purposes.json`) | Implemented (v0.1.0) |
 | Presets data model (`presets.json`) | Implemented (v0.1.0) |
 | Per-domain rules in storage | Implemented (v0.1.0) |
-| Extension enforcement (DNR) | Implemented (v0.1.0) |
-| Extension popup UI | Implemented (v0.1.0) |
+| Extension enforcement (DNR) | Implemented (v0.1.1 — global + per-site, domain-anchored) |
+| Extension popup UI | Implemented (v0.1.1 — global profile, custom detection, safe storage) |
 | SDK skeleton (API surface defined) | Implemented (v0.1.0) |
 | SDK messaging (actual communication) | Implemented (v0.1.0) |
 | Content script bridge | Implemented (v0.1.0) |
-| JSON Schemas | Planned |
-| Demo sites using SDK | Planned |
+| TypeScript type declarations | Implemented (v0.1.1) |
+| JSON Schemas | Planned (protocol formalization) |
+| Demo sites using SDK | protoconsent.org live test (v0.1.0); additional demos planned |
 
 ## 7. Design Principles
 

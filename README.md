@@ -10,15 +10,13 @@
   <img src="https://img.shields.io/badge/status-alpha-blue" alt="status: alpha">
 </p>
 
-ProtoConsent is a browser extension to control how websites may use your data, expressed in terms of purposes from inside your browser (for example functional, analytics, ads, personalisation, third‑party services, and advanced tracking).
+ProtoConsent is a browser extension that lets you control how websites may use your data — expressed in terms of purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking) rather than specific trackers or domains.
 
-No central server, no tracking, no sharing of personal data — everything stays in your browser by default.
-
-Instead of focusing on specific trackers or ad slots, ProtoConsent lets you express preferences in terms of data-use purposes and enforces those preferences at the network level, per site, from inside your browser.
+No central server, no tracking, no sharing of personal data. Preferences are enforced at the network level, per site, entirely from your browser.
 
 **Project website:** https://www.protoconsent.org
 
-> Status: early alpha, meant for exploration and feedback, not production use yet (baseline v0.1.0). Visuals and logo are provisional and will likely change as the project matures.
+> Status: early alpha (v0.1.1), meant for exploration and feedback, not production use yet.
 
 ## What is ProtoConsent?
 
@@ -42,13 +40,14 @@ In later versions, websites that choose to respect ProtoConsent may be able to r
 
 ## Project status
 
-ProtoConsent is currently in early design and prototyping. A first Chromium-based extension already exists with per-site profiles, purpose toggles, and basic blocking of common analytics and ads resources.
+ProtoConsent is in early alpha (v0.1.1), meant for exploration and feedback, not production use yet. The current Chromium extension provides:
 
-ProtoConsent is in early alpha, meant for exploration and feedback, not production use yet (baseline v0.1.0). The current milestone is a minimal browser extension that provides:
-
-- Local settings storage in the browser.
-- Per-site profiles and purpose toggles in a browser action popup.
-- Blocking of common tracking and analytics resources according to those toggles.
+- Global default profile with per-site overrides via a browser action popup.
+- Purpose toggles for six categories: functional, analytics, ads, personalisation, third-party services, and advanced tracking.
+- Network-level enforcement using declarative net request rules (150 curated domains from public blocklists).
+- Content script bridge and JavaScript SDK for web pages to query user preferences.
+- TypeScript type declarations for SDK consumers.
+- Live SDK test on [protoconsent.org](https://www.protoconsent.org).
 
 For a more detailed roadmap and planned features, see [product-overview.md](design/product-overview.md). Expect the code and documentation to change quickly at this stage.
 
