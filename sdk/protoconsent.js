@@ -1,7 +1,7 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: MIT
 
-// ProtoConsent SDK v0.1.0-alpha
+// ProtoConsent SDK v0.1.1-alpha
 //
 // Purpose-signalling SDK for web pages to read user consent preferences
 // from the ProtoConsent browser extension.
@@ -21,7 +21,7 @@
 // via the content script bridge. Without it, all queries resolve to null.
 // See design/protocol-draft.md for the protocol specification.
 
-const VERSION = '0.1.0-alpha';
+const VERSION = '0.1.1-alpha';
 
 const PURPOSES = Object.freeze([
 	'functional',
