@@ -128,6 +128,31 @@ The SDK exposes a minimal read-only API for web pages:
 
 Reference implementation: `sdk/protoconsent.js` (MIT licensed)
 
+### Quick example
+
+```html
+<script type="module">
+  import ProtoConsent from 'protoconsent.js';
+
+  // Check a single purpose — returns true, false, or null (no extension)
+  const allowed = await ProtoConsent.get('analytics');
+  if (allowed) {
+    // user allows analytics on this site
+  }
+
+  // Read all purposes at once
+  const all = await ProtoConsent.getAll();
+  // → { functional: true, analytics: false, ads: false, personalization: false,
+  //     third_parties: false, advanced_tracking: false }
+
+  // Read the active profile
+  const profile = await ProtoConsent.getProfile();
+  // → "strict", "balanced", "permissive", or null
+</script>
+```
+
+Every method returns a `Promise` that resolves to `null` when the extension is not installed — no errors, no retries, no side effects.
+
 ## 5. JSON Schema Formalization (Planned)
 
 Formal JSON Schemas are planned for the configuration files:

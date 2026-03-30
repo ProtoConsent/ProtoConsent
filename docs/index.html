@@ -222,6 +222,31 @@
           </article>
         </section>
 
+        <!-- SDK INTEGRATION EXAMPLE -->
+        <section class="card card-spaced">
+          <div class="card-title">Integrate the SDK</div>
+          <h3>Read user preferences in 3 lines</h3>
+          <p>
+            The optional JavaScript SDK (MIT licensed) lets your site query the user's consent choices. If the extension is installed, you get a direct answer. If not, every call returns <code>null</code> — no errors, no side effects.
+          </p>
+          <pre class="code-block"><span class="code-comment">// Load the SDK (ES module, MIT licensed)</span>
+import ProtoConsent from 'protoconsent.js';
+
+<span class="code-comment">// Check a single purpose</span>
+const allowed = await ProtoConsent.get('analytics');
+if (allowed) {
+  <span class="code-comment">// user allows analytics on this site — load your scripts</span>
+}
+
+<span class="code-comment">// Or read all purposes at once</span>
+const all = await ProtoConsent.getAll();
+<span class="code-comment">// { functional: true, analytics: false, ads: false, ... }</span></pre>
+          <p>
+            Full API: <code>get(purpose)</code>, <code>getAll()</code>, <code>getProfile()</code>.
+            See the <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/protocol-draft.md#4-sdk-api-surface" target="_blank" rel="noopener noreferrer">protocol spec</a> and <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/sdk/protoconsent.js" target="_blank" rel="noopener noreferrer">SDK source</a>.
+          </p>
+        </section>
+
         <!-- LIVE SDK TEST -->
         <section class="card card-spaced sdk-demo-card" id="live-test">
           <div class="card-title">Live test</div>

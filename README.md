@@ -93,6 +93,7 @@ ProtoConsent comes with a small set of public documents that describe the projec
 - **Icons and layers** – visual representation of profiles, purposes, and UI layers: see [icons-and-layers.md](design/icons-and-layers.md).
 - **How to test the extension** – practical steps to install the extension in developer mode and try it on real sites: see [testing-guide.md](design/testing-guide.md).
 - **Purpose-signalling protocol** – data model, communication mechanism, and SDK API surface: see [protocol-draft.md](design/protocol-draft.md).
+- **SDK quick start** – import `sdk/protoconsent.js` (MIT) and call `get('analytics')`. Returns `true`, `false`, or `null` (no extension). See the [quick example](design/protocol-draft.md#quick-example).
 
 ## Use of Generative AI
 
