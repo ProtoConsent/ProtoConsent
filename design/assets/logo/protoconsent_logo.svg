@@ -4,7 +4,7 @@
   CC BY-SA 4.0 — ProtoConsent contributors
 -->
 <svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-  <rect width="256" height="256" fill="#dbeafe"/>
+  <rect width="256" height="256" rx="51" ry="51" fill="#dbeafe"/>
 
   <g>
     <!-- Slider 1: ~80% -->
