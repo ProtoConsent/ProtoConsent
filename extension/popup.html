@@ -12,47 +12,60 @@
   <link rel="icon" type="image/png" sizes="32x32" href="icons/protoconsent_icon_32.png">
 </head>
 <body>
-  <div id="popup-root">
-    <header class="pc-header">
-      <div class="pc-site">
-        <div class="pc-site-label">Site</div>
-        <div id="pc-site-domain" class="pc-site-domain">loading...</div>
-      </div>
-      <div class="pc-profile">
-        <label for="pc-profile-select" class="pc-profile-label">Profile</label>
-        <select id="pc-profile-select" class="pc-profile-select">
-          <option value="strict">Strict</option>
-          <option value="balanced" selected>Balanced</option>
-          <option value="permissive">Permissive</option>
-          <option value="custom" disabled hidden>Custom</option>
-        </select>
-      </div>
-    </header>
+  <div id="popup-layout">
+    <!-- Side panel: site declaration (hidden until data loads) -->
+    <aside id="pc-side-panel" class="pc-side-panel">
+      <div id="pc-site-declaration" class="pc-site-declaration"></div>
+    </aside>
 
-    <div class="pc-header-stat">
-      <span id="pc-blocked-count" class="pc-blocked-count">loading...</span>
-      <span id="pc-blocked-chevron" class="pc-blocked-chevron"></span>
+    <!-- Tab to toggle side panel (hidden until data loads) -->
+    <button id="pc-side-tab" class="pc-side-tab" title="Site declaration">
+      <span class="pc-side-tab-icon">ℹ</span>
+      <span class="pc-side-tab-chevron">◂</span>
+    </button>
+
+    <div id="popup-root">
+      <header class="pc-header">
+        <div class="pc-site">
+          <div class="pc-site-label">Site</div>
+          <div id="pc-site-domain" class="pc-site-domain">loading...</div>
+        </div>
+        <div class="pc-profile">
+          <label for="pc-profile-select" class="pc-profile-label">Profile</label>
+          <select id="pc-profile-select" class="pc-profile-select">
+            <option value="strict">Strict</option>
+            <option value="balanced" selected>Balanced</option>
+            <option value="permissive">Permissive</option>
+            <option value="custom" disabled hidden>Custom</option>
+          </select>
+        </div>
+      </header>
+
+      <div class="pc-header-stat">
+        <span id="pc-blocked-count" class="pc-blocked-count">loading...</span>
+        <span id="pc-blocked-chevron" class="pc-blocked-chevron"></span>
+      </div>
+      <div id="pc-blocked-detail" class="pc-blocked-detail is-collapsed"></div>
+
+      <main class="pc-main">
+        <div id="pc-purposes-list" class="pc-purposes-list">
+          <!-- Purposes will be injected here by popup.js -->
+        </div>
+      </main>
+
+      <footer class="pc-footer">
+        <div class="pc-footer-text">
+          Changes apply only to this site.
+        </div>
+        <div class="pc-footer-links">
+          <a href="#" class="pc-footer-link" id="pc-toggle-descriptions">Show details</a>
+          <a href="purposes-editor.html" class="pc-footer-link" id="pc-purposes-link">Purposes</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent" class="pc-footer-link" target="_blank" rel="noopener noreferrer">
+            Learn more
+          </a>
+        </div>
+      </footer>
     </div>
-    <div id="pc-blocked-detail" class="pc-blocked-detail is-collapsed"></div>
-
-    <main class="pc-main">
-      <div id="pc-purposes-list" class="pc-purposes-list">
-        <!-- Purposes will be injected here by popup.js -->
-      </div>
-    </main>
-
-    <footer class="pc-footer">
-      <div class="pc-footer-text">
-        Changes apply only to this site.
-      </div>
-      <div class="pc-footer-links">
-        <a href="#" class="pc-footer-link" id="pc-toggle-descriptions">Show details</a>
-        <a href="purposes-editor.html" class="pc-footer-link" id="pc-purposes-link">Purposes</a>
-        <a href="https://github.com/ProtoConsent/ProtoConsent" class="pc-footer-link" target="_blank" rel="noopener noreferrer">
-          Learn more
-        </a>
-      </div>
-    </footer>
   </div>
 
   <script src="popup.js"></script>
