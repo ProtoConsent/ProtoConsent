@@ -6,19 +6,28 @@
 // Purpose-signalling SDK for web pages to read user consent preferences
 // from the ProtoConsent browser extension.
 //
-// Usage (ES module):
-//   import ProtoConsent from './protoconsent.js';
-//   const allowed = await ProtoConsent.get('analytics');
+// Quick start:
 //
-// Usage (script tag):
-//   <script type="module" src="protoconsent.js"></script>
-//   <script type="module">
-//     const allowed = await window.ProtoConsent.get('analytics');
-//   </script>
+//   import ProtoConsent from './protoconsent.js';
+//
+//   // Check whether analytics is allowed on this site
+//   const allowed = await ProtoConsent.get('analytics');
+//   if (allowed) {
+//     // load analytics scripts
+//   }
+//
+//   // Read all purpose states at once
+//   const all = await ProtoConsent.getAll();
+//   // → { functional: true, analytics: false, ads: false, ... }
+//
+//   // Read the active profile
+//   const profile = await ProtoConsent.getProfile();
+//   // → "strict", "balanced", "permissive", or null
+//
+// Every method returns a Promise. If the extension is not installed,
+// all calls resolve to null — no errors, no side effects.
 //
 // Status: alpha — API surface defined, messaging implemented.
-// When the ProtoConsent extension is installed, queries are answered
-// via the content script bridge. Without it, all queries resolve to null.
 // See design/protocol-draft.md for the protocol specification.
 
 const VERSION = '0.1.1-alpha';
