@@ -153,7 +153,37 @@ Reference implementation: `sdk/protoconsent.js` (MIT licensed)
 
 Every method returns a `Promise` that resolves to `null` when the extension is not installed — no errors, no retries, no side effects.
 
-## 5. JSON Schema Formalization (Planned)
+## 5. Site Declaration (`.well-known/protoconsent.json`)
+
+Websites can optionally declare their data-processing purposes by serving a static JSON file at `/.well-known/protoconsent.json`. This is a **voluntary, informational declaration** — it does not change how the extension enforces user preferences.
+
+The extension reads the file when the user opens the popup, caches it locally with a 24-hour TTL, and displays the site's claims alongside the user's own choices.
+
+### Minimal example
+
+```json
+{
+  "protoconsent": "0.1",
+  "purposes": {
+    "functional": { "used": true, "legal_basis": "legitimate_interest" },
+    "analytics": { "used": true, "legal_basis": "consent", "provider": "Plausible" }
+  }
+}
+```
+
+### Three-state model
+
+- `"used": true` — the site declares it uses this purpose.
+- `"used": false` — the site explicitly declares it does **not** use this purpose.
+- **Key absent** — the site makes no claim (not declared).
+
+### Complementary to the SDK
+
+The SDK enables **dynamic interaction** (page queries extension via JavaScript). The `.well-known` file enables **static declaration** (extension reads site metadata). A site can use one, both, or neither.
+
+Full specification: [`design/well-known-spec.md`](well-known-spec.md)
+
+## 6. JSON Schema Formalization (Planned)
 
 Formal JSON Schemas are planned for the configuration files:
 
@@ -164,7 +194,7 @@ Formal JSON Schemas are planned for the configuration files:
 
 Status: not yet created. This is the next planned step for protocol formalization.
 
-## 6. Implementation Status
+## 7. Implementation Status
 
 | Component | Status |
 |-----------|--------|
@@ -178,10 +208,11 @@ Status: not yet created. This is the next planned step for protocol formalizatio
 | Content script bridge | Implemented (v0.1.0) |
 | TypeScript type declarations | Implemented (v0.1.0) |
 | Conditional GPC header (Sec-GPC) | Implemented — per-site, driven by `triggers_gpc` in purposes.json |
+| Site declaration (`.well-known`) | Implemented — fetch with 24h cache, popup display |
 | JSON Schemas | Planned (protocol formalization) |
 | Demo sites using SDK | protoconsent.org live test (v0.1.0); additional demos planned |
 
-## 7. Design Principles
+## 8. Design Principles
 
 - **No central server:** all data stays local to the browser.
 - **Privacy by default:** the SDK reveals only purpose-level allow/deny per domain, never user identity or cross-site state.

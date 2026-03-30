@@ -3,6 +3,7 @@
     "order": 1,
     "label": "Functional (service)",
     "short": "F",
+    "short_label": "Functional",
     "consent_commons_keys": [
       "service_management",
       "other_data"
@@ -13,6 +14,7 @@
     "order": 2,
     "label": "Analytics",
     "short": "An",
+    "short_label": "Analytics",
     "consent_commons_keys": [
       "profiling_analytics"
     ],
@@ -22,6 +24,7 @@
     "order": 3,
     "label": "Ads / Marketing",
     "short": "Ad",
+    "short_label": "Ads",
     "consent_commons_keys": [
       "marketing_purposes",
       "profiling_analytics"
@@ -33,6 +36,7 @@
     "order": 4,
     "label": "Personalization / Profiling",
     "short": "P",
+    "short_label": "Personal",
     "consent_commons_keys": [
       "profiling_analytics"
     ],
@@ -42,6 +46,7 @@
     "order": 5,
     "label": "Third-party sharing",
     "short": "3P",
+    "short_label": "3rd party",
     "consent_commons_keys": [
       "third_party_access",
       "third_party_sharing_advertising"
@@ -53,6 +58,7 @@
     "order": 6,
     "label": "Advanced tracking / fingerprinting",
     "short": "T",
+    "short_label": "Tracking",
     "consent_commons_keys": [
       "profiling_analytics",
       "other_data"

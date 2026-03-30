@@ -404,6 +404,46 @@ footer {
   flex-shrink: 0;
 }
 
+/* Collapsible card (details/summary) */
+details.card {
+  padding: 0;
+}
+
+details.card > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 14px 16px;
+}
+
+details.card > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.card > summary::after {
+  content: "▸";
+  float: right;
+  color: var(--pc-muted);
+  font-size: 12px;
+}
+
+details.card[open] > summary::after {
+  content: "▾";
+}
+
+details.card[open] > summary {
+  border-bottom: 1px solid var(--pc-border);
+  margin-bottom: 0;
+}
+
+details.card > p,
+details.card > ul {
+  padding: 0 16px;
+}
+
+details.card > p:first-of-type {
+  margin-top: 12px;
+}
+
 /* Article page (why.html) */
 
 .article {
