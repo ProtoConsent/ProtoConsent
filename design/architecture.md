@@ -6,7 +6,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 ProtoConsent is a client‑side system that adds purpose‑based privacy controls to the browser. It is implemented as a browser extension that stores all user rules locally and uses standard browser capabilities to enforce them. There is no central server: everything happens on the user’s device.
 
-The extension provides a popup interface to manage profiles and purposes per site, and a background component that translates those choices into declarative network rules. An optional JavaScript SDK and an open purpose‑signalling protocol are planned so that websites can read and react to the user’s choices.
+The extension provides a popup interface to manage profiles and purposes per site, and a background component that translates those choices into declarative network rules. A JavaScript SDK and a content script bridge allow websites to read and react to the user’s choices via a local purpose‑signalling protocol.
 
 ## 2. Components
 
@@ -18,7 +18,7 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 **Enforcement (declarativeNetRequest)** – The background component maintains rules that match requests associated with specific purposes (analytics, ads, etc.) and blocks them when the corresponding purpose is disabled. The core idea: express user intent as purposes, let the browser enforce it.
 
-**protoconsent.js SDK (planned)** – A small, optional JavaScript library for web pages to read the user’s ProtoConsent preferences (e.g. whether analytics is allowed). The extension works without it; the SDK is for sites that want to adapt their behaviour to the user’s choices.
+**protoconsent.js SDK** – A small, optional JavaScript library for web pages to read the user’s ProtoConsent preferences (e.g. whether analytics is allowed) via the content script bridge. The extension works without it; the SDK is for sites that want to adapt their behaviour to the user’s choices. TypeScript type declarations are also provided (`sdk/protoconsent.d.ts`).
 
 ![ProtoConsent technical diagram](assets/diagrams/protoconsent-technical-diagram.png)
 

@@ -19,13 +19,13 @@ This document explains how to try the current version of ProtoConsent in a brows
   cd ProtoConsent
   ```
 
-  In this folder you should see files like `manifest.json`, `background.js`, `popup.html`, `popup.js`, `popup.css` and the `config/` and `icons/` directories.
+  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `popup.html`, `popup.js`, `popup.css`, `config/` and `icons/`) and the `sdk/` directory.
 
 2.2. **Load the extension in your browser:**
 
 - Open the extensions page (for example `chrome://extensions/` or `edge://extensions/`).
 - Enable **Developer mode**.
-- Click **Load unpacked** and select the folder that contains `manifest.json` (the project root you just cloned).
+- Click **Load unpacked** and select the `extension/` folder inside the cloned repository (the one that contains `manifest.json`).
 - Confirm that an extension called **ProtoConsent** appears in the extensions list and that it is enabled. Pin it in the toolbar if your browser supports pinning.
 
 ## 3. Basic Test: Per‑Site Profile
@@ -118,7 +118,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** See how Analytics controls measurement and usage tracking.
 
-- Reference domains: `google-analytics.com`, `www.google-analytics.com`, `analytics.google.com`, `stats.g.doubleclick.net`, `cdn.segment.com`.
+- Reference domains (examples — full list in `extension/config/blocklists.json`): `google-analytics.com`, `clarity.ms`, `scorecardresearch.com`, `chartbeat.com`, `fullstory.com`.
 
 - Steps:
   1. Visit a site that uses Google Analytics or Segment.
@@ -131,7 +131,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Observe the impact on advertising traffic.
 
-- Reference domains: `doubleclick.net`, `pagead2.googlesyndication.com`, `securepubads.g.doubleclick.net`, `adservice.google.com`, `ads.yahoo.com`.
+- Reference domains (examples — full list in `extension/config/blocklists.json`): `doubleclick.net`, `googlesyndication.com`, `adservice.google.com`, `criteo.com`, `taboola.com`.
 
 - Steps:
   1. Use a site with visible ads (for example, a major news site).
@@ -143,7 +143,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Separate basic ads from more advanced personalization or retargeting.
 
-- Reference domains: `ad.doubleclick.net`, `cm.g.doubleclick.net`, `secure.adnxs.com`, `idsync.rlcdn.com`, `match.adsrvr.org`.
+- Reference domains (examples — full list in `extension/config/blocklists.json`): `ad.doubleclick.net`, `demdex.net`, `bluekai.com`, `tapad.com`, `liveramp.com`.
 
 - Steps:
   1. On a site with banners and personalised or retargeted ads, keep **Ads / Marketing** allowed but set **Personalization / Profiling** to *Blocked*.
@@ -155,7 +155,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Highlight third‑party data sharing and integrations.
 
-- Reference domains: `connect.facebook.net`, `static.hotjar.com`, `script.hotjar.com`, `analytics.twitter.com`, `bat.bing.com`.
+- Reference domains (examples — full list in `extension/config/blocklists.json`): `connect.facebook.net`, `hotjar.com`, `analytics.twitter.com`, `bat.bing.com`, `hubspot.com`.
 
 - Steps:
   1. Choose a site that embeds social widgets, Hotjar or Microsoft/Bing tracking.
@@ -168,7 +168,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Target more advanced monitoring or experimentation tools.
 
-- Reference domains: `js-agent.newrelic.com`, `bam.nr-data.net`, `cdn.perfdrive.com`, `cdn.heapanalytics.com`, `cdn.optimizely.com`.
+- Reference domains (examples — full list in `extension/config/blocklists.json`): `js-agent.newrelic.com`, `cdn.optimizely.com`, `fpnpmcdn.net`, `datadome.co`, `arkoselabs.com`.
 
 - Steps:
   1. Visit a site that uses New Relic, Heap, Optimizely or similar tooling.
@@ -192,7 +192,7 @@ This test verifies that a web page can query the user's consent preferences thro
 
 Open DevTools (F12) and go to the **Console** tab. Paste the following helper function:
 
-```
+```js
 function testQuery(action, purpose) {
   const id = crypto.randomUUID();
   return new Promise((resolve) => {
@@ -211,17 +211,17 @@ function testQuery(action, purpose) {
 
 Then run these queries one at a time:
 
-```
+```js
 await testQuery('get', 'analytics')
 ```
 
 You can replace `'analytics'` with any valid purpose key: `functional`, `analytics`, `ads`, `personalization`, `third_parties`, `advanced_tracking`.
 
-```
+```js
 await testQuery('getAll')
 ```
 
-```
+```js
 await testQuery('getProfile')
 ```
 
@@ -237,13 +237,13 @@ On a site with no explicit configuration, the results reflect the default profil
 
 These queries should be rejected by the content script:
 
-```
+```js
 await testQuery('delete', null)
 ```
 
 Expected: `TIMEOUT` (invalid action, ignored by the content script).
 
-```
+```js
 await testQuery('get', 'malware')
 ```
 
