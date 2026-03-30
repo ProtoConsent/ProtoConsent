@@ -221,6 +221,27 @@ body {
   border: 1px solid #ffc2c2;
 }
 
+/* Blocked count stat */
+.pc-header-stat {
+  display: flex;
+  justify-content: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #eff6ff;
+  font-size: 12px;
+}
+
+.pc-blocked-count {
+  color: #6b7280;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.pc-blocked-count.has-blocked {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
 /* Collapsed description state */
 .pc-purpose-description.is-collapsed {
   display: none;

@@ -7,14 +7,7 @@
 // For debugging: set to true to log rule saves and messages
 const DEBUG_RULES = false;
 
-const PURPOSES_TO_SHOW = [
-  "functional",
-  "analytics",
-  "ads",
-  "personalization",
-  "third_parties",
-  "advanced_tracking"
-];
+let PURPOSES_TO_SHOW = [];
 
 let purposesConfig = {};
 let presetsConfig = {};
@@ -34,9 +27,106 @@ async function initPopup() {
     initProfileSelect();
     initStateForDomain();
     renderPurposesList();
+    await displayBlockedCount();
   } catch (err) {
     console.error("ProtoConsent popup error:", err);
     showPopupError("Could not load ProtoConsent settings for this site.");
+  }
+}
+
+/**
+ * Get the count of matched DNR rules for the current tab.
+ * Calls chrome.declarativeNetRequest.getMatchedRules({ tabId })
+ * @returns {Promise<number>} Count of matched rules, or 0 if error/no extension API
+ */
+async function getBlockedRulesCount() {
+  try {
+    if (!chrome.declarativeNetRequest || !chrome.tabs) {
+      return { blocked: 0, gpc: 0 };
+    }
+
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0 };
+
+    const tabId = tabs[0].id;
+
+    const [matched, dynamicRules] = await Promise.all([
+      chrome.declarativeNetRequest.getMatchedRules({ tabId }),
+      chrome.declarativeNetRequest.getDynamicRules(),
+    ]);
+
+    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0 };
+
+    // Classify rule IDs by action type
+    const blockRuleIds = new Set();
+    const headerRuleIds = new Set();
+    for (const rule of dynamicRules) {
+      if (rule.action.type === "block") {
+        blockRuleIds.add(rule.id);
+      } else if (rule.action.type === "modifyHeaders") {
+        headerRuleIds.add(rule.id);
+      }
+    }
+
+    let blocked = 0;
+    let gpc = 0;
+    for (const info of matched.rulesMatchedInfo) {
+      if (blockRuleIds.has(info.rule.ruleId)) {
+        blocked++;
+      } else if (headerRuleIds.has(info.rule.ruleId)) {
+        gpc++;
+      }
+    }
+
+    if (DEBUG_RULES) {
+      console.debug(`ProtoConsent: ${blocked} blocked, ${gpc} GPC for tab ${tabId}`);
+      console.debug("ProtoConsent: all matched rules:", matched.rulesMatchedInfo);
+      console.debug("ProtoConsent: dynamic block rule IDs:", [...blockRuleIds]);
+      console.debug("ProtoConsent: dynamic header rule IDs:", [...headerRuleIds]);
+      // Show debug panel in popup
+      const dbg = document.createElement("pre");
+      dbg.style.cssText = "font-size:9px;max-height:150px;overflow:auto;background:#f0f0f0;padding:4px;margin:4px;";
+      dbg.textContent = "Block IDs: " + [...blockRuleIds].join(",") +
+        "\nHeader IDs: " + [...headerRuleIds].join(",") +
+        "\nMatches:\n" + matched.rulesMatchedInfo.map(m =>
+          "  rule " + m.rule.ruleId + " @ " + new Date(m.timeStamp).toISOString()
+        ).join("\n");
+      document.getElementById("popup-root").appendChild(dbg);
+    }
+
+    return { blocked, gpc };
+  } catch (err) {
+    console.error("ProtoConsent: error fetching matched rules count:", err);
+    return { blocked: 0, gpc: 0 };
+  }
+}
+
+/**
+ * Fetch and display the blocked rules count on the popup.
+ */
+async function displayBlockedCount() {
+  const countEl = document.getElementById("pc-blocked-count");
+  if (!countEl) return;
+
+  try {
+    const { blocked, gpc } = await getBlockedRulesCount();
+
+    const parts = [];
+    if (blocked > 0) parts.push(blocked + " blocked");
+    if (gpc > 0) parts.push(gpc + " GPC signals sent");
+
+    countEl.textContent = parts.length > 0
+      ? parts.join(" · ")
+      : "No requests blocked";
+
+    if (blocked > 0) {
+      countEl.classList.add("has-blocked");
+    } else {
+      countEl.classList.remove("has-blocked");
+    }
+  } catch (err) {
+    console.error("ProtoConsent: error displaying blocked count:", err);
+    countEl.textContent = "? requests blocked";
   }
 }
 
@@ -64,6 +154,9 @@ async function loadConfigs() {
 
   purposesConfig = await purposesRes.json();
   presetsConfig = await presetsRes.json();
+
+  // Dynamically derive PURPOSES_TO_SHOW from config keys
+  PURPOSES_TO_SHOW = Object.keys(purposesConfig);
 }
 
 // Load the user's default profile from storage
@@ -434,10 +527,15 @@ function saveCurrentDomainRulesSafe() {
 function notifyBackgroundRulesUpdated() {
   if (!chrome.runtime || !chrome.runtime.sendMessage) return;
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_RULES_UPDATED" }, () => {
-    // ignore runtime errors (e.g. background sleeping), but log them for debugging
     const err = chrome.runtime.lastError;
     if (err && DEBUG_RULES) {
       console.debug("ProtoConsent: background may be sleeping:", err.message);
+    }
+    // After rule rebuild, matched rule IDs are stale — prompt reload
+    const countEl = document.getElementById("pc-blocked-count");
+    if (countEl) {
+      countEl.textContent = "Reload page to update counter";
+      countEl.classList.remove("has-blocked");
     }
   });
 }

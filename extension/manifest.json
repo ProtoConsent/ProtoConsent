@@ -32,7 +32,8 @@
     "tabs",
     "storage",
     "scripting",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback"
   ],
 
   "host_permissions": [
