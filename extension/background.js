@@ -10,21 +10,29 @@ const BASE_RULE_ID = 1;
 // For debugging: set to true to log all rule rebuilds and inputs
 const DEBUG_RULES = false;
 
-// Purposes we currently enforce
-const PURPOSES_FOR_ENFORCEMENT = [
-  "functional",
-  "analytics",
-  "ads",
-  "personalization",
-  "third_parties",
-  "advanced_tracking"
+// Resource types for blocking rules (not main_frame — that would block the page itself)
+const BLOCK_RESOURCE_TYPES = [
+  "script", "xmlhttprequest", "image", "sub_frame", "ping", "other"
 ];
+
+// Resource types for GPC header injection (includes main_frame for the server signal)
+const GPC_RESOURCE_TYPES = ["main_frame", ...BLOCK_RESOURCE_TYPES];
+
+// Purposes we currently enforce — derived at runtime from purposes.json keys.
+let PURPOSES_FOR_ENFORCEMENT = [];
+
+// Purposes that trigger the Sec-GPC header when denied.
+// Derived at runtime from purposes.json (triggers_gpc: true).
+let gpcPurposes = [];
 
 // Cached in-memory copy of blocklists.json; loaded once per SW lifetime.
 let blocklistsConfig = null;
 
 // Cached in-memory copy of presets.json; loaded once per SW lifetime.
 let presetsConfig = null;
+
+// Cached in-memory copy of purposes.json; loaded once per SW lifetime.
+let purposesConfig = null;
 
 /**
  * Load blocklists.json once when the service worker starts.
@@ -65,6 +73,30 @@ async function loadPresetsConfig() {
     presetsConfig = {};
     return presetsConfig;
   }
+}
+
+/**
+ * Load purposes.json once when the service worker starts.
+ * Extracts the list of purposes that trigger GPC (triggers_gpc: true).
+ */
+async function loadPurposesConfig() {
+  if (purposesConfig) return purposesConfig;
+
+  try {
+    const url = chrome.runtime.getURL("config/purposes.json");
+    const res = await fetch(url);
+    purposesConfig = await res.json();
+  } catch (e) {
+    console.error("Failed to load purposes.json:", e);
+    purposesConfig = {};
+  }
+
+  // Derive purpose lists from config
+  PURPOSES_FOR_ENFORCEMENT = Object.keys(purposesConfig);
+  gpcPurposes = PURPOSES_FOR_ENFORCEMENT
+    .filter(key => purposesConfig[key].triggers_gpc);
+
+  return purposesConfig;
 }
 
 /**
@@ -167,6 +199,7 @@ async function _rebuildAllDynamicRulesImpl() {
       loadBlocklistsConfig(),
       loadPresetsConfig(),
       getDefaultProfileConfig(),
+      loadPurposesConfig(),
     ]);
 
     // First, remove all existing dynamic rules
@@ -200,7 +233,7 @@ async function _rebuildAllDynamicRulesImpl() {
           action: { type: "block" },
           condition: {
             urlFilter: "||" + blockedDomain,
-            resourceTypes: ["script", "xmlhttprequest", "image", "sub_frame", "ping", "other"],
+            resourceTypes: BLOCK_RESOURCE_TYPES,
           },
         });
       }
@@ -229,7 +262,7 @@ async function _rebuildAllDynamicRulesImpl() {
               condition: {
                 urlFilter: "||" + blockedDomain,
                 initiatorDomains: [domain],
-                resourceTypes: ["script", "xmlhttprequest", "image", "sub_frame", "ping", "other"],
+                resourceTypes: BLOCK_RESOURCE_TYPES,
               },
             });
           } else {
@@ -241,11 +274,83 @@ async function _rebuildAllDynamicRulesImpl() {
               condition: {
                 urlFilter: "||" + blockedDomain,
                 initiatorDomains: [domain],
-                resourceTypes: ["script", "xmlhttprequest", "image", "sub_frame", "ping", "other"],
+                resourceTypes: BLOCK_RESOURCE_TYPES,
               },
             });
           }
         }
+      }
+    }
+
+    // 4. GPC header rules — inject Sec-GPC: 1 when privacy purposes are denied.
+    //
+    // Per-site overrides use requestDomains (the destination), not initiatorDomains
+    // (the page making the request). This means: trusting elpais.com (custom, all
+    // allowed) removes GPC from requests TO elpais.com, but third-party requests
+    // FROM elpais.com to e.g. google-analytics.com still carry the global GPC
+    // signal — trusting a site does not imply trusting the third parties it loads.
+    // The same applies to cross-origin iframes: an iframe from youtube.com on a
+    // trusted elpais.com page still receives GPC from the global rule.
+    const globalNeedsGPC = gpcPurposes.some(p => !globalPurposes[p]);
+
+    if (globalNeedsGPC) {
+      // Global: send GPC on all requests by default
+      newRules.push({
+        id: nextRuleId++,
+        priority: 1,
+        action: {
+          type: "modifyHeaders",
+          requestHeaders: [
+            { header: "Sec-GPC", operation: "set", value: "1" }
+          ]
+        },
+        condition: {
+          resourceTypes: GPC_RESOURCE_TYPES,
+        },
+      });
+    }
+
+    // Per-site GPC overrides (same priority pattern as block/allow)
+    for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
+      const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
+      const siteNeedsGPC = gpcPurposes.some(p => !sitePurposes[p]);
+
+      if (siteNeedsGPC === globalNeedsGPC) continue;
+
+      if (siteNeedsGPC && !globalNeedsGPC) {
+        // Site blocks privacy purposes but global doesn't → add GPC for this site
+        // Uses requestDomains (not initiatorDomains) so main_frame navigations match
+        newRules.push({
+          id: nextRuleId++,
+          priority: 2,
+          action: {
+            type: "modifyHeaders",
+            requestHeaders: [
+              { header: "Sec-GPC", operation: "set", value: "1" }
+            ]
+          },
+          condition: {
+            requestDomains: [domain],
+            resourceTypes: GPC_RESOURCE_TYPES,
+          },
+        });
+      } else if (!siteNeedsGPC && globalNeedsGPC) {
+        // Site allows all but global sends GPC → remove header for this site
+        // Uses requestDomains (not initiatorDomains) so main_frame navigations match
+        newRules.push({
+          id: nextRuleId++,
+          priority: 2,
+          action: {
+            type: "modifyHeaders",
+            requestHeaders: [
+              { header: "Sec-GPC", operation: "remove" }
+            ]
+          },
+          condition: {
+            requestDomains: [domain],
+            resourceTypes: GPC_RESOURCE_TYPES,
+          },
+        });
       }
     }
 
@@ -267,8 +372,76 @@ async function _rebuildAllDynamicRulesImpl() {
       });
     }
 
+    // Update the GPC content script registration to match the new rule state
+    await updateGPCContentScript(rulesByDomain, presets, defaultConfig);
+
   } catch (e) {
     console.error("ProtoConsent: failed to rebuild dynamic rules:", e);
+  }
+}
+
+/**
+ * Register or unregister the GPC DOM signal (navigator.globalPrivacyControl)
+ * as a MAIN-world content script, scoped to domains where GPC is needed.
+ *
+ * Receives pre-computed data from the rebuild to avoid re-reading storage.
+ */
+const GPC_SCRIPT_ID = "protoconsent-gpc";
+
+async function updateGPCContentScript(rulesByDomain, presets, defaultConfig) {
+  if (!chrome.scripting?.registerContentScripts) return;
+
+  try {
+    // Always unregister first to start fresh
+    await chrome.scripting.unregisterContentScripts({ ids: [GPC_SCRIPT_ID] }).catch(() => {});
+
+    const globalPurposes = resolvePurposes({}, presets, defaultConfig);
+    const globalNeedsGPC = gpcPurposes.length > 0 && gpcPurposes.some(p => !globalPurposes[p]);
+
+    // Collect per-site exceptions (domains that differ from global GPC state)
+    const excludeDomains = [];
+    const includeDomains = [];
+
+    for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
+      const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
+      const siteNeedsGPC = gpcPurposes.some(p => !sitePurposes[p]);
+
+      if (siteNeedsGPC === globalNeedsGPC) continue;
+
+      if (globalNeedsGPC && !siteNeedsGPC) {
+        excludeDomains.push(`*://*.${domain}/*`, `*://${domain}/*`);
+      } else if (!globalNeedsGPC && siteNeedsGPC) {
+        includeDomains.push(`*://*.${domain}/*`, `*://${domain}/*`);
+      }
+    }
+
+    // Determine if we need to register at all
+    if (globalNeedsGPC) {
+      // Register for all URLs, excluding domains that override to no-GPC
+      await chrome.scripting.registerContentScripts([{
+        id: GPC_SCRIPT_ID,
+        matches: ["<all_urls>"],
+        excludeMatches: excludeDomains.length > 0 ? excludeDomains : undefined,
+        js: ["gpc-signal.js"],
+        runAt: "document_start",
+        world: "MAIN",
+        allFrames: true,
+      }]);
+    } else if (includeDomains.length > 0) {
+      // Global doesn't need GPC but some sites do
+      await chrome.scripting.registerContentScripts([{
+        id: GPC_SCRIPT_ID,
+        matches: includeDomains,
+        js: ["gpc-signal.js"],
+        runAt: "document_start",
+        world: "MAIN",
+        allFrames: true,
+      }]);
+    }
+    // else: no GPC needed anywhere, nothing to register
+
+  } catch (e) {
+    console.error("ProtoConsent: failed to update GPC content script:", e);
   }
 }
 
@@ -283,7 +456,8 @@ async function handleBridgeQuery(message) {
   const [rules, presets, defaultConfig] = await Promise.all([
     getAllRulesFromStorage(),
     loadPresetsConfig(),
-    getDefaultProfileConfig()
+    getDefaultProfileConfig(),
+    loadPurposesConfig()
   ]);
 
   const siteConfig = rules[domain] || {};
