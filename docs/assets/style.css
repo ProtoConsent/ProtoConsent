@@ -80,6 +80,12 @@ header {
   color: var(--pc-muted);
 }
 
+.header-links-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 main {
   flex: 1;
 }
@@ -302,6 +308,24 @@ footer {
   margin-bottom: 6px;
 }
 
+.screenshot {
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+.screenshot img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--pc-border);
+}
+
+.screenshot figcaption {
+  font-size: 13px;
+  color: var(--pc-muted);
+  margin-top: 8px;
+}
+
 /* SDK live test */
 
 .sdk-demo-card {
@@ -362,4 +386,67 @@ footer {
 
 .sdk-demo-icon {
   flex-shrink: 0;
+}
+
+/* Article page (why.html) */
+
+.article {
+  background-color: var(--pc-white);
+  border-radius: 12px;
+  border: 1px solid var(--pc-border);
+  padding: 28px 24px 24px;
+}
+
+.article-header {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--pc-border);
+}
+
+.article-back {
+  font-size: 13px;
+  color: var(--pc-muted);
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.article-title {
+  font-size: 26px;
+  line-height: 1.25;
+  margin: 0 0 8px;
+  color: var(--pc-text-main);
+}
+
+.article-subtitle {
+  font-size: 17px;
+  color: var(--pc-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.article-section {
+  margin-bottom: 24px;
+}
+
+.article-section:last-child {
+  margin-bottom: 0;
+}
+
+.article-section h2 {
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: var(--pc-text-main);
+}
+
+.article-section p {
+  margin: 0 0 10px;
+}
+
+.article-section ul {
+  margin: 8px 0 10px;
+  padding-left: 18px;
+}
+
+.article-section li {
+  margin-bottom: 6px;
 }

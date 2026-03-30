@@ -13,6 +13,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="ProtoConsent is a user-side browser extension to control how websites may use your data, expressed in terms of purposes, from inside your browser.">
 
+  <!-- Open Graph -->
+  <meta property="og:title" content="ProtoConsent – user-side, purpose-based consent for the web">
+  <meta property="og:description" content="A browser extension to control how websites may use your data, expressed in terms of purposes, from inside your browser.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://protoconsent.org/">
+  <meta property="og:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="ProtoConsent – user-side, purpose-based consent for the web">
+  <meta name="twitter:description" content="A browser extension to control how websites may use your data, expressed in terms of purposes, from inside your browser.">
+  <meta name="twitter:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
   <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -24,9 +37,10 @@
           <img src="assets/logo/protoconsent_logo_bold.svg" alt="PC" class="brand-mark" width="28" height="28">
           <div class="brand-name">ProtoConsent</div>
         </div>
-        <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">
-          View on GitHub
-        </a>
+        <div class="header-links-nav">
+          <a class="header-link" href="why.html">Why ProtoConsent</a>
+          <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        </div>
       </header>
 
       <main>
@@ -64,8 +78,11 @@
 			<a class="btn-primary" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">
 			  View the code on GitHub
 			</a>
+			<a class="btn-secondary" href="why.html">
+			  Why ProtoConsent →
+			</a>
 			<a class="btn-secondary" href="#how-it-works">
-			  Read the technical overview →
+			  Technical overview →
 			</a>
 			<a class="btn-secondary" href="#live-test">
 			  Try it live ↓
@@ -182,7 +199,6 @@
             </p>
 
             <figure class="screenshot">
-              <br />
               <img src="assets/screenshots/popup-profile.png" alt="ProtoConsent popup with per-site profile and purpose toggles">
               <figcaption>
                 Compact view of the popup when sections are collapsed.
@@ -224,7 +240,6 @@
             If you work around privacy, consent UX, tracking, or browser internals and feel like taking a look or sharing thoughts, I’d really appreciate it.
           </p>	  
           <ul>
-			<br />
             <li>Star or fork the GitHub repo.</li>
             <li>Open an issue with feedback or questions.</li>
             <li>Reach out by email at <a href="mailto:contact@protoconsent.org">contact@protoconsent.org</a> with “ProtoConsent” in the subject.</li>
@@ -237,6 +252,7 @@
           ProtoConsent is a browser extension exploring browser‑level, purpose‑based consent controls for the open web.
         </div>
         <div class="footer-links">
+          <a href="why.html">Why ProtoConsent</a>
           <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">GitHub repo</a>
           <a href="https://github.com/ProtoConsent/ProtoConsent#readme" target="_blank" rel="noopener noreferrer">Technical README</a>
           <a href="mailto:contact@protoconsent.org">Contact</a>
