@@ -7,7 +7,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>ProtoConsent Purposes</title>
+	<title>ProtoConsent - Purpose Settings</title>
 	<link rel="icon" type="image/png" sizes="32x32" href="icons/protoconsent_icon_32.png">
 	<style>
 		body {
@@ -52,6 +52,7 @@
 		}
 		.preset-pill.allowed { background: #dcfce7; color: #166534; }
 		.preset-pill.denied { background: #f3f4f6; color: #9ca3af; }
+		.preset-pill.gpc { background: #dbeafe; color: #1e3a8a; }
 		.gpc-info-row {
 			display: flex; align-items: baseline; gap: 6px;
 			margin-bottom: 6px;
@@ -113,7 +114,7 @@
 <body>
 	<div class="viewer-root">
 		<header>
-			<h1>ProtoConsent Purpose Definitions</h1>
+			<h1>ProtoConsent - Purpose Settings</h1>
 			<p class="subtitle">Manage your default consent profile, purposes, and presets</p>
 		</header>
 
@@ -140,14 +141,14 @@
 			</div>
 		</section>
 
-		<section id="purposes-section" style="display:none;">
-			<h2>Purposes</h2>
-			<div id="purpose-list"></div>
-		</section>
-
 		<section id="presets-section" style="display:none;">
 			<h2>Presets</h2>
 			<div id="preset-list"></div>
+		</section>
+
+		<section id="purposes-section" style="display:none;">
+			<h2>Purposes</h2>
+			<div id="purpose-list"></div>
 		</section>
 		<footer class="viewer-footer">
 			<span id="viewer-version">ProtoConsent</span>
