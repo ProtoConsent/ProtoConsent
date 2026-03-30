@@ -14,7 +14,7 @@ ProtoConsent is a browser extension that lets you control how websites may use y
 
 No central server, no tracking, no sharing of personal data. Preferences are enforced at the network level, per site, entirely from your browser.
 
-**Project website:** https://www.protoconsent.org
+**Project website:** https://protoconsent.org
 
 > Status: early alpha (v0.1.1), meant for exploration and feedback, not production use yet.
 
@@ -47,7 +47,7 @@ ProtoConsent is in early alpha (v0.1.1), meant for exploration and feedback, not
 - Network-level enforcement using declarative net request rules (150 curated domains from public blocklists).
 - Content script bridge and JavaScript SDK for web pages to query user preferences.
 - TypeScript type declarations for SDK consumers.
-- Live SDK test on [protoconsent.org](https://www.protoconsent.org).
+- Live SDK test on [protoconsent.org](https://protoconsent.org).
 
 For a more detailed roadmap and planned features, see [product-overview.md](design/product-overview.md). Expect the code and documentation to change quickly at this stage.
 
