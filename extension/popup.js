@@ -8,6 +8,7 @@
 const DEBUG_RULES = false;
 
 let PURPOSES_TO_SHOW = [];
+let blocklistsConfig = null;
 
 let purposesConfig = {};
 let presetsConfig = {};
@@ -37,16 +38,16 @@ async function initPopup() {
 /**
  * Get the count of matched DNR rules for the current tab.
  * Calls chrome.declarativeNetRequest.getMatchedRules({ tabId })
- * @returns {Promise<number>} Count of matched rules, or 0 if error/no extension API
+ * @returns {Promise<{blocked, gpc, domainHitCount}>}
  */
 async function getBlockedRulesCount() {
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
-      return { blocked: 0, gpc: 0 };
+      return { blocked: 0, gpc: 0, domainHitCount: {} };
     }
 
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0 };
+    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0, domainHitCount: {} };
 
     const tabId = tabs[0].id;
 
@@ -55,14 +56,20 @@ async function getBlockedRulesCount() {
       chrome.declarativeNetRequest.getDynamicRules(),
     ]);
 
-    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0 };
+    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, domainHitCount: {} };
 
-    // Classify rule IDs by action type
+    // Classify rule IDs by action type and map block IDs to domains
     const blockRuleIds = new Set();
     const headerRuleIds = new Set();
+    const ruleIdToDomain = {};
     for (const rule of dynamicRules) {
       if (rule.action.type === "block") {
         blockRuleIds.add(rule.id);
+        // Extract domain from urlFilter "||domain"
+        const filter = rule.condition && rule.condition.urlFilter;
+        if (filter && filter.startsWith("||")) {
+          ruleIdToDomain[rule.id] = filter.slice(2);
+        }
       } else if (rule.action.type === "modifyHeaders") {
         headerRuleIds.add(rule.id);
       }
@@ -70,9 +77,12 @@ async function getBlockedRulesCount() {
 
     let blocked = 0;
     let gpc = 0;
+    const domainHitCount = {};
     for (const info of matched.rulesMatchedInfo) {
       if (blockRuleIds.has(info.rule.ruleId)) {
         blocked++;
+        const domain = ruleIdToDomain[info.rule.ruleId];
+        if (domain) domainHitCount[domain] = (domainHitCount[domain] || 0) + 1;
       } else if (headerRuleIds.has(info.rule.ruleId)) {
         gpc++;
       }
@@ -94,22 +104,25 @@ async function getBlockedRulesCount() {
       document.getElementById("popup-root").appendChild(dbg);
     }
 
-    return { blocked, gpc };
+    return { blocked, gpc, domainHitCount };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
-    return { blocked: 0, gpc: 0 };
+    return { blocked: 0, gpc: 0, domainHitCount: {} };
   }
 }
 
 /**
  * Fetch and display the blocked rules count on the popup.
  */
+let lastDomainHitCount = {};
+
 async function displayBlockedCount() {
   const countEl = document.getElementById("pc-blocked-count");
   if (!countEl) return;
 
   try {
-    const { blocked, gpc } = await getBlockedRulesCount();
+    const { blocked, gpc, domainHitCount } = await getBlockedRulesCount();
+    lastDomainHitCount = domainHitCount;
 
     const parts = [];
     if (blocked > 0) parts.push(blocked + " blocked");
@@ -117,17 +130,103 @@ async function displayBlockedCount() {
 
     countEl.textContent = parts.length > 0
       ? parts.join(" · ")
-      : "No requests blocked";
+      : "All purposes allowed — nothing blocked";
 
     if (blocked > 0) {
-      countEl.classList.add("has-blocked");
+      countEl.classList.add("has-blocked", "clickable");
+      const chevron = document.getElementById("pc-blocked-chevron");
+      if (chevron) chevron.textContent = "▸";
     } else {
-      countEl.classList.remove("has-blocked");
+      countEl.classList.remove("has-blocked", "clickable");
     }
   } catch (err) {
     console.error("ProtoConsent: error displaying blocked count:", err);
     countEl.textContent = "? requests blocked";
   }
+}
+
+// Load blocklists.json and build inverse map: domain → purpose
+async function loadBlocklists() {
+  if (blocklistsConfig) return blocklistsConfig;
+  try {
+    const url = chrome.runtime.getURL("config/blocklists.json");
+    const res = await fetch(url);
+    blocklistsConfig = await res.json();
+  } catch (_) {
+    blocklistsConfig = {};
+  }
+  return blocklistsConfig;
+}
+
+function buildDomainToPurposeMap(blocklists) {
+  const map = {};
+  for (const [purpose, data] of Object.entries(blocklists)) {
+    if (purpose === "metadata") continue;
+    if (!data || !Array.isArray(data.domains)) continue;
+    for (const domain of data.domains) {
+      map[domain] = purpose;
+    }
+  }
+  return map;
+}
+
+// Toggle detail breakdown on counter click
+async function toggleBlockedDetail() {
+  const detailEl = document.getElementById("pc-blocked-detail");
+  const countEl = document.getElementById("pc-blocked-count");
+  if (!detailEl) return;
+
+  if (!detailEl.classList.contains("is-collapsed")) {
+    detailEl.classList.add("is-collapsed");
+    const chevron = document.getElementById("pc-blocked-chevron");
+    if (chevron) chevron.textContent = "▸";
+    return;
+  }
+
+  if (Object.keys(lastDomainHitCount).length === 0) return;
+
+  const blocklists = await loadBlocklists();
+  const domainToPurpose = buildDomainToPurposeMap(blocklists);
+
+  // Group blocked domains by purpose
+  const byPurpose = {};
+  for (const domain of Object.keys(lastDomainHitCount)) {
+    const purpose = domainToPurpose[domain] || "other";
+    if (!byPurpose[purpose]) byPurpose[purpose] = [];
+    byPurpose[purpose].push(domain);
+  }
+
+  // Render grouped by purpose, respecting display order
+  detailEl.innerHTML = "";
+  const orderedPurposes = PURPOSES_TO_SHOW.filter(p => byPurpose[p]);
+  if (byPurpose["other"]) orderedPurposes.push("other");
+
+  for (const purpose of orderedPurposes) {
+    const domains = byPurpose[purpose];
+    const row = document.createElement("div");
+    row.className = "pc-detail-purpose";
+
+    const label = document.createElement("span");
+    label.className = "pc-detail-purpose-label";
+    const cfg = purposesConfig[purpose];
+    const purposeHits = domains.reduce((sum, d) => sum + (lastDomainHitCount[d] || 1), 0);
+    label.textContent = (cfg ? cfg.label : purpose) + " (" + purposeHits + "): ";
+
+    const domainList = document.createElement("span");
+    domainList.className = "pc-detail-domains";
+    domainList.textContent = domains.map(d => {
+      const hits = lastDomainHitCount[d];
+      return hits > 1 ? d + " ×" + hits : d;
+    }).join(", ");
+
+    row.appendChild(label);
+    row.appendChild(domainList);
+    detailEl.appendChild(row);
+  }
+
+  detailEl.classList.remove("is-collapsed");
+  const chevron = document.getElementById("pc-blocked-chevron");
+  if (chevron) chevron.textContent = "▾";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -138,6 +237,38 @@ document.addEventListener("DOMContentLoaded", () => {
     purposesLink.addEventListener("click", (e) => {
       e.preventDefault();
       chrome.tabs.create({ url: chrome.runtime.getURL("purposes-editor.html") });
+    });
+  }
+
+  const countEl = document.getElementById("pc-blocked-count");
+  if (countEl) {
+    countEl.addEventListener("click", toggleBlockedDetail);
+  }
+
+  const toggleDescBtn = document.getElementById("pc-toggle-descriptions");
+  if (toggleDescBtn) {
+    toggleDescBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const descriptions = document.querySelectorAll(".pc-purpose-description");
+      const chevrons = document.querySelectorAll(".pc-purpose-chevron");
+      // Expand all if majority are collapsed, collapse all otherwise
+      let collapsedCount = 0;
+      descriptions.forEach((desc) => {
+        if (desc.classList.contains("is-collapsed")) collapsedCount++;
+      });
+      const shouldExpand = collapsedCount > descriptions.length / 2;
+
+      descriptions.forEach((desc) => {
+        if (shouldExpand) {
+          desc.classList.remove("is-collapsed");
+        } else {
+          desc.classList.add("is-collapsed");
+        }
+      });
+      chevrons.forEach((ch) => {
+        ch.textContent = shouldExpand ? " ▾" : " ▸";
+      });
+      toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
     });
   }
 });
@@ -155,8 +286,9 @@ async function loadConfigs() {
   purposesConfig = await purposesRes.json();
   presetsConfig = await presetsRes.json();
 
-  // Dynamically derive PURPOSES_TO_SHOW from config keys
-  PURPOSES_TO_SHOW = Object.keys(purposesConfig);
+  // Derive display order from config, sorted by the order field
+  PURPOSES_TO_SHOW = Object.keys(purposesConfig)
+    .sort((a, b) => (purposesConfig[a].order || 0) - (purposesConfig[b].order || 0));
 }
 
 // Load the user's default profile from storage
@@ -378,7 +510,13 @@ function createPurposeItemElement(purposeKey, cfg) {
 
   const nameEl = document.createElement("div");
   nameEl.className = "pc-purpose-name";
-  nameEl.textContent = cfg.label || purposeKey;
+
+  const nameTxt = document.createTextNode(cfg.label || purposeKey);
+  const chevronEl = document.createElement("span");
+  chevronEl.className = "pc-purpose-chevron";
+  chevronEl.textContent = " ▾";
+  nameEl.appendChild(nameTxt);
+  nameEl.appendChild(chevronEl);
 
   leftEl.appendChild(iconEl);
   leftEl.appendChild(nameEl);
@@ -433,22 +571,23 @@ function createPurposeItemElement(purposeKey, cfg) {
   descEl.textContent = cfg.description || "";
 
   // Wire title (left side) to collapse/expand description
-  let isCollapsed = false;
-  function updateDescriptionVisibility() {
-    if (isCollapsed) {
+  function updateDescriptionVisibility(collapsed) {
+    if (collapsed) {
       descEl.classList.add("is-collapsed");
+      chevronEl.textContent = " ▸";
     } else {
       descEl.classList.remove("is-collapsed");
+      chevronEl.textContent = " ▾";
     }
   }
 
   leftEl.addEventListener("click", () => {
-    isCollapsed = !isCollapsed;
-    updateDescriptionVisibility();
+    const nowCollapsed = !descEl.classList.contains("is-collapsed");
+    updateDescriptionVisibility(nowCollapsed);
   });
 
-  // Start expanded
-  updateDescriptionVisibility();
+  // Start collapsed
+  updateDescriptionVisibility(true);
 
   // Final assembly
   itemEl.appendChild(checkboxEl);
@@ -535,8 +674,12 @@ function notifyBackgroundRulesUpdated() {
     const countEl = document.getElementById("pc-blocked-count");
     if (countEl) {
       countEl.textContent = "Reload page to update counter";
-      countEl.classList.remove("has-blocked");
+      countEl.classList.remove("has-blocked", "clickable");
     }
+    const chevron = document.getElementById("pc-blocked-chevron");
+    if (chevron) chevron.textContent = "";
+    const detailEl = document.getElementById("pc-blocked-detail");
+    if (detailEl) detailEl.classList.add("is-collapsed");
   });
 }
 
@@ -555,6 +698,12 @@ function showUnsupportedPage() {
   // Disable profile selector
   const selectEl = document.getElementById("pc-profile-select");
   if (selectEl) selectEl.disabled = true;
+
+  // Hide stat bar and detail on unsupported pages
+  const statEl = document.getElementById("pc-blocked-count");
+  if (statEl) statEl.parentElement.style.display = "none";
+  const detailEl = document.getElementById("pc-blocked-detail");
+  if (detailEl) detailEl.style.display = "none";
 }
 
 // Simple UI error helper
