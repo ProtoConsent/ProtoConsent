@@ -46,6 +46,7 @@ ProtoConsent is in early alpha (v0.1.0), meant for exploration and feedback, not
 - Purpose toggles for six categories: functional, analytics, ads, personalisation, third-party services, and advanced tracking.
 - Network-level enforcement using declarative net request rules (150 curated domains from public blocklists).
 - Conditional [Global Privacy Control](https://globalprivacycontrol.org/) (Sec-GPC) header, sent only when privacy-relevant purposes are denied.
+- Per-purpose blocked request counter with estimated performance impact, visible in the popup.
 - Content script bridge and JavaScript SDK for web pages to query user preferences.
 - Site declaration support: websites can publish a `.well-known/protoconsent.json` file declaring their data practices, displayed in the popup as a side panel.
 - Visual icons from the [Consent Commons](https://consentcommons.com/) system for purposes, legal basis, sharing and international transfers.

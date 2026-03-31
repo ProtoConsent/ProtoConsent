@@ -22,6 +22,10 @@ const LEGAL_BASIS_LABELS = {
   legitimate_interest: "legit. interest",
 };
 
+// Estimated time saved per blocked request (ms) — conservative heuristic
+// Accounts for DNS + connection + download of typical third-party tracking scripts
+const ESTIMATED_MS_PER_BLOCKED_REQUEST = 50;
+
 let PURPOSES_TO_SHOW = [];
 let blocklistsConfig = null;
 
@@ -131,6 +135,7 @@ async function getBlockedRulesCount() {
  * Fetch and display the blocked rules count on the popup.
  */
 let lastDomainHitCount = {};
+let lastPurposeStats = {};
 
 async function displayBlockedCount() {
   const countEl = document.getElementById("pc-blocked-count");
@@ -140,8 +145,23 @@ async function displayBlockedCount() {
     const { blocked, gpc, domainHitCount } = await getBlockedRulesCount();
     lastDomainHitCount = domainHitCount;
 
+    // Compute per-purpose breakdown
+    const blocklists = await loadBlocklists();
+    const domainToPurpose = buildDomainToPurposeMap(blocklists);
+    lastPurposeStats = {};
+    for (const domain of Object.keys(domainHitCount)) {
+      const purpose = domainToPurpose[domain] || "other";
+      lastPurposeStats[purpose] = (lastPurposeStats[purpose] || 0) + domainHitCount[domain];
+    }
+
     const parts = [];
-    if (blocked > 0) parts.push(blocked + " blocked");
+    if (blocked > 0) {
+      parts.push(blocked + " blocked");
+      const estimatedMs = blocked * ESTIMATED_MS_PER_BLOCKED_REQUEST;
+      if (estimatedMs >= 100) {
+        parts.push("~" + formatEstimatedTime(estimatedMs) + " faster");
+      }
+    }
     if (gpc > 0) parts.push(gpc + " GPC signals sent");
 
     countEl.textContent = parts.length > 0
@@ -156,6 +176,9 @@ async function displayBlockedCount() {
       countEl.classList.remove("has-blocked", "clickable");
       countEl.removeAttribute("aria-expanded");
     }
+
+    // Inject per-purpose stats into purpose items
+    displayPerPurposeStats();
   } catch (err) {
     console.error("ProtoConsent: error displaying blocked count:", err);
     countEl.textContent = "? requests blocked";
@@ -185,6 +208,38 @@ function buildDomainToPurposeMap(blocklists) {
     }
   }
   return map;
+}
+
+function formatEstimatedTime(ms) {
+  if (ms >= 1000) return (ms / 1000).toFixed(1) + "s";
+  return Math.round(ms / 10) * 10 + "ms";
+}
+
+function displayPerPurposeStats() {
+  for (const purposeKey of PURPOSES_TO_SHOW) {
+    const itemEl = document.querySelector('.pc-purpose-item[data-purpose="' + purposeKey + '"]');
+    if (!itemEl) continue;
+
+    // Remove existing stat if re-rendering
+    const existing = itemEl.querySelector(".pc-purpose-stat");
+    if (existing) existing.remove();
+
+    const count = lastPurposeStats[purposeKey];
+    if (!count) continue;
+
+    const ms = count * ESTIMATED_MS_PER_BLOCKED_REQUEST;
+    const statEl = document.createElement("div");
+    statEl.className = "pc-purpose-stat";
+    statEl.textContent = count + " blocked · ~" + formatEstimatedTime(ms);
+
+    // Insert after header, before description
+    const descEl = itemEl.querySelector(".pc-purpose-description");
+    if (descEl) {
+      itemEl.insertBefore(statEl, descEl);
+    } else {
+      itemEl.appendChild(statEl);
+    }
+  }
 }
 
 // Toggle detail breakdown on counter click
