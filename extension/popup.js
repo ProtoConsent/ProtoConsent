@@ -7,6 +7,20 @@
 // For debugging: set to true to log rule saves and messages
 const DEBUG_RULES = false;
 
+// Consent Commons icons for legal_basis values in site declaration
+const LEGAL_BASIS_ICONS = {
+  consent: "icons/declaration/consent.png",
+  contractual: "icons/declaration/contractual.png",
+  legitimate_interest: "icons/declaration/legitimate_interest.png",
+  public_interest: "icons/declaration/public_interest.png",
+  vital_interest: "icons/declaration/vital_interest.png",
+};
+
+// Display labels for legal_basis values
+const LEGAL_BASIS_LABELS = {
+  legitimate_interest: "legit. interest",
+};
+
 let PURPOSES_TO_SHOW = [];
 let blocklistsConfig = null;
 
@@ -821,30 +835,43 @@ function renderSiteDeclaration(container, declaration) {
     nameEl.className = "pc-declaration-purpose";
     nameEl.textContent = cfg.short_label || cfg.label || purposeKey;
 
-    const statusEl = document.createElement("span");
-    statusEl.className = "pc-declaration-status";
+    const checkEl = document.createElement("span");
+    checkEl.className = "pc-declaration-check";
+
+    const basisEl = document.createElement("span");
+    basisEl.className = "pc-declaration-basis";
 
     const entry = declaration.purposes[purposeKey];
     if (!entry) {
-      statusEl.textContent = "—";
-      statusEl.classList.add("not-declared");
+      checkEl.textContent = "—";
+      checkEl.classList.add("not-declared");
     } else if (entry.used) {
-      statusEl.textContent = "✓";
-      statusEl.classList.add("used");
+      checkEl.textContent = "✓";
+      checkEl.classList.add("used");
 
       if (typeof entry.legal_basis === "string") {
-        const metaEl = document.createElement("span");
-        metaEl.className = "pc-declaration-meta";
-        metaEl.textContent = " " + entry.legal_basis.replace(/_/g, " ");
-        statusEl.appendChild(metaEl);
+        const basisIcon = LEGAL_BASIS_ICONS[entry.legal_basis];
+        if (basisIcon) {
+          const iconImg = document.createElement("img");
+          iconImg.src = basisIcon;
+          iconImg.alt = "";
+          iconImg.className = "pc-declaration-icon";
+          iconImg.width = 14;
+          iconImg.height = 14;
+          basisEl.appendChild(iconImg);
+        }
+        basisEl.appendChild(document.createTextNode(
+          LEGAL_BASIS_LABELS[entry.legal_basis] || entry.legal_basis.replace(/_/g, " ")
+        ));
       }
     } else {
-      statusEl.textContent = "✗";
-      statusEl.classList.add("not-used");
+      checkEl.textContent = "✗";
+      checkEl.classList.add("not-used");
     }
 
     row.appendChild(nameEl);
-    row.appendChild(statusEl);
+    row.appendChild(checkEl);
+    row.appendChild(basisEl);
     container.appendChild(row);
   }
 
@@ -862,18 +889,31 @@ function renderSiteDeclaration(container, declaration) {
   // Data handling section (if present and valid)
   if (declaration.data_handling && typeof declaration.data_handling === "object") {
     const dh = declaration.data_handling;
-    const parts = [];
-    if (typeof dh.storage_region === "string") {
-      parts.push("Stored: " + dh.storage_region.toUpperCase());
-    }
-    if (dh.international_transfers === true) parts.push("Int'l transfers");
-    if (dh.international_transfers === false) parts.push("No int'l transfers");
 
-    if (parts.length > 0) {
-      const dhEl = document.createElement("div");
-      dhEl.className = "pc-declaration-data";
-      dhEl.textContent = parts.join(" · ");
-      container.appendChild(dhEl);
+    if (typeof dh.storage_region === "string") {
+      const regionEl = document.createElement("div");
+      regionEl.className = "pc-declaration-data";
+      regionEl.textContent = "Stored: " + dh.storage_region.toUpperCase();
+      container.appendChild(regionEl);
+    }
+
+    if (dh.international_transfers === true || dh.international_transfers === false) {
+      const intlEl = document.createElement("div");
+      intlEl.className = "pc-declaration-data";
+
+      const intlIcon = document.createElement("img");
+      intlIcon.src = dh.international_transfers
+        ? "icons/declaration/intl_transfers_yes.png"
+        : "icons/declaration/intl_transfers_no.png";
+      intlIcon.alt = "";
+      intlIcon.className = "pc-declaration-icon";
+      intlIcon.width = 14;
+      intlIcon.height = 14;
+      intlEl.appendChild(intlIcon);
+
+      const intlText = dh.international_transfers ? " International transfers" : " No international transfers";
+      intlEl.appendChild(document.createTextNode(intlText));
+      container.appendChild(intlEl);
     }
   }
 
@@ -887,7 +927,17 @@ function renderSiteDeclaration(container, declaration) {
   if (sharingValues.size > 0) {
     const shareEl = document.createElement("div");
     shareEl.className = "pc-declaration-data";
-    shareEl.textContent = "Sharing: " + [...sharingValues].join(", ");
+
+    const shareIcon = document.createElement("img");
+    shareIcon.src = "icons/declaration/sharing.png";
+    shareIcon.alt = "";
+    shareIcon.className = "pc-declaration-icon";
+    shareIcon.width = 14;
+    shareIcon.height = 14;
+    shareEl.appendChild(shareIcon);
+
+    const shareText = document.createTextNode(" Sharing: " + [...sharingValues].join(", "));
+    shareEl.appendChild(shareText);
     container.appendChild(shareEl);
   }
 

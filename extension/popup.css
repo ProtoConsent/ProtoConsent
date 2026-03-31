@@ -402,42 +402,52 @@ body {
 }
 
 .pc-declaration-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 62px auto 1fr;
+  align-items: center;
+  gap: 4px;
   padding: 3px 0;
   line-height: 1.4;
 }
 
 .pc-declaration-purpose {
   font-weight: 500;
+}
+
+.pc-declaration-check {
+  text-align: center;
   flex-shrink: 0;
 }
 
-.pc-declaration-status {
-  color: #6b7280;
-  white-space: nowrap;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.pc-declaration-status.used {
+.pc-declaration-check.used {
   color: #16a34a;
 }
 
-.pc-declaration-status.not-used {
+.pc-declaration-check.not-used {
   color: #9ca3af;
 }
 
-.pc-declaration-status.not-declared {
+.pc-declaration-check.not-declared {
   color: #d1d5db;
   font-style: italic;
 }
 
-.pc-declaration-meta {
+.pc-declaration-basis {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   color: #9ca3af;
   font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-declaration-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  vertical-align: middle;
 }
 
 .pc-declaration-data {

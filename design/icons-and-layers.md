@@ -2,62 +2,55 @@
 
 This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../LICENSE-CC-BY-SA) file for details.
 
-ProtoConsent uses the Consent Commons icon system as a visual language to explain what each purpose means.
+ProtoConsent uses the [Consent Commons](https://consentcommons.com/el-sistema/) icon system as a visual language to explain what each purpose means.
 
-## 1. Central purposes (icons used for enforcement)
+## 1. Purpose icons (popup badges)
 
-Each ProtoConsent purpose is mapped to one or more central Consent Commons icons (see [Consent Commons website](https://consentcommons.com/el-sistema/)):
+Each ProtoConsent purpose is represented by a Consent Commons icon displayed as a badge next to the purpose name in the popup:
 
-- `functional` → icons for service management (and other data when needed).
-- `analytics` → icon for profiling and analytics.
-- `ads` → icons for marketing purposes (plus profiling and analytics when targeting is involved).
-- `personalization` → icon for profiling and analytics.
-- `third_parties` → icons for access to third-party data and sharing with third parties.
-- `advanced_tracking` → combination of profiling and analytics plus other data, or a specific textual warning.
+| Purpose | Icon | Consent Commons icon | File | Notes |
+|---------|------|---------------------|------|-------|
+| `functional` | ![](../extension/icons/purposes/functional.png) | Box (service management) | `icons/purposes/functional.png` | CC “gestión del servicio” |
+| `analytics` | ![](../extension/icons/purposes/analytics.png) | Person + bar chart (profiling & analytics) | `icons/purposes/analytics.png` | CC “perfilado y analítica” |
+| `ads` | ![](../extension/icons/purposes/ads.png) | Megaphone (marketing) | `icons/purposes/ads.png` | CC “marketing” |
+| `personalization` | ![](../extension/icons/purposes/personalization.png) | Person + bar chart + “P” overlay | `icons/purposes/personalization.png` | Shares base icon with analytics; “P” overlay distinguishes it |
+| `third_parties` | ![](../extension/icons/purposes/third_parties.png) | Person + nodes (third-party access) | `icons/purposes/third_parties.png` | CC “información a terceros” |
+| `advanced_tracking` | ![](../extension/icons/purposes/advanced_tracking.png) | Eye (custom) | `icons/purposes/advanced_tracking.png` | No Consent Commons equivalent; custom SVG design (source: `advanced_tracking.svg`) |
 
-In the ProtoConsent popup, each purpose is shown as:
+Icons are PNG files at 125×125 pixels, rendered at 18×18 in the popup. When an icon is present, the letter badge (F, An, Ad, P, 3P, T) is replaced; if no icon file is found, the letter badge remains as fallback.
 
-- a short label (e.g. “Analytics”),
-- an allow/deny toggle controlled by the user,
-- (future) central icon(s) from Consent Commons.
+## 2. Legal basis icons (site declaration panel)
 
-## 2. Legal basis (informational layer, future)
+When a website publishes a `.well-known/protoconsent.json` declaration, the popup side panel shows an icon for each purpose's declared legal basis:
 
-Consent Commons also provides icons for legal basis (consent, legitimate interest, contractual, etc.).
+| `legal_basis` value | Icon | Consent Commons icon | File |
+|---------------------|------|---------------------|------|
+| `consent` | ![](../extension/icons/declaration/consent.png) | Book (generic) | `icons/declaration/consent.png` |
+| `contractual` | ![](../extension/icons/declaration/contractual.png) | Signed document | `icons/declaration/contractual.png` |
+| `legitimate_interest` | ![](../extension/icons/declaration/legitimate_interest.png) | Temple / columns | `icons/declaration/legitimate_interest.png` |
+| `public_interest` | ![](../extension/icons/declaration/public_interest.png) | Public building | `icons/declaration/public_interest.png` |
+| `vital_interest` | ![](../extension/icons/declaration/vital_interest.png) | Heart | `icons/declaration/vital_interest.png` |
 
-ProtoConsent does not decide the legal basis. Instead, in future versions it may:
+Icons are rendered at 14×14 next to the legal basis text. The label “legitimate_interest” is abbreviated to “legit. interest” for space.
 
-- display the legal basis declared by the site (e.g. via a cooperating CMP or protocol),
-- use the corresponding Consent Commons icon (“Consent”, “Legitimate interest”, “Contractual”, etc.),
-- without changing how purposes are enforced technically.
+## 3. Data sharing icon (site declaration panel)
 
-For the early versions, legal basis is documented here but not implemented in the UI or in enforcement.
+| Field | Icon | Consent Commons icon | File |
+|-------|------|---------------------|------|
+| `sharing` (any value) | ![](../extension/icons/declaration/sharing.png) | Arrow E→ (data shared) | `icons/declaration/sharing.png` |
 
-## 3. Data sharing, transfers and storage (informational layer, future)
+## 4. International transfers icons (site declaration panel)
 
-Consent Commons includes icons for:
+| `international_transfers` value | Icon | Consent Commons icon | File |
+|---------------------------------|------|---------------------|------|
+| `true` | ![](../extension/icons/declaration/intl_transfers_yes.png) | Bidirectional arrows ↔ | `icons/declaration/intl_transfers_yes.png` |
+| `false` | ![](../extension/icons/declaration/intl_transfers_no.png) | Angle brackets < > | `icons/declaration/intl_transfers_no.png` |
 
-- whether data is shared with third parties and for which reasons,
-- whether data is stored inside or outside the user's region or country,
-- whether international transfers take place.
+## 5. Out of scope (v0.1)
 
-In the early versions, data sharing and transfers are not enforced as separate purposes. Over time, ProtoConsent may:
+The following Consent Commons icons are not used in the current version:
 
-- use `third_parties` as a technical purpose (allow/deny sharing and enrichment where detectable),
-- show additional Consent Commons icons about:
-  - “no third-party sharing” vs “sharing within group” vs “sharing with third parties for ads/advertising”,
-  - storage within your region or country,
-  - international transfers.
-
-These elements are purely informational in the current early design: they help the user understand a site, but they do not automatically create or change blocking rules.
-
-## 4. Data subject rights (informational layer, future)
-
-Consent Commons also defines icons for data subject rights (withdraw consent, access/rectification/erasure, portability, complaint to a data protection authority, etc.).
-
-ProtoConsent may later include a small “rights” block in the site panel:
-
-- a compact set of icons reminding users of their data protection and privacy rights (access, rectification, erasure, etc.) under applicable law,
-- possibly linking to the site's privacy policy or to a help page.
-
-Again, this is an informational layer: it does not change browser-level enforcement.
+- **Data subject rights** (portability, complaint, withdraw consent, transparency): ProtoConsent uses a single `rights_url` link instead of individual right icons. These rights are legally mandated under GDPR, so there is little variability to declare.
+- **Data retention modifiers** (3+, 3−, 3×, 3++): retention periods are not modeled in the current schema. This is the most likely candidate for a future schema extension, potentially as an optional field per purpose.
+- **International transfers with safeguards**: the current schema uses a boolean (`international_transfers: true/false`). A future version could evolve this to an enum (e.g. `”none”`, `”safeguarded”`, `”unrestricted”`) to capture whether Standard Contractual Clauses or adequacy decisions apply.
+- **Other unused icons**: CV/recruitment, commercial communications (subsumed by ads), generic “other data”, data reception (reverse direction of sharing).
