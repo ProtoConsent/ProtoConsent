@@ -235,6 +235,14 @@ body {
   line-height: 1.4;
 }
 
+/* Per-purpose blocked stat */
+.pc-purpose-stat {
+  font-size: 10px;
+  color: #d32f2f;
+  margin-top: 2px;
+  padding-left: 24px;
+}
+
 /* Footer */
 .pc-footer {
   display: flex;
