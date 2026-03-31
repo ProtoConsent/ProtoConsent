@@ -47,6 +47,7 @@ ProtoConsent is in early alpha (v0.1.0), meant for exploration and feedback, not
 - Network-level enforcement using declarative net request rules (150 curated domains from public blocklists).
 - Conditional [Global Privacy Control](https://globalprivacycontrol.org/) (Sec-GPC) header, sent only when privacy-relevant purposes are denied.
 - Content script bridge and JavaScript SDK for web pages to query user preferences.
+- Site declaration support: websites can publish a `.well-known/protoconsent.json` file declaring their data practices, displayed in the popup as a side panel.
 - TypeScript type declarations for SDK consumers.
 - Live SDK test on [protoconsent.org](https://protoconsent.org).
 
@@ -79,6 +80,11 @@ ProtoConsent sends a conditional [Sec-GPC](https://globalprivacycontrol.org/) he
 
 ![GPC signal detected on globalprivacycontrol.org](docs/assets/screenshots/gpc-demo-detected.png)
 
+Websites can publish a `.well-known/protoconsent.json` file to declare their data practices.
+The popup displays the declaration in a side panel:
+
+![Site declaration on protoconsent.org](docs/assets/screenshots/well-known-demo-detected.png)
+
 ## Getting started (developer mode)
 
 For now ProtoConsent is only available as an unpacked extension.
@@ -98,6 +104,7 @@ ProtoConsent comes with a small set of public documents that describe the projec
 - **Icons and layers** – visual representation of profiles, purposes, and UI layers: see [icons-and-layers.md](design/icons-and-layers.md).
 - **How to test the extension** – practical steps to install the extension in developer mode and try it on real sites: see [testing-guide.md](design/testing-guide.md).
 - **Purpose-signalling protocol** – data model, communication mechanism, and SDK API surface: see [protocol-draft.md](design/protocol-draft.md).
+- **Site declaration spec** – `.well-known/protoconsent.json` format for websites to declare data practices: see [well-known-spec.md](design/well-known-spec.md).
 - **SDK quick start** – import `sdk/protoconsent.js` (MIT) and call `get('analytics')`. Returns `true`, `false`, or `null` (no extension). See the [quick example](design/protocol-draft.md#quick-example).
 
 ## Use of Generative AI
