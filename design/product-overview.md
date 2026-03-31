@@ -8,7 +8,7 @@ Today, people are asked to make privacy and tracking decisions on almost every w
 
 ## 2. Solution: ProtoConsent in one paragraph
 
-ProtoConsent is a purpose‑based privacy control that lives in the browser and works consistently across websites. Instead of deciding vendor by vendor in each cookie banner, the user defines high‑level profiles (for example, “Strict”, “Balanced”, “Permissive”) and purpose toggles (functional, analytics, ads/advertising, personalization, third‑party services, advanced tracking) directly in ProtoConsent’s interface. For each site, ProtoConsent stores a local rule that combines a profile with explicit overrides for specific purposes, and then applies technical enforcement via the browser’s native blocking capabilities (for instance, by using declarative network rules to prevent analytics or ads requests when those purposes are disabled). The long‑term goal is to complement the extension with an open, documented purpose‑signalling protocol and a small JavaScript SDK, so that websites and CMPs can read the user’s browser‑level preferences and adapt, without forcing people through yet another dark‑patterned banner.
+ProtoConsent is a purpose‑based privacy control that lives in the browser and works consistently across websites. Instead of deciding vendor by vendor in each cookie banner, the user defines high‑level profiles (for example, “Strict”, “Balanced”, “Permissive”) and purpose toggles (functional, analytics, ads/advertising, personalization, third‑party services, advanced tracking) directly in ProtoConsent’s interface. For each site, ProtoConsent stores a local rule that combines a profile with explicit overrides for specific purposes, and then applies technical enforcement via the browser’s native blocking capabilities (for instance, by using declarative network rules to prevent analytics or ads requests when those purposes are disabled). The extension includes an open, documented [purpose‑signalling protocol](protocol-draft.md) and a small [JavaScript SDK](../sdk/protoconsent.js) (MIT licensed), so that websites and CMPs can read the user’s browser‑level preferences and adapt, without forcing people through yet another dark‑patterned banner. Websites can also publish a [`.well-known/protoconsent.json`](well-known-spec.md) file to declare their data practices without any code changes.
 
 ## 3. Key features (MVP, today)
 
@@ -32,13 +32,13 @@ From a request‑flow perspective, ProtoConsent works in a few simple steps. Fir
 
 ## 5. Roadmap
 
-**Short‑term:** Improve the existing Chromium extension with more robust purpose handling, refine the user interface, and publish a “how to test ProtoConsent” guide for early adopters.
+**Short‑term:** Expand the curated blocklists for broader enforcement coverage, add an onboarding page for first‑time users, and prepare the extension for publication in browser extension stores.
 
-**Medium‑term:** Specify a small, open protocol for purpose signalling between the browser and websites, expand the extension into a reference implementation with better enforcement and multi‑browser support, and release a lightweight JavaScript SDK and demo sites that consume the user’s browser‑level preferences.
+**Medium‑term:** Port the extension to Firefox, add internationalisation support (starting with English and Spanish), implement import/export of user configuration, and refine the protocol specification based on real‑world feedback.
 
 **Long‑term:** Strengthen ProtoConsent’s security posture (risk assessment, hardening, security processes) and work with regulators, browser vendors, and civil‑society organisations so that purpose‑based controls can become part of mainstream web practice.
 
-**Internationalisation:** the extension’s user interface is structured so that all user‑facing strings can be translated. The initial focus will be on English and Spanish, with additional languages welcomed as community contributions.
+**Already delivered:** purpose‑signalling [protocol specification](protocol-draft.md), [JavaScript SDK](../sdk/protoconsent.js) with [TypeScript declarations](../sdk/protoconsent.d.ts), [site declaration spec](well-known-spec.md) (`.well-known/protoconsent.json`), conditional [GPC signal](https://globalprivacycontrol.org/), per‑purpose blocked request counter with estimated performance impact, [Consent Commons](https://consentcommons.com/) icons, live SDK demo on [protoconsent.org](https://protoconsent.org/), and a [testing guide](testing-guide.md) for early adopters.
 
 ## 6. Openness and licensing
 

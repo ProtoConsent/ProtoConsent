@@ -16,7 +16,7 @@ No central server, no tracking, no sharing of personal data. Preferences are enf
 
 **Project website:** https://protoconsent.org
 
-> Status: early alpha (v0.1.0), meant for exploration and feedback, not production use yet.
+> Not yet in extension stores — install locally in developer mode on Chromium-based browsers. Firefox support planned.
 
 ## What is ProtoConsent?
 
@@ -28,7 +28,7 @@ ProtoConsent is a browser extension (initially for Chromium-based browsers, with
 
 ProtoConsent is not a full ad blocker or a traditional consent management platform (CMP). It is a personal “consent control panel” that lives in the browser and can coexist with existing blockers and consent tools.
 
-In later versions, websites that choose to respect ProtoConsent may be able to read a minimal, privacy-preserving signal from the browser (for example, “analytics allowed/denied for this site”), without learning any real-world identity or cross-site tracking identifier.
+Websites can read user preferences through a JavaScript SDK or publish a `.well-known/protoconsent.json` file declaring their data practices — both without learning any real-world identity or cross-site tracking identifier.
 
 ## Goals
 
@@ -40,7 +40,7 @@ In later versions, websites that choose to respect ProtoConsent may be able to r
 
 ## Project status
 
-ProtoConsent is in early alpha (v0.1.0), meant for exploration and feedback, not production use yet. The current Chromium extension provides:
+The current Chromium extension provides:
 
 - Global default profile with per-site overrides via a browser action popup.
 - Purpose toggles for six categories: functional, analytics, ads, personalisation, third-party services, and advanced tracking.
@@ -53,7 +53,7 @@ ProtoConsent is in early alpha (v0.1.0), meant for exploration and feedback, not
 - TypeScript type declarations for SDK consumers.
 - Live SDK test on [protoconsent.org](https://protoconsent.org).
 
-For a more detailed roadmap and planned features, see [product-overview.md](design/product-overview.md). Expect the code and documentation to change quickly at this stage.
+For a more detailed roadmap and planned features, see [product-overview.md](design/product-overview.md).
 
 ## Architecture overview
 
