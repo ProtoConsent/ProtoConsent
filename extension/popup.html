@@ -14,17 +14,18 @@
 <body>
   <div id="popup-layout">
     <!-- Side panel: site declaration (hidden until data loads) -->
-    <aside id="pc-side-panel" class="pc-side-panel">
+    <aside id="pc-side-panel" class="pc-side-panel" aria-label="Site declaration" aria-hidden="true">
       <div id="pc-site-declaration" class="pc-site-declaration"></div>
     </aside>
 
     <!-- Tab to toggle side panel (hidden until data loads) -->
-    <button id="pc-side-tab" class="pc-side-tab" title="Site declaration" aria-label="Toggle site declaration panel" aria-expanded="false">
-      <span class="pc-side-tab-icon">ℹ</span>
-      <span class="pc-side-tab-chevron">◂</span>
+    <button id="pc-side-tab" class="pc-side-tab" title="Site declaration" aria-label="Toggle site declaration panel" aria-expanded="false" aria-controls="pc-side-panel">
+      <span class="pc-side-tab-icon" aria-hidden="true">ℹ</span>
+      <span class="pc-side-tab-chevron" aria-hidden="true">◂</span>
     </button>
 
     <div id="popup-root">
+      <h1 class="visually-hidden">ProtoConsent</h1>
       <header class="pc-header">
         <div class="pc-site">
           <div class="pc-site-label">Site</div>
@@ -42,8 +43,8 @@
       </header>
 
       <div class="pc-header-stat">
-        <span id="pc-blocked-count" class="pc-blocked-count">loading...</span>
-        <span id="pc-blocked-chevron" class="pc-blocked-chevron"></span>
+        <button id="pc-blocked-count" class="pc-blocked-count" aria-expanded="false" aria-controls="pc-blocked-detail" aria-live="polite">loading...</button>
+        <span id="pc-blocked-chevron" class="pc-blocked-chevron" aria-hidden="true"></span>
       </div>
       <div id="pc-blocked-detail" class="pc-blocked-detail is-collapsed"></div>
 
@@ -54,15 +55,16 @@
       </main>
 
       <footer class="pc-footer">
-        <div class="pc-footer-text">
-          Changes apply only to this site.
-        </div>
-        <div class="pc-footer-links">
-          <a href="#" class="pc-footer-link" id="pc-toggle-descriptions">Show details</a>
-          <a href="purposes-editor.html" class="pc-footer-link" id="pc-purposes-link">Purposes</a>
-          <a href="https://github.com/ProtoConsent/ProtoConsent" class="pc-footer-link" target="_blank" rel="noopener noreferrer">
-            Learn more
-          </a>
+        <img src="icons/protoconsent_icon_32.png" alt="" class="pc-footer-icon" width="20" height="20">
+        <div class="pc-footer-content">
+          <span class="pc-footer-brand">ProtoConsent</span>
+          <div class="pc-footer-links">
+            <button class="pc-footer-link" id="pc-toggle-descriptions" aria-expanded="false">Show details</button>
+            <a href="purposes-editor.html" class="pc-footer-link" id="pc-purposes-link">Purposes</a>
+            <a href="https://protoconsent.org" class="pc-footer-link" target="_blank" rel="noopener noreferrer">
+              Learn more
+            </a>
+          </div>
         </div>
       </footer>
     </div>

@@ -133,7 +133,8 @@ function initDefaultProfile(purposes) {
 				void chrome.runtime.lastError; // suppress warning if background is inactive
 			});
 			resetBtn.textContent = 'Done';
-			setTimeout(() => { resetBtn.textContent = 'Reset all sites'; }, 1500);
+			resetBtn.setAttribute('aria-live', 'polite');
+			setTimeout(() => { resetBtn.textContent = 'Reset all sites'; resetBtn.removeAttribute('aria-live'); }, 1500);
 		});
 	});
 
@@ -153,6 +154,15 @@ function renderPurposes(purposes) {
 
 		const header = document.createElement('div');
 		header.className = 'purpose-header';
+
+		if (p.icon) {
+			const iconImg = document.createElement('img');
+			iconImg.className = 'purpose-icon-img';
+			iconImg.src = p.icon;
+			iconImg.alt = '';
+			iconImg.onerror = function () { this.remove(); };
+			header.appendChild(iconImg);
+		}
 
 		const badge = document.createElement('span');
 		badge.className = 'purpose-short';
@@ -174,10 +184,14 @@ function renderPurposes(purposes) {
 		if (p.consent_commons_keys && p.consent_commons_keys.length) {
 			const keys = document.createElement('div');
 			keys.className = 'purpose-keys';
+			const keysLabel = document.createElement('span');
+			keysLabel.className = 'purpose-keys-label';
+			keysLabel.textContent = 'Consent Commons:';
+			keys.appendChild(keysLabel);
 			for (const k of p.consent_commons_keys) {
 				const pill = document.createElement('span');
 				pill.className = 'purpose-key';
-				pill.textContent = k;
+				pill.textContent = k.replace(/_/g, ' ');
 				keys.appendChild(pill);
 			}
 			card.appendChild(keys);
