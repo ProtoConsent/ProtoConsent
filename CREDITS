@@ -1,0 +1,36 @@
+Third-party assets used in ProtoConsent
+========================================
+
+Consent Commons
+---------------
+Purpose icons, legal basis icons, sharing and international transfer icons 
+used in the browser extension popup and site declaration panel.
+
+Website: https://consentcommons.com
+License: Free to use with attribution (link to project).
+         © Consent Commons 2019
+
+Icons used as-is:
+  extension/icons/purposes/functional.png
+  extension/icons/purposes/analytics.png
+  extension/icons/purposes/ads.png
+  extension/icons/purposes/third_parties.png
+  extension/icons/declaration/consent.png
+  extension/icons/declaration/contractual.png
+  extension/icons/declaration/legitimate_interest.png
+  extension/icons/declaration/legal_obligation.png
+  extension/icons/declaration/public_interest.png
+  extension/icons/declaration/vital_interest.png
+  extension/icons/declaration/sharing.png
+  extension/icons/declaration/intl_transfers_yes.png
+  extension/icons/declaration/intl_transfers_no.png
+
+Modified icons:
+  extension/icons/purposes/personalization.png
+    Based on the Consent Commons "profiling & analytics" icon
+    with a "P" letter overlay added to distinguish it from analytics.
+
+Icons not from Consent Commons:
+  extension/icons/purposes/advanced_tracking.png
+  extension/icons/purposes/advanced_tracking.svg
+    Custom eye icon designed for ProtoConsent (no Consent Commons equivalent).

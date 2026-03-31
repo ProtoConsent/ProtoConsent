@@ -25,13 +25,14 @@ When a website publishes a `.well-known/protoconsent.json` declaration, the popu
 
 | `legal_basis` value | Icon | Consent Commons icon | File |
 |---------------------|------|---------------------|------|
-| `consent` | ![](../extension/icons/declaration/consent.png) | Book (generic) | `icons/declaration/consent.png` |
+| `consent` | ![](../extension/icons/declaration/consent.png) | Check in circle | `icons/declaration/consent.png` |
 | `contractual` | ![](../extension/icons/declaration/contractual.png) | Signed document | `icons/declaration/contractual.png` |
-| `legitimate_interest` | ![](../extension/icons/declaration/legitimate_interest.png) | Temple / columns | `icons/declaration/legitimate_interest.png` |
+| `legitimate_interest` | ![](../extension/icons/declaration/legitimate_interest.png) | Empty circle | `icons/declaration/legitimate_interest.png` |
+| `legal_obligation` | ![](../extension/icons/declaration/legal_obligation.png) | Temple / columns | `icons/declaration/legal_obligation.png` |
 | `public_interest` | ![](../extension/icons/declaration/public_interest.png) | Public building | `icons/declaration/public_interest.png` |
 | `vital_interest` | ![](../extension/icons/declaration/vital_interest.png) | Heart | `icons/declaration/vital_interest.png` |
 
-Icons are rendered at 14×14 next to the legal basis text. The label “legitimate_interest” is abbreviated to “legit. interest” for space.
+Icons are rendered at 14×14 next to the legal basis text. The label “legitimate_interest” is abbreviated to “legit. interest” for space. The value `legal_obligation` uses the generic temple/columns icon (the Consent Commons section header for legal basis) as there is no specific icon for this value.
 
 ## 3. Data sharing icon (site declaration panel)
 

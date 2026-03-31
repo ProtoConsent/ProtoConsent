@@ -12,6 +12,7 @@ const LEGAL_BASIS_ICONS = {
   consent: "icons/declaration/consent.png",
   contractual: "icons/declaration/contractual.png",
   legitimate_interest: "icons/declaration/legitimate_interest.png",
+  legal_obligation: "icons/declaration/legal_obligation.png",
   public_interest: "icons/declaration/public_interest.png",
   vital_interest: "icons/declaration/vital_interest.png",
 };
@@ -524,10 +525,14 @@ function createPurposeItemElement(purposeKey, cfg) {
   if (cfg.icon) {
     const imgEl = document.createElement("img");
     imgEl.src = cfg.icon;
-    imgEl.alt = cfg.short || "";
+    imgEl.alt = "";
     imgEl.className = "pc-purpose-icon-img";
     imgEl.width = 18;
     imgEl.height = 18;
+    imgEl.onerror = () => {
+      iconEl.removeChild(imgEl);
+      iconEl.textContent = cfg.short || (cfg.label?.charAt(0) || "?");
+    };
     iconEl.appendChild(imgEl);
   } else {
     iconEl.textContent = cfg.short || (cfg.label?.charAt(0) || "?");
@@ -858,6 +863,7 @@ function renderSiteDeclaration(container, declaration) {
           iconImg.className = "pc-declaration-icon";
           iconImg.width = 14;
           iconImg.height = 14;
+          iconImg.onerror = () => iconImg.remove();
           basisEl.appendChild(iconImg);
         }
         basisEl.appendChild(document.createTextNode(
@@ -909,6 +915,7 @@ function renderSiteDeclaration(container, declaration) {
       intlIcon.className = "pc-declaration-icon";
       intlIcon.width = 14;
       intlIcon.height = 14;
+      intlIcon.onerror = () => intlIcon.remove();
       intlEl.appendChild(intlIcon);
 
       const intlText = dh.international_transfers ? " International transfers" : " No international transfers";
@@ -934,6 +941,7 @@ function renderSiteDeclaration(container, declaration) {
     shareIcon.className = "pc-declaration-icon";
     shareIcon.width = 14;
     shareIcon.height = 14;
+    shareIcon.onerror = () => shareIcon.remove();
     shareEl.appendChild(shareIcon);
 
     const shareText = document.createTextNode(" Sharing: " + [...sharingValues].join(", "));
@@ -965,6 +973,7 @@ function renderSiteDeclaration(container, declaration) {
     sideTab.addEventListener("click", () => {
       const isOpen = sidePanel.classList.toggle("is-open");
       sideTab.classList.toggle("is-open", isOpen);
+      sideTab.setAttribute("aria-expanded", isOpen ? "true" : "false");
     });
   }
 }
