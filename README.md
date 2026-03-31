@@ -64,27 +64,37 @@ See [architecture.md](design/architecture.md) for more details.
 
 ## Screenshots
 
-ProtoConsent popup with per-site profile and purpose toggles:
+### Popup with per-site profile and purpose toggles
 
-![ProtoConsent popup](docs/assets/screenshots/popup-profile.png)
+![ProtoConsent popup](design/assets/screenshots/popup-profile.png)
 
-Basic blocking of tracking resources for the Ads purpose on a news site.
-Notice the missing ad slots in the page header and `ERR_BLOCKED_BY_CLIENT` entries in the console panel:
+### Network-level blocking of tracking requests
 
-![Blocking analytics on elpais.com](design/assets/screenshots/test-elpais-blocked.png)
+Basic blocking of tracking resources for the Ads purpose on a news site:
 
-The project website ([protoconsent.org](https://protoconsent.org)) includes a live SDK test that shows your current preferences when the extension is installed:
+![Blocking ProtoConsent config on elpais.com](design/assets/screenshots/test-elpais-blocked-detail.png)
 
-![SDK live test on protoconsent.org](docs/assets/screenshots/sdk-demo-detected.png)
+![Blocking requests on elpais.com](design/assets/screenshots/test-elpais-blocked.png)
 
-ProtoConsent sends a conditional [Sec-GPC](https://globalprivacycontrol.org/) header and sets `navigator.globalPrivacyControl` only when privacy-relevant purposes are denied — per site, not globally:
+### SDK live test on protoconsent.org
 
-![GPC signal detected on globalprivacycontrol.org](docs/assets/screenshots/gpc-demo-detected.png)
+The project website includes a live test that shows your current preferences when the extension is installed:
+
+![SDK live test on protoconsent.org](design/assets/screenshots/sdk-demo-detected.png)
+
+### Global Privacy Control conditional signal
+
+ProtoConsent sends a [Sec-GPC](https://globalprivacycontrol.org/) header only when privacy-relevant purposes are denied — per site, not globally:
+
+![GPC signal detected on globalprivacycontrol.org](design/assets/screenshots/gpc-demo-detected.png)
+
+### Site declaration with Consent Commons icons
 
 Websites can publish a `.well-known/protoconsent.json` file to declare their data practices.
-The popup displays the declaration in a side panel with Consent Commons icons (localhost demo with sample data):
+The popup displays this in a side panel with [Consent Commons](https://consentcommons.com/) icons.
+Live example: [protoconsent.org](https://protoconsent.org/) (screenshot shown with localhost sample data):
 
-![Site declaration side panel](docs/assets/screenshots/well-known-demo-detected.png)
+![Site declaration side panel](design/assets/screenshots/well-known-demo-detected.png)
 
 ## Getting started (developer mode)
 

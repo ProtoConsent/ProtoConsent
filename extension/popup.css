@@ -16,6 +16,38 @@ body {
   background-color: #f3f4f6;
 }
 
+/* Visually hidden but accessible to screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus indicators */
+*:focus-visible {
+  outline: 2px solid #1e3a8a;
+  outline-offset: 2px;
+}
+
+.pc-toggle-checkbox:focus-visible + .pc-purpose-header .pc-toggle-switch {
+  outline: 2px solid #1e3a8a;
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Layout: side panel + main popup */
 #popup-layout {
   display: flex;
@@ -137,7 +169,7 @@ body {
 
 .pc-purpose-chevron {
   font-size: 10px;
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 /* Toggle area clickable for Allowed/Blocked */
@@ -163,7 +195,7 @@ body {
   width: 30px;
   height: 16px;
   border-radius: 999px;
-  background-color: #d1d5db;
+  background-color: #9ca3af;
   transition: background-color 0.15s ease;
 }
 
@@ -188,7 +220,7 @@ body {
 
 /* ON state via class */
 .pc-toggle-switch.is-on {
-  background-color: #22c55e;
+  background-color: #16a34a;
 }
 
 .pc-toggle-switch.is-on .pc-toggle-switch-knob {
@@ -206,22 +238,42 @@ body {
 /* Footer */
 .pc-footer {
   display: flex;
-  justify-content: space-between;
+  flex-direction: row;
   align-items: center;
-  gap: 1.2px;
+  gap: 8px;
   border-top: 1px solid #e5e7eb;
   padding-top: 4px;
 }
 
-.pc-footer-text {
-  font-size: 10px;
-  color: #6b7280;
+.pc-footer-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.pc-footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 1px;
+}
+
+.pc-footer-brand {
+  font-size: 11px;
+  color: #1e3a8a;
+  font-weight: 600;
 }
 
 .pc-footer-link {
-  font-size: 10px;
+  font-size: 11px;
   color: #1e3a8a;
   text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .pc-footer-link:hover {
@@ -259,6 +311,12 @@ body {
   color: #6b7280;
   font-weight: 500;
   transition: color 0.2s ease;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: default;
 }
 
 .pc-blocked-count.clickable {
@@ -276,7 +334,7 @@ body {
 
 .pc-blocked-chevron {
   font-size: 10px;
-  color: #9ca3af;
+  color: #6b7280;
   margin-left: 2px;
 }
 
@@ -329,6 +387,7 @@ body {
 /* Side panel (.well-known/protoconsent.json) */
 .pc-side-panel {
   width: 0;
+  max-height: 0;
   overflow: hidden;
   background-color: #f9fafb;
   border-right: 1px solid #e5e7eb;
@@ -339,6 +398,7 @@ body {
 .pc-side-panel.is-open {
   width: 180px;
   min-width: 180px;
+  max-height: none;
   padding: 8px;
 }
 
@@ -423,11 +483,11 @@ body {
 }
 
 .pc-declaration-check.not-used {
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 .pc-declaration-check.not-declared {
-  color: #d1d5db;
+  color: #9ca3af;
   font-style: italic;
 }
 
@@ -435,7 +495,7 @@ body {
   display: flex;
   align-items: center;
   gap: 2px;
-  color: #9ca3af;
+  color: #6b7280;
   font-size: 10px;
   white-space: nowrap;
   overflow: hidden;
@@ -453,7 +513,7 @@ body {
   margin-top: 8px;
   padding-top: 6px;
   border-top: 1px solid #e5e7eb;
-  font-size: 10px;
+  font-size: 11px;
   color: #6b7280;
   line-height: 1.4;
 }
@@ -461,7 +521,7 @@ body {
 .pc-declaration-link {
   color: #1e3a8a;
   text-decoration: none;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .pc-declaration-link:hover {
