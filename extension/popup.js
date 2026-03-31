@@ -154,6 +154,7 @@ async function displayBlockedCount() {
       if (chevron) chevron.textContent = "▸";
     } else {
       countEl.classList.remove("has-blocked", "clickable");
+      countEl.removeAttribute("aria-expanded");
     }
   } catch (err) {
     console.error("ProtoConsent: error displaying blocked count:", err);
@@ -196,6 +197,7 @@ async function toggleBlockedDetail() {
     detailEl.classList.add("is-collapsed");
     const chevron = document.getElementById("pc-blocked-chevron");
     if (chevron) chevron.textContent = "▸";
+    if (countEl) countEl.setAttribute("aria-expanded", "false");
     return;
   }
 
@@ -243,6 +245,7 @@ async function toggleBlockedDetail() {
   detailEl.classList.remove("is-collapsed");
   const chevron = document.getElementById("pc-blocked-chevron");
   if (chevron) chevron.textContent = "▾";
+  if (countEl) countEl.setAttribute("aria-expanded", "true");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -263,10 +266,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const toggleDescBtn = document.getElementById("pc-toggle-descriptions");
   if (toggleDescBtn) {
-    toggleDescBtn.addEventListener("click", (e) => {
-      e.preventDefault();
+    toggleDescBtn.addEventListener("click", () => {
       const descriptions = document.querySelectorAll(".pc-purpose-description");
       const chevrons = document.querySelectorAll(".pc-purpose-chevron");
+      const leftEls = document.querySelectorAll(".pc-purpose-left");
       // Expand all if majority are collapsed, collapse all otherwise
       let collapsedCount = 0;
       descriptions.forEach((desc) => {
@@ -284,7 +287,11 @@ document.addEventListener("DOMContentLoaded", () => {
       chevrons.forEach((ch) => {
         ch.textContent = shouldExpand ? " ▾" : " ▸";
       });
+      leftEls.forEach((el) => {
+        el.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
+      });
       toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
+      toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
     });
   }
 });
@@ -510,6 +517,7 @@ function createPurposeItemElement(purposeKey, cfg) {
   checkboxEl.id = checkboxId;
   checkboxEl.className = "pc-toggle-checkbox";
   checkboxEl.checked = isAllowed;
+  checkboxEl.setAttribute("aria-label", cfg.label + " — " + (isAllowed ? "Allowed" : "Blocked"));
 
   // Header container (visual row)
   const headerEl = document.createElement("div");
@@ -544,12 +552,15 @@ function createPurposeItemElement(purposeKey, cfg) {
   const nameTxt = document.createTextNode(cfg.label || purposeKey);
   const chevronEl = document.createElement("span");
   chevronEl.className = "pc-purpose-chevron";
+  chevronEl.setAttribute("aria-hidden", "true");
   chevronEl.textContent = " ▾";
   nameEl.appendChild(nameTxt);
   nameEl.appendChild(chevronEl);
 
   leftEl.appendChild(iconEl);
   leftEl.appendChild(nameEl);
+  leftEl.setAttribute("role", "button");
+  leftEl.setAttribute("aria-expanded", "false");
 
   // Right side: toggle area (label + visual switch + Allowed/Blocked)
   const toggleLabelEl = document.createElement("label");
@@ -571,9 +582,11 @@ function createPurposeItemElement(purposeKey, cfg) {
     if (checkboxEl.checked) {
       switchEl.classList.add("is-on");
       stateLabelEl.textContent = "Allowed";
+      checkboxEl.setAttribute("aria-label", cfg.label + " — Allowed");
     } else {
       switchEl.classList.remove("is-on");
       stateLabelEl.textContent = "Blocked";
+      checkboxEl.setAttribute("aria-label", cfg.label + " — Blocked");
     }
   }
 
@@ -605,9 +618,11 @@ function createPurposeItemElement(purposeKey, cfg) {
     if (collapsed) {
       descEl.classList.add("is-collapsed");
       chevronEl.textContent = " ▸";
+      leftEl.setAttribute("aria-expanded", "false");
     } else {
       descEl.classList.remove("is-collapsed");
       chevronEl.textContent = " ▾";
+      leftEl.setAttribute("aria-expanded", "true");
     }
   }
 
@@ -619,7 +634,7 @@ function createPurposeItemElement(purposeKey, cfg) {
   // Start collapsed
   updateDescriptionVisibility(true);
 
-  // Final assembly
+  // Final assembly (checkbox before header for CSS focus-visible sibling selector)
   itemEl.appendChild(checkboxEl);
   itemEl.appendChild(headerEl);
   itemEl.appendChild(descEl);
@@ -850,9 +865,13 @@ function renderSiteDeclaration(container, declaration) {
     if (!entry) {
       checkEl.textContent = "—";
       checkEl.classList.add("not-declared");
+      checkEl.setAttribute("role", "img");
+      checkEl.setAttribute("aria-label", "Not declared");
     } else if (entry.used) {
       checkEl.textContent = "✓";
       checkEl.classList.add("used");
+      checkEl.setAttribute("role", "img");
+      checkEl.setAttribute("aria-label", "Used");
 
       if (typeof entry.legal_basis === "string") {
         const basisIcon = LEGAL_BASIS_ICONS[entry.legal_basis];
@@ -873,6 +892,8 @@ function renderSiteDeclaration(container, declaration) {
     } else {
       checkEl.textContent = "✗";
       checkEl.classList.add("not-used");
+      checkEl.setAttribute("role", "img");
+      checkEl.setAttribute("aria-label", "Not used");
     }
 
     row.appendChild(nameEl);
@@ -974,6 +995,7 @@ function renderSiteDeclaration(container, declaration) {
       const isOpen = sidePanel.classList.toggle("is-open");
       sideTab.classList.toggle("is-open", isOpen);
       sideTab.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      sidePanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
     });
   }
 }
