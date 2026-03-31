@@ -75,12 +75,6 @@ This example uses the Spanish news site <https://elpais.com/> to show how the **
 6. Reload the page.
 7. In the Network panel you should see requests to domains like `g.doubleclick.net`, `googleads.g.doubleclick.net` or `pagead2.googlesyndication.com` with status 200 (or similar).
 
-Example screenshot with ads allowed:
-
-![Ads / Marketing allowed on elpais.com](assets/screenshots/test-elpais-allowed.png)
-
-Basic ad slots are visible in the page header & footer and the Network panel shows `doubleclick` requests with successful responses.
-
 ### 5.2 Ads Blocked with ProtoConsent
 
 1. With the same elpais.com tab open, switch back to the ProtoConsent popup.
