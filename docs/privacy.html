@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Privacy Policy – ProtoConsent</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/logo/protoconsent_logo_bold.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/protoconsent_logo_32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ProtoConsent privacy policy. No data collected, no tracking, everything stays in your browser.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Privacy Policy – ProtoConsent">
+  <meta property="og:description" content="ProtoConsent privacy policy. No data collected, no tracking, everything stays in your browser.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://protoconsent.org/privacy.html">
+  <meta property="og:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Privacy Policy – ProtoConsent">
+  <meta name="twitter:description" content="ProtoConsent privacy policy. No data collected, no tracking, everything stays in your browser.">
+  <meta name="twitter:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <header>
+        <a href="index.html" class="brand">
+          <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
+          <div class="brand-name">ProtoConsent</div>
+        </a>
+        <div class="header-links-nav">
+          <a class="header-link" href="index.html">Home</a>
+          <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        </div>
+      </header>
+
+      <main>
+        <article class="article">
+          <div class="article-header">
+            <a href="index.html" class="article-back">&larr; Back to home</a>
+            <h1 class="article-title">Privacy Policy</h1>
+            <p class="article-subtitle">
+              Last updated: March 2026
+            </p>
+          </div>
+
+          <section class="article-section">
+            <h2>Short version</h2>
+            <p>
+              ProtoConsent does not collect, store, or share any personal data. Everything runs in your browser. There is no backend, no analytics, no tracking.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>What data the extension handles</h2>
+            <p>
+              ProtoConsent stores your per-site purpose preferences (profile and purpose toggles) in your browser's local extension storage (<code>chrome.storage.local</code>). This data never leaves your device.
+            </p>
+            <p>
+              The extension does <strong>not</strong>:
+            </p>
+            <ul>
+              <li>Collect browsing history or page content</li>
+              <li>Send data to any server or third party</li>
+              <li>Use cookies, analytics, or telemetry</li>
+              <li>Create user accounts or identifiers</li>
+              <li>Access or read personal information</li>
+            </ul>
+          </section>
+
+          <section class="article-section">
+            <h2>What the extension does locally</h2>
+            <ul>
+              <li>Reads the current tab URL to identify which domain you are managing</li>
+              <li>Stores your purpose preferences per site in local storage</li>
+              <li>Creates declarative network rules to block requests matching denied purposes</li>
+              <li>Sends a <code>Sec-GPC: 1</code> header to sites where privacy-relevant purposes are denied</li>
+              <li>Fetches <code>.well-known/protoconsent.json</code> from sites you visit to display their declared data practices (cached locally, never forwarded)</li>
+              <li>Queries matched blocking rules to display request counts in the popup</li>
+            </ul>
+          </section>
+
+          <section class="article-section">
+            <h2>Permissions and why they are needed</h2>
+            <table class="policy-table">
+              <thead>
+                <tr>
+                  <th>Permission</th>
+                  <th>Why it is needed</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>tabs</code></td>
+                  <td>Read the active tab URL to apply per-site rules</td>
+                </tr>
+                <tr>
+                  <td><code>storage</code></td>
+                  <td>Persist preferences locally in the browser</td>
+                </tr>
+                <tr>
+                  <td><code>scripting</code></td>
+                  <td>Register the GPC content script at runtime</td>
+                </tr>
+                <tr>
+                  <td><code>declarativeNetRequest</code></td>
+                  <td>Create and manage blocking and header rules</td>
+                </tr>
+                <tr>
+                  <td><code>declarativeNetRequestFeedback</code></td>
+                  <td>Count blocked requests for the popup display</td>
+                </tr>
+                <tr>
+                  <td><code>host_permissions (&lt;all_urls&gt;)</code></td>
+                  <td>Apply blocking and header rules across all domains</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="article-section">
+            <h2>The website (protoconsent.org)</h2>
+            <p>
+              protoconsent.org is a static site hosted on GitHub Pages. It does not use cookies, analytics, ads, or any form of tracking. No personal data is collected, stored, or shared.
+            </p>
+            <p>
+              This site publishes a <code><a href="/.well-known/protoconsent.json">.well-known/protoconsent.json</a></code> file declaring its own data practices, which the extension can read.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>Open source</h2>
+            <p>
+              The extension source code is publicly available at <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">github.com/ProtoConsent/ProtoConsent</a> under GPL-3.0+. You can inspect exactly what the extension does.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>Contact</h2>
+            <p>
+              Questions about this policy: <a href="mailto:contact@protoconsent.org">contact@protoconsent.org</a>.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>Changes to this policy</h2>
+            <p>
+              If this policy changes, the updated version will be published at this URL. The extension does not auto-update policies or collect version information.
+            </p>
+          </section>
+        </article>
+      </main>
+
+      <footer>
+        <div>
+          ProtoConsent is a browser extension exploring browser-level, purpose-based consent controls for the open web.
+        </div>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="why.html">Why ProtoConsent</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">GitHub repo</a>
+          <a href="mailto:contact@protoconsent.org">Contact</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>
