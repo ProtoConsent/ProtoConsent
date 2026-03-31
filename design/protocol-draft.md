@@ -10,7 +10,7 @@ This document describes the protocol by which web pages can query the user's con
 
 **Scope:** data model, communication model, and SDK API surface.
 
-**Status:** early draft. The communication mechanism is implemented via a content script bridge; this document defines the architecture.
+**Status:** draft. The communication mechanism is implemented via a content script bridge; this document defines the architecture.
 
 ## 2. Data Model
 

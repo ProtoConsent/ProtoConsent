@@ -217,6 +217,13 @@ main {
   border-radius: 10px;
   border: 1px solid var(--pc-border);
   padding: 18px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card > .screenshot:last-child {
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .card-title {
@@ -238,7 +245,7 @@ main {
 }
 
 .card ul {
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   padding-left: 16px;
 }
 
@@ -309,7 +316,8 @@ footer {
 }
 
 .screenshot {
-  margin: 12px 0 0;
+  margin: 12px 0 14px;
+  padding: 0;
   text-align: center;
 }
 
