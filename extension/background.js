@@ -502,6 +502,14 @@ chrome.runtime.onStartup?.addListener(() => {
 
 // For browsers that don't support onStartup in this context,
 // also rebuild when the extension is installed or updated.
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
   rebuildAllDynamicRules();
+
+  if (details.reason === 'install') {
+    chrome.storage.local.get(['onboardingComplete'], (result) => {
+      if (!result.onboardingComplete) {
+        chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+      }
+    });
+  }
 });
