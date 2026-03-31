@@ -514,3 +514,26 @@ details.card > p:first-of-type {
 .article-section li {
   margin-bottom: 6px;
 }
+
+.policy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+.policy-table th,
+.policy-table td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--pc-border);
+}
+
+.policy-table th {
+  font-weight: 600;
+  color: var(--pc-blue);
+}
+
+.policy-table td:first-child {
+  white-space: nowrap;
+}
