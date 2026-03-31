@@ -40,7 +40,7 @@ Three predefined profiles (“Strict”, “Balanced”, “Permissive”) map d
 
 **Page loads and makes network requests** – As the user navigates, third‑party requests are evaluated against the active rules for the current site. Requests tied to disabled purposes are blocked by the browser’s declarative rules; allowed purposes proceed normally.
 
-**(Future) Page reads preferences via SDK** – On sites that integrate the optional SDK, page code can query the user’s preferences (e.g. `get("analytics")`) and decide whether to load scripts or simplify consent prompts. This complements browser‑level enforcement — it does not replace it.
+**Page reads preferences via SDK** – On sites that integrate the optional SDK, page code can query the user’s preferences (e.g. `get("analytics")`) and decide whether to load scripts or simplify consent prompts. This complements browser‑level enforcement — it does not replace it. A live test is available on [protoconsent.org](https://protoconsent.org/).
 
 ## 5. Security and privacy by design (non-normative)
 
