@@ -507,7 +507,17 @@ function createPurposeItemElement(purposeKey, cfg) {
 
   const iconEl = document.createElement("div");
   iconEl.className = "pc-purpose-icon";
-  iconEl.textContent = cfg.short || (cfg.label?.charAt(0) || "?");
+  if (cfg.icon) {
+    const imgEl = document.createElement("img");
+    imgEl.src = cfg.icon;
+    imgEl.alt = cfg.short || "";
+    imgEl.className = "pc-purpose-icon-img";
+    imgEl.width = 18;
+    imgEl.height = 18;
+    iconEl.appendChild(imgEl);
+  } else {
+    iconEl.textContent = cfg.short || (cfg.label?.charAt(0) || "?");
+  }
 
   const nameEl = document.createElement("div");
   nameEl.className = "pc-purpose-name";

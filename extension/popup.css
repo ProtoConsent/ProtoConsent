@@ -116,6 +116,19 @@ body {
   font-size: 11px;
   background-color: #dbeafe;
   color: #1e3a8a;
+  flex-shrink: 0;
+}
+
+.pc-purpose-icon:has(img) {
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.pc-purpose-icon-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
 }
 
 .pc-purpose-name {
