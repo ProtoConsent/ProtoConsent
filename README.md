@@ -48,6 +48,7 @@ ProtoConsent is in early alpha (v0.1.0), meant for exploration and feedback, not
 - Conditional [Global Privacy Control](https://globalprivacycontrol.org/) (Sec-GPC) header, sent only when privacy-relevant purposes are denied.
 - Content script bridge and JavaScript SDK for web pages to query user preferences.
 - Site declaration support: websites can publish a `.well-known/protoconsent.json` file declaring their data practices, displayed in the popup as a side panel.
+- Visual icons from the [Consent Commons](https://consentcommons.com/) system for purposes, legal basis, sharing and international transfers.
 - TypeScript type declarations for SDK consumers.
 - Live SDK test on [protoconsent.org](https://protoconsent.org).
 
@@ -81,9 +82,9 @@ ProtoConsent sends a conditional [Sec-GPC](https://globalprivacycontrol.org/) he
 ![GPC signal detected on globalprivacycontrol.org](docs/assets/screenshots/gpc-demo-detected.png)
 
 Websites can publish a `.well-known/protoconsent.json` file to declare their data practices.
-The popup displays the declaration in a side panel:
+The popup displays the declaration in a side panel with Consent Commons icons (localhost demo with sample data):
 
-![Site declaration on protoconsent.org](docs/assets/screenshots/well-known-demo-detected.png)
+![Site declaration side panel](docs/assets/screenshots/well-known-demo-detected.png)
 
 ## Getting started (developer mode)
 
