@@ -131,7 +131,7 @@ async function displayBlockedCount() {
 
     countEl.textContent = parts.length > 0
       ? parts.join(" · ")
-      : "All purposes allowed — nothing blocked";
+      : "Nothing blocked";
 
     if (blocked > 0) {
       countEl.classList.add("has-blocked", "clickable");
