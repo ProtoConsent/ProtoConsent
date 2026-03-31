@@ -10,7 +10,7 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 ## 2. Components
 
-**Popup UI** – The main user‑facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. The popup does not enforce anything directly; it sends messages to the background component when settings change.
+**Popup UI** – The main user‑facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. Purpose categories are shown with [Consent Commons](https://consentcommons.com/) icons for visual clarity. When a site publishes a `.well-known/protoconsent.json` declaration, the popup displays it in a collapsible side panel with icons for legal basis, sharing and international transfers. The popup does not enforce anything directly; it sends messages to the background component when settings change.
 
 **Background script (service worker)** – Maintains per‑site rules, computes defaults for new domains, and translates user choices into declarative network rules. Enforcement stays in the browser; policy and UI logic stay in the extension.
 
