@@ -207,8 +207,8 @@ Status: not yet created. This is the next planned step for protocol formalizatio
 | SDK messaging (actual communication) | Implemented (v0.1.0) |
 | Content script bridge | Implemented (v0.1.0) |
 | TypeScript type declarations | Implemented (v0.1.0) |
-| Conditional GPC header (Sec-GPC) | Implemented — per-site, driven by `triggers_gpc` in purposes.json |
-| Site declaration (`.well-known`) | Implemented — fetch with 24h cache, popup display |
+| Conditional GPC header (Sec-GPC) | Implemented (v0.1.1) — per-site, driven by `triggers_gpc` in purposes.json |
+| Site declaration (`.well-known`) | Implemented (v0.1.1) — fetch with 24h cache, popup display |
 | JSON Schemas | Planned (protocol formalization) |
 | Demo sites using SDK | protoconsent.org live test (v0.1.0); additional demos planned |
 
