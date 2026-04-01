@@ -32,7 +32,7 @@ The curation draws from 8 public blocklists:
 | [OISD big](https://oisd.nl/) | Composite domain list | (mixed) |
 | [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | DNS blocklist | (mixed) |
 | [HaGeZi TIF](https://github.com/hagezi/dns-blocklists) | Threat intelligence | Advanced tracking |
-| [Disconnect](https://github.com/nickspaargaren/disconnect-tracking-protection) | Categorized JSON | Multi-category |
+| [Disconnect.me](https://github.com/disconnectme/disconnect-tracking-protection) | Categorized JSON | Multi-category |
 
 ## 4. Curation process
 
