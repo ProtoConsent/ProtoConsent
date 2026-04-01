@@ -23,16 +23,18 @@ This is **not** a full ad/tracking blocker. At this stage of development, the li
 
 The curation draws from 8 public blocklists:
 
-| Source | Type | Category hint |
-|--------|------|---------------|
-| [EasyList](https://easylist.to/) | Adblock filter list | Ads |
-| [EasyPrivacy](https://easylist.to/) | Adblock filter list | Analytics |
-| [Peter Lowe's list](https://pgl.yoyo.org/adservers/) | Domain list | Ads |
-| [OISD small](https://oisd.nl/) | Composite domain list | (mixed) |
-| [OISD big](https://oisd.nl/) | Composite domain list | (mixed) |
-| [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | DNS blocklist | (mixed) |
-| [HaGeZi TIF](https://github.com/hagezi/dns-blocklists) | Threat intelligence | Advanced tracking |
-| [Disconnect.me](https://github.com/disconnectme/disconnect-tracking-protection) | Categorized JSON | Multi-category |
+| Source | Type | Category hint | License |
+|--------|------|---------------|---------|
+| [EasyList](https://easylist.to/) | Adblock filter list | Ads | GPL-3.0+ / CC BY-SA 3.0+ |
+| [EasyPrivacy](https://easylist.to/) | Adblock filter list | Analytics | GPL-3.0+ / CC BY-SA 3.0+ |
+| [Peter Lowe's list](https://pgl.yoyo.org/adservers/) | Domain list | Ads | No formal license¹ |
+| [OISD small](https://oisd.nl/) | Composite domain list | (mixed) | GPL-3.0 |
+| [OISD big](https://oisd.nl/) | Composite domain list | (mixed) | GPL-3.0 |
+| [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | DNS blocklist | (mixed) | GPL-3.0 |
+| [HaGeZi TIF](https://github.com/hagezi/dns-blocklists) | Threat intelligence | Advanced tracking | GPL-3.0 |
+| [Disconnect.me](https://github.com/disconnectme/disconnect-tracking-protection) | Categorized JSON | Multi-category | CC BY-NC-SA 4.0 |
+
+¹ Peter Lowe's list has no formal license; the author grants informal permission: "Feel free to combine this list with yours or lists from other sites and put it up on the web."
 
 ## 4. Curation process
 
