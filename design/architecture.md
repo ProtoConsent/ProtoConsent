@@ -22,20 +22,20 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 ```
 Static rulesets (30,000 rule pool)
-┌─────────────────────┐  ┌─────────────────────────┐
+┌──────────────────────┐  ┌──────────────────────────┐
 │ block_ads            │  │ block_ads_paths          │
-│ 1 rule, 1206 domains│  │ 13 rules, urlFilter each │
+│ 1 rule, 1206 domains │  │ 13 rules, urlFilter each │
 │ requestDomains       │  │ e.g. ||google.com/adsense│
 │ priority 1           │  │ priority 1               │
-└─────────────────────┘  └─────────────────────────┘
-  × 5 categories            × 5 categories
+└──────────────────────┘  └──────────────────────────┘
+     × 5 categories              × 5 categories
 
 Dynamic rules (5,000 rule pool)
-┌─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────┐
 │ Per-site overrides: max 10 rules (priority 2)│
 │ GPC global: 1 rule        (priority 1)       │
 │ GPC per-site: max 2 rules (priority 2)       │
-└─────────────────────────────────────────────┘
+└──────────────────────────────────────────────┘
 ```
 
 *Domain‑based rules* use a single rule per category with a `requestDomains` array listing all tracker domains for that purpose. Chrome matches subdomains automatically, so listing `doubleclick.net` also blocks `static.doubleclick.net`.
