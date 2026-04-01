@@ -241,6 +241,11 @@ body {
   color: #d32f2f;
   margin-top: 2px;
   padding-left: 24px;
+  cursor: pointer;
+}
+
+.pc-purpose-stat:hover {
+  text-decoration: underline;
 }
 
 /* Footer */
@@ -306,15 +311,6 @@ body {
 }
 
 /* Blocked count stat */
-.pc-header-stat {
-  display: flex;
-  justify-content: center;
-  padding: 6px 8px;
-  border-bottom: 1px solid #e5e7eb;
-  background-color: #eff6ff;
-  font-size: 12px;
-}
-
 .pc-blocked-count {
   color: #6b7280;
   font-weight: 500;
@@ -338,6 +334,28 @@ body {
 .pc-blocked-count.has-blocked {
   color: #d32f2f;
   font-weight: 600;
+}
+
+.pc-protection-scope {
+  text-align: center;
+  font-size: 11px;
+  color: #1e3a8a;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pc-protection-scope:empty {
+  display: none;
+}
+
+.pc-header-stat {
+  display: flex;
+  justify-content: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #eff6ff;
+  font-size: 12px;
 }
 
 .pc-blocked-chevron {
@@ -372,6 +390,18 @@ body {
 .pc-detail-domains {
   color: #6b7280;
   font-style: italic;
+}
+
+.pc-detail-info {
+  color: #6b7280;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.pc-detail-total {
+  font-weight: 600;
+  color: #d32f2f;
+  margin-bottom: 2px;
 }
 
 /* Collapsed description state */
@@ -457,10 +487,6 @@ body {
   color: #4b5563;
 }
 
-.pc-declaration-header {
-  margin-bottom: 6px;
-}
-
 .pc-declaration-title {
   font-weight: 600;
   color: #1e3a8a;
@@ -536,5 +562,53 @@ body {
   text-decoration: underline;
 }
 
+/* Debug panel */
+.pc-debug-panel {
+  margin: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 11px;
+  background: #f9fafb;
+}
 
+.pc-debug-summary {
+  padding: 4px 8px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pc-debug-summary:hover {
+  color: #374151;
+}
+
+.pc-debug-copy {
+  float: right;
+  font-size: 10px;
+  padding: 1px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pc-debug-copy:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.pc-debug-content {
+  padding: 4px 8px 6px;
+  color: #4b5563;
+  line-height: 1.5;
+  font-family: monospace;
+  font-size: 10px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+}
 
