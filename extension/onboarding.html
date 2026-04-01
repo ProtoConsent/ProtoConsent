@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome to ProtoConsent</title>
+  <link rel="stylesheet" href="onboarding.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/protoconsent_icon_32.png">
+</head>
+<body>
+  <div class="ob-root">
+
+    <!-- Setup screen -->
+    <div id="ob-setup" class="ob-screen">
+      <header class="ob-header">
+        <img src="icons/protoconsent_icon_128.png" alt="ProtoConsent" class="ob-logo" width="64" height="64">
+        <h1 class="ob-title">Welcome to ProtoConsent</h1>
+        <p class="ob-intro">
+          ProtoConsent puts you in control of how websites use your data.
+          Choose a default privacy profile below &mdash; you can always
+          change it or customize individual sites from the toolbar icon.
+        </p>
+      </header>
+
+      <div id="ob-profiles" class="ob-profiles" role="radiogroup" aria-label="Default privacy profile">
+        <!-- Profile cards rendered by onboarding.js -->
+      </div>
+
+      <div class="ob-action">
+        <button id="ob-save" class="ob-save-btn">Get Started</button>
+      </div>
+    </div>
+
+    <!-- Confirmation screen -->
+    <div id="ob-done" class="ob-screen ob-hidden">
+      <img src="icons/protoconsent_icon_128.png" alt="" class="ob-logo" width="64" height="64">
+      <h1 class="ob-title">You're all set!</h1>
+      <p class="ob-intro">
+        Your default profile is <strong id="ob-chosen-profile"></strong>.
+        Click the ProtoConsent icon in your toolbar to adjust settings for any site.
+      </p>
+      <p class="ob-sub">You can change your default anytime in
+        <a href="#" id="ob-link-settings">Purpose Settings</a>.</p>
+    </div>
+
+    <footer class="ob-footer">
+      <span id="ob-version">ProtoConsent</span>
+      <a href="https://protoconsent.org" target="_blank" rel="noopener noreferrer">protoconsent.org</a>
+    </footer>
+  </div>
+
+  <script src="onboarding.js"></script>
+</body>
+</html>

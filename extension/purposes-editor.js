@@ -24,6 +24,14 @@ async function init() {
 		if (versionEl) {
 			versionEl.textContent = 'ProtoConsent v' + chrome.runtime.getManifest().version;
 		}
+
+		const welcomeLink = document.getElementById('pe-welcome-link');
+		if (welcomeLink) {
+			welcomeLink.addEventListener('click', (e) => {
+				e.preventDefault();
+				chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+			});
+		}
 	} catch (err) {
 		statusEl.textContent = 'Error loading configuration: ' + err.message;
 		statusEl.classList.add('error');
