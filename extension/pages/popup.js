@@ -11,6 +11,7 @@
 const ESTIMATED_MS_PER_BLOCKED_REQUEST = 50;
 
 let PURPOSES_TO_SHOW = [];
+let gpcPurposeKeys = [];
 
 let purposesConfig = {};
 let presetsConfig = {};
@@ -22,15 +23,18 @@ let defaultPurposes = null;
 let currentProfile = "balanced";
 let currentPurposesState = {};
 let allRules = {};
+let lastGpcSignalsSent = 0;
 
 async function initPopup() {
   try {
     await loadConfigs();
     await loadDefaultProfile();
     await initDomain();
+    updateHeaderControls();
     await loadRulesFromStorageSafe();
     initProfileSelect();
     initStateForDomain();
+    updateGpcIndicator();
     renderPurposesList();
     await displayBlockedCount();
     await loadSiteDeclaration();
@@ -129,12 +133,14 @@ let lastBlocked = 0;
 
 async function displayBlockedCount() {
   const countEl = document.getElementById("pc-blocked-count");
+  const statRowEl = document.querySelector(".pc-header-stat");
 
   try {
     const { blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains } = await getBlockedRulesCount();
     lastDomainHitCount = domainHitCount;
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
+    lastGpcSignalsSent = gpc;
 
     // domainHitCount maps purpose -> count from static rulesets only.
     // Supplement with blockedDomains (from onRuleMatchedDebug) to cover dynamic rule matches.
@@ -168,10 +174,12 @@ async function displayBlockedCount() {
 
       if (blocked > 0) {
         countEl.classList.add("has-blocked", "clickable");
+        if (statRowEl) statRowEl.classList.add("clickable");
         const chevron = document.getElementById("pc-blocked-chevron");
         if (chevron) chevron.textContent = "▸";
       } else {
         countEl.classList.remove("has-blocked", "clickable");
+        if (statRowEl) statRowEl.classList.remove("clickable");
         countEl.removeAttribute("aria-expanded");
       }
     }
@@ -179,6 +187,7 @@ async function displayBlockedCount() {
     // Inject per-purpose stats into purpose items
     displayPerPurposeStats();
     displayProtectionScope();
+    updateGpcIndicator(gpc);
 
     // Debug panel (visible only when DEBUG_RULES = true)
     if (DEBUG_RULES) {
@@ -209,18 +218,18 @@ function displayPerPurposeStats() {
 
     const ms = count * ESTIMATED_MS_PER_BLOCKED_REQUEST;
     const statEl = document.createElement("div");
-   statEl.className = "pc-purpose-stat clickable";
-  statEl.textContent = count + " blocked · ~" + formatEstimatedTime(ms);
-   statEl.setAttribute("role", "button");
-   statEl.setAttribute("tabindex", "0");
-   statEl.setAttribute("aria-label", "Show blocked trackers for " + (purposesConfig[purposeKey]?.label || purposeKey));
-   statEl.addEventListener("click", toggleBlockedDetail);
-   statEl.addEventListener("keydown", (e) => {
-     if (e.key === "Enter" || e.key === " ") {
-       e.preventDefault();
-       toggleBlockedDetail();
-     }
-   });
+    statEl.className = "pc-purpose-stat clickable";
+    statEl.textContent = count + " blocked · ~" + formatEstimatedTime(ms);
+    statEl.setAttribute("role", "button");
+    statEl.setAttribute("tabindex", "0");
+    statEl.setAttribute("aria-label", "Show blocked trackers for " + (purposesConfig[purposeKey]?.label || purposeKey));
+    statEl.addEventListener("click", toggleBlockedDetail);
+    statEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleBlockedDetail();
+      }
+    });
 
     // Insert after header, before description
     const descEl = itemEl.querySelector(".pc-purpose-description");
@@ -235,7 +244,10 @@ function displayPerPurposeStats() {
 // Display "Protected from X trackers" below the counter bar
 function displayProtectionScope() {
   const scopeEl = document.getElementById("pc-protection-scope");
-  if (!scopeEl) return;
+  const scopeTextEl = document.getElementById("pc-protection-scope-text");
+  if (!scopeEl || !scopeTextEl) return;
+
+  const hasBlockedPurposes = PURPOSES_TO_SHOW.some((purposeKey) => currentPurposesState[purposeKey] === false);
 
   let domainCount = 0;
   let pathCount = 0;
@@ -247,9 +259,20 @@ function displayProtectionScope() {
 
   const total = domainCount + pathCount;
   if (total > 0) {
-    scopeEl.textContent = "Protected from " + total + " tracking rules";
+    scopeTextEl.textContent = "Protected from " + total + " tracking rules";
+    scopeTextEl.title = "";
+    scopeEl.style.display = "flex";
   } else {
-    scopeEl.textContent = "";
+    if (hasBlockedPurposes) {
+      scopeTextEl.textContent = "Protection enabled";
+      scopeTextEl.title = "";
+    } else {
+      scopeTextEl.textContent = "No site-level protections";
+      scopeTextEl.title = lastBlocked > 0
+        ? "This site allows all purposes; blocked requests may still come from embedded third-party contexts."
+        : "This site currently allows all purposes.";
+    }
+    scopeEl.style.display = "flex";
   }
 }
 
@@ -271,22 +294,6 @@ async function toggleBlockedDetail() {
 
   // lastBlockedDomains maps purpose -> { domain -> count } from onRuleMatchedDebug
   detailEl.innerHTML = "";
-
-  // Total blocked count
-  if (lastBlocked > 0) {
-    const totalEl = document.createElement("div");
-    totalEl.className = "pc-detail-total";
-    totalEl.appendChild(document.createTextNode(lastBlocked + " blocked "));
-    const undercountEl = document.createElement("span");
-    undercountEl.className = "pc-detail-info";
-    const ucIcon = document.createElement("span");
-    ucIcon.style.fontStyle = "normal";
-    ucIcon.textContent = "\u2014 \u2139\uFE0F ";
-    undercountEl.appendChild(ucIcon);
-    undercountEl.appendChild(document.createTextNode("Counts may undercount"));
-    totalEl.appendChild(undercountEl);
-    detailEl.appendChild(totalEl);
-  }
 
   const orderedPurposes = PURPOSES_TO_SHOW.filter(p => lastDomainHitCount[p] || lastBlockedDomains[p]);
 
@@ -321,15 +328,34 @@ async function toggleBlockedDetail() {
     detailEl.appendChild(row);
   }
 
-  // Footnote explaining the blocked count
+  // Clarify the apparent contradiction only when site-level protections are off.
+  const hasSiteLevelProtection = PURPOSES_TO_SHOW.some((purposeKey) => currentPurposesState[purposeKey] === false);
+
+  // Unified info block with undercount + optional third-party clarification
   const infoEl = document.createElement("div");
   infoEl.className = "pc-detail-info";
   const infoIcon = document.createElement("span");
   infoIcon.style.fontStyle = "normal";
   infoIcon.textContent = "\u2139\uFE0F ";
   infoEl.appendChild(infoIcon);
-  infoEl.appendChild(document.createTextNode("Blocked trackers can\u2019t load additional scripts."));
-  detailEl.appendChild(infoEl);
+
+  const infoTextContainer = document.createElement("div");
+  infoTextContainer.style.display = "flex";
+  infoTextContainer.style.flexDirection = "column";
+  infoTextContainer.style.gap = "2px";
+
+  const undercountText = document.createElement("span");
+  undercountText.textContent = "Blocked entry-scripts may stop others' execution.";
+  infoTextContainer.appendChild(undercountText);
+
+  if (!hasSiteLevelProtection && lastBlocked > 0) {
+    const thirdPartyText = document.createElement("span");
+    thirdPartyText.textContent = "Some may come from embedded 3rd-party contexts.";
+    infoTextContainer.appendChild(thirdPartyText);
+  }
+
+  infoEl.appendChild(infoTextContainer);
+  detailEl.appendChild(infoEl)
 
   detailEl.classList.remove("is-collapsed");
   const chevron = document.getElementById("pc-blocked-chevron");
@@ -339,6 +365,11 @@ async function toggleBlockedDetail() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initPopup();
+
+  const reloadBtn = document.getElementById("pc-reload-btn");
+  if (reloadBtn) {
+    reloadBtn.addEventListener("click", reloadActiveTab);
+  }
 
   const purposesLink = document.getElementById("pc-purposes-link");
   if (purposesLink) {
@@ -351,6 +382,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const countEl = document.getElementById("pc-blocked-count");
   if (countEl) {
     countEl.addEventListener("click", toggleBlockedDetail);
+  }
+
+  const headerStatEl = document.querySelector(".pc-header-stat");
+  if (headerStatEl) {
+    headerStatEl.addEventListener("click", (e) => {
+      if (e.target && e.target.closest("#pc-blocked-count")) return;
+      if (!headerStatEl.classList.contains("clickable")) return;
+      toggleBlockedDetail();
+    });
   }
 
   const toggleDescBtn = document.getElementById("pc-toggle-descriptions");
@@ -401,6 +441,9 @@ async function loadConfigs() {
   // Derive display order from config, sorted by the order field
   PURPOSES_TO_SHOW = Object.keys(purposesConfig)
     .sort((a, b) => (purposesConfig[a].order || 0) - (purposesConfig[b].order || 0));
+
+  // Purposes that can trigger Sec-GPC when blocked
+  gpcPurposeKeys = PURPOSES_TO_SHOW.filter((key) => purposesConfig[key] && purposesConfig[key].triggers_gpc);
 }
 
 // Load the user's default profile from storage
@@ -491,6 +534,7 @@ function initProfileSelect() {
     renderPurposesList();
     saveCurrentDomainRulesSafe();
     displayProtectionScope();
+    updateGpcIndicator();
   });
 }
 
@@ -688,6 +732,7 @@ function createPurposeItemElement(purposeKey, cfg) {
     detectCustomProfile();
     saveCurrentDomainRulesSafe();
     displayProtectionScope();
+    updateGpcIndicator();
   });
 
   // Initial visual state
@@ -808,8 +853,140 @@ function notifyBackgroundRulesUpdated() {
     const detailEl = document.getElementById("pc-blocked-detail");
     if (detailEl) detailEl.classList.add("is-collapsed");
     const scopeEl = document.getElementById("pc-protection-scope");
-    if (scopeEl) scopeEl.textContent = "";
+    const scopeTextEl = document.getElementById("pc-protection-scope-text");
+    if (scopeEl) scopeEl.style.display = "flex";
+    if (scopeTextEl) scopeTextEl.textContent = "";
+    const reloadBtn = document.getElementById("pc-reload-btn");
+    if (reloadBtn && currentDomain) reloadBtn.classList.add("is-recommended");
   });
+}
+
+function isSupportedWebUrl(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch (_) {
+    return false;
+  }
+}
+
+// Predictive semaphore: active when any purpose with triggers_gpc is blocked in the current configuration.
+function expectedGpcEnabled() {
+  if (!currentDomain || !Array.isArray(gpcPurposeKeys) || gpcPurposeKeys.length === 0) return false;
+  return gpcPurposeKeys.some((key) => currentPurposesState[key] === false);
+}
+
+// Color/label reflect the expected state; the observed count is exposed only in the tooltip.
+function updateGpcIndicator(observedGpc = lastGpcSignalsSent) {
+  const indicatorEl = document.getElementById("pc-gpc-indicator");
+  const labelEl = document.getElementById("pc-gpc-label");
+  if (!indicatorEl || !labelEl) return;
+
+  if (!currentDomain) {
+    indicatorEl.classList.remove("is-active", "is-inactive");
+    indicatorEl.classList.add("is-disabled");
+    labelEl.textContent = "GPC n/a";
+    indicatorEl.title = "GPC unavailable on this page";
+    return;
+  }
+
+  const expectedOn = expectedGpcEnabled();
+  indicatorEl.classList.remove("is-disabled");
+  indicatorEl.classList.toggle("is-active", expectedOn);
+  indicatorEl.classList.toggle("is-inactive", !expectedOn);
+  labelEl.textContent = expectedOn ? "GPC on" : "GPC off";
+  const expectedText = expectedOn ? "Expected: GPC on" : "Expected: GPC off";
+  const observedText = observedGpc > 0
+    ? "Observed: " + observedGpc + " GPC signals sent"
+    : "Observed: no GPC signals sent yet on this tab";
+  indicatorEl.title = expectedText + "\n" + observedText;
+}
+
+function updateHeaderControls() {
+  const reloadBtn = document.getElementById("pc-reload-btn");
+  if (reloadBtn) {
+    const enabled = !!currentDomain;
+    reloadBtn.disabled = !enabled;
+    if (!enabled) reloadBtn.classList.remove("is-recommended");
+  }
+  updateGpcIndicator();
+}
+
+function waitForTabReload(tabId, timeoutMs = 12000) {
+  return new Promise((resolve) => {
+    if (!chrome.tabs || !chrome.tabs.onUpdated) {
+      resolve(false);
+      return;
+    }
+
+    let settled = false;
+    let timeoutId = null;
+
+    const cleanup = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      chrome.tabs.onUpdated.removeListener(handleUpdated);
+    };
+
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(result);
+    };
+
+    const handleUpdated = (updatedTabId, changeInfo) => {
+      if (updatedTabId !== tabId) return;
+      if (changeInfo.status === "complete") {
+        finish(true);
+      }
+    };
+
+    chrome.tabs.onUpdated.addListener(handleUpdated);
+    timeoutId = setTimeout(() => finish(false), timeoutMs);
+  });
+}
+
+async function reloadActiveTab() {
+  const reloadBtn = document.getElementById("pc-reload-btn");
+  const countEl = document.getElementById("pc-blocked-count");
+  if (!reloadBtn || !chrome.tabs) return;
+
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = tabs && tabs[0];
+    if (!tab || !tab.id || !isSupportedWebUrl(tab.url)) return;
+
+    reloadBtn.disabled = true;
+    reloadBtn.classList.remove("is-recommended");
+    if (countEl) countEl.textContent = "Reloading page...";
+
+    chrome.tabs.reload(tab.id, {}, async () => {
+      // Popup may have closed; guard all DOM access
+      if (chrome.runtime.lastError) {
+        console.error("ProtoConsent: reload request failed:", chrome.runtime.lastError);
+        if (reloadBtn) reloadBtn.disabled = false;
+        await displayBlockedCount();
+        return;
+      }
+
+      const reloaded = await waitForTabReload(tab.id);
+      // Re-query elements in case popup closed
+      const reloadBtnEl = document.getElementById("pc-reload-btn");
+      const countElEl = document.getElementById("pc-blocked-count");
+
+      if (reloadBtnEl) reloadBtnEl.disabled = false;
+
+      if (reloaded) {
+        await displayBlockedCount();
+      } else {
+        if (countElEl) countElEl.textContent = "Reload page to update stats";
+      }
+    });
+  } catch (err) {
+    console.error("ProtoConsent: reload failed:", err);
+    reloadBtn.disabled = false;
+    await displayBlockedCount();
+  }
 }
 
 // Show a message when the active tab is not an http(s) page
@@ -835,6 +1012,8 @@ function showUnsupportedPage() {
   if (detailEl) detailEl.style.display = "none";
   const scopeEl = document.getElementById("pc-protection-scope");
   if (scopeEl) scopeEl.style.display = "none";
+
+  updateHeaderControls();
 }
 
 // Simple UI error helper
