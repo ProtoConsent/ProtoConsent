@@ -552,3 +552,53 @@ body {
   text-decoration: underline;
 }
 
+/* Debug panel */
+.pc-debug-panel {
+  margin: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 11px;
+  background: #f9fafb;
+}
+
+.pc-debug-summary {
+  padding: 4px 8px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pc-debug-summary:hover {
+  color: #374151;
+}
+
+.pc-debug-copy {
+  float: right;
+  font-size: 10px;
+  padding: 1px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pc-debug-copy:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.pc-debug-content {
+  padding: 4px 8px 6px;
+  color: #4b5563;
+  line-height: 1.5;
+  font-family: monospace;
+  font-size: 10px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+}
+

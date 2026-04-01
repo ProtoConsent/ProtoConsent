@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // popup.js with safe chrome.storage.local
-
-// For debugging: set to true to log rule saves and messages
-const DEBUG_RULES = false;
+// DEBUG_RULES loaded from config.js via <script> in popup.html
 
 // Consent Commons icons for legal_basis values in site declaration
 const LEGAL_BASIS_ICONS = {
@@ -52,12 +50,10 @@ async function initPopup() {
   }
 }
 
-/**
- * Get the count of matched DNR rules for the current tab.
- * Calls chrome.declarativeNetRequest.getMatchedRules({ tabId })
- * and fetches per-domain detail from the background's onRuleMatchedDebug tracker.
- * @returns {Promise<{blocked, gpc, domainHitCount, blockedDomains}>}
- */
+ // Get the count of matched DNR rules for the current tab.
+ // Calls chrome.declarativeNetRequest.getMatchedRules({ tabId })
+ // and fetches per-domain detail from the background's onRuleMatchedDebug tracker.
+ // @returns {Promise<{blocked, gpc, domainHitCount, blockedDomains}>}
 async function getBlockedRulesCount() {
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
@@ -69,9 +65,10 @@ async function getBlockedRulesCount() {
 
     const tabId = tabs[0].id;
 
-    const [matched, domainsResp] = await Promise.all([
+    const [matched, domainsResp, dynamicRules] = await Promise.all([
       chrome.declarativeNetRequest.getMatchedRules({ tabId }),
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_BLOCKED_DOMAINS", tabId }),
+      chrome.declarativeNetRequest.getDynamicRules(),
     ]);
 
     if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, domainHitCount: {}, blockedDomains: {} };
@@ -83,25 +80,38 @@ async function getBlockedRulesCount() {
       purposeDomainCounts = domainsResp.purposeDomainCounts;
     }
 
-    // Dynamic rule classification from background (avoids calling getDynamicRules)
-    const dynamicBlockIds = new Set(domainsResp?.dynamicBlockIds || []);
-    const dynamicGpcIds = new Set(domainsResp?.dynamicGpcIds || []);
+    // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)
+    const dynamicBlockIds = new Set();
+    const dynamicGpcIds = new Set();
+    for (const rule of dynamicRules) {
+      if (rule.action.type === "block") {
+        dynamicBlockIds.add(rule.id);
+      } else if (rule.action.type === "modifyHeaders") {
+        const isGpcSet = rule.action.requestHeaders?.some(
+          h => h.header === "Sec-GPC" && h.operation === "set"
+        );
+        if (isGpcSet) dynamicGpcIds.add(rule.id);
+      }
+    }
 
     let blocked = 0;
     let gpc = 0;
     const domainHitCount = {};
+    const rulesetHitCount = {}; // rulesetId → count (for debug)
     for (const info of matched.rulesMatchedInfo) {
       const rulesetId = info.rule.rulesetId;
 
-      // Static ruleset match (e.g. "block_ads" → purpose "ads")
+      // Static ruleset match (e.g. "block_ads" or "block_ads_paths" → purpose "ads")
       if (rulesetId && rulesetId.startsWith("block_")) {
         blocked++;
-        const purpose = rulesetId.slice(6); // "block_ads" → "ads"
+        const purpose = rulesetId.slice(6).replace(/_paths$/, "");
         domainHitCount[purpose] = (domainHitCount[purpose] || 0) + 1;
+        rulesetHitCount[rulesetId] = (rulesetHitCount[rulesetId] || 0) + 1;
       }
       // Dynamic block override (per-site)
       else if (rulesetId === "_dynamic" && dynamicBlockIds.has(info.rule.ruleId)) {
         blocked++;
+        rulesetHitCount["_dynamic_block"] = (rulesetHitCount["_dynamic_block"] || 0) + 1;
       }
       // GPC header (dynamic)
       else if (rulesetId === "_dynamic" && dynamicGpcIds.has(info.rule.ruleId)) {
@@ -109,23 +119,14 @@ async function getBlockedRulesCount() {
       }
     }
 
-    if (DEBUG_RULES) {
-      console.debug(`ProtoConsent: ${blocked} blocked, ${gpc} GPC for tab ${tabId}`);
-      console.debug("ProtoConsent: all matched rules:", matched.rulesMatchedInfo);
-      console.debug("ProtoConsent: hit counts by purpose:", domainHitCount);
-      console.debug("ProtoConsent: blocked domains:", blockedDomains);
-    }
-
-    return { blocked, gpc, domainHitCount, blockedDomains };
+    return { blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
-    return { blocked: 0, gpc: 0, domainHitCount: {}, blockedDomains: {} };
+    return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
   }
 }
 
-/**
- * Fetch and display the blocked rules count on the popup.
- */
+// Fetch and display the blocked rules count on the popup.
 let lastDomainHitCount = {};
 let lastPurposeStats = {};
 let lastBlockedDomains = {};
@@ -136,7 +137,7 @@ async function displayBlockedCount() {
   const gpcEl = document.getElementById("pc-gpc-count");
 
   try {
-    const { blocked, gpc, domainHitCount, blockedDomains } = await getBlockedRulesCount();
+    const { blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains } = await getBlockedRulesCount();
     lastDomainHitCount = domainHitCount;
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
@@ -152,6 +153,11 @@ async function displayBlockedCount() {
     // Inject per-purpose stats into purpose items
     displayPerPurposeStats();
     displayProtectionScope();
+
+    // Debug panel (visible only when DEBUG_RULES = true)
+    if (DEBUG_RULES) {
+      renderDebugPanel({ blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains });
+    }
   } catch (err) {
     console.error("ProtoConsent: error displaying blocked count:", err);
   }
@@ -184,10 +190,8 @@ function displayPerPurposeStats() {
   }
 }
 
-/**
- * Display "Protected from X tracker domains" based on which
- * purposes are currently blocked for this site.
- */
+// Display "Protected from X tracker domains" based on which
+// purposes are currently blocked for this site.
 function displayProtectionScope() {
   const scopeEl = document.getElementById("pc-protection-scope");
   if (!scopeEl) return;
@@ -757,12 +761,6 @@ function saveCurrentDomainRulesSafe() {
       if (chrome.runtime.lastError) {
         console.error("ProtoConsent: error saving rules:", chrome.runtime.lastError);
       } else {
-        if (DEBUG_RULES) {
-          console.debug("ProtoConsent: saved rules for", currentDomain, {
-            profile: currentProfile,
-            purposes: currentPurposesState
-          });
-        }
         notifyBackgroundRulesUpdated();
       }
     });
@@ -773,9 +771,6 @@ function notifyBackgroundRulesUpdated() {
   if (!chrome.runtime || !chrome.runtime.sendMessage) return;
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_RULES_UPDATED" }, () => {
     const err = chrome.runtime.lastError;
-    if (err && DEBUG_RULES) {
-      console.debug("ProtoConsent: background may be sleeping:", err.message);
-    }
     // After rule rebuild, matched rule IDs are stale — prompt reload
     const scopeEl = document.getElementById("pc-protection-scope");
     if (scopeEl) {
@@ -862,7 +857,7 @@ async function loadSiteDeclaration() {
     if (data && validateSiteDeclaration(data)) {
       // Cache valid declarations (24h TTL)
       chrome.storage.local.set({ [cacheKey]: { data, ts: Date.now() } }, () => {
-        if (chrome.runtime.lastError && DEBUG_RULES) {
+        if (chrome.runtime.lastError) {
           console.warn("[well-known] Cache write error:", chrome.runtime.lastError);
         }
       });
@@ -870,20 +865,18 @@ async function loadSiteDeclaration() {
     } else {
       // Cache negative/invalid result (6h TTL) to avoid re-fetching on every popup open
       chrome.storage.local.set({ [cacheKey]: { data: null, ts: Date.now() } }, () => {
-        if (chrome.runtime.lastError && DEBUG_RULES) {
+        if (chrome.runtime.lastError) {
           console.warn("[well-known] Cache write error:", chrome.runtime.lastError);
         }
       });
     }
   } catch (err) {
-    if (DEBUG_RULES) console.error("[well-known] Error:", err);
+    console.error("[well-known] Error:", err);
   }
 }
 
-/**
- * Minimal validation of a .well-known/protoconsent.json file.
- * See design/well-known-spec.md §4.2 for the rules.
- */
+// Minimal validation of a .well-known/protoconsent.json file.
+// See design/well-known-spec.md §4.2 for the rules.
 function validateSiteDeclaration(json) {
   if (!json || typeof json !== "object") return false;
   if (!json.purposes || typeof json.purposes !== "object") return false;
@@ -1061,6 +1054,128 @@ function renderSiteDeclaration(container, declaration) {
       sideTab.classList.toggle("is-open", isOpen);
       sideTab.setAttribute("aria-expanded", isOpen ? "true" : "false");
       sidePanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+    });
+  }
+}
+
+// Render debug info into the collapsible debug panel (only when DEBUG_RULES = true).
+function renderDebugPanel({ blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains }) {
+  const panel = document.getElementById("pc-debug-panel");
+  const content = document.getElementById("pc-debug-content");
+  if (!panel || !content) return;
+
+  panel.hidden = false;
+
+  // Fetch background rebuild snapshot
+  chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_DEBUG" }, (bg) => {
+    const lines = [];
+
+    // Global profile & purposes
+    if (bg && bg.globalProfile) {
+      lines.push("— global profile: " + bg.globalProfile + " —");
+      if (bg.globalPurposes) {
+        const purposeStr = Object.entries(bg.globalPurposes)
+          .map(([k, v]) => k + ":" + (v ? "✓" : "✗")).join("  ");
+        lines.push("  " + purposeStr);
+      }
+      lines.push("");
+    }
+
+    // Site profile (from popup state)
+    lines.push("— site: " + (currentDomain || "?") + " (profile: " + currentProfile + ") —");
+    if (currentPurposesState) {
+      const siteStr = Object.entries(currentPurposesState)
+        .map(([k, v]) => k + ":" + (v ? "✓" : "✗")).join("  ");
+      lines.push("  " + siteStr);
+    }
+    lines.push("");
+
+    // Category domain counts
+    if (bg && bg.categoryDomains) {
+      lines.push("— blocklist sizes —");
+      for (const [cat, info] of Object.entries(bg.categoryDomains).sort()) {
+        lines.push("  " + cat + ": " + info);
+      }
+      lines.push("");
+    }
+
+    // Static rulesets & dynamic rules
+    if (bg && bg.enableIds) {
+      lines.push("— rulesets —");
+      lines.push("  enabled:  " + (bg.enableIds.join(", ") || "(none)"));
+      lines.push("  disabled: " + (bg.disableIds.join(", ") || "(none)"));
+      lines.push("  dynamic: " + bg.dynamicCount +
+        " (" + bg.overrideCount + " overrides, " +
+        bg.gpcGlobal + " GPC-g, " + bg.gpcPerSite + " GPC-s)");
+      if (bg.error) lines.push("  ⚠ ERROR: " + bg.error);
+      lines.push("");
+    }
+
+    // Override detail
+    if (bg && bg.overrideDetails && Object.keys(bg.overrideDetails).length) {
+      lines.push("— overrides —");
+      for (const [id, detail] of Object.entries(bg.overrideDetails)) {
+        lines.push("  rule " + id + ": " + detail);
+      }
+      lines.push("");
+    }
+
+    // Custom sites
+    if (bg && bg.customSites && bg.customSites.length) {
+      lines.push("— custom sites (" + bg.customSites.length + ") —");
+      lines.push("  " + bg.customSites.join(", "));
+      lines.push("");
+    }
+
+    // Tab match info
+    lines.push("— tab matches —");
+    lines.push("  blocked: " + blocked + "  gpc: " + gpc);
+    lines.push("");
+
+    // Ruleset breakdown (domain vs path)
+    if (Object.keys(rulesetHitCount).length) {
+      lines.push("— ruleset hits —");
+      for (const [id, count] of Object.entries(rulesetHitCount).sort()) {
+        const tag = id.endsWith("_paths") ? " (path)" : id === "_dynamic_block" ? " (dynamic)" : " (domain)";
+        lines.push("  " + id + ": " + count + tag);
+      }
+      lines.push("");
+    }
+
+    // Purpose breakdown
+    if (Object.keys(domainHitCount).length) {
+      lines.push("— purpose hits —");
+      for (const [purpose, count] of Object.entries(domainHitCount).sort()) {
+        lines.push("  " + purpose + ": " + count);
+      }
+      lines.push("");
+    }
+
+    // Blocked domains detail
+    if (Object.keys(blockedDomains).length) {
+      lines.push("— blocked domains —");
+      for (const [purpose, domains] of Object.entries(blockedDomains).sort()) {
+        for (const [domain, count] of Object.entries(domains).sort()) {
+          lines.push("  [" + purpose + "] " + domain + " ×" + count);
+        }
+      }
+    }
+
+    content.textContent = lines.join("\n");
+  });
+
+  // Copy button
+  const copyBtn = document.getElementById("pc-debug-copy");
+  if (copyBtn && !copyBtn._bound) {
+    copyBtn._bound = true;
+    copyBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const text = content.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = "Copied!";
+        setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
+      });
     });
   }
 }

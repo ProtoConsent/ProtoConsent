@@ -61,7 +61,12 @@
       { "id": "block_ads", "enabled": false, "path": "rules/block_ads.json" },
       { "id": "block_personalization", "enabled": false, "path": "rules/block_personalization.json" },
       { "id": "block_third_parties", "enabled": false, "path": "rules/block_third_parties.json" },
-      { "id": "block_advanced_tracking", "enabled": false, "path": "rules/block_advanced_tracking.json" }
+      { "id": "block_advanced_tracking", "enabled": false, "path": "rules/block_advanced_tracking.json" },
+      { "id": "block_analytics_paths", "enabled": false, "path": "rules/block_analytics_paths.json" },
+      { "id": "block_ads_paths", "enabled": false, "path": "rules/block_ads_paths.json" },
+      { "id": "block_personalization_paths", "enabled": false, "path": "rules/block_personalization_paths.json" },
+      { "id": "block_third_parties_paths", "enabled": false, "path": "rules/block_third_parties_paths.json" },
+      { "id": "block_advanced_tracking_paths", "enabled": false, "path": "rules/block_advanced_tracking_paths.json" }
     ]
   }
 }

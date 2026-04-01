@@ -3,12 +3,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // background.js - ProtoConsent enforcement using declarativeNetRequest
+importScripts("config.js");
 
 // We assign IDs for dynamic rules starting from 1 upwards
 const BASE_RULE_ID = 1;
-
-// For debugging: set to true to log all rule rebuilds and inputs
-const DEBUG_RULES = false;
 
 // Resource types for blocking rules (not main_frame — that would block the page itself)
 const BLOCK_RESOURCE_TYPES = [
@@ -38,9 +36,9 @@ const tabBlockedDomains = new Map();
 // Maps dynamic block rule IDs to their purpose (rebuilt on each rule update).
 let dynamicBlockRuleMap = {};
 
-// Dynamic GPC "set" rule IDs — only rules that ADD Sec-GPC:1 (rebuilt on each rule update).
-// The "remove" rule (for permissive sites) is excluded so popup doesn't count it as a signal.
-let dynamicGpcSetIds = [];
+// Last rebuild debug snapshot (served to popup on request)
+let lastRebuildDebug = {};
+
 
 // Cached in-memory copy of presets.json; loaded once per SW lifetime.
 let presetsConfig = null;
@@ -68,6 +66,24 @@ async function loadBlocklistsConfig() {
     } catch (_) {
       // No static ruleset for this category (e.g. "functional")
       entry.domains = [];
+    }
+    // Extract unique domains from path-based rules (urlFilter "||domain.com/path")
+    try {
+      const url = chrome.runtime.getURL("rules/block_" + key + "_paths.json");
+      const res = await fetch(url);
+      const rules = await res.json();
+      const domainSet = new Set(entry.domains);
+      const pathDomains = [];
+      for (const rule of rules) {
+        const m = rule.condition?.urlFilter?.match(/^\|\|([^/]+)/);
+        if (m && !domainSet.has(m[1])) {
+          pathDomains.push(m[1]);
+          domainSet.add(m[1]);
+        }
+      }
+      entry.pathDomains = pathDomains;
+    } catch (_) {
+      entry.pathDomains = [];
     }
     config[key] = entry;
   }
@@ -196,9 +212,7 @@ async function rebuildAllDynamicRules() {
 
 async function _rebuildAllDynamicRulesImpl() {
   if (!chrome.declarativeNetRequest?.updateDynamicRules) {
-    if (DEBUG_RULES) {
-      console.warn("ProtoConsent: declarativeNetRequest not available in this browser.");
-    }
+    console.warn("ProtoConsent: declarativeNetRequest not available in this browser.");
     return;
   }
 
@@ -221,7 +235,6 @@ async function _rebuildAllDynamicRulesImpl() {
     const newRules = [];
     let nextRuleId = BASE_RULE_ID;
     const newDynamicBlockMap = {};
-    const newDynamicGpcSetIds = [];
 
     // 1. Resolve global default purposes (what applies to unconfigured sites)
     const globalPurposes = resolvePurposes({}, presets, defaultConfig);
@@ -236,10 +249,11 @@ async function _rebuildAllDynamicRulesImpl() {
     for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
       if (!blocklists[purposeKey]?.domains?.length) continue; // no ruleset for this category
       const rulesetId = "block_" + purposeKey;
+      const pathsRulesetId = rulesetId + "_paths";
       if (!globalPurposes[purposeKey]) {
-        enableIds.push(rulesetId);
+        enableIds.push(rulesetId, pathsRulesetId);
       } else {
-        disableIds.push(rulesetId);
+        disableIds.push(rulesetId, pathsRulesetId);
       }
     }
 
@@ -271,8 +285,10 @@ async function _rebuildAllDynamicRulesImpl() {
 
     // Second pass: emit one rule per (category, action) with all sites grouped
     for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
-      const domains = blocklists[purposeKey]?.domains;
-      if (!domains?.length) continue;
+      const domainList = blocklists[purposeKey]?.domains || [];
+      const pathDomainList = blocklists[purposeKey]?.pathDomains || [];
+      const domains = pathDomainList.length ? [...domainList, ...pathDomainList] : domainList;
+      if (!domains.length) continue;
 
       if (allowOverrides[purposeKey]?.length) {
         newRules.push({
@@ -315,7 +331,6 @@ async function _rebuildAllDynamicRulesImpl() {
 
     if (globalNeedsGPC) {
       // Global: send GPC on all requests by default
-      newDynamicGpcSetIds.push(nextRuleId);
       newRules.push({
         id: nextRuleId++,
         priority: 1,
@@ -349,7 +364,6 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     if (gpcAddSites.length > 0) {
-      newDynamicGpcSetIds.push(nextRuleId);
       newRules.push({
         id: nextRuleId++,
         priority: 2,
@@ -366,8 +380,8 @@ async function _rebuildAllDynamicRulesImpl() {
       });
     }
 
-    // GPC remove rule for permissive sites — NOT tracked in dynamicGpcSetIds
-    // because popup should not count "remove GPC" as "GPC signal sent"
+    // GPC remove rule for permissive sites — popup filters these out
+    // by only counting "set" operations, not "remove"
     if (gpcRemoveSites.length > 0) {
       newRules.push({
         id: nextRuleId++,
@@ -391,24 +405,53 @@ async function _rebuildAllDynamicRulesImpl() {
         r.action.type === "modifyHeaders" && !r.condition.requestDomains).length;
       const gpcPerSite = newRules.filter(r =>
         r.action.type === "modifyHeaders" && r.condition.requestDomains).length;
-      console.log("ProtoConsent: static rulesets to enable:", enableIds.join(", ") || "(none)");
-      console.log("ProtoConsent: static rulesets to disable:", disableIds.join(", ") || "(none)");
-      console.log("ProtoConsent: rebuilt", newRules.length, "dynamic rules (" +
-        overrideCount + " per-site overrides, " +
-        gpcGlobal + " GPC global, " +
-        gpcPerSite + " GPC per-site)");
+      // Per-category domain counts
+      const categoryDomains = {};
+      for (const key of PURPOSES_FOR_ENFORCEMENT) {
+        const d = blocklists[key]?.domains?.length || 0;
+        const p = blocklists[key]?.pathDomains?.length || 0;
+        if (d || p) categoryDomains[key] = d + "d+" + p + "p=" + (d + p);
+      }
+      // Per-site override detail
+      const overrideDetails = {};
+      for (const r of newRules) {
+        if (r.condition.initiatorDomains && r.condition.requestDomains) {
+          overrideDetails[r.id] = r.action.type + " " + r.condition.requestDomains.length +
+            " → " + r.condition.initiatorDomains.join(",");
+        }
+      }
+      // Custom sites summary
+      const customSites = Object.keys(rulesByDomain);
+      lastRebuildDebug = {
+        globalProfile: defaultConfig.profile || "balanced",
+        globalPurposes,
+        categoryDomains,
+        customSites,
+        enableIds,
+        disableIds,
+        dynamicCount: newRules.length,
+        overrideCount,
+        gpcGlobal,
+        gpcPerSite,
+        overrideDetails,
+        ts: Date.now(),
+      };
     }
 
     // 5. Apply changes: dynamic rules FIRST, then static rulesets.
     //    Order matters for security: during the brief gap between calls,
     //    "new dynamic + old static" may over-block (safe), whereas the
     //    reverse order "new static + old dynamic" could under-block.
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: existingIds,
-      addRules: newRules,
-    });
+    try {
+      await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: existingIds,
+        addRules: newRules,
+      });
+    } catch (e) {
+      console.error("updateDynamicRules failed:", e.message, "rules:", newRules.length);
+      if (DEBUG_RULES) lastRebuildDebug.error = e.message;
+    }
     dynamicBlockRuleMap = newDynamicBlockMap;
-    dynamicGpcSetIds = newDynamicGpcSetIds;
     await chrome.declarativeNetRequest.updateEnabledRulesets({
       enableRulesetIds: enableIds,
       disableRulesetIds: disableIds,
@@ -533,8 +576,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({
         data: tabBlockedDomains.get(message.tabId) || {},
         purposeDomainCounts,
-        dynamicBlockIds: Object.keys(dynamicBlockRuleMap).map(Number),
-        dynamicGpcIds: dynamicGpcSetIds,
       });
     });
     return true; // async response
@@ -547,6 +588,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .catch(() => sendResponse({ data: null }));
     return true; // keep message channel open for async response
   }
+
+  // Popup requests last rebuild debug snapshot
+  if (message.type === "PROTOCONSENT_GET_DEBUG") {
+    sendResponse(lastRebuildDebug);
+    return;
+  }
 });
 
 // Track blocked domains per tab for the popup detail view.
@@ -558,9 +605,9 @@ if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
 
     let purpose = null;
 
-    // Static block ruleset (e.g. "block_ads" → "ads")
+    // Static block ruleset (e.g. "block_ads" or "block_ads_paths" → "ads")
     if (rule.rulesetId && rule.rulesetId.startsWith("block_")) {
-      purpose = rule.rulesetId.slice(6);
+      purpose = rule.rulesetId.slice(6).replace(/_paths$/, "");
     }
     // Dynamic block override
     else if (rule.rulesetId === "_dynamic" && dynamicBlockRuleMap[rule.ruleId]) {
