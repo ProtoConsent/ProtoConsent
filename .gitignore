@@ -17,3 +17,6 @@ desktop.ini
 # Node (if a build step is added later)
 node_modules/
 npm-debug.log*
+
+# Chrome generated files
+extension/_metadata/generated_indexed_rulesets/

@@ -56,6 +56,12 @@
   "options_page": "purposes-editor.html",
 
   "declarative_net_request": {
-    "rule_resources": []
+    "rule_resources": [
+      { "id": "block_analytics", "enabled": false, "path": "rules/block_analytics.json" },
+      { "id": "block_ads", "enabled": false, "path": "rules/block_ads.json" },
+      { "id": "block_personalization", "enabled": false, "path": "rules/block_personalization.json" },
+      { "id": "block_third_parties", "enabled": false, "path": "rules/block_third_parties.json" },
+      { "id": "block_advanced_tracking", "enabled": false, "path": "rules/block_advanced_tracking.json" }
+    ]
   }
 }

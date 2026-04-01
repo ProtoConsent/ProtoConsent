@@ -112,7 +112,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** See how Analytics controls measurement and usage tracking.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `google-analytics.com`, `clarity.ms`, `scorecardresearch.com`, `chartbeat.com`, `fullstory.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `google-analytics.com`, `scorecardresearch.com`, `chartbeat.com`, `fullstory.com`.
 
 - Steps:
   1. Visit a site that uses Google Analytics or Segment.
@@ -125,7 +125,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Observe the impact on advertising traffic.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `doubleclick.net`, `googlesyndication.com`, `adservice.google.com`, `criteo.com`, `taboola.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `doubleclick.net`, `googlesyndication.com`, `adservice.google.com`, `criteo.com`, `taboola.com`.
 
 - Steps:
   1. Use a site with visible ads (for example, a major news site).
@@ -137,7 +137,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Separate basic ads from more advanced personalization or retargeting.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `ad.doubleclick.net`, `demdex.net`, `bluekai.com`, `tapad.com`, `liveramp.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `ad.doubleclick.net`, `demdex.net`, `bluekai.com`, `tapad.com`, `liveramp.com`.
 
 - Steps:
   1. On a site with banners and personalised or retargeted ads, keep **Ads / Marketing** allowed but set **Personalization / Profiling** to *Blocked*.
@@ -149,7 +149,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Highlight third‑party data sharing and integrations.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `connect.facebook.net`, `hotjar.com`, `analytics.twitter.com`, `bat.bing.com`, `hubspot.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `connect.facebook.net`, `hotjar.com`, `analytics.twitter.com`, `bat.bing.com`, `hubspot.com`.
 
 - Steps:
   1. Choose a site that embeds social widgets, Hotjar or Microsoft/Bing tracking.
@@ -162,7 +162,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Target more advanced monitoring or experimentation tools.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `js-agent.newrelic.com`, `cdn.optimizely.com`, `fpnpmcdn.net`, `datadome.co`, `arkoselabs.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `js-agent.newrelic.com`, `cdn.optimizely.com`, `fpnpmcdn.net`, `datadome.co`, `arkoselabs.com`.
 
 - Steps:
   1. Visit a site that uses New Relic, Heap, Optimizely or similar tooling.

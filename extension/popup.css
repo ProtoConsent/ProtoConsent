@@ -241,6 +241,11 @@ body {
   color: #d32f2f;
   margin-top: 2px;
   padding-left: 24px;
+  cursor: pointer;
+}
+
+.pc-purpose-stat:hover {
+  text-decoration: underline;
 }
 
 /* Footer */
@@ -306,6 +311,34 @@ body {
 }
 
 /* Blocked count stat */
+.pc-protection-scope {
+  color: #1e3a8a;
+  font-weight: 600;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.pc-protection-scope:hover {
+  text-decoration: underline;
+}
+
+.pc-gpc-count {
+  text-align: center;
+  font-size: 11px;
+  color: #d32f2f;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pc-gpc-count:empty {
+  display: none;
+}
+
 .pc-header-stat {
   display: flex;
   justify-content: center;
@@ -313,31 +346,6 @@ body {
   border-bottom: 1px solid #e5e7eb;
   background-color: #eff6ff;
   font-size: 12px;
-}
-
-.pc-blocked-count {
-  color: #6b7280;
-  font-weight: 500;
-  transition: color 0.2s ease;
-  background: none;
-  border: none;
-  padding: 0;
-  font-family: inherit;
-  font-size: inherit;
-  cursor: default;
-}
-
-.pc-blocked-count.clickable {
-  cursor: pointer;
-}
-
-.pc-blocked-count.clickable:hover {
-  text-decoration: underline;
-}
-
-.pc-blocked-count.has-blocked {
-  color: #d32f2f;
-  font-weight: 600;
 }
 
 .pc-blocked-chevron {
@@ -372,6 +380,18 @@ body {
 .pc-detail-domains {
   color: #6b7280;
   font-style: italic;
+}
+
+.pc-detail-info {
+  color: #6b7280;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.pc-detail-total {
+  font-weight: 600;
+  color: #d32f2f;
+  margin-bottom: 2px;
 }
 
 /* Collapsed description state */
@@ -457,10 +477,6 @@ body {
   color: #4b5563;
 }
 
-.pc-declaration-header {
-  margin-bottom: 6px;
-}
-
 .pc-declaration-title {
   font-weight: 600;
   color: #1e3a8a;
@@ -535,6 +551,4 @@ body {
 .pc-declaration-link:hover {
   text-decoration: underline;
 }
-
-
 
