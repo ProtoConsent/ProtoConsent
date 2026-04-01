@@ -1,6 +1,7 @@
 {
   "functional": {
     "order": 1,
+    "required": true,
     "label": "Functional (service)",
     "short": "F",
     "short_label": "Functional",
@@ -9,7 +10,7 @@
       "service_management",
       "other_data"
     ],
-    "description": "Everything strictly necessary to provide the service (login, basic UX, billing, support)."
+    "description": "Everything strictly necessary to provide the service, such as login, security, billing, and core UX. This purpose is always enabled."
   },
   "analytics": {
     "order": 2,

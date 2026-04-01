@@ -24,6 +24,7 @@ let currentProfile = "balanced";
 let currentPurposesState = {};
 let allRules = {};
 let lastGpcSignalsSent = 0;
+let requiredPurposeKeys = new Set();
 
 async function initPopup() {
   try {
@@ -444,6 +445,11 @@ async function loadConfigs() {
 
   // Purposes that can trigger Sec-GPC when blocked
   gpcPurposeKeys = PURPOSES_TO_SHOW.filter((key) => purposesConfig[key] && purposesConfig[key].triggers_gpc);
+
+  // Purposes that are always enabled (e.g. functional)
+  requiredPurposeKeys = new Set(
+    PURPOSES_TO_SHOW.filter((key) => purposesConfig[key]?.required)
+  );
 }
 
 // Load the user's default profile from storage
@@ -574,6 +580,11 @@ function initStateForDomain() {
   } else {
     applyPresetToCurrentDomain();
   }
+
+  // Force required purposes to true regardless of stored state
+  for (const key of requiredPurposeKeys) {
+    currentPurposesState[key] = true;
+  }
 }
 
 // Apply preset values for currentProfile into currentPurposesState
@@ -591,6 +602,11 @@ function applyPresetToCurrentDomain() {
     const presetValue = profilePurposes[purposeKey];
     currentPurposesState[purposeKey] = presetValue !== false;
   });
+
+  // Force required purposes to true
+  for (const key of requiredPurposeKeys) {
+    currentPurposesState[key] = true;
+  }
 }
 
 // Check if current toggles match the active preset; if not, switch to "custom".
@@ -601,6 +617,7 @@ function detectCustomProfile() {
     for (const [presetKey, presetDef] of Object.entries(presetsConfig)) {
       const purposes = presetDef.purposes || {};
       const matches = PURPOSES_TO_SHOW.every((key) => {
+        if (requiredPurposeKeys.has(key)) return true;
         return currentPurposesState[key] === (purposes[key] !== false);
       });
       if (matches) {
@@ -620,6 +637,7 @@ function detectCustomProfile() {
 
   const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
   const matchesPreset = PURPOSES_TO_SHOW.every((key) => {
+    if (requiredPurposeKeys.has(key)) return true;
     return currentPurposesState[key] === (profilePurposes[key] !== false);
   });
 
@@ -643,6 +661,11 @@ function createPurposeItemElement(purposeKey, cfg) {
   itemEl.className = "pc-purpose-item";
   itemEl.dataset.purpose = purposeKey;
 
+  const isRequired = requiredPurposeKeys.has(purposeKey);
+  if (isRequired) {
+    itemEl.classList.add("is-required");
+  }
+
   const checkboxId = `pc-toggle-${purposeKey}`;
 
   // Checkbox that owns the state for this purpose
@@ -652,6 +675,11 @@ function createPurposeItemElement(purposeKey, cfg) {
   checkboxEl.className = "pc-toggle-checkbox";
   checkboxEl.checked = isAllowed;
   checkboxEl.setAttribute("aria-label", cfg.label + " — " + (isAllowed ? "Allowed" : "Blocked"));
+
+  if (isRequired) {
+    checkboxEl.checked = true;
+    checkboxEl.disabled = true;
+  }
 
   // Header container (visual row)
   const headerEl = document.createElement("div");
@@ -713,6 +741,12 @@ function createPurposeItemElement(purposeKey, cfg) {
 
   // Update the visual switch based on the checkbox state
   function updateSwitchVisual() {
+    if (isRequired) {
+      switchEl.classList.add("is-on", "is-disabled");
+      stateLabelEl.textContent = "Required";
+      checkboxEl.setAttribute("aria-label", cfg.label + " — Required (always enabled)");
+      return;
+    }
     if (checkboxEl.checked) {
       switchEl.classList.add("is-on");
       stateLabelEl.textContent = "Allowed";
@@ -726,6 +760,7 @@ function createPurposeItemElement(purposeKey, cfg) {
 
   // Sync internal state + visuals when checkbox changes
   checkboxEl.addEventListener("change", () => {
+    if (isRequired) return;
     const newValue = checkboxEl.checked;
     currentPurposesState[purposeKey] = newValue;
     updateSwitchVisual();
@@ -806,6 +841,7 @@ function saveCurrentDomainRulesSafe() {
     // Custom: store all purposes explicitly
     purposes = {};
     PURPOSES_TO_SHOW.forEach((key) => {
+      if (requiredPurposeKeys.has(key)) return;
       purposes[key] = currentPurposesState[key] !== false;
     });
   } else {
@@ -813,6 +849,7 @@ function saveCurrentDomainRulesSafe() {
     const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
     purposes = {};
     PURPOSES_TO_SHOW.forEach((key) => {
+      if (requiredPurposeKeys.has(key)) return;
       const profileDefault = profilePurposes[key] !== false;
       if (currentPurposesState[key] !== profileDefault) {
         purposes[key] = currentPurposesState[key];

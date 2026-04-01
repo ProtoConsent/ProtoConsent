@@ -346,6 +346,25 @@ body {
   transform: translateX(14px);
 }
 
+/* Required purpose: disabled toggle — softer green, non-interactive */
+.pc-toggle-switch.is-on.is-disabled {
+  background-color: #aad1b4;
+  cursor: not-allowed;
+}
+
+.pc-purpose-item.is-required .pc-purpose-toggle {
+  cursor: not-allowed;
+}
+
+.pc-purpose-item.is-required .pc-toggle-label {
+  cursor: not-allowed;
+  color: #6b7280;
+}
+
+.pc-purpose-item.is-required .pc-toggle-checkbox:focus-visible + .pc-purpose-header .pc-toggle-switch {
+  outline: none;
+}
+
 /* Description (expandable) */
 .pc-purpose-description {
   margin-top: 4px;
