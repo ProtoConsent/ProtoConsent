@@ -7,12 +7,12 @@
 
 // Consent Commons icons for legal_basis values in site declaration
 const LEGAL_BASIS_ICONS = {
-  consent: "icons/declaration/consent.png",
-  contractual: "icons/declaration/contractual.png",
-  legitimate_interest: "icons/declaration/legitimate_interest.png",
-  legal_obligation: "icons/declaration/legal_obligation.png",
-  public_interest: "icons/declaration/public_interest.png",
-  vital_interest: "icons/declaration/vital_interest.png",
+  consent: "../icons/declaration/consent.png",
+  contractual: "../icons/declaration/contractual.png",
+  legitimate_interest: "../icons/declaration/legitimate_interest.png",
+  legal_obligation: "../icons/declaration/legal_obligation.png",
+  public_interest: "../icons/declaration/public_interest.png",
+  vital_interest: "../icons/declaration/vital_interest.png",
 };
 
 // Display labels for legal_basis values
@@ -197,8 +197,8 @@ function renderSiteDeclaration(container, declaration) {
 
       const intlIcon = document.createElement("img");
       intlIcon.src = dh.international_transfers
-        ? "icons/declaration/intl_transfers_yes.png"
-        : "icons/declaration/intl_transfers_no.png";
+        ? "../icons/declaration/intl_transfers_yes.png"
+        : "../icons/declaration/intl_transfers_no.png";
       intlIcon.alt = "";
       intlIcon.className = "pc-declaration-icon";
       intlIcon.width = 14;
@@ -224,7 +224,7 @@ function renderSiteDeclaration(container, declaration) {
     shareEl.className = "pc-declaration-data";
 
     const shareIcon = document.createElement("img");
-    shareIcon.src = "icons/declaration/sharing.png";
+    shareIcon.src = "../icons/declaration/sharing.png";
     shareIcon.alt = "";
     shareIcon.className = "pc-declaration-icon";
     shareIcon.width = 14;

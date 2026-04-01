@@ -29,7 +29,7 @@ async function init() {
 		if (welcomeLink) {
 			welcomeLink.addEventListener('click', (e) => {
 				e.preventDefault();
-				chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+				chrome.tabs.create({ url: chrome.runtime.getURL('pages/onboarding.html') });
 			});
 		}
 	} catch (err) {
