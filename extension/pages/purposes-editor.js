@@ -62,6 +62,11 @@ function initDefaultProfile(purposes) {
 		cb.id = 'dp-' + key;
 		cb.checked = true;
 
+		if (purposes[key].required) {
+			cb.disabled = true;
+			label.textContent += ' (required)';
+		}
+
 		row.appendChild(label);
 		row.appendChild(cb);
 		togglesContainer.appendChild(row);
@@ -77,7 +82,9 @@ function initDefaultProfile(purposes) {
 			togglesContainer.style.display = '';
 			if (result.defaultPurposes) {
 				for (const key of purposeKeys) {
-					if (key in result.defaultPurposes) {
+					if (purposes[key].required) {
+						checkboxes[key].checked = true;
+					} else if (key in result.defaultPurposes) {
 						checkboxes[key].checked = result.defaultPurposes[key];
 					}
 				}
@@ -89,7 +96,7 @@ function initDefaultProfile(purposes) {
 	function saveCustomPurposes() {
 		const dp = {};
 		for (const key of purposeKeys) {
-			dp[key] = checkboxes[key].checked;
+			dp[key] = purposes[key].required ? true : checkboxes[key].checked;
 		}
 		chrome.storage.local.set({ defaultPurposes: dp }, notifyBackground);
 		updateCustomPresetCard();

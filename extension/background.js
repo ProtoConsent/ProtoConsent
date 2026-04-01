@@ -169,6 +169,14 @@ function resolvePurposes(siteConfig, presets, defaultConfig) {
       resolved[key] = profilePurposes[key] !== false;
     }
   }
+
+  // Force required purposes to true (defensive: even if storage is corrupted)
+  for (const key of PURPOSES_FOR_ENFORCEMENT) {
+    if (purposesConfig && purposesConfig[key]?.required) {
+      resolved[key] = true;
+    }
+  }
+
   return resolved;
 }
 
