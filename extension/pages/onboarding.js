@@ -18,8 +18,8 @@ let purposes = null;
 async function init() {
   try {
     const [presetsRes, purposesRes] = await Promise.all([
-      fetch('config/presets.json'),
-      fetch('config/purposes.json')
+      fetch('../config/presets.json'),
+      fetch('../config/purposes.json')
     ]);
     presets = await presetsRes.json();
     purposes = await purposesRes.json();
@@ -133,7 +133,7 @@ function wireEvents() {
   // Settings link in confirmation screen
   document.getElementById('ob-link-settings').addEventListener('click', (e) => {
     e.preventDefault();
-    chrome.tabs.create({ url: chrome.runtime.getURL('purposes-editor.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-editor.html') });
   });
 }
 
