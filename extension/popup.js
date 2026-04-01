@@ -4,28 +4,18 @@
 
 // popup.js with safe chrome.storage.local
 // DEBUG_RULES loaded from config.js via <script> in popup.html
+// .well-known logic in well-known.js, debug panel in debug.js
 
-// Consent Commons icons for legal_basis values in site declaration
-const LEGAL_BASIS_ICONS = {
-  consent: "icons/declaration/consent.png",
-  contractual: "icons/declaration/contractual.png",
-  legitimate_interest: "icons/declaration/legitimate_interest.png",
-  legal_obligation: "icons/declaration/legal_obligation.png",
-  public_interest: "icons/declaration/public_interest.png",
-  vital_interest: "icons/declaration/vital_interest.png",
-};
-
-// Display labels for legal_basis values
-const LEGAL_BASIS_LABELS = {
-  legitimate_interest: "legit. interest",
-};
-
+// Estimated time saved per blocked request (ms) — conservative heuristic
+// Accounts for DNS + connection + download of typical third-party tracking scripts
+const ESTIMATED_MS_PER_BLOCKED_REQUEST = 50;
 
 let PURPOSES_TO_SHOW = [];
 
 let purposesConfig = {};
 let presetsConfig = {};
 let purposeDomainCounts = {};
+let purposePathCounts = {};
 let currentDomain = null;
 let defaultProfile = "balanced";
 let defaultPurposes = null;
@@ -53,15 +43,17 @@ async function initPopup() {
  // Get the count of matched DNR rules for the current tab.
  // Calls chrome.declarativeNetRequest.getMatchedRules({ tabId })
  // and fetches per-domain detail from the background's onRuleMatchedDebug tracker.
- // @returns {Promise<{blocked, gpc, domainHitCount, blockedDomains}>}
+ // @returns {Promise<{blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains}>}
+ // domainHitCount: purpose -> count (from static rulesets only)
+ // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
-      return { blocked: 0, gpc: 0, domainHitCount: {}, blockedDomains: {} };
+      return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
     }
 
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0, domainHitCount: {}, blockedDomains: {} };
+    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
 
     const tabId = tabs[0].id;
 
@@ -71,13 +63,16 @@ async function getBlockedRulesCount() {
       chrome.declarativeNetRequest.getDynamicRules(),
     ]);
 
-    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, domainHitCount: {}, blockedDomains: {} };
+    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
 
     const blockedDomains = domainsResp?.data || {};
 
-    // Cache per-purpose domain counts for displayProtectionScope
+    // Cache per-purpose domain and path counts for displayProtectionScope
     if (domainsResp?.purposeDomainCounts) {
       purposeDomainCounts = domainsResp.purposeDomainCounts;
+    }
+    if (domainsResp?.purposePathCounts) {
+      purposePathCounts = domainsResp.purposePathCounts;
     }
 
     // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)
@@ -133,8 +128,7 @@ let lastBlockedDomains = {};
 let lastBlocked = 0;
 
 async function displayBlockedCount() {
-  const scopeEl = document.getElementById("pc-protection-scope");
-  const gpcEl = document.getElementById("pc-gpc-count");
+  const countEl = document.getElementById("pc-blocked-count");
 
   try {
     const { blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains } = await getBlockedRulesCount();
@@ -142,12 +136,44 @@ async function displayBlockedCount() {
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
 
-    // domainHitCount already maps purpose -> count from static rulesets
+    // domainHitCount maps purpose -> count from static rulesets only.
+    // Supplement with blockedDomains (from onRuleMatchedDebug) to cover dynamic rule matches.
     lastPurposeStats = Object.assign({}, domainHitCount);
 
-    // GPC count (separate static line)
-    if (gpcEl) {
-      gpcEl.textContent = gpc > 0 ? gpc + " GPC signals sent" : "";
+    // Supplement with purpose counts from blockedDomains (covers dynamic rule matches)
+    if (blockedDomains) {
+      for (const [purpose, domains] of Object.entries(blockedDomains)) {
+        if (!lastPurposeStats[purpose]) {
+          const total = Object.values(domains).reduce((sum, c) => sum + c, 0);
+          if (total > 0) lastPurposeStats[purpose] = total;
+        }
+      }
+    }
+
+    // Unified counter line: "X blocked · ~Ys faster · Z GPC signals sent"
+    if (countEl) {
+      const parts = [];
+      if (blocked > 0) {
+        parts.push(blocked + " blocked");
+        const estimatedMs = blocked * ESTIMATED_MS_PER_BLOCKED_REQUEST;
+        if (estimatedMs >= 100) {
+          parts.push("~" + formatEstimatedTime(estimatedMs) + " faster");
+        }
+      }
+      if (gpc > 0) parts.push(gpc + " GPC signals sent");
+
+      countEl.textContent = parts.length > 0
+        ? parts.join(" · ")
+        : "Nothing blocked";
+
+      if (blocked > 0) {
+        countEl.classList.add("has-blocked", "clickable");
+        const chevron = document.getElementById("pc-blocked-chevron");
+        if (chevron) chevron.textContent = "▸";
+      } else {
+        countEl.classList.remove("has-blocked", "clickable");
+        countEl.removeAttribute("aria-expanded");
+      }
     }
 
     // Inject per-purpose stats into purpose items
@@ -160,7 +186,13 @@ async function displayBlockedCount() {
     }
   } catch (err) {
     console.error("ProtoConsent: error displaying blocked count:", err);
+    if (countEl) countEl.textContent = "? requests blocked";
   }
+}
+
+function formatEstimatedTime(ms) {
+  if (ms >= 1000) return (ms / 1000).toFixed(1) + "s";
+  return Math.round(ms / 10) * 10 + "ms";
 }
 
 function displayPerPurposeStats() {
@@ -175,10 +207,10 @@ function displayPerPurposeStats() {
     const count = lastPurposeStats[purposeKey];
     if (!count) continue;
 
+    const ms = count * ESTIMATED_MS_PER_BLOCKED_REQUEST;
     const statEl = document.createElement("div");
     statEl.className = "pc-purpose-stat";
-    statEl.textContent = count + " blocked";
-    statEl.addEventListener("click", toggleBlockedDetail);
+    statEl.textContent = count + " blocked · ~" + formatEstimatedTime(ms);
 
     // Insert after header, before description
     const descEl = itemEl.querySelector(".pc-purpose-description");
@@ -190,58 +222,42 @@ function displayPerPurposeStats() {
   }
 }
 
-// Display "Protected from X tracker domains" based on which
-// purposes are currently blocked for this site.
+// Display "Protected from X trackers" below the counter bar
 function displayProtectionScope() {
   const scopeEl = document.getElementById("pc-protection-scope");
   if (!scopeEl) return;
 
   let domainCount = 0;
+  let pathCount = 0;
   for (const purposeKey of PURPOSES_TO_SHOW) {
     if (currentPurposesState[purposeKey]) continue; // allowed, not blocking
     if (purposeDomainCounts[purposeKey]) domainCount += purposeDomainCounts[purposeKey];
+    if (purposePathCounts[purposeKey]) pathCount += purposePathCounts[purposeKey];
   }
 
-  if (domainCount > 0) {
-    scopeEl.textContent = "Protected from " + domainCount + " tracker domains";
-    scopeEl.style.display = "";
-    if (scopeEl.parentElement) scopeEl.parentElement.style.display = "";
-    const chevron = document.getElementById("pc-blocked-chevron");
-    if (chevron) chevron.textContent = "▸";
+  const total = domainCount + pathCount;
+  if (total > 0) {
+    scopeEl.textContent = "Protected from " + total + " tracking rules";
   } else {
     scopeEl.textContent = "";
-    scopeEl.style.display = "none";
-    if (scopeEl.parentElement) scopeEl.parentElement.style.display = "none";
-    const chevron = document.getElementById("pc-blocked-chevron");
-    if (chevron) chevron.textContent = "";
   }
 }
 
 // Toggle detail breakdown on counter click
 async function toggleBlockedDetail() {
   const detailEl = document.getElementById("pc-blocked-detail");
-  const scopeEl = document.getElementById("pc-protection-scope");
+  const countEl = document.getElementById("pc-blocked-count");
   if (!detailEl) return;
 
   if (!detailEl.classList.contains("is-collapsed")) {
     detailEl.classList.add("is-collapsed");
     const chevron = document.getElementById("pc-blocked-chevron");
     if (chevron) chevron.textContent = "▸";
-    if (scopeEl) scopeEl.setAttribute("aria-expanded", "false");
+    if (countEl) countEl.setAttribute("aria-expanded", "false");
     return;
   }
 
-  if (Object.keys(lastDomainHitCount).length === 0 && lastBlocked === 0) {
-    // Still show the detail if protection scope is visible (has domain counts)
-    let hasDomainCounts = false;
-    for (const purposeKey of PURPOSES_TO_SHOW) {
-      if (!currentPurposesState[purposeKey] && purposeDomainCounts[purposeKey]) {
-        hasDomainCounts = true;
-        break;
-      }
-    }
-    if (!hasDomainCounts) return;
-  }
+  if (Object.keys(lastDomainHitCount).length === 0 && lastBlocked === 0) return;
 
   // lastBlockedDomains maps purpose -> { domain -> count } from onRuleMatchedDebug
   detailEl.innerHTML = "";
@@ -308,7 +324,7 @@ async function toggleBlockedDetail() {
   detailEl.classList.remove("is-collapsed");
   const chevron = document.getElementById("pc-blocked-chevron");
   if (chevron) chevron.textContent = "▾";
-  if (scopeEl) scopeEl.setAttribute("aria-expanded", "true");
+  if (countEl) countEl.setAttribute("aria-expanded", "true");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -322,9 +338,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const scopeBtn = document.getElementById("pc-protection-scope");
-  if (scopeBtn) {
-    scopeBtn.addEventListener("click", toggleBlockedDetail);
+  const countEl = document.getElementById("pc-blocked-count");
+  if (countEl) {
+    countEl.addEventListener("click", toggleBlockedDetail);
   }
 
   const toggleDescBtn = document.getElementById("pc-toggle-descriptions");
@@ -770,19 +786,19 @@ function saveCurrentDomainRulesSafe() {
 function notifyBackgroundRulesUpdated() {
   if (!chrome.runtime || !chrome.runtime.sendMessage) return;
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_RULES_UPDATED" }, () => {
-    const err = chrome.runtime.lastError;
+    void chrome.runtime.lastError; // Suppress "no listener" warning
     // After rule rebuild, matched rule IDs are stale — prompt reload
-    const scopeEl = document.getElementById("pc-protection-scope");
-    if (scopeEl) {
-      scopeEl.textContent = "Reload page to update stats";
-      scopeEl.style.display = "";
+    const countEl = document.getElementById("pc-blocked-count");
+    if (countEl) {
+      countEl.textContent = "Reload page to update stats";
+      countEl.classList.remove("has-blocked", "clickable");
     }
     const chevron = document.getElementById("pc-blocked-chevron");
     if (chevron) chevron.textContent = "";
-    const gpcEl = document.getElementById("pc-gpc-count");
-    if (gpcEl) gpcEl.textContent = "";
     const detailEl = document.getElementById("pc-blocked-detail");
     if (detailEl) detailEl.classList.add("is-collapsed");
+    const scopeEl = document.getElementById("pc-protection-scope");
+    if (scopeEl) scopeEl.textContent = "";
   });
 }
 
@@ -795,7 +811,7 @@ function showUnsupportedPage() {
 
   const msgEl = document.createElement("div");
   msgEl.className = "pc-unsupported-msg";
-  msgEl.textContent = "ProtoConsent only works on regular web pages (http/https).";
+  msgEl.textContent = "ProtoConsent only works on regular web pages (http/https)";
   listEl.appendChild(msgEl);
 
   // Disable profile selector
@@ -803,381 +819,12 @@ function showUnsupportedPage() {
   if (selectEl) selectEl.disabled = true;
 
   // Hide stat bar and detail on unsupported pages
-  const scopeEl = document.getElementById("pc-protection-scope");
-  if (scopeEl) scopeEl.parentElement.style.display = "none";
-  const gpcEl = document.getElementById("pc-gpc-count");
-  if (gpcEl) gpcEl.style.display = "none";
+  const countEl = document.getElementById("pc-blocked-count");
+  if (countEl) countEl.parentElement.style.display = "none";
   const detailEl = document.getElementById("pc-blocked-detail");
   if (detailEl) detailEl.style.display = "none";
-}
-
-// Cache TTL for .well-known declarations
-const WELL_KNOWN_CACHE_TTL = 24 * 60 * 60 * 1000;
-// Shorter TTL for negative results (site has no .well-known or invalid file)
-const WELL_KNOWN_NEGATIVE_TTL = 6 * 60 * 60 * 1000;
-
-// Load and display site declaration from .well-known/protoconsent.json
-async function loadSiteDeclaration() {
-  if (!currentDomain) return;
-
-  const container = document.getElementById("pc-site-declaration");
-  if (!container) return;
-
-  try {
-    const cacheKey = "wk_" + currentDomain;
-    const cached = await new Promise(resolve =>
-      chrome.storage.local.get([cacheKey], resolve)
-    );
-    if (cached[cacheKey]) {
-      const entry = cached[cacheKey];
-      const ttl = entry.data ? WELL_KNOWN_CACHE_TTL : WELL_KNOWN_NEGATIVE_TTL;
-      if (Date.now() - entry.ts < ttl) {
-        if (entry.data) renderSiteDeclaration(container, entry.data);
-        return;
-      }
-    }
-
-    // Fetch via executeScript: runs in the page context (same-origin, no extra permissions)
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tabs || !tabs[0]) return;
-
-    const results = await chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      func: async () => {
-        try {
-          const res = await fetch("/.well-known/protoconsent.json");
-          if (res.ok) return await res.json();
-        } catch (_) {}
-        return null;
-      }
-    });
-
-    const data = results && results[0] && results[0].result;
-
-    if (data && validateSiteDeclaration(data)) {
-      // Cache valid declarations (24h TTL)
-      chrome.storage.local.set({ [cacheKey]: { data, ts: Date.now() } }, () => {
-        if (chrome.runtime.lastError) {
-          console.warn("[well-known] Cache write error:", chrome.runtime.lastError);
-        }
-      });
-      renderSiteDeclaration(container, data);
-    } else {
-      // Cache negative/invalid result (6h TTL) to avoid re-fetching on every popup open
-      chrome.storage.local.set({ [cacheKey]: { data: null, ts: Date.now() } }, () => {
-        if (chrome.runtime.lastError) {
-          console.warn("[well-known] Cache write error:", chrome.runtime.lastError);
-        }
-      });
-    }
-  } catch (err) {
-    console.error("[well-known] Error:", err);
-  }
-}
-
-// Minimal validation of a .well-known/protoconsent.json file.
-// See design/well-known-spec.md §4.2 for the rules.
-function validateSiteDeclaration(json) {
-  if (!json || typeof json !== "object") return false;
-  if (!json.purposes || typeof json.purposes !== "object") return false;
-
-  let hasValidPurpose = false;
-  for (const key of Object.keys(json.purposes)) {
-    if (!PURPOSES_TO_SHOW.includes(key)) continue;
-    const entry = json.purposes[key];
-    if (entry && typeof entry === "object" && typeof entry.used === "boolean") {
-      hasValidPurpose = true;
-      break;
-    }
-  }
-  return hasValidPurpose;
-}
-
-function renderSiteDeclaration(container, declaration) {
-  container.innerHTML = "";
-
-  const titleEl = document.createElement("div");
-  titleEl.className = "pc-declaration-title";
-  titleEl.textContent = "Site declaration";
-  container.appendChild(titleEl);
-
-  // Render each purpose in display order
-  for (const purposeKey of PURPOSES_TO_SHOW) {
-    const cfg = purposesConfig[purposeKey];
-    if (!cfg) continue;
-
-    const row = document.createElement("div");
-    row.className = "pc-declaration-row";
-
-    const nameEl = document.createElement("span");
-    nameEl.className = "pc-declaration-purpose";
-    nameEl.textContent = cfg.short_label || cfg.label || purposeKey;
-
-    const checkEl = document.createElement("span");
-    checkEl.className = "pc-declaration-check";
-
-    const basisEl = document.createElement("span");
-    basisEl.className = "pc-declaration-basis";
-
-    const entry = declaration.purposes[purposeKey];
-    if (!entry) {
-      checkEl.textContent = "—";
-      checkEl.classList.add("not-declared");
-      checkEl.setAttribute("role", "img");
-      checkEl.setAttribute("aria-label", "Not declared");
-    } else if (entry.used) {
-      checkEl.textContent = "✓";
-      checkEl.classList.add("used");
-      checkEl.setAttribute("role", "img");
-      checkEl.setAttribute("aria-label", "Used");
-
-      if (typeof entry.legal_basis === "string") {
-        const basisIcon = LEGAL_BASIS_ICONS[entry.legal_basis];
-        if (basisIcon) {
-          const iconImg = document.createElement("img");
-          iconImg.src = basisIcon;
-          iconImg.alt = "";
-          iconImg.className = "pc-declaration-icon";
-          iconImg.width = 14;
-          iconImg.height = 14;
-          iconImg.onerror = () => iconImg.remove();
-          basisEl.appendChild(iconImg);
-        }
-        basisEl.appendChild(document.createTextNode(
-          LEGAL_BASIS_LABELS[entry.legal_basis] || entry.legal_basis.replace(/_/g, " ")
-        ));
-      }
-    } else {
-      checkEl.textContent = "✗";
-      checkEl.classList.add("not-used");
-      checkEl.setAttribute("role", "img");
-      checkEl.setAttribute("aria-label", "Not used");
-    }
-
-    row.appendChild(nameEl);
-    row.appendChild(checkEl);
-    row.appendChild(basisEl);
-    container.appendChild(row);
-  }
-
-  // Collect providers and sharing info across purposes
-  const providers = new Set();
-  const sharingValues = new Set();
-  for (const purposeKey of PURPOSES_TO_SHOW) {
-    const entry = declaration.purposes[purposeKey];
-    if (entry && entry.used) {
-      if (typeof entry.provider === "string") providers.add(entry.provider);
-      if (typeof entry.sharing === "string") sharingValues.add(entry.sharing.replace(/_/g, " "));
-    }
-  }
-
-  // Data handling section (if present and valid)
-  if (declaration.data_handling && typeof declaration.data_handling === "object") {
-    const dh = declaration.data_handling;
-
-    if (typeof dh.storage_region === "string") {
-      const regionEl = document.createElement("div");
-      regionEl.className = "pc-declaration-data";
-      regionEl.textContent = "Stored: " + dh.storage_region.toUpperCase();
-      container.appendChild(regionEl);
-    }
-
-    if (dh.international_transfers === true || dh.international_transfers === false) {
-      const intlEl = document.createElement("div");
-      intlEl.className = "pc-declaration-data";
-
-      const intlIcon = document.createElement("img");
-      intlIcon.src = dh.international_transfers
-        ? "icons/declaration/intl_transfers_yes.png"
-        : "icons/declaration/intl_transfers_no.png";
-      intlIcon.alt = "";
-      intlIcon.className = "pc-declaration-icon";
-      intlIcon.width = 14;
-      intlIcon.height = 14;
-      intlIcon.onerror = () => intlIcon.remove();
-      intlEl.appendChild(intlIcon);
-
-      const intlText = dh.international_transfers ? " International transfers" : " No international transfers";
-      intlEl.appendChild(document.createTextNode(intlText));
-      container.appendChild(intlEl);
-    }
-  }
-
-  if (providers.size > 0) {
-    const provEl = document.createElement("div");
-    provEl.className = "pc-declaration-data";
-    provEl.textContent = "Provider: " + [...providers].join(", ");
-    container.appendChild(provEl);
-  }
-
-  if (sharingValues.size > 0) {
-    const shareEl = document.createElement("div");
-    shareEl.className = "pc-declaration-data";
-
-    const shareIcon = document.createElement("img");
-    shareIcon.src = "icons/declaration/sharing.png";
-    shareIcon.alt = "";
-    shareIcon.className = "pc-declaration-icon";
-    shareIcon.width = 14;
-    shareIcon.height = 14;
-    shareIcon.onerror = () => shareIcon.remove();
-    shareEl.appendChild(shareIcon);
-
-    const shareText = document.createTextNode(" Sharing: " + [...sharingValues].join(", "));
-    shareEl.appendChild(shareText);
-    container.appendChild(shareEl);
-  }
-
-  // Rights URL (only https:// or http:// to prevent javascript: / data: XSS)
-  if (typeof declaration.rights_url === "string" &&
-      /^https?:\/\//i.test(declaration.rights_url)) {
-    const rightsEl = document.createElement("div");
-    rightsEl.className = "pc-declaration-data";
-    const rightsLink = document.createElement("a");
-    rightsLink.href = declaration.rights_url;
-    rightsLink.textContent = "Your rights";
-    rightsLink.target = "_blank";
-    rightsLink.rel = "noopener noreferrer";
-    rightsLink.className = "pc-declaration-link";
-    rightsEl.appendChild(rightsLink);
-    container.appendChild(rightsEl);
-  }
-
-  // Show the side tab and wire toggle (guard against duplicate listeners)
-  const sideTab = document.getElementById("pc-side-tab");
-  const sidePanel = document.getElementById("pc-side-panel");
-  if (sideTab && sidePanel && !sideTab.dataset.bound) {
-    sideTab.dataset.bound = "1";
-    sideTab.classList.add("is-visible");
-    sideTab.addEventListener("click", () => {
-      const isOpen = sidePanel.classList.toggle("is-open");
-      sideTab.classList.toggle("is-open", isOpen);
-      sideTab.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      sidePanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
-    });
-  }
-}
-
-// Render debug info into the collapsible debug panel (only when DEBUG_RULES = true).
-function renderDebugPanel({ blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains }) {
-  const panel = document.getElementById("pc-debug-panel");
-  const content = document.getElementById("pc-debug-content");
-  if (!panel || !content) return;
-
-  panel.hidden = false;
-
-  // Fetch background rebuild snapshot
-  chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_DEBUG" }, (bg) => {
-    const lines = [];
-
-    // Global profile & purposes
-    if (bg && bg.globalProfile) {
-      lines.push("— global profile: " + bg.globalProfile + " —");
-      if (bg.globalPurposes) {
-        const purposeStr = Object.entries(bg.globalPurposes)
-          .map(([k, v]) => k + ":" + (v ? "✓" : "✗")).join("  ");
-        lines.push("  " + purposeStr);
-      }
-      lines.push("");
-    }
-
-    // Site profile (from popup state)
-    lines.push("— site: " + (currentDomain || "?") + " (profile: " + currentProfile + ") —");
-    if (currentPurposesState) {
-      const siteStr = Object.entries(currentPurposesState)
-        .map(([k, v]) => k + ":" + (v ? "✓" : "✗")).join("  ");
-      lines.push("  " + siteStr);
-    }
-    lines.push("");
-
-    // Category domain counts
-    if (bg && bg.categoryDomains) {
-      lines.push("— blocklist sizes —");
-      for (const [cat, info] of Object.entries(bg.categoryDomains).sort()) {
-        lines.push("  " + cat + ": " + info);
-      }
-      lines.push("");
-    }
-
-    // Static rulesets & dynamic rules
-    if (bg && bg.enableIds) {
-      lines.push("— rulesets —");
-      lines.push("  enabled:  " + (bg.enableIds.join(", ") || "(none)"));
-      lines.push("  disabled: " + (bg.disableIds.join(", ") || "(none)"));
-      lines.push("  dynamic: " + bg.dynamicCount +
-        " (" + bg.overrideCount + " overrides, " +
-        bg.gpcGlobal + " GPC-g, " + bg.gpcPerSite + " GPC-s)");
-      if (bg.error) lines.push("  ⚠ ERROR: " + bg.error);
-      lines.push("");
-    }
-
-    // Override detail
-    if (bg && bg.overrideDetails && Object.keys(bg.overrideDetails).length) {
-      lines.push("— overrides —");
-      for (const [id, detail] of Object.entries(bg.overrideDetails)) {
-        lines.push("  rule " + id + ": " + detail);
-      }
-      lines.push("");
-    }
-
-    // Custom sites
-    if (bg && bg.customSites && bg.customSites.length) {
-      lines.push("— custom sites (" + bg.customSites.length + ") —");
-      lines.push("  " + bg.customSites.join(", "));
-      lines.push("");
-    }
-
-    // Tab match info
-    lines.push("— tab matches —");
-    lines.push("  blocked: " + blocked + "  gpc: " + gpc);
-    lines.push("");
-
-    // Ruleset breakdown (domain vs path)
-    if (Object.keys(rulesetHitCount).length) {
-      lines.push("— ruleset hits —");
-      for (const [id, count] of Object.entries(rulesetHitCount).sort()) {
-        const tag = id.endsWith("_paths") ? " (path)" : id === "_dynamic_block" ? " (dynamic)" : " (domain)";
-        lines.push("  " + id + ": " + count + tag);
-      }
-      lines.push("");
-    }
-
-    // Purpose breakdown
-    if (Object.keys(domainHitCount).length) {
-      lines.push("— purpose hits —");
-      for (const [purpose, count] of Object.entries(domainHitCount).sort()) {
-        lines.push("  " + purpose + ": " + count);
-      }
-      lines.push("");
-    }
-
-    // Blocked domains detail
-    if (Object.keys(blockedDomains).length) {
-      lines.push("— blocked domains —");
-      for (const [purpose, domains] of Object.entries(blockedDomains).sort()) {
-        for (const [domain, count] of Object.entries(domains).sort()) {
-          lines.push("  [" + purpose + "] " + domain + " ×" + count);
-        }
-      }
-    }
-
-    content.textContent = lines.join("\n");
-  });
-
-  // Copy button
-  const copyBtn = document.getElementById("pc-debug-copy");
-  if (copyBtn && !copyBtn._bound) {
-    copyBtn._bound = true;
-    copyBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const text = content.textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        copyBtn.textContent = "Copied!";
-        setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
-      });
-    });
-  }
+  const scopeEl = document.getElementById("pc-protection-scope");
+  if (scopeEl) scopeEl.style.display = "none";
 }
 
 // Simple UI error helper

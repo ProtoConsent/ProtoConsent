@@ -19,7 +19,7 @@ This document explains how to try the current version of ProtoConsent in a brows
   cd ProtoConsent
   ```
 
-  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `popup.html`, `popup.js`, `popup.css`, `config/` and `icons/`) and the `sdk/` directory.
+  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `popup.html`, `popup.js`, `popup.css`, `well-known.js`, `debug.js`, `config/`, `rules/` and `icons/`) and the `sdk/` directory.
 
 2.2. **Load the extension in your browser:**
 
@@ -266,9 +266,10 @@ Open the service worker console for the extension and run:
 
 ```js
 chrome.declarativeNetRequest.getDynamicRules().then(r => {
-  const gpc = r.filter(x => x.action.type === 'modifyHeaders');
   const block = r.filter(x => x.action.type === 'block');
-  console.log('Block:', block.length, '| GPC:', gpc.length);
+  const allow = r.filter(x => x.action.type === 'allow');
+  const gpc = r.filter(x => x.action.type === 'modifyHeaders');
+  console.log('Block:', block.length, '| Allow:', allow.length, '| GPC:', gpc.length);
   gpc.forEach(x => console.log(' ',
     x.action.requestHeaders[0].operation,
     x.condition.requestDomains || 'GLOBAL'));
@@ -277,7 +278,10 @@ chrome.declarativeNetRequest.getDynamicRules().then(r => {
 
 With Balanced as the default and one site set to custom (all allowed), the expected output is:
 
-- `Block: 90 | GPC: 2`
-- `set GLOBAL` — the global GPC rule
-- `remove ["example.com"]` — the per-site override that suppresses GPC
+- `Block: 0 | Allow: 3 | GPC: 2`
+- The 3 allow rules are per-site overrides for the categories that Balanced blocks globally (ads, third_parties, advanced_tracking), allowing them on the custom site.
+- `set GLOBAL` — the global GPC rule (privacy purposes denied by Balanced)
+- `remove ["example.com"]` — the per-site override that suppresses GPC for the permissive site
+
+Note: most blocking is now handled by static rulesets (enabled/disabled per category by the background script), not by dynamic rules. Dynamic rules are only used for per-site overrides and GPC headers.
 

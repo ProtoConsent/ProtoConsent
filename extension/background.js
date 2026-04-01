@@ -23,10 +23,10 @@ let PURPOSES_FOR_ENFORCEMENT = [];
 // Derived at runtime from purposes.json (triggers_gpc: true).
 let gpcPurposes = [];
 
-// Cached domain lists extracted from static rulesets (rules/block_*.json).
+// Cached domain and path-domain lists extracted from static rulesets (rules/block_*.json).
 // Curated subset of public blocklists — not a full ad/tracking blocker.
 // Sources: OISD big/small, HaGeZi Pro/Light/Ultimate, EasyPrivacy/EasyList, Disconnect.me
-// Loaded once per SW lifetime. Maps purposeKey -> { domains: string[] }.
+// Loaded once per SW lifetime. Maps purposeKey -> { domains: string[], pathDomains: string[] }.
 let blocklistsConfig = null;
 
 // Per-tab tracking of blocked domains for the popup detail view.
@@ -47,7 +47,7 @@ let presetsConfig = null;
 let purposesConfig = null;
 
 
-// Load domain lists from static rulesets (rules/block_*.json).
+// Load domain and path-domain lists from static rulesets (rules/block_*.json, rules/block_*_paths.json).
 // Subsequent calls return the cached in-memory version.
 async function loadBlocklistsConfig() {
   if (blocklistsConfig) return blocklistsConfig;
@@ -188,10 +188,11 @@ let _rebuildQueued = false;
 
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
-// 1) Enable/disable static rulesets for global blocking per category.
+// 1) Enable/disable static rulesets (domain + path) for global blocking per category.
 // 2) Build per-site dynamic overrides (block/allow) grouped by category.
 // 3) Build GPC header rules (global + per-site overrides).
 // 4) Atomic-swap all dynamic rules in a single updateDynamicRules call.
+// 5) Update static rulesets AFTER dynamic (over-block during gap, never under-block).
 async function rebuildAllDynamicRules() {
   if (_rebuildRunning) {
     _rebuildQueued = true;
@@ -239,21 +240,23 @@ async function _rebuildAllDynamicRulesImpl() {
     // 1. Resolve global default purposes (what applies to unconfigured sites)
     const globalPurposes = resolvePurposes({}, presets, defaultConfig);
 
-    // 2. Compute which static rulesets to enable/disable (applied AFTER dynamic
-    //    rules to avoid a sub-blocking window — see step 5).
-    //    Each category has a static ruleset file (rules/block_*.json) with one rule
-    //    covering all domains via requestDomains. We enable/disable entire rulesets
-    //    based on the global profile, freeing the dynamic rule budget for overrides.
+    // 2. Compute which static rulesets to enable/disable.
+    //    Each category may have a domain ruleset (block_X) and/or a path ruleset (block_X_paths).
+    //    We enable/disable them independently based on the global profile,
+    //    freeing the dynamic rule budget for per-site overrides.
     const enableIds = [];
     const disableIds = [];
     for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
-      if (!blocklists[purposeKey]?.domains?.length) continue; // no ruleset for this category
+      const hasDomains = blocklists[purposeKey]?.domains?.length > 0;
+      const hasPaths = blocklists[purposeKey]?.pathDomains?.length > 0;
+      if (!hasDomains && !hasPaths) continue; // no rulesets for this category
       const rulesetId = "block_" + purposeKey;
-      const pathsRulesetId = rulesetId + "_paths";
       if (!globalPurposes[purposeKey]) {
-        enableIds.push(rulesetId, pathsRulesetId);
+        if (hasDomains) enableIds.push(rulesetId);
+        if (hasPaths) enableIds.push(rulesetId + "_paths");
       } else {
-        disableIds.push(rulesetId, pathsRulesetId);
+        if (hasDomains) disableIds.push(rulesetId);
+        if (hasPaths) disableIds.push(rulesetId + "_paths");
       }
     }
 
@@ -261,6 +264,8 @@ async function _rebuildAllDynamicRulesImpl() {
     //    First pass: group sites by (category, action) so we can batch all sites
     //    into one initiatorDomains array per rule. This reduces from O(categories × sites)
     //    to O(categories × 2) — max 10 dynamic rules regardless of how many custom sites.
+    //    Override requestDomains merges domain + pathDomain lists so both domain-based
+    //    and path-based static rules are overridden for the site.
     const allowOverrides = {}; // purposeKey -> [site1, site2, ...]
     const blockOverrides = {}; // purposeKey -> [site1, site2, ...]
 
@@ -442,6 +447,7 @@ async function _rebuildAllDynamicRulesImpl() {
     //    Order matters for security: during the brief gap between calls,
     //    "new dynamic + old static" may over-block (safe), whereas the
     //    reverse order "new static + old dynamic" could under-block.
+    //    Each wrapped in its own try/catch to surface errors independently.
     try {
       await chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: existingIds,
@@ -452,10 +458,16 @@ async function _rebuildAllDynamicRulesImpl() {
       if (DEBUG_RULES) lastRebuildDebug.error = e.message;
     }
     dynamicBlockRuleMap = newDynamicBlockMap;
-    await chrome.declarativeNetRequest.updateEnabledRulesets({
-      enableRulesetIds: enableIds,
-      disableRulesetIds: disableIds,
-    });
+    try {
+      await chrome.declarativeNetRequest.updateEnabledRulesets({
+        enableRulesetIds: enableIds,
+        disableRulesetIds: disableIds,
+      });
+    } catch (e) {
+      console.error("updateEnabledRulesets failed:", e.message,
+        "enable:", enableIds, "disable:", disableIds);
+      if (DEBUG_RULES) lastRebuildDebug.rulesetError = e.message;
+    }
 
     // Update the GPC content script registration to match the new rule state
     await updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes);
@@ -565,17 +577,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return;
   }
 
-  // Popup requests per-tab blocked domain detail + per-purpose domain counts
+  // Popup requests per-tab blocked domain detail + per-purpose counts (domains + paths)
   if (message.type === "PROTOCONSENT_GET_BLOCKED_DOMAINS") {
     loadBlocklistsConfig().then(bl => {
       const purposeDomainCounts = {};
+      const purposePathCounts = {};
       for (const key of PURPOSES_FOR_ENFORCEMENT) {
-        const len = bl[key]?.domains?.length;
-        if (len) purposeDomainCounts[key] = len;
+        const dLen = bl[key]?.domains?.length;
+        const pLen = bl[key]?.pathDomains?.length;
+        if (dLen) purposeDomainCounts[key] = dLen;
+        if (pLen) purposePathCounts[key] = pLen;
       }
       sendResponse({
         data: tabBlockedDomains.get(message.tabId) || {},
         purposeDomainCounts,
+        purposePathCounts,
       });
     });
     return true; // async response

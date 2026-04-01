@@ -44,7 +44,7 @@ The current Chromium extension provides:
 
 - Global default profile with per-site overrides via a browser action popup.
 - Purpose toggles for six categories: functional, analytics, ads, personalisation, third-party services, and advanced tracking.
-- Network-level enforcement using declarative net request rules (150 curated domains from public blocklists).
+- Network-level enforcement via static rulesets: 4 500+ curated tracker domains and 100+ path-based rules from public blocklists, organized by purpose.
 - Conditional [Global Privacy Control](https://globalprivacycontrol.org/) (Sec-GPC) header, sent only when privacy-relevant purposes are denied.
 - Per-purpose blocked request counter with estimated performance impact, visible in the popup.
 - Content script bridge and JavaScript SDK for web pages to query user preferences.

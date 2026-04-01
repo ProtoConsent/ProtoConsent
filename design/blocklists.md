@@ -1,4 +1,4 @@
-# ProtoConsent – Blocklist curation
+# ProtoConsent – Blocklists management
 
 This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../LICENSE-CC-BY-SA) file for details.
 
@@ -80,3 +80,46 @@ Each `block_*.json` contains a single declarative net request rule:
 - Priority 1 for static rulesets; `background.js` uses priority 2 for dynamic per-site overrides.
 - All rulesets are `enabled: false` in the manifest; the background script enables them based on user preferences.
 - `main_frame` is excluded from `resourceTypes`, so users can still navigate to any domain directly.
+
+## 6. Path‑based rules
+
+Some high‑value domains cannot be blocked entirely because they serve both legitimate content and tracking endpoints. For example, `google.com` hosts search results, authentication flows, and advertising scripts on the same domain. Blocking `google.com` via `requestDomains` would break core functionality.
+
+For these domains, ProtoConsent uses **path‑based rules** with `urlFilter` patterns that target specific tracking endpoints:
+
+```json
+{
+  "id": 1,
+  "priority": 1,
+  "action": { "type": "block" },
+  "condition": {
+    "urlFilter": "||google.com/pagead/",
+    "resourceTypes": ["script", "xmlhttprequest", "image", "ping", "other"]
+  }
+}
+```
+
+Path rules are stored in `block_*_paths.json` files (one per category) alongside the domain rules. Each file contains multiple rules, one per tracking endpoint.
+
+### Current path rule counts
+
+| File | Category | Rules | Example endpoints |
+|------|----------|-------|-------------------|
+| `block_analytics_paths.json` | Analytics | 34 | `google.com/pagead/`, `googletagmanager.com/gtag/js`, `facebook.com/tr/` |
+| `block_ads_paths.json` | Ads | 13 | `google.com/adsense/`, `fundingchoicesmessages.google.com/` |
+| `block_personalization_paths.json` | Personalization | 13 | `logx.optimizely.com/`, `segment.com/analytics.js/` |
+| `block_third_parties_paths.json` | Third parties | 25 | `facebook.com/plugins/`, `linkedin.com/embed/` |
+| `block_advanced_tracking_paths.json` | Advanced tracking | 31 | `privacymanager.io/`, `consent.cookiebot.com/` |
+| **Total** | | **116** | |
+
+### Selection criteria for path rules
+
+A path rule is added only when:
+
+1. The domain hosts both tracking and legitimate content (cannot be fully blocked).
+2. The tracking endpoint has a stable, well‑known URL pattern.
+3. The domain is **not** already in the corresponding domain blocklist (no redundancy).
+
+### Interaction with per‑site overrides
+
+Per‑site override rules use `requestDomains` to match both domain‑blocked and path‑blocked domains. When building overrides, the background script extracts the unique domains from path rules (e.g. `google.com` from `||google.com/pagead/`) and merges them into the override's `requestDomains`. This ensures that a Permissive site gets path‑based requests unblocked alongside domain‑based ones.
