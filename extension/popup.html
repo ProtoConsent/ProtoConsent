@@ -47,12 +47,19 @@
         <span id="pc-blocked-chevron" class="pc-blocked-chevron" aria-hidden="true"></span>
       </div>
       <div id="pc-blocked-detail" class="pc-blocked-detail is-collapsed"></div>
+      <div id="pc-protection-scope" class="pc-protection-scope"></div>
 
       <main class="pc-main">
         <div id="pc-purposes-list" class="pc-purposes-list">
           <!-- Purposes will be injected here by popup.js -->
         </div>
       </main>
+
+      <!-- Debug panel (hidden unless DEBUG_RULES = true in popup.js) -->
+      <details id="pc-debug-panel" class="pc-debug-panel" hidden>
+        <summary class="pc-debug-summary">Debug <button id="pc-debug-copy" class="pc-debug-copy" title="Copy to clipboard">Copy</button></summary>
+        <div id="pc-debug-content" class="pc-debug-content"></div>
+      </details>
 
       <footer class="pc-footer">
         <img src="icons/protoconsent_icon_32.png" alt="" class="pc-footer-icon" width="20" height="20">
@@ -70,6 +77,9 @@
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script src="popup.js"></script>
+  <script src="well-known.js"></script>
+  <script src="debug.js"></script>
 </body>
 </html>

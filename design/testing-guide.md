@@ -19,7 +19,7 @@ This document explains how to try the current version of ProtoConsent in a brows
   cd ProtoConsent
   ```
 
-  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `popup.html`, `popup.js`, `popup.css`, `config/` and `icons/`) and the `sdk/` directory.
+  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `popup.html`, `popup.js`, `popup.css`, `well-known.js`, `debug.js`, `config/`, `rules/` and `icons/`) and the `sdk/` directory.
 
 2.2. **Load the extension in your browser:**
 
@@ -112,7 +112,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** See how Analytics controls measurement and usage tracking.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `google-analytics.com`, `clarity.ms`, `scorecardresearch.com`, `chartbeat.com`, `fullstory.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `google-analytics.com`, `scorecardresearch.com`, `chartbeat.com`, `fullstory.com`.
 
 - Steps:
   1. Visit a site that uses Google Analytics or Segment.
@@ -125,7 +125,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Observe the impact on advertising traffic.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `doubleclick.net`, `googlesyndication.com`, `adservice.google.com`, `criteo.com`, `taboola.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `doubleclick.net`, `googlesyndication.com`, `adservice.google.com`, `criteo.com`, `taboola.com`.
 
 - Steps:
   1. Use a site with visible ads (for example, a major news site).
@@ -137,7 +137,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Separate basic ads from more advanced personalization or retargeting.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `ad.doubleclick.net`, `demdex.net`, `bluekai.com`, `tapad.com`, `liveramp.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `ad.doubleclick.net`, `demdex.net`, `bluekai.com`, `tapad.com`, `liveramp.com`.
 
 - Steps:
   1. On a site with banners and personalised or retargeted ads, keep **Ads / Marketing** allowed but set **Personalization / Profiling** to *Blocked*.
@@ -149,7 +149,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Highlight third‑party data sharing and integrations.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `connect.facebook.net`, `hotjar.com`, `analytics.twitter.com`, `bat.bing.com`, `hubspot.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `connect.facebook.net`, `hotjar.com`, `analytics.twitter.com`, `bat.bing.com`, `hubspot.com`.
 
 - Steps:
   1. Choose a site that embeds social widgets, Hotjar or Microsoft/Bing tracking.
@@ -162,7 +162,7 @@ Below are example scenarios for each purpose.
 
 **Goal:** Target more advanced monitoring or experimentation tools.
 
-- Reference domains (examples — full list in `extension/config/blocklists.json`): `js-agent.newrelic.com`, `cdn.optimizely.com`, `fpnpmcdn.net`, `datadome.co`, `arkoselabs.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `js-agent.newrelic.com`, `cdn.optimizely.com`, `fpnpmcdn.net`, `datadome.co`, `arkoselabs.com`.
 
 - Steps:
   1. Visit a site that uses New Relic, Heap, Optimizely or similar tooling.
@@ -266,9 +266,10 @@ Open the service worker console for the extension and run:
 
 ```js
 chrome.declarativeNetRequest.getDynamicRules().then(r => {
-  const gpc = r.filter(x => x.action.type === 'modifyHeaders');
   const block = r.filter(x => x.action.type === 'block');
-  console.log('Block:', block.length, '| GPC:', gpc.length);
+  const allow = r.filter(x => x.action.type === 'allow');
+  const gpc = r.filter(x => x.action.type === 'modifyHeaders');
+  console.log('Block:', block.length, '| Allow:', allow.length, '| GPC:', gpc.length);
   gpc.forEach(x => console.log(' ',
     x.action.requestHeaders[0].operation,
     x.condition.requestDomains || 'GLOBAL'));
@@ -277,7 +278,10 @@ chrome.declarativeNetRequest.getDynamicRules().then(r => {
 
 With Balanced as the default and one site set to custom (all allowed), the expected output is:
 
-- `Block: 90 | GPC: 2`
-- `set GLOBAL` — the global GPC rule
-- `remove ["example.com"]` — the per-site override that suppresses GPC
+- `Block: 0 | Allow: 3 | GPC: 2`
+- The 3 allow rules are per-site overrides for the categories that Balanced blocks globally (ads, third_parties, advanced_tracking), allowing them on the custom site.
+- `set GLOBAL` — the global GPC rule (privacy purposes denied by Balanced)
+- `remove ["example.com"]` — the per-site override that suppresses GPC for the permissive site
+
+Note: most blocking is now handled by static rulesets (enabled/disabled per category by the background script), not by dynamic rules. Dynamic rules are only used for per-site overrides and GPC headers.
 

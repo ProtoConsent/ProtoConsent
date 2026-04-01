@@ -201,8 +201,10 @@ Status: not yet created. This is the next planned step for protocol formalizatio
 | Purposes data model (`purposes.json`) | Implemented (v0.1.0) |
 | Presets data model (`presets.json`) | Implemented (v0.1.0) |
 | Per-domain rules in storage | Implemented (v0.1.0) |
-| Extension enforcement (DNR) | Implemented (v0.1.0 — global + per-site, domain-anchored) |
-| Extension popup UI | Implemented (v0.1.0 — global profile, custom detection, safe storage) |
+| Extension enforcement (DNR) | Implemented (v0.1.0 — global + per-site; v0.1.1 — static rulesets, path-based blocking, override grouping) |
+| Extension popup UI | Implemented (v0.1.0 — profiles, toggles; v0.1.1 — blocked counter, per-purpose stats, .well-known side panel, debug panel) |
+| Blocked request counter | Implemented (v0.1.1) — per-tab blocked count, per-purpose breakdown, domain detail |
+| Onboarding welcome page | Implemented |
 | SDK skeleton (API surface defined) | Implemented (v0.1.0) |
 | SDK messaging (actual communication) | Implemented (v0.1.0) |
 | Content script bridge | Implemented (v0.1.0) |
