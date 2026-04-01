@@ -209,8 +209,18 @@ function displayPerPurposeStats() {
 
     const ms = count * ESTIMATED_MS_PER_BLOCKED_REQUEST;
     const statEl = document.createElement("div");
-    statEl.className = "pc-purpose-stat";
-    statEl.textContent = count + " blocked · ~" + formatEstimatedTime(ms);
+   statEl.className = "pc-purpose-stat clickable";
+  statEl.textContent = count + " blocked · ~" + formatEstimatedTime(ms);
+   statEl.setAttribute("role", "button");
+   statEl.setAttribute("tabindex", "0");
+   statEl.setAttribute("aria-label", "Show blocked trackers for " + (purposesConfig[purposeKey]?.label || purposeKey));
+   statEl.addEventListener("click", toggleBlockedDetail);
+   statEl.addEventListener("keydown", (e) => {
+     if (e.key === "Enter" || e.key === " ") {
+       e.preventDefault();
+       toggleBlockedDetail();
+     }
+   });
 
     // Insert after header, before description
     const descEl = itemEl.querySelector(".pc-purpose-description");
@@ -334,7 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (purposesLink) {
     purposesLink.addEventListener("click", (e) => {
       e.preventDefault();
-      chrome.tabs.create({ url: chrome.runtime.getURL("purposes-editor.html") });
+      chrome.tabs.create({ url: chrome.runtime.getURL("pages/purposes-editor.html") });
     });
   }
 

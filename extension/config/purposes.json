@@ -4,7 +4,7 @@
     "label": "Functional (service)",
     "short": "F",
     "short_label": "Functional",
-    "icon": "icons/purposes/functional.png",
+    "icon": "../icons/purposes/functional.png",
     "consent_commons_keys": [
       "service_management",
       "other_data"
@@ -16,7 +16,7 @@
     "label": "Analytics",
     "short": "An",
     "short_label": "Analytics",
-    "icon": "icons/purposes/analytics.png",
+    "icon": "../icons/purposes/analytics.png",
     "consent_commons_keys": [
       "profiling_analytics"
     ],
@@ -27,7 +27,7 @@
     "label": "Ads / Marketing",
     "short": "Ad",
     "short_label": "Ads",
-    "icon": "icons/purposes/ads.png",
+    "icon": "../icons/purposes/ads.png",
     "consent_commons_keys": [
       "marketing_purposes",
       "profiling_analytics"
@@ -40,7 +40,7 @@
     "label": "Personalization / Profiling",
     "short": "P",
     "short_label": "Personal",
-    "icon": "icons/purposes/personalization.png",
+    "icon": "../icons/purposes/personalization.png",
     "consent_commons_keys": [
       "profiling_analytics"
     ],
@@ -51,7 +51,7 @@
     "label": "Third-party sharing",
     "short": "3P",
     "short_label": "3rd party",
-    "icon": "icons/purposes/third_parties.png",
+    "icon": "../icons/purposes/third_parties.png",
     "consent_commons_keys": [
       "third_party_access",
       "third_party_sharing_advertising"
@@ -61,10 +61,10 @@
   },
   "advanced_tracking": {
     "order": 6,
-    "label": "Advanced tracking / fingerprinting",
+    "label": "Advanced tracking",
     "short": "T",
     "short_label": "Tracking",
-    "icon": "icons/purposes/advanced_tracking.png",
+    "icon": "../icons/purposes/advanced_tracking.png",
     "consent_commons_keys": [
       "profiling_analytics",
       "other_data"

@@ -667,7 +667,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     chrome.storage.local.get(['onboardingComplete'], (result) => {
       if (!result.onboardingComplete) {
-        chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+        chrome.tabs.create({ url: chrome.runtime.getURL('pages/onboarding.html') });
       }
     });
   }
