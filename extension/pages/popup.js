@@ -9,6 +9,7 @@
 // Estimated time saved per blocked request (ms) — conservative heuristic
 // Accounts for DNS + connection + download of typical third-party tracking scripts
 const ESTIMATED_MS_PER_BLOCKED_REQUEST = 50;
+const ENABLE_MODE_RAIL = false;
 
 let PURPOSES_TO_SHOW = [];
 let gpcPurposeKeys = [];
@@ -25,9 +26,11 @@ let currentPurposesState = {};
 let allRules = {};
 let lastGpcSignalsSent = 0;
 let requiredPurposeKeys = new Set();
+let activeMode = "consent";
 
 async function initPopup() {
   try {
+    initFutureModeSkeleton();
     await loadConfigs();
     await loadDefaultProfile();
     await initDomain();
@@ -43,6 +46,44 @@ async function initPopup() {
     console.error("ProtoConsent popup error:", err);
     showPopupError("Could not load ProtoConsent settings for this site.");
   }
+}
+
+function initFutureModeSkeleton() {
+  const modeRail = document.getElementById("pc-mode-rail");
+  const modeTabs = document.querySelectorAll(".pc-mode-tab");
+
+  if (!ENABLE_MODE_RAIL) {
+    if (modeRail) modeRail.remove();
+    setActiveMode("consent");
+    return;
+  }
+
+  if (modeRail) modeRail.hidden = false;
+  modeTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const mode = tab.dataset.mode || "consent";
+      setActiveMode(mode);
+    });
+  });
+  setActiveMode(activeMode);
+}
+
+function setActiveMode(mode) {
+  activeMode = mode;
+
+  const views = document.querySelectorAll("[data-mode-view]");
+  views.forEach((view) => {
+    const isActive = view.dataset.modeView === mode;
+    view.hidden = !isActive;
+    view.setAttribute("aria-hidden", isActive ? "false" : "true");
+  });
+
+  const tabs = document.querySelectorAll(".pc-mode-tab");
+  tabs.forEach((tab) => {
+    const isActive = tab.dataset.mode === mode;
+    tab.classList.toggle("is-active", isActive);
+    tab.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
 }
 
  // Get the count of matched DNR rules for the current tab.
@@ -741,19 +782,27 @@ function createPurposeItemElement(purposeKey, cfg) {
 
   // Update the visual switch based on the checkbox state
   function updateSwitchVisual() {
+    itemEl.classList.remove("is-allowed", "is-blocked");
+    stateLabelEl.classList.remove("is-allowed", "is-blocked", "is-required");
+
     if (isRequired) {
       switchEl.classList.add("is-on", "is-disabled");
       stateLabelEl.textContent = "Required";
+      stateLabelEl.classList.add("is-required");
       checkboxEl.setAttribute("aria-label", cfg.label + " — Required (always enabled)");
       return;
     }
     if (checkboxEl.checked) {
       switchEl.classList.add("is-on");
       stateLabelEl.textContent = "Allowed";
+      stateLabelEl.classList.add("is-allowed");
+      itemEl.classList.add("is-allowed");
       checkboxEl.setAttribute("aria-label", cfg.label + " — Allowed");
     } else {
       switchEl.classList.remove("is-on");
       stateLabelEl.textContent = "Blocked";
+      stateLabelEl.classList.add("is-blocked");
+      itemEl.classList.add("is-blocked");
       checkboxEl.setAttribute("aria-label", cfg.label + " — Blocked");
     }
   }
