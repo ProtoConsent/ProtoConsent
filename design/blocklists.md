@@ -21,7 +21,7 @@ This is **not** a full ad/tracking blocker. At this stage of development, the li
 
 ## 3. Sources
 
-The curation draws from 8 public blocklists:
+The curation draws from 7 public blocklists:
 
 | Source | Type | Category hint | License |
 |--------|------|---------------|---------|
@@ -32,7 +32,6 @@ The curation draws from 8 public blocklists:
 | [OISD big](https://oisd.nl/) | Composite domain list | (mixed) | GPL-3.0 |
 | [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | DNS blocklist | (mixed) | GPL-3.0 |
 | [HaGeZi TIF](https://github.com/hagezi/dns-blocklists) | Threat intelligence | Advanced tracking | GPL-3.0 |
-| [Disconnect.me](https://github.com/disconnectme/disconnect-tracking-protection) | Categorized JSON | Multi-category | CC BY-NC-SA 4.0 |
 
 ¹ Peter Lowe's list has no formal license; the author grants informal permission: "Feel free to combine this list with yours or lists from other sites and put it up on the web."
 
