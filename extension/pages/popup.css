@@ -359,6 +359,65 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
+.pc-scope-indicators {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pc-wk-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--pc-line);
+  background-color: var(--pc-surface);
+  color: var(--pc-text-muted);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.pc-wk-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: #9ca3af;
+}
+
+.pc-wk-indicator.is-active {
+  color: #1e3a8a;
+  border-color: #bfd0e4;
+  background-color: #f3f8ff;
+}
+
+.pc-wk-indicator.is-active .pc-wk-dot {
+  background-color: #2563eb;
+}
+
+.pc-wk-indicator.is-inactive {
+  color: #6b7280;
+  border-color: #e5e7eb;
+  background-color: #f3f4f6;
+}
+
+.pc-wk-indicator.is-inactive .pc-wk-dot {
+  background-color: #9ca3af;
+}
+
+.pc-wk-indicator.is-disabled {
+  color: #6b7280;
+  border-color: #e5e7eb;
+  background-color: #f3f4f6;
+}
+
+.pc-wk-indicator.is-disabled .pc-wk-dot {
+  background-color: #9ca3af;
+}
+
 .pc-gpc-dot {
   width: 8px;
   height: 8px;
@@ -544,6 +603,7 @@ body {
 .pc-purpose-toggle {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 6px;
   cursor: pointer;
   flex-shrink: 0;
@@ -553,6 +613,7 @@ body {
 .pc-toggle-label {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   cursor: pointer;
   font-size: 10px;
@@ -561,6 +622,7 @@ body {
   letter-spacing: 0.03em;
   text-transform: uppercase;
   padding: 3px 7px;
+  min-width: 62px;
   border-radius: 999px;
   background-color: #f1f5f9;
   border: 1px solid #e2e8f0;

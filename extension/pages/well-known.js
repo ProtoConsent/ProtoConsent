@@ -25,9 +25,40 @@ const WELL_KNOWN_CACHE_TTL = 24 * 60 * 60 * 1000;
 // Shorter TTL for negative results (site has no .well-known or invalid file)
 const WELL_KNOWN_NEGATIVE_TTL = 6 * 60 * 60 * 1000;
 
+function setWellKnownIndicator(state, titleText) {
+  const indicatorEl = document.getElementById("pc-wk-indicator");
+  const labelEl = document.getElementById("pc-wk-label");
+  if (!indicatorEl || !labelEl) return;
+
+  indicatorEl.classList.remove("is-active", "is-inactive", "is-disabled");
+
+  if (state === "active") {
+    indicatorEl.classList.add("is-active");
+    labelEl.textContent = "WK ok";
+    indicatorEl.title = titleText || "Valid .well-known declaration detected";
+    return;
+  }
+
+  if (state === "inactive") {
+    indicatorEl.classList.add("is-inactive");
+    labelEl.textContent = "WK off";
+    indicatorEl.title = titleText || "No valid .well-known declaration for this site";
+    return;
+  }
+
+  indicatorEl.classList.add("is-disabled");
+  labelEl.textContent = "WK n/a";
+  indicatorEl.title = titleText || ".well-known status unavailable";
+}
+
 // Load and display site declaration from .well-known/protoconsent.json
 async function loadSiteDeclaration() {
-  if (!currentDomain) return;
+  if (!currentDomain) {
+    setWellKnownIndicator("disabled", ".well-known unavailable on this page");
+    return;
+  }
+
+  setWellKnownIndicator("inactive", "Checking .well-known declaration...");
 
   const container = document.getElementById("pc-site-declaration");
   if (!container) return;
@@ -41,7 +72,12 @@ async function loadSiteDeclaration() {
       const entry = cached[cacheKey];
       const ttl = entry.data ? WELL_KNOWN_CACHE_TTL : WELL_KNOWN_NEGATIVE_TTL;
       if (Date.now() - entry.ts < ttl) {
-        if (entry.data) renderSiteDeclaration(container, entry.data);
+        if (entry.data) {
+          renderSiteDeclaration(container, entry.data);
+          setWellKnownIndicator("active");
+        } else {
+          setWellKnownIndicator("inactive");
+        }
         return;
       }
     }
@@ -71,6 +107,7 @@ async function loadSiteDeclaration() {
         }
       });
       renderSiteDeclaration(container, data);
+      setWellKnownIndicator("active");
     } else {
       // Cache negative/invalid result (6h TTL) to avoid re-fetching on every popup open
       chrome.storage.local.set({ [cacheKey]: { data: null, ts: Date.now() } }, () => {
@@ -78,9 +115,11 @@ async function loadSiteDeclaration() {
           console.warn("[well-known] Cache write error:", chrome.runtime.lastError);
         }
       });
+      setWellKnownIndicator("inactive");
     }
   } catch (err) {
     console.error("[well-known] Error:", err);
+    setWellKnownIndicator("disabled", "Could not check .well-known declaration");
   }
 }
 
