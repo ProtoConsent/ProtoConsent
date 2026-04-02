@@ -24,9 +24,34 @@
       <span class="pc-side-tab-chevron" aria-hidden="true">◂</span>
     </button>
 
+    <nav id="pc-mode-rail" class="pc-mode-rail" aria-label="Popup modes" hidden>
+      <button type="button" class="pc-mode-tab is-active" data-mode="consent" aria-pressed="true" title="Consent mode">
+        <span class="pc-mode-tab-dot" aria-hidden="true"></span>
+        <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
+          <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">CONSENT</text>
+        </svg>
+      </button>
+      <button type="button" class="pc-mode-tab" data-mode="enhanced" aria-pressed="false" title="Enhanced Protection mode">
+        <span class="pc-mode-tab-dot" aria-hidden="true"></span>
+        <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
+          <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">ENHANCED</text>
+        </svg>
+      </button>
+      <button type="button" class="pc-mode-tab" data-mode="log" aria-pressed="false" title="Log mode">
+        <span class="pc-mode-tab-dot" aria-hidden="true"></span>
+        <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
+          <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">LOG</text>
+        </svg>
+      </button>
+    </nav>
+
     <div id="popup-root">
       <h1 class="visually-hidden">ProtoConsent</h1>
       <header class="pc-header">
+        <div class="pc-header-brand" aria-hidden="true">
+          <img src="../icons/protoconsent_icon_32.png" alt="" class="pc-header-brand-icon" width="16" height="16">
+          <span class="pc-header-brand-name">ProtoConsent</span>
+        </div>
         <div class="pc-site">
           <div class="pc-site-label">Site</div>
           <div id="pc-site-domain" class="pc-site-domain">loading...</div>
@@ -45,35 +70,57 @@
         </div>
       </header>
 
-      <div class="pc-header-stat">
-        <button id="pc-blocked-count" class="pc-blocked-count" aria-expanded="false" aria-controls="pc-blocked-detail" aria-live="polite">loading...</button>
-        <span id="pc-blocked-chevron" class="pc-blocked-chevron" aria-hidden="true"></span>
-      </div>
-      <div id="pc-blocked-detail" class="pc-blocked-detail is-collapsed"></div>
-      <div id="pc-protection-scope" class="pc-protection-scope">
-        <span id="pc-protection-scope-text" class="pc-protection-scope-text"></span>
-        <div id="pc-gpc-indicator" class="pc-gpc-indicator is-disabled" role="status" aria-live="polite" title="GPC unavailable on this page">
-          <span class="pc-gpc-dot" aria-hidden="true"></span>
-          <span id="pc-gpc-label">GPC off</span>
-        </div>
-      </div>
+      <div id="pc-mode-content" class="pc-mode-content">
+        <section id="pc-view-consent" class="pc-view is-active" data-mode-view="consent">
+          <div class="pc-header-stat">
+            <button id="pc-blocked-count" class="pc-blocked-count" aria-expanded="false" aria-controls="pc-blocked-detail" aria-live="polite">loading...</button>
+            <span id="pc-blocked-chevron" class="pc-blocked-chevron" aria-hidden="true"></span>
+          </div>
+          <div id="pc-blocked-detail" class="pc-blocked-detail is-collapsed"></div>
+          <div id="pc-protection-scope" class="pc-protection-scope">
+            <span id="pc-protection-scope-text" class="pc-protection-scope-text"></span>
+            <div id="pc-gpc-indicator" class="pc-gpc-indicator is-disabled" role="status" aria-live="polite" title="GPC unavailable on this page">
+              <span class="pc-gpc-dot" aria-hidden="true"></span>
+              <span id="pc-gpc-label">GPC off</span>
+            </div>
+          </div>
 
-      <main class="pc-main">
-        <div id="pc-purposes-list" class="pc-purposes-list">
-          <!-- Purposes will be injected here by popup.js -->
-        </div>
-      </main>
+          <main class="pc-main">
+            <div id="pc-purposes-list" class="pc-purposes-list">
+              <!-- Purposes will be injected here by popup.js -->
+            </div>
+          </main>
+        </section>
 
-      <!-- Debug panel (hidden unless DEBUG_RULES = true in popup.js) -->
-      <details id="pc-debug-panel" class="pc-debug-panel" hidden>
-        <summary class="pc-debug-summary">Debug <button id="pc-debug-copy" class="pc-debug-copy" title="Copy to clipboard">Copy</button></summary>
-        <div id="pc-debug-content" class="pc-debug-content"></div>
-      </details>
+        <section id="pc-view-enhanced" class="pc-view pc-view-placeholder" data-mode-view="enhanced" hidden aria-hidden="true">
+          <div class="pc-placeholder-card">
+            <div class="pc-placeholder-eyebrow">Enhanced Protection</div>
+            <h2 class="pc-placeholder-title">Additional network protection presets</h2>
+            <p class="pc-placeholder-copy">This future mode will activate stronger rulesets and curated list presets without replacing the consent-first flow.</p>
+            <div class="pc-placeholder-pills">
+              <span class="pc-placeholder-pill">Basic</span>
+              <span class="pc-placeholder-pill">Full</span>
+              <span class="pc-placeholder-pill">Custom</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="pc-view-log" class="pc-view pc-view-placeholder" data-mode-view="log" hidden aria-hidden="true">
+          <div class="pc-placeholder-card">
+            <div class="pc-placeholder-eyebrow">Log</div>
+            <h2 class="pc-placeholder-title">Local inspection and activity view</h2>
+            <p class="pc-placeholder-copy">This future mode will summarize blocked requests, GPC activity, and recent site-level events for debugging and transparency.</p>
+            <div class="pc-placeholder-list">
+              <div class="pc-placeholder-list-item">Blocked requests summary</div>
+              <div class="pc-placeholder-list-item">GPC signals per site</div>
+              <div class="pc-placeholder-list-item">Recent protection activity</div>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <footer class="pc-footer">
-        <img src="../icons/protoconsent_icon_32.png" alt="" class="pc-footer-icon" width="20" height="20">
         <div class="pc-footer-content">
-          <span class="pc-footer-brand">ProtoConsent</span>
           <div class="pc-footer-links">
             <button class="pc-footer-link" id="pc-toggle-descriptions" aria-expanded="false">Show details</button>
             <a href="purposes-editor.html" class="pc-footer-link" id="pc-purposes-link">Purpose Settings</a>
@@ -83,6 +130,13 @@
           </div>
         </div>
       </footer>
+
+      <!-- Debug panel (hidden unless DEBUG_RULES = true in popup.js) -->
+      <details id="pc-debug-panel" class="pc-debug-panel" hidden>
+        <summary class="pc-debug-summary">Debug</summary>
+        <button id="pc-debug-copy" class="pc-debug-copy" type="button" title="Copy to clipboard">Copy</button>
+        <div id="pc-debug-content" class="pc-debug-content"></div>
+      </details>
     </div>
   </div>
 
