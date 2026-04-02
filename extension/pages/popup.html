@@ -140,8 +140,10 @@
 
       <!-- Debug panel (hidden unless DEBUG_RULES = true in popup.js) -->
       <details id="pc-debug-panel" class="pc-debug-panel" hidden>
-        <summary class="pc-debug-summary">Debug</summary>
-        <button id="pc-debug-copy" class="pc-debug-copy" type="button" title="Copy to clipboard">Copy</button>
+        <summary class="pc-debug-summary">
+          <span class="pc-debug-label">Debug <span class="pc-debug-chevron" aria-hidden="true">▸</span></span>
+          <button id="pc-debug-copy" class="pc-debug-copy" type="button" title="Copy to clipboard">Copy</button>
+        </summary>
         <div id="pc-debug-content" class="pc-debug-content"></div>
       </details>
     </div>

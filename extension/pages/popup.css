@@ -850,7 +850,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin: 6px 0 8px 0;
+  margin: 10px 0 8px 0;
   font-size: 11px;
   color: var(--pc-accent);
   font-weight: 600;
@@ -1127,6 +1127,10 @@ body {
 }
 
 .pc-debug-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 4px 8px;
   font-weight: 600;
   color: #6b7280;
@@ -1135,13 +1139,38 @@ body {
   user-select: none;
 }
 
+.pc-debug-summary::-webkit-details-marker {
+  display: none;
+}
+
+.pc-debug-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.pc-debug-chevron {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+  color: var(--pc-text-soft);
+  margin-left: 2px;
+  transform-origin: 45% 55%;
+  transition: transform 0.15s ease;
+}
+
+.pc-debug-panel[open] .pc-debug-chevron {
+  transform: rotate(90deg);
+}
+
 .pc-debug-summary:hover {
   color: #374151;
 }
 
 .pc-debug-copy {
-  display: block;
-  margin: 4px 8px 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
   font-size: 10px;
   padding: 1px 6px;
   border: 1px solid #d1d5db;

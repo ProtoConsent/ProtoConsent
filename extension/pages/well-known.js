@@ -35,30 +35,30 @@ function setWellKnownIndicator(state, titleText) {
   if (state === "active") {
     indicatorEl.classList.add("is-active");
     labelEl.textContent = "WK ok";
-    indicatorEl.title = titleText || "Valid .well-known declaration detected";
+    indicatorEl.title = titleText || "Valid ProtoConsent .well-known declaration detected";
     return;
   }
 
   if (state === "inactive") {
     indicatorEl.classList.add("is-inactive");
     labelEl.textContent = "WK off";
-    indicatorEl.title = titleText || "No valid .well-known declaration for this site";
+    indicatorEl.title = titleText || "No valid ProtoConsent .well-known declaration for this site";
     return;
   }
 
   indicatorEl.classList.add("is-disabled");
   labelEl.textContent = "WK n/a";
-  indicatorEl.title = titleText || ".well-known status unavailable";
+  indicatorEl.title = titleText || "ProtoConsent .well-known status unavailable";
 }
 
 // Load and display site declaration from .well-known/protoconsent.json
 async function loadSiteDeclaration() {
   if (!currentDomain) {
-    setWellKnownIndicator("disabled", ".well-known unavailable on this page");
+    setWellKnownIndicator("disabled", "ProtoConsent .well-known unavailable on this page");
     return;
   }
 
-  setWellKnownIndicator("inactive", "Checking .well-known declaration...");
+  setWellKnownIndicator("inactive", "Checking ProtoConsent .well-known declaration...");
 
   const container = document.getElementById("pc-site-declaration");
   if (!container) return;
@@ -119,11 +119,11 @@ async function loadSiteDeclaration() {
     }
   } catch (err) {
     console.error("[well-known] Error:", err);
-    setWellKnownIndicator("disabled", "Could not check .well-known declaration");
+    setWellKnownIndicator("disabled", "Could not check ProtoConsent .well-known declaration");
   }
 }
 
-// Minimal validation of a .well-known/protoconsent.json file.
+// Minimal validation of a ProtoConsent .well-known/protoconsent.json file.
 // See design/well-known-spec.md §4.2 for the rules.
 function validateSiteDeclaration(json) {
   if (!json || typeof json !== "object") return false;
