@@ -301,7 +301,7 @@ function displayProtectionScope() {
 
   const total = domainCount + pathCount;
   if (total > 0) {
-    scopeTextEl.textContent = "Protected from " + total + " tracking rules";
+    scopeTextEl.textContent = "Protected: " + total + " tracking rules";
     scopeTextEl.title = "";
     scopeEl.style.display = "flex";
   } else {
