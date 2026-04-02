@@ -488,7 +488,7 @@ body {
 /* Purposes */
 .pc-main {
   margin-bottom: 10px;
-  padding: 2px 6px 2px 0;
+  padding: 2px 2px 2px 4px;
   border: none;
   border-radius: 12px;
   background: #ffffff;
