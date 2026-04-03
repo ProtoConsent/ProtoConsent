@@ -427,7 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (purposesLink) {
     purposesLink.addEventListener("click", (e) => {
       e.preventDefault();
-      chrome.tabs.create({ url: chrome.runtime.getURL("pages/purposes-editor.html") });
+      chrome.tabs.create({ url: chrome.runtime.getURL("pages/purposes-settings.html") });
     });
   }
 

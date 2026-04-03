@@ -53,7 +53,7 @@
     }
   ],
 
-  "options_page": "pages/purposes-editor.html",
+  "options_page": "pages/purposes-settings.html",
 
   "declarative_net_request": {
     "rule_resources": [
