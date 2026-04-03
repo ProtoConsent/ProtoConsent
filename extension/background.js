@@ -334,17 +334,35 @@ async function _rebuildAllDynamicRulesImpl() {
       }
 
       if (blockOverrides[purposeKey]?.length) {
-        newDynamicBlockMap[nextRuleId] = purposeKey;
-        newRules.push({
-          id: nextRuleId++,
-          priority: 2,
-          action: { type: "block" },
-          condition: {
-            requestDomains: domains,
-            initiatorDomains: blockOverrides[purposeKey],
-            resourceTypes: BLOCK_RESOURCE_TYPES,
-          },
-        });
+        // Path-extracted domains (e.g. "elpais.com" from ||elpais.com/t.gif)
+        // are too broad as requestDomains — DNR matches all subdomains, so
+        // "elpais.com" would block static.elpais.com, imagenes.elpais.com, etc.
+        // When one overlaps with an initiatorDomain the rule blocks the site's
+        // own first-party resources.  Filter those out; the static path ruleset
+        // handles them with precise urlFilter patterns when enabled globally.
+        const initiators = blockOverrides[purposeKey];
+        let effectiveDomains = domains;
+        if (pathDomainList.length) {
+          const safePathDomains = pathDomainList.filter(pd =>
+            !initiators.some(id => pd === id || pd.endsWith("." + id) || id.endsWith("." + pd))
+          );
+          effectiveDomains = safePathDomains.length
+            ? [...domainList, ...safePathDomains]
+            : domainList;
+        }
+        if (effectiveDomains.length) {
+          newDynamicBlockMap[nextRuleId] = purposeKey;
+          newRules.push({
+            id: nextRuleId++,
+            priority: 2,
+            action: { type: "block" },
+            condition: {
+              requestDomains: effectiveDomains,
+              initiatorDomains: initiators,
+              resourceTypes: BLOCK_RESOURCE_TYPES,
+            },
+          });
+        }
       }
     }
 
