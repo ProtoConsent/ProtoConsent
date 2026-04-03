@@ -283,5 +283,30 @@ With Balanced as the default and one site set to custom (all allowed), the expec
 - `set GLOBAL` — the global GPC rule (privacy purposes denied by Balanced)
 - `remove ["example.com"]` — the per-site override that suppresses GPC for the permissive site
 
-Note: most blocking is now handled by static rulesets (enabled/disabled per category by the background script), not by dynamic rules. Dynamic rules are only used for per-site overrides and GPC headers.
+## 9. Enabling the debug panel
+
+The popup includes a hidden debug panel that shows internal state (dynamic rules, ruleset toggles, GPC mappings). It is off by default and controlled by a flag in local storage — no code changes needed.
+
+### 9.1 Activate debug mode
+
+1. Open `chrome://extensions/` and click **Service Worker** under the ProtoConsent entry to open its console.
+2. Run:
+
+   ```js
+   chrome.storage.local.set({ debug: true })
+   ```
+
+3. Close and reopen the popup. A **Debug** section should appear at the bottom.
+
+### 9.2 Deactivate debug mode
+
+1. In the same service worker console, run:
+
+   ```js
+   chrome.storage.local.remove("debug")
+   ```
+
+2. Close and reopen the popup. The debug panel disappears.
+
+The flag persists across browser restarts until explicitly removed.
 

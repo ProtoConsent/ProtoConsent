@@ -241,7 +241,8 @@ async function displayBlockedCount() {
     displayProtectionScope();
     updateGpcIndicator(gpc);
 
-    // Debug panel (visible only when DEBUG_RULES = true)
+    // Debug panel (visible only when debug flag is set in storage)
+    await loadDebugFlag();
     if (DEBUG_RULES) {
       renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains });
     }

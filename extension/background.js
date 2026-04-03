@@ -215,6 +215,8 @@ async function rebuildAllDynamicRules() {
   }
   _rebuildRunning = true;
 
+  await loadDebugFlag();
+
   try {
     await _rebuildAllDynamicRulesImpl();
   } finally {
