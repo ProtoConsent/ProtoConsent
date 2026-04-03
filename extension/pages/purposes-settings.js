@@ -17,7 +17,7 @@ async function init() {
 		const purposes = await purposesRes.json();
 		const presets = await presetsRes.json();
 
-		statusEl.style.display = 'none';
+		statusEl.classList.add('ps-hidden');
 		initDefaultProfile(purposes);
 		renderPurposes(purposes);
 		renderPresets(presets, purposes);
@@ -27,7 +27,7 @@ async function init() {
 			versionEl.textContent = 'ProtoConsent v' + chrome.runtime.getManifest().version;
 		}
 
-		const welcomeLink = document.getElementById('pe-welcome-link');
+		const welcomeLink = document.getElementById('ps-welcome-link');
 		if (welcomeLink) {
 			welcomeLink.addEventListener('click', (e) => {
 				e.preventDefault();
@@ -53,10 +53,10 @@ function initDefaultProfile(purposes) {
 	const checkboxes = {};
 	for (const key of purposeKeys) {
 		const row = document.createElement('div');
-		row.className = 'custom-toggle-row';
+		row.className = 'ps-custom-toggle-row';
 
 		const label = document.createElement('label');
-		label.className = 'custom-toggle-label';
+		label.className = 'ps-custom-toggle-label';
 		label.textContent = purposes[key].label || key;
 		label.setAttribute('for', 'dp-' + key);
 
@@ -82,7 +82,7 @@ function initDefaultProfile(purposes) {
 		selectEl.value = profile;
 
 		if (profile === 'custom') {
-			togglesContainer.style.display = '';
+			togglesContainer.classList.remove('ps-hidden');
 			if (result.defaultPurposes) {
 				for (const key of purposeKeys) {
 					if (purposes[key].required) {
@@ -109,11 +109,11 @@ function initDefaultProfile(purposes) {
 	function updateCustomPresetCard() {
 		const pillsEl = document.getElementById('custom-preset-pills');
 		if (!pillsEl) return;
-		pillsEl.innerHTML = '';
+		pillsEl.replaceChildren();
 		for (const key of purposeKeys) {
 			const allowed = checkboxes[key].checked;
 			const pill = document.createElement('span');
-			pill.className = 'preset-pill ' + (allowed ? 'allowed' : 'denied');
+			pill.className = 'ps-preset-pill ' + (allowed ? 'allowed' : 'denied');
 			pill.textContent = (purposes[key] ? purposes[key].short : key) + (allowed ? ' \u2713' : ' \u2717');
 			pillsEl.appendChild(pill);
 		}
@@ -124,7 +124,7 @@ function initDefaultProfile(purposes) {
 		const value = selectEl.value;
 
 		if (value === 'custom') {
-			togglesContainer.style.display = '';
+			togglesContainer.classList.remove('ps-hidden');
 			// Atomic write: both keys together to avoid inconsistent state
 			const dp = {};
 			for (const key of purposeKeys) {
@@ -133,7 +133,7 @@ function initDefaultProfile(purposes) {
 			chrome.storage.local.set({ defaultProfile: value, defaultPurposes: dp }, notifyBackground);
 			updateCustomPresetCard();
 		} else {
-			togglesContainer.style.display = 'none';
+			togglesContainer.classList.add('ps-hidden');
 			chrome.storage.local.set({ defaultProfile: value }, notifyBackground);
 		}
 	});
@@ -156,7 +156,7 @@ function initDefaultProfile(purposes) {
 		});
 	});
 
-	section.style.display = '';
+	section.classList.remove('ps-hidden');
 }
 
 function renderPurposes(purposes) {
@@ -164,19 +164,19 @@ function renderPurposes(purposes) {
 	const section = document.getElementById('purposes-section');
 	if (!container || !section) return;
 
-	const purposeEntries = Object.entries(purposes)
-		.sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+	const purposeEntries = Object.values(purposes)
+		.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-	for (const [key, p] of purposeEntries) {
+	for (const p of purposeEntries) {
 		const card = document.createElement('div');
-		card.className = 'purpose-card';
+		card.className = 'ps-purpose-card';
 
 		const header = document.createElement('div');
-		header.className = 'purpose-header';
+		header.className = 'ps-purpose-header';
 
 		if (p.icon) {
 			const iconImg = document.createElement('img');
-			iconImg.className = 'purpose-icon-img';
+			iconImg.className = 'ps-purpose-icon-img';
 			iconImg.src = p.icon;
 			iconImg.alt = '';
 			iconImg.onerror = function () { this.remove(); };
@@ -184,11 +184,11 @@ function renderPurposes(purposes) {
 		}
 
 		const badge = document.createElement('span');
-		badge.className = 'purpose-short';
+		badge.className = 'ps-purpose-short';
 		badge.textContent = p.short;
 
 		const label = document.createElement('span');
-		label.className = 'purpose-label';
+		label.className = 'ps-purpose-label';
 		label.textContent = p.label;
 
 		header.appendChild(badge);
@@ -196,20 +196,20 @@ function renderPurposes(purposes) {
 		card.appendChild(header);
 
 		const desc = document.createElement('p');
-		desc.className = 'purpose-desc';
+		desc.className = 'ps-purpose-desc';
 		desc.textContent = p.description;
 		card.appendChild(desc);
 
 		if (p.consent_commons_keys && p.consent_commons_keys.length) {
 			const keys = document.createElement('div');
-			keys.className = 'purpose-keys';
+			keys.className = 'ps-purpose-keys';
 			const keysLabel = document.createElement('span');
-			keysLabel.className = 'purpose-keys-label';
+			keysLabel.className = 'ps-purpose-keys-label';
 			keysLabel.textContent = 'Consent Commons:';
 			keys.appendChild(keysLabel);
 			for (const k of p.consent_commons_keys) {
 				const pill = document.createElement('span');
-				pill.className = 'purpose-key';
+				pill.className = 'ps-purpose-key';
 				pill.textContent = k.replace(/_/g, ' ');
 				keys.appendChild(pill);
 			}
@@ -218,7 +218,7 @@ function renderPurposes(purposes) {
 
 		container.appendChild(card);
 	}
-	section.style.display = '';
+	section.classList.remove('ps-hidden');
 }
 
 function renderPresets(presets, purposes) {
@@ -226,20 +226,20 @@ function renderPresets(presets, purposes) {
 	const section = document.getElementById('presets-section');
 	if (!container || !section) return;
 
-	for (const [key, preset] of Object.entries(presets)) {
+	for (const preset of Object.values(presets)) {
 		const card = document.createElement('div');
-		card.className = 'preset-card';
+		card.className = 'ps-preset-card';
 
 		const name = document.createElement('div');
-		name.className = 'preset-name';
+		name.className = 'ps-preset-name';
 		name.textContent = preset.label;
 		card.appendChild(name);
 
 		const pills = document.createElement('div');
-		pills.className = 'preset-purposes';
+		pills.className = 'ps-preset-purposes';
 		for (const [pKey, allowed] of Object.entries(preset.purposes)) {
 			const pill = document.createElement('span');
-			pill.className = 'preset-pill ' + (allowed ? 'allowed' : 'denied');
+			pill.className = 'ps-preset-pill ' + (allowed ? 'allowed' : 'denied');
 			pill.textContent = (purposes[pKey] ? purposes[pKey].short : pKey) + (allowed ? ' \u2713' : ' \u2717');
 			pills.appendChild(pill);
 		}
@@ -247,35 +247,35 @@ function renderPresets(presets, purposes) {
 
 		container.appendChild(card);
 	}
-	section.style.display = '';
+	section.classList.remove('ps-hidden');
 
 	// GPC signal info row — read-only, shows which purposes trigger Sec-GPC
 	const gpcCard = document.createElement('div');
-	gpcCard.className = 'preset-card';
+	gpcCard.className = 'ps-preset-card';
 
 	const gpcInfo = document.createElement('div');
-	gpcInfo.className = 'gpc-info-row';
+	gpcInfo.className = 'ps-gpc-info-row';
 
 	const gpcName = document.createElement('span');
-	gpcName.className = 'gpc-info-name';
+	gpcName.className = 'ps-gpc-info-name';
 	gpcName.textContent = 'GPC (Global Privacy Control)';
 	gpcInfo.appendChild(gpcName);
 
 	const gpcDesc = document.createElement('span');
-	gpcDesc.className = 'gpc-info-desc';
+	gpcDesc.className = 'ps-gpc-info-desc';
 	gpcDesc.textContent = '— privacy signal sent to websites when any of these purposes are denied';
 	gpcInfo.appendChild(gpcDesc);
 
 	gpcCard.appendChild(gpcInfo);
 
 	const gpcPills = document.createElement('div');
-	gpcPills.className = 'preset-purposes';
-	const gpcEntries = Object.entries(purposes)
-		.sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
-	for (const [pKey, pDef] of gpcEntries) {
+	gpcPills.className = 'ps-preset-purposes';
+	const gpcEntries = Object.values(purposes)
+		.sort((a, b) => (a.order || 0) - (b.order || 0));
+	for (const pDef of gpcEntries) {
 		if (!pDef.triggers_gpc) continue;
 		const pill = document.createElement('span');
-		pill.className = 'preset-pill gpc';
+		pill.className = 'ps-preset-pill gpc';
 		pill.textContent = pDef.short + ' \u2717';
 		gpcPills.appendChild(pill);
 	}
@@ -284,16 +284,16 @@ function renderPresets(presets, purposes) {
 
 	// Always render custom preset card (updated live by initDefaultProfile)
 	const customCard = document.createElement('div');
-	customCard.className = 'preset-card';
+	customCard.className = 'ps-preset-card';
 	customCard.id = 'custom-preset-card';
 
 	const customName = document.createElement('div');
-	customName.className = 'preset-name';
+	customName.className = 'ps-preset-name';
 	customName.textContent = 'Custom (your default)';
 	customCard.appendChild(customName);
 
 	const customPills = document.createElement('div');
-	customPills.className = 'preset-purposes';
+	customPills.className = 'ps-preset-purposes';
 	customPills.id = 'custom-preset-pills';
 	customCard.appendChild(customPills);
 	container.appendChild(customCard);

@@ -9,31 +9,26 @@ html, body {
   padding: 0;
 }
 
-:root {
-  --pc-bg: #d8e3ef;
-  --pc-surface: #ffffff;
-  --pc-surface-soft: #f7fafc;
-  --pc-surface-strong: #eef5ff;
-  --pc-line: #d9e2ec;
-  --pc-line-strong: #bfd0e4;
-  --pc-text: #0f172a;
-  --pc-text-muted: #475569;
-  --pc-text-soft: #64748b;
-  --pc-accent: #1d4ed8;
-  --pc-accent-soft: #dbeafe;
-  --pc-accent-strong: #c7d2fe;
-  --pc-success: #15803d;
-  --pc-success-soft: #dcfce7;
-  --pc-danger: #b91c1c;
-  --pc-danger-soft: #fee2e2;
-  --pc-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
-}
-
 body {
   font-family: "Segoe UI Variable", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 13px;
   color: var(--pc-text);
   background: #fdfefe;
+}
+
+/* Thin scrollbar matching popup palette (Chromium only) */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1cad4;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9aa8b5;
 }
 
 /* Visually hidden but accessible to screen readers */

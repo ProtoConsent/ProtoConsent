@@ -9,19 +9,6 @@ html, body {
   padding: 0;
 }
 
-:root {
-  --pc-bg: #d8e3ef;
-  --pc-surface: #ffffff;
-  --pc-surface-soft: #f7fafc;
-  --pc-line: #d9e2ec;
-  --pc-line-strong: #bfd0e4;
-  --pc-text: #0f172a;
-  --pc-text-muted: #475569;
-  --pc-text-soft: #64748b;
-  --pc-accent: #1d4ed8;
-  --pc-success: #15803d;
-}
-
 body {
   font-family: "Segoe UI Variable", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
