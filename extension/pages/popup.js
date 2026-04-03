@@ -19,6 +19,8 @@ let presetsConfig = {};
 let purposeDomainCounts = {};
 let purposePathCounts = {};
 let currentDomain = null;
+let currentProtocol = "https:";
+let currentHost = null;
 let defaultProfile = "balanced";
 let defaultPurposes = null;
 let currentProfile = "balanced";
@@ -543,6 +545,8 @@ async function initDomain() {
     }
     const hostname = url.hostname.replace(/^www\./, "");
     currentDomain = hostname;
+    currentProtocol = url.protocol;
+    currentHost = url.host;
     document.getElementById("pc-site-domain").textContent = hostname;
   } catch (e) {
     currentDomain = null;

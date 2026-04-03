@@ -672,7 +672,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ data: null });
       return;
     }
-    const url = "https://" + domain + "/.well-known/protoconsent.json";
+    const host = (message.host && typeof message.host === "string") ? message.host : domain;
+    const protocol = message.protocol === "http:" ? "http://" : "https://";
+    const url = protocol + host + "/.well-known/protoconsent.json";
     fetch(url, { credentials: "omit", redirect: "follow" })
       .then(res => {
         if (!res.ok) return null;

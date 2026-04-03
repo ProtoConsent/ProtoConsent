@@ -143,7 +143,7 @@ async function loadSiteDeclaration() {
     // Fetch via background service worker (bypasses page Service Workers, no cookies sent)
     const response = await new Promise(resolve => {
       chrome.runtime.sendMessage(
-        { type: "PROTOCONSENT_FETCH_WELL_KNOWN", domain: currentDomain },
+        { type: "PROTOCONSENT_FETCH_WELL_KNOWN", domain: currentDomain, host: currentHost, protocol: currentProtocol },
         (resp) => {
           if (chrome.runtime.lastError) {
             resolve(null);
