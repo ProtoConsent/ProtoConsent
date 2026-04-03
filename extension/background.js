@@ -31,6 +31,8 @@ let blocklistsConfig = null;
 
 // Per-tab tracking of blocked domains for the popup detail view.
 // Maps tabId -> { purposeKey -> { domain -> count } }
+// Note: these Maps reset when the service worker terminates (by design 
+// Chrome persists DNR rules independently, only popup counters are affected).
 const tabBlockedDomains = new Map();
 
 // Maps dynamic block rule IDs to their purpose (rebuilt on each rule update).
@@ -68,16 +70,19 @@ async function loadBlocklistsConfig() {
     try {
       const url = chrome.runtime.getURL("rules/block_" + key + ".json");
       const res = await fetch(url);
+      if (!res.ok) throw new Error("HTTP " + res.status);
       const rules = await res.json();
       entry.domains = rules[0]?.condition?.requestDomains || [];
-    } catch (_) {
-      // No static ruleset for this category (e.g. "functional")
+    } catch (e) {
+      // Expected for categories without a static ruleset (e.g. "functional")
+      if (key !== "functional") console.warn("loadBlocklistsConfig: block_" + key + ".json:", e.message);
       entry.domains = [];
     }
     // Extract unique domains from path-based rules (urlFilter "||domain.com/path")
     try {
       const url = chrome.runtime.getURL("rules/block_" + key + "_paths.json");
       const res = await fetch(url);
+      if (!res.ok) throw new Error("HTTP " + res.status);
       const rules = await res.json();
       const domainSet = new Set(entry.domains);
       const pathDomains = [];
@@ -89,7 +94,8 @@ async function loadBlocklistsConfig() {
         }
       }
       entry.pathDomains = pathDomains;
-    } catch (_) {
+    } catch (e) {
+      if (key !== "functional") console.warn("loadBlocklistsConfig: block_" + key + "_paths.json:", e.message);
       entry.pathDomains = [];
     }
     config[key] = entry;
@@ -123,6 +129,7 @@ async function loadPurposesConfig() {
   try {
     const url = chrome.runtime.getURL("config/purposes.json");
     const res = await fetch(url);
+    if (!res.ok) throw new Error("HTTP " + res.status);
     purposesConfig = await res.json();
   } catch (e) {
     console.error("Failed to load purposes.json:", e);
@@ -475,12 +482,12 @@ async function _rebuildAllDynamicRulesImpl() {
         removeRuleIds: existingIds,
         addRules: newRules,
       });
+      dynamicBlockRuleMap = newDynamicBlockMap;
+      dynamicGpcSetIds = newGpcSetIds;
     } catch (e) {
       console.error("updateDynamicRules failed:", e.message, "rules:", newRules.length);
       if (DEBUG_RULES) lastRebuildDebug.error = e.message;
     }
-    dynamicBlockRuleMap = newDynamicBlockMap;
-    dynamicGpcSetIds = newGpcSetIds;
     try {
       await chrome.declarativeNetRequest.updateEnabledRulesets({
         enableRulesetIds: enableIds,
@@ -602,6 +609,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Popup requests per-tab blocked domain detail + per-purpose counts (domains + paths)
   if (message.type === "PROTOCONSENT_GET_BLOCKED_DOMAINS") {
+    // Lazy rebuild if SW restarted and in-memory state is stale
+    if (PURPOSES_FOR_ENFORCEMENT.length === 0) {
+      rebuildAllDynamicRules();
+    }
     loadBlocklistsConfig().then(bl => {
       const purposeDomainCounts = {};
       const purposePathCounts = {};
@@ -634,6 +645,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "PROTOCONSENT_GET_DEBUG") {
     sendResponse(lastRebuildDebug);
     return;
+  }
+
+  // Popup requests .well-known fetch (via background to bypass page Service Workers)
+  if (message.type === "PROTOCONSENT_FETCH_WELL_KNOWN") {
+    const domain = message.domain;
+    if (!domain || typeof domain !== "string") {
+      sendResponse({ data: null });
+      return;
+    }
+    const url = "https://" + domain + "/.well-known/protoconsent.json";
+    fetch(url, { credentials: "omit", redirect: "follow" })
+      .then(res => {
+        if (!res.ok) return null;
+        return res.text().then(text => {
+          if (text.length > 5000) return null;
+          try { return JSON.parse(text); } catch (_) { return null; }
+        });
+      })
+      .then(data => sendResponse({ data: data || null }))
+      .catch(() => sendResponse({ data: null }));
+    return true; // async response
   }
 });
 

@@ -24,6 +24,64 @@ const LEGAL_BASIS_LABELS = {
 const WELL_KNOWN_CACHE_TTL = 24 * 60 * 60 * 1000;
 // Shorter TTL for negative results (site has no .well-known or invalid file)
 const WELL_KNOWN_NEGATIVE_TTL = 6 * 60 * 60 * 1000;
+// Maximum cached .well-known entries before evicting oldest
+const WELL_KNOWN_MAX_ENTRIES = 200;
+// Known legal_basis values (GDPR Article 6)
+const KNOWN_LEGAL_BASIS = ["consent", "contractual", "legitimate_interest", "legal_obligation", "public_interest", "vital_interest"];
+// Maximum string length for declaration text fields
+const WELL_KNOWN_MAX_STRING_LEN = 100;
+
+// Strip unrecognized fields and cap string lengths before caching
+function sanitizeDeclaration(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const clean = {};
+  if (typeof raw.protoconsent === "string") clean.protoconsent = raw.protoconsent.slice(0, 10);
+  if (raw.purposes && typeof raw.purposes === "object") {
+    clean.purposes = {};
+    for (const [key, entry] of Object.entries(raw.purposes)) {
+      if (typeof key !== "string" || key.length > 50) continue;
+      if (!entry || typeof entry !== "object") continue;
+      const p = { used: entry.used === true };
+      if (typeof entry.legal_basis === "string" && KNOWN_LEGAL_BASIS.includes(entry.legal_basis)) {
+        p.legal_basis = entry.legal_basis;
+      }
+      if (typeof entry.provider === "string") p.provider = entry.provider.slice(0, WELL_KNOWN_MAX_STRING_LEN);
+      if (typeof entry.sharing === "string") p.sharing = entry.sharing.slice(0, WELL_KNOWN_MAX_STRING_LEN);
+      clean.purposes[key] = p;
+    }
+  }
+  if (raw.data_handling && typeof raw.data_handling === "object") {
+    const dh = {};
+    if (typeof raw.data_handling.storage_region === "string") {
+      dh.storage_region = raw.data_handling.storage_region.slice(0, 20);
+    }
+    if (typeof raw.data_handling.international_transfers === "boolean") {
+      dh.international_transfers = raw.data_handling.international_transfers;
+    }
+    if (Object.keys(dh).length > 0) clean.data_handling = dh;
+  }
+  if (typeof raw.rights_url === "string" && /^https?:\/\//i.test(raw.rights_url)) {
+    clean.rights_url = raw.rights_url.slice(0, 500);
+  }
+  return clean;
+}
+
+// Evict oldest wk_ entries if over the limit
+async function evictOldCacheEntries() {
+  const all = await new Promise(resolve => chrome.storage.local.get(null, resolve));
+  const wkEntries = [];
+  for (const [key, val] of Object.entries(all)) {
+    if (key.startsWith("wk_") && val && typeof val.ts === "number") {
+      wkEntries.push({ key, ts: val.ts });
+    }
+  }
+  if (wkEntries.length <= WELL_KNOWN_MAX_ENTRIES) return;
+  wkEntries.sort((a, b) => a.ts - b.ts);
+  const toRemove = wkEntries.slice(0, wkEntries.length - WELL_KNOWN_MAX_ENTRIES).map(e => e.key);
+  if (toRemove.length > 0) {
+    chrome.storage.local.remove(toRemove);
+  }
+}
 
 function setWellKnownIndicator(state, titleText) {
   const indicatorEl = document.getElementById("pc-wk-indicator");
@@ -82,31 +140,32 @@ async function loadSiteDeclaration() {
       }
     }
 
-    // Fetch via executeScript: runs in the page context (same-origin, no extra permissions)
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tabs || !tabs[0]) return;
-
-    const results = await chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      func: async () => {
-        try {
-          const res = await fetch("/.well-known/protoconsent.json");
-          if (res.ok) return await res.json();
-        } catch (_) {}
-        return null;
-      }
+    // Fetch via background service worker (bypasses page Service Workers, no cookies sent)
+    const response = await new Promise(resolve => {
+      chrome.runtime.sendMessage(
+        { type: "PROTOCONSENT_FETCH_WELL_KNOWN", domain: currentDomain },
+        (resp) => {
+          if (chrome.runtime.lastError) {
+            resolve(null);
+          } else {
+            resolve(resp);
+          }
+        }
+      );
     });
 
-    const data = results && results[0] && results[0].result;
+    const data = response?.data || null;
 
     if (data && validateSiteDeclaration(data)) {
-      // Cache valid declarations (24h TTL)
-      chrome.storage.local.set({ [cacheKey]: { data, ts: Date.now() } }, () => {
+      const clean = sanitizeDeclaration(data);
+      // Cache sanitized declaration (24h TTL), then evict oldest if over limit
+      chrome.storage.local.set({ [cacheKey]: { data: clean, ts: Date.now() } }, () => {
         if (chrome.runtime.lastError) {
           console.warn("[well-known] Cache write error:", chrome.runtime.lastError);
         }
+        evictOldCacheEntries();
       });
-      renderSiteDeclaration(container, data);
+      renderSiteDeclaration(container, clean);
       setWellKnownIndicator("active");
     } else {
       // Cache negative/invalid result (6h TTL) to avoid re-fetching on every popup open
@@ -114,6 +173,7 @@ async function loadSiteDeclaration() {
         if (chrome.runtime.lastError) {
           console.warn("[well-known] Cache write error:", chrome.runtime.lastError);
         }
+        evictOldCacheEntries();
       });
       setWellKnownIndicator("inactive");
     }
@@ -281,13 +341,47 @@ function renderSiteDeclaration(container, declaration) {
       /^https?:\/\//i.test(declaration.rights_url)) {
     const rightsEl = document.createElement("div");
     rightsEl.className = "pc-declaration-data";
-    const rightsLink = document.createElement("a");
-    rightsLink.href = declaration.rights_url;
-    rightsLink.textContent = "Your rights";
-    rightsLink.target = "_blank";
-    rightsLink.rel = "noopener noreferrer";
-    rightsLink.className = "pc-declaration-link";
-    rightsEl.appendChild(rightsLink);
+
+    // Truncate display URL if too long, full URL always in title
+    const fullUrl = declaration.rights_url;
+    const maxLen = 50;
+    const displayUrl = fullUrl.length > maxLen
+      ? fullUrl.slice(0, maxLen) + "[...]"
+      : fullUrl;
+
+    // Check if rights_url domain matches the current site (strip www.)
+    let rightsHost = "";
+    try { rightsHost = new URL(fullUrl).hostname.replace(/^www\./, ""); } catch (_) {}
+    const isSameDomain = rightsHost === currentDomain;
+
+    // Always show the full URL first so the user knows where the link goes
+    const heading = document.createElement("span");
+    heading.className = "pc-declaration-purpose";
+    heading.textContent = "Rights URL";
+    rightsEl.appendChild(heading);
+
+    const urlLabel = document.createElement("span");
+    urlLabel.className = "pc-declaration-link--url";
+    urlLabel.textContent = displayUrl;
+    urlLabel.title = fullUrl;
+    rightsEl.appendChild(urlLabel);
+
+    if (isSameDomain && rightsHost) {
+      // Same domain: clickable action
+      const rightsLink = document.createElement("a");
+      rightsLink.href = fullUrl;
+      rightsLink.textContent = "See your rights ↗";
+      rightsLink.target = "_blank";
+      rightsLink.rel = "noopener noreferrer";
+      rightsLink.className = "pc-declaration-link";
+      rightsEl.appendChild(rightsLink);
+    } else if (rightsHost) {
+      // External domain: warning, not clickable (anti-phishing)
+      const warnEl = document.createElement("span");
+      warnEl.className = "pc-declaration-warning";
+      warnEl.textContent = "External domain — not clickable";
+      rightsEl.appendChild(warnEl);
+    }
     container.appendChild(rightsEl);
   }
 

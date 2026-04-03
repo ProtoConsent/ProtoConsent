@@ -86,7 +86,7 @@ body {
 }
 
 .pc-mode-tab {
-  width: 14px;
+  width: 18px;
   min-height: 74px;
   border: none;
   border-radius: 999px;
@@ -251,7 +251,7 @@ body {
   line-height: 1;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #48617f;
+  color: #3b5068;
 }
 
 .pc-site {
@@ -266,7 +266,7 @@ body {
 .pc-site-label,
 .pc-profile-label {
   font-size: 11px;
-  color: #526274;
+  color: #3d5165;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -499,6 +499,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .pc-purpose-item {
@@ -972,10 +975,11 @@ body {
 .pc-side-panel {
   width: 0;
   max-height: 0;
+  padding: 0;
   overflow: hidden;
   background: linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
   border-right: 1px solid var(--pc-line);
-  transition: width 0.2s ease;
+  transition: width 0.2s ease, padding 0.2s ease;
   box-sizing: border-box;
   border-top-left-radius: 14px;
   border-bottom-left-radius: 14px;
@@ -983,15 +987,16 @@ body {
 
 .pc-side-panel.is-open {
   width: 180px;
-  min-width: 180px;
-  max-height: none;
+  max-height: 600px;
   padding: 8px;
+  /* Open: snap everything instantly; close transition is on the base rule */
+  transition: none;
 }
 
 /* Tab bar on left edge — full height vertical strip */
 .pc-side-tab {
   display: none; /* hidden until declaration data loads */
-  width: 20px;
+  width: 24px;
   flex-shrink: 0;
   background: linear-gradient(180deg, #eef5ff 0%, #dbeafe 100%);
   border: none;
@@ -1040,7 +1045,7 @@ body {
 .pc-declaration-title {
   font-weight: 600;
   color: var(--pc-accent);
-  font-size: 13px;
+  font-size: 12px;
   margin-bottom: 8px;
 }
 
@@ -1115,6 +1120,20 @@ body {
 
 .pc-declaration-link:hover {
   text-decoration: underline;
+}
+
+.pc-declaration-link--url {
+  display: block;
+  font-size: 11px;
+  color: var(--pc-text-soft);
+  margin-bottom: 2px;
+  word-break: break-all;
+}
+
+.pc-declaration-warning {
+  color: var(--pc-danger);
+  font-size: 11px;
+  cursor: default;
 }
 
 /* Debug panel */

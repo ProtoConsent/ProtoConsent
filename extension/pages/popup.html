@@ -25,26 +25,26 @@
       <span class="pc-side-tab-chevron" aria-hidden="true">◂</span>
     </button>
 
-    <nav id="pc-mode-rail" class="pc-mode-rail" aria-label="Popup modes" hidden>
-      <button type="button" class="pc-mode-tab is-active" data-mode="consent" aria-pressed="true" title="Consent mode">
+    <div id="pc-mode-rail" class="pc-mode-rail" role="tablist" aria-label="Popup modes" hidden>
+      <button type="button" class="pc-mode-tab is-active" data-mode="consent" role="tab" aria-selected="true" aria-controls="pc-view-consent" title="Consent mode">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">CONSENT</text>
         </svg>
       </button>
-      <button type="button" class="pc-mode-tab" data-mode="enhanced" aria-pressed="false" title="Enhanced Protection mode">
+      <button type="button" class="pc-mode-tab" data-mode="enhanced" role="tab" aria-selected="false" aria-controls="pc-view-enhanced" title="Enhanced Protection mode">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">ENHANCED</text>
         </svg>
       </button>
-      <button type="button" class="pc-mode-tab" data-mode="log" aria-pressed="false" title="Log mode">
+      <button type="button" class="pc-mode-tab" data-mode="log" role="tab" aria-selected="false" aria-controls="pc-view-log" title="Log mode">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">LOG</text>
         </svg>
       </button>
-    </nav>
+    </div>
 
     <div id="popup-root">
       <h1 class="visually-hidden">ProtoConsent</h1>
@@ -72,7 +72,8 @@
       </header>
 
       <div id="pc-mode-content" class="pc-mode-content">
-        <section id="pc-view-consent" class="pc-view is-active" data-mode-view="consent">
+        <section id="pc-view-consent" class="pc-view is-active" data-mode-view="consent" role="tabpanel" aria-label="Consent settings">
+          <h2 class="visually-hidden">Consent settings</h2>
           <div class="pc-header-stat">
             <button id="pc-blocked-count" class="pc-blocked-count" aria-expanded="false" aria-controls="pc-blocked-detail" aria-live="polite">loading...</button>
             <span id="pc-blocked-chevron" class="pc-blocked-chevron" aria-hidden="true"></span>
@@ -93,13 +94,13 @@
           </div>
 
           <main class="pc-main">
-            <div id="pc-purposes-list" class="pc-purposes-list">
+            <ul id="pc-purposes-list" class="pc-purposes-list" role="list">
               <!-- Purposes will be injected here by popup.js -->
-            </div>
+            </ul>
           </main>
         </section>
 
-        <section id="pc-view-enhanced" class="pc-view pc-view-placeholder" data-mode-view="enhanced" hidden aria-hidden="true">
+        <section id="pc-view-enhanced" class="pc-view pc-view-placeholder" data-mode-view="enhanced" role="tabpanel" hidden aria-hidden="true">
           <div class="pc-placeholder-card">
             <div class="pc-placeholder-eyebrow">Enhanced Protection</div>
             <h2 class="pc-placeholder-title">Additional network protection presets</h2>
@@ -112,7 +113,7 @@
           </div>
         </section>
 
-        <section id="pc-view-log" class="pc-view pc-view-placeholder" data-mode-view="log" hidden aria-hidden="true">
+        <section id="pc-view-log" class="pc-view pc-view-placeholder" data-mode-view="log" role="tabpanel" hidden aria-hidden="true">
           <div class="pc-placeholder-card">
             <div class="pc-placeholder-eyebrow">Log</div>
             <h2 class="pc-placeholder-title">Local inspection and activity view</h2>

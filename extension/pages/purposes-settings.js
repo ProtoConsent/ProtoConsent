@@ -12,6 +12,8 @@ async function init() {
 			fetch(chrome.runtime.getURL('config/purposes.json')),
 			fetch(chrome.runtime.getURL('config/presets.json'))
 		]);
+		if (!purposesRes.ok) throw new Error("purposes.json: HTTP " + purposesRes.status);
+		if (!presetsRes.ok) throw new Error("presets.json: HTTP " + presetsRes.status);
 		const purposes = await purposesRes.json();
 		const presets = await presetsRes.json();
 
@@ -43,6 +45,7 @@ function initDefaultProfile(purposes) {
 	const selectEl = document.getElementById('default-profile-select');
 	const resetBtn = document.getElementById('reset-all-sites');
 	const togglesContainer = document.getElementById('custom-toggles');
+	if (!section || !selectEl || !resetBtn || !togglesContainer) return;
 
 	// Build dynamic toggle rows from purposes config, sorted by order
 	const purposeKeys = Object.keys(purposes)
@@ -159,6 +162,7 @@ function initDefaultProfile(purposes) {
 function renderPurposes(purposes) {
 	const container = document.getElementById('purpose-list');
 	const section = document.getElementById('purposes-section');
+	if (!container || !section) return;
 
 	const purposeEntries = Object.entries(purposes)
 		.sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
@@ -220,6 +224,7 @@ function renderPurposes(purposes) {
 function renderPresets(presets, purposes) {
 	const container = document.getElementById('preset-list');
 	const section = document.getElementById('presets-section');
+	if (!container || !section) return;
 
 	for (const [key, preset] of Object.entries(presets)) {
 		const card = document.createElement('div');

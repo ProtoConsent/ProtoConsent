@@ -104,11 +104,15 @@ async function getBlockedRulesCount() {
 
     const tabId = tabs[0].id;
 
-    const [matched, domainsResp, dynamicRules] = await Promise.all([
+    const [matchedResult, domainsResult, dynamicResult] = await Promise.allSettled([
       chrome.declarativeNetRequest.getMatchedRules({ tabId }),
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_BLOCKED_DOMAINS", tabId }),
       chrome.declarativeNetRequest.getDynamicRules(),
     ]);
+
+    const matched = matchedResult.status === "fulfilled" ? matchedResult.value : null;
+    const domainsResp = domainsResult.status === "fulfilled" ? domainsResult.value : null;
+    const dynamicRules = dynamicResult.status === "fulfilled" ? dynamicResult.value : [];
 
     if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
 
@@ -201,7 +205,7 @@ async function displayBlockedCount() {
       }
     }
 
-    // Unified counter line: "X blocked · ~Ys faster · Z GPC signals sent"
+    // Unified counter line: "X blocked · ~Ys faster · Z GPC to domains"
     if (countEl) {
       const parts = [];
       if (blocked > 0) {
@@ -488,6 +492,9 @@ async function loadConfigs() {
     fetch(presetsUrl)
   ]);
 
+  if (!purposesRes.ok) throw new Error("Failed to load purposes.json: HTTP " + purposesRes.status);
+  if (!presetsRes.ok) throw new Error("Failed to load presets.json: HTTP " + presetsRes.status);
+
   purposesConfig = await purposesRes.json();
   presetsConfig = await presetsRes.json();
 
@@ -559,24 +566,9 @@ async function loadRulesFromStorageSafe() {
   });
 }
 
-// Init profile selector
+// Init profile selector (event handler only; values set by initStateForDomain)
 function initProfileSelect() {
   const selectEl = document.getElementById("pc-profile-select");
-
-  if (currentDomain && allRules[currentDomain] && allRules[currentDomain].profile) {
-    currentProfile = allRules[currentDomain].profile;
-  }
-
-  // Show the custom option if the stored profile is custom
-  if (currentProfile === "custom") {
-    const customOption = selectEl.querySelector('option[value="custom"]');
-    if (customOption) {
-      customOption.disabled = false;
-      customOption.hidden = false;
-    }
-  }
-
-  selectEl.value = currentProfile;
 
   selectEl.addEventListener("change", () => {
     currentProfile = selectEl.value;
@@ -604,19 +596,15 @@ function initStateForDomain() {
 
   if (existing && existing.profile) {
     currentProfile = existing.profile;
-    const selectEl = document.getElementById("pc-profile-select");
 
     // Show the custom option if this domain uses it
     if (currentProfile === "custom") {
-      const customOption = selectEl.querySelector('option[value="custom"]');
+      const customOption = document.querySelector('#pc-profile-select option[value="custom"]');
       if (customOption) {
         customOption.disabled = false;
         customOption.hidden = false;
       }
     }
-
-    selectEl.value = currentProfile;
-
     // Start from profile defaults (if named preset) or empty (if custom)
     const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
     PURPOSES_TO_SHOW.forEach((key) => {
@@ -632,6 +620,10 @@ function initStateForDomain() {
   } else {
     applyPresetToCurrentDomain();
   }
+
+  // Sync select element with current profile
+  const selectEl = document.getElementById("pc-profile-select");
+  selectEl.value = currentProfile;
 
   // Force required purposes to true regardless of stored state
   for (const key of requiredPurposeKeys) {
@@ -709,7 +701,7 @@ function detectCustomProfile() {
 function createPurposeItemElement(purposeKey, cfg) {
   const isAllowed = currentPurposesState[purposeKey] !== false;
 
-  const itemEl = document.createElement("div");
+  const itemEl = document.createElement("li");
   itemEl.className = "pc-purpose-item";
   itemEl.dataset.purpose = purposeKey;
 
@@ -775,6 +767,7 @@ function createPurposeItemElement(purposeKey, cfg) {
   leftEl.appendChild(nameEl);
   leftEl.setAttribute("role", "button");
   leftEl.setAttribute("aria-expanded", "false");
+  leftEl.setAttribute("tabindex", "0");
 
   // Right side: toggle area (label + visual switch + Allowed/Blocked)
   const toggleLabelEl = document.createElement("label");
@@ -861,6 +854,13 @@ function createPurposeItemElement(purposeKey, cfg) {
     const nowCollapsed = !descEl.classList.contains("is-collapsed");
     updateDescriptionVisibility(nowCollapsed);
   });
+  leftEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const nowCollapsed = !descEl.classList.contains("is-collapsed");
+      updateDescriptionVisibility(nowCollapsed);
+    }
+  });
 
   // Start collapsed
   updateDescriptionVisibility(true);
@@ -928,6 +928,8 @@ function saveCurrentDomainRulesSafe() {
     chrome.storage.local.set({ rules: allRules }, () => {
       if (chrome.runtime.lastError) {
         console.error("ProtoConsent: error saving rules:", chrome.runtime.lastError);
+        const countEl = document.getElementById("pc-blocked-count");
+        if (countEl) countEl.textContent = "Error saving, try again";
       } else {
         notifyBackgroundRulesUpdated();
       }
