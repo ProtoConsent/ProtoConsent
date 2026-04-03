@@ -11,7 +11,7 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
 ## 2. Current state
 
 | File | Purpose | Domains |
-|------|---------|---------|
+| --- | --- | --- |
 | `block_ads.json` | Advertising networks | ~12,904 |
 | `block_analytics.json` | Analytics and measurement | ~15,851 |
 | `block_personalization.json` | DMPs, identity sync, personalization engines | ~73 |
@@ -24,7 +24,7 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
 The curation draws from 7 public blocklists:
 
 | Source | Type | Category hint | License |
-|--------|------|---------------|---------|
+| --- | --- | --- | --- |
 | [EasyList](https://easylist.to/) | Adblock filter list | Ads | GPL-3.0+ / CC BY-SA 3.0+ |
 | [EasyPrivacy](https://easylist.to/) | Adblock filter list | Analytics | GPL-3.0+ / CC BY-SA 3.0+ |
 | [Peter Lowe's list](https://pgl.yoyo.org/adservers/) | Domain list | Ads | No formal license¹ |
@@ -105,7 +105,7 @@ Path rules are stored in `block_*_paths.json` files (one per category) alongside
 ### Current path rule counts
 
 | File | Category | Rules | Example endpoints |
-|------|----------|-------|-------------------|
+| --- | --- | --- | --- |
 | `block_analytics_paths.json` | Analytics | 559 | `google.com/pagead/`, `googletagmanager.com/gtag/js`, `facebook.com/tr/` |
 | `block_ads_paths.json` | Ads | 529 | `google.com/adsense/`, `fundingchoicesmessages.google.com/` |
 | `block_personalization_paths.json` | Personalization | 13 | `logx.optimizely.com/`, `crwdcntrl.net/5/c=` |

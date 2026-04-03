@@ -20,11 +20,11 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 *Static rulesets* handle global blocking. Each of the five blocking purposes (analytics, ads, personalization, third\_parties, advanced\_tracking) has two static rulesets declared in the manifest: one for domain‑based rules (`block_ads.json`) and one for path‑based rules (`block_ads_paths.json`). All start disabled; the background script enables or disables each ruleset based on the user's global profile. Because static rulesets draw from a separate Chrome‑managed pool (up to 30,000 rules), they leave the dynamic rule budget free for per‑site customisation.
 
-```
+```text
 Static rulesets (30,000 rule pool)
 ┌──────────────────────┐  ┌──────────────────────────┐
 │ block_ads            │  │ block_ads_paths          │
-│ 1 rule, 1206 domains │  │ 13 rules, urlFilter each │
+│ 1 rule, 12904 domains│  │ 529 rules, urlFilter each│
 │ requestDomains       │  │ e.g. ||google.com/adsense│
 │ priority 1           │  │ priority 1               │
 └──────────────────────┘  └──────────────────────────┘
@@ -81,7 +81,7 @@ Enforcement is based on built‑in browser APIs (declarativeNetRequest), so Prot
 The extension requests only the permissions it needs. Each one has a specific purpose:
 
 | Permission | Why it is needed |
-|---|---|
+| --- | --- |
 | `tabs` | Read the active tab's URL so the popup can identify which domain the user is managing and apply per‑site rules. |
 | `storage` | Persist user rules, profiles, and preferences locally in the browser's extension storage. No remote storage is used. |
 | `scripting` | Register the GPC content script (`gpc-signal.js`) into the MAIN world at runtime via `chrome.scripting.registerContentScripts`, so that `navigator.globalPrivacyControl` is set only on pages where the user's preferences require it. |
@@ -116,10 +116,10 @@ The `initiatorDomains` condition matches the **origin that initiated the request
 ### Resource limits
 
 | Limit | Value | ProtoConsent usage |
-|---|---|---|
+| --- | --- | --- |
 | Static rulesets (max declared) | 100 | 10 (5 domain + 5 path) |
 | Static rulesets (max enabled) | 50 | Up to 10 |
-| Static rules (total) | 30,000 | ~4,650 |
+| Static rules (total) | 30,000 | ~41,435 (40,233 domains + 1,202 path rules) |
 | Dynamic + session rules | 5,000 | ~13 (10 overrides + 3 GPC) |
 | `getMatchedRules` calls | 20 per 10 min | 1 per popup open |
 

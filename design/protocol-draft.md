@@ -19,7 +19,7 @@ This document describes the protocol by which web pages can query the user's con
 ProtoConsent defines six purpose categories, each mapped to the [Consent Commons](https://consentcommons.com/) taxonomy:
 
 | Key | Label | Short | Consent Commons keys |
-|-----|-------|-------|---------------------|
+| --- | --- | --- | --- |
 | `functional` | Functional (service) | F | `service_management`, `other_data` |
 | `analytics` | Analytics | An | `profiling_analytics` |
 | `ads` | Ads / Marketing | Ad | `marketing_purposes`, `profiling_analytics` |
@@ -34,7 +34,7 @@ Canonical source: `extension/config/purposes.json`
 Three predefined profiles set default purpose states:
 
 | Profile | functional | analytics | ads | personalization | third_parties | advanced_tracking |
-|---------|-----------|-----------|-----|-----------------|---------------|-------------------|
+| --- | --- | --- | --- | --- | --- | --- |
 | **strict** | allowed | denied | denied | denied | denied | denied |
 | **balanced** | allowed | allowed | denied | allowed | denied | denied |
 | **permissive** | allowed | allowed | allowed | allowed | allowed | denied |
@@ -90,6 +90,7 @@ Each domain has exactly one rule entry. Purpose values are booleans: `true` = al
 ### 3.2 Message format (informative, subject to change)
 
 **Query** (page → extension):
+
 ```json
 {
   "type": "PROTOCONSENT_QUERY",
@@ -100,6 +101,7 @@ Each domain has exactly one rule entry. Purpose values are booleans: `true` = al
 ```
 
 **Response** (extension → page):
+
 ```json
 {
   "type": "PROTOCONSENT_RESPONSE",
@@ -119,7 +121,7 @@ The protocol is entirely local. No HTTP requests, no server endpoints, no remote
 The SDK exposes a minimal read-only API for web pages:
 
 | Member | Type | Returns |
-|--------|------|---------|
+| --- | --- | --- |
 | `ProtoConsent.get(purpose)` | method | `Promise<boolean\|null>` — `true` = allowed, `false` = denied, `null` = extension not present |
 | `ProtoConsent.getAll()` | method | `Promise<object\|null>` — all purpose states, or `null` |
 | `ProtoConsent.getProfile()` | method | `Promise<string\|null>` — `"strict"`, `"balanced"`, `"permissive"`, or `null` |
@@ -197,14 +199,14 @@ Status: not yet created. This is the next planned step for protocol formalizatio
 ## 7. Implementation Status
 
 | Component | Status |
-|-----------|--------|
+| --- | --- |
 | Purposes data model (`purposes.json`) | Implemented (v0.1.0) |
 | Presets data model (`presets.json`) | Implemented (v0.1.0) |
 | Per-domain rules in storage | Implemented (v0.1.0) |
-| Extension enforcement (DNR) | Implemented (v0.1.0 — global + per-site; v0.1.1 — static rulesets, path-based blocking, override grouping) |
-| Extension popup UI | Implemented (v0.1.0 — profiles, toggles; v0.1.1 — blocked counter, per-purpose stats, .well-known side panel, debug panel) |
+| Extension enforcement (DNR) | Implemented (v0.1.0 — global + per-site; v0.1.1 — static rulesets, path-based blocking, override grouping; v0.2.0 — 40 000+ domains, 1 200+ path rules, blocklist audit) |
+| Extension popup UI | Implemented (v0.1.0 — profiles, toggles; v0.1.1 — blocked counter, per-purpose stats, .well-known side panel, debug panel; v0.2.0 — onboarding, purpose settings page) |
 | Blocked request counter | Implemented (v0.1.1) — per-tab blocked count, per-purpose breakdown, domain detail |
-| Onboarding welcome page | Implemented |
+| Onboarding welcome page | Implemented (v0.2.0) |
 | SDK skeleton (API surface defined) | Implemented (v0.1.0) |
 | SDK messaging (actual communication) | Implemented (v0.1.0) |
 | Content script bridge | Implemented (v0.1.0) |

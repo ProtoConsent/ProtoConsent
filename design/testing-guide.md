@@ -19,7 +19,7 @@ This document explains how to try the current version of ProtoConsent in a brows
   cd ProtoConsent
   ```
 
-  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `popup.html`, `popup.js`, `popup.css`, `well-known.js`, `debug.js`, `config/`, `rules/` and `icons/`) and the `sdk/` directory.
+  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `pages/` with the popup, onboarding and settings UI, `config/`, `rules/` and `icons/`) and the `sdk/` directory.
 
 2.2. **Load the extension in your browser:**
 
@@ -137,11 +137,11 @@ Below are example scenarios for each purpose.
 
 **Goal:** Separate basic ads from more advanced personalization or retargeting.
 
-- Reference domains (examples — full list in `extension/rules/block_*.json`): `ad.doubleclick.net`, `demdex.net`, `bluekai.com`, `tapad.com`, `liveramp.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `bluekai.com`, `crwdcntrl.net`, `acxiom.com`, `barilliance.com`, `audigent.com`.
 
 - Steps:
   1. On a site with banners and personalised or retargeted ads, keep **Ads / Marketing** allowed but set **Personalization / Profiling** to *Blocked*.
-  2. Filter in **Network** by `adnxs`, `adsrvr`, `doubleclick`.
+  2. Filter in **Network** by `bluekai`, `crwdcntrl`, `audigent`.
   3. Reload and compare the results with the case where Personalization is also allowed.
   4. This will not be perfect on every site, but it shows that ProtoConsent treats personalization as a separate purpose from “basic ads”.
 
@@ -149,13 +149,13 @@ Below are example scenarios for each purpose.
 
 **Goal:** Highlight third‑party data sharing and integrations.
 
-- Reference domains (examples — full list in `extension/rules/block_*.json`): `connect.facebook.net`, `hotjar.com`, `analytics.twitter.com`, `bat.bing.com`, `hubspot.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `connect.facebook.net`, `addthis.com`, `addtoany.com`, `intercom.io`, `disqus.com`.
 
 - Steps:
   1. Choose a site that embeds social widgets, Hotjar or Microsoft/Bing tracking.
 
   2. Allow **Functional** and **Analytics**, but set **Third‑party sharing** to *Blocked*.
-  3. Filter by `facebook.net`, `hotjar`, `analytics.twitter.com` or `bat.bing.com` in **Network**.
+  3. Filter by `facebook.net`, `addthis`, `intercom` or `disqus` in **Network**.
   4. Reload and compare the results with the case where Third‑party sharing is also allowed.
 
 ### 6.6 Advanced tracking / fingerprinting
@@ -309,4 +309,3 @@ The popup includes a hidden debug panel that shows internal state (dynamic rules
 2. Close and reopen the popup. The debug panel disappears.
 
 The flag persists across browser restarts until explicitly removed.
-

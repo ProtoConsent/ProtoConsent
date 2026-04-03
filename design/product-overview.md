@@ -32,13 +32,13 @@ From a request‑flow perspective, ProtoConsent works in a few simple steps. Fir
 
 ## 5. Roadmap
 
-**Short‑term:** Expand the curated blocklists for broader enforcement coverage, add an onboarding page for first‑time users, and prepare the extension for publication in browser extension stores.
+**Short‑term:** Expand the curated blocklists for broader enforcement coverage and prepare the extension for publication in browser extension stores.
 
 **Medium‑term:** Port the extension to Firefox, add internationalisation support (starting with English and Spanish), implement import/export of user configuration, and refine the protocol specification based on real‑world feedback.
 
 **Long‑term:** Strengthen ProtoConsent’s security posture (risk assessment, hardening, security processes) and work with regulators, browser vendors, and civil‑society organisations so that purpose‑based controls can become part of mainstream web practice.
 
-**Already delivered:** purpose‑signalling [protocol specification](protocol-draft.md), [JavaScript SDK](../sdk/protoconsent.js) with [TypeScript declarations](../sdk/protoconsent.d.ts), [site declaration spec](well-known-spec.md) (`.well-known/protoconsent.json`), conditional [GPC signal](https://globalprivacycontrol.org/), expanded enforcement with 4 500+ curated tracker domains and path‑based rules organized in static rulesets by purpose, per‑purpose blocked request counter with estimated performance impact, [Consent Commons](https://consentcommons.com/) icons, live SDK demo on [protoconsent.org](https://protoconsent.org/), and a [testing guide](testing-guide.md) for early adopters.
+**Already delivered:** purpose‑signalling [protocol specification](protocol-draft.md), [JavaScript SDK](../sdk/protoconsent.js) with [TypeScript declarations](../sdk/protoconsent.d.ts), [site declaration spec](well-known-spec.md) (`.well-known/protoconsent.json`), conditional [GPC signal](https://globalprivacycontrol.org/), enforcement with 40 000+ curated tracker domains and 1 200+ path‑based rules organized in static rulesets by purpose (see [blocklists.md](blocklists.md)), per‑purpose blocked request counter with estimated performance impact, [Consent Commons](https://consentcommons.com/) icons, onboarding welcome page for first‑time users, purpose settings page for custom global profiles, live SDK demo on [protoconsent.org](https://protoconsent.org/), and a [testing guide](testing-guide.md) for early adopters.
 
 ## 6. Openness and licensing
 

@@ -7,14 +7,14 @@
 <p align="center"><em>User‑side, purpose‑based consent for the web.</em></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-alpha-blue" alt="status: alpha">
+  <img src="https://img.shields.io/badge/status-beta-yellow" alt="status: beta">
 </p>
 
 ProtoConsent is a browser extension that lets you control how websites may use your data — expressed in terms of purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking) rather than specific trackers or domains.
 
 No central server, no tracking, no sharing of personal data. Preferences are enforced at the network level, per site, entirely from your browser.
 
-**Project website:** https://protoconsent.org
+**Project website:** <https://protoconsent.org>
 
 > Not yet in extension stores — install locally in developer mode on Chromium-based browsers. Firefox support planned.
 
@@ -44,9 +44,11 @@ The current Chromium extension provides:
 
 - Global default profile with per-site overrides via a browser action popup.
 - Purpose toggles for six categories: functional, analytics, ads, personalisation, third-party services, and advanced tracking.
-- Network-level enforcement via static rulesets: 4 500+ curated tracker domains and 100+ path-based rules from public blocklists, organized by purpose.
+- Network-level enforcement via static rulesets: 40 000+ curated tracker domains and 1 200+ path-based rules from public blocklists, organized by purpose. See [blocklists.md](design/blocklists.md) for sources and curation criteria.
 - Conditional [Global Privacy Control](https://globalprivacycontrol.org/) (Sec-GPC) header, sent only when privacy-relevant purposes are denied.
 - Per-purpose blocked request counter with estimated performance impact, visible in the popup.
+- Onboarding welcome page for first-time users with profile selection.
+- Purpose settings page for customizing the global default profile.
 - Content script bridge and JavaScript SDK for web pages to query user preferences.
 - Site declaration support: websites can publish a `.well-known/protoconsent.json` file declaring their data practices, displayed in the popup as a side panel.
 - Visual icons from the [Consent Commons](https://consentcommons.com/) system for purposes, legal basis, sharing and international transfers.
