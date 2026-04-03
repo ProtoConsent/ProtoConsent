@@ -615,7 +615,7 @@ async function handleBridgeQuery(message) {
 }
 
 // Listen for messages from popup and content script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message) return;
 
   // Popup notifies that rules were changed by the user

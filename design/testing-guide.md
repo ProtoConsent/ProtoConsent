@@ -4,6 +4,19 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 This document explains how to try the current version of ProtoConsent in a browser using an unpacked extension, and how to observe its effects on real websites.
 
+## Contents
+
+1. [Requirements](#1-requirements)
+2. [Installing the Extension (Developer Mode)](#2-installing-the-extension-developer-mode)
+3. [Basic Test: Per‑Site Profile](#3-basic-test-persite-profile)
+4. [Purpose Toggles and Visible Effects](#4-purpose-toggles-and-visible-effects)
+5. [Example: Blocking Ads on elpais.com (DoubleClick)](#5-example-blocking-ads-on-elpaiscom-doubleclick)
+6. [Trying different sites, profiles and purposes](#6-trying-different-sites-profiles-and-purposes)
+7. [Testing the SDK query flow (content script bridge)](#7-testing-the-sdk-query-flow-content-script-bridge)
+8. [Testing Global Privacy Control (Sec-GPC header)](#8-testing-global-privacy-control-sec-gpc-header)
+9. [Enabling the debug panel](#9-enabling-the-debug-panel)
+10. [Testing site declarations (`.well-known/protoconsent.json`)](#10-testing-site-declarations-well-knownprotocolconsentjson)
+
 ## 1. Requirements
 
 - **A Chromium‑based browser** (for example, Chrome, Edge or Brave)
@@ -309,3 +322,27 @@ The popup includes a hidden debug panel that shows internal state (dynamic rules
 2. Close and reopen the popup. The debug panel disappears.
 
 The flag persists across browser restarts until explicitly removed.
+
+## 10. Testing site declarations (`.well-known/protoconsent.json`)
+
+ProtoConsent reads a `.well-known/protoconsent.json` file from any website to display the site's declared data practices in a side panel. The easiest way to test this is with the public demo site.
+
+### 10.1 Using demo.protoconsent.org
+
+1. Make sure the extension is loaded (see section 2).
+2. Open <https://demo.protoconsent.org> in a new tab.
+3. Open the ProtoConsent popup from the toolbar.
+4. Click the **Site** tab (side panel toggle) in the popup header.
+5. The side panel should show the site's declaration with [Consent Commons](https://consentcommons.com/) icons, including purposes, legal bases, providers, sharing scope, and data handling details.
+
+### 10.2 What to check
+
+- Each declared purpose shows its legal basis, provider, and sharing scope (if declared).
+- Purposes with `"used": false` are shown as not used.
+- The `rights_url` field links to the site's data rights page.
+- The declaration indicator (pill) in the popup header should be active (blue dot) when a valid declaration is found.
+
+### 10.3 Publishing your own declaration
+
+Any site can publish a `.well-known/protoconsent.json` file. See the [site declaration spec](well-known-spec.md) for the full format and the [demo site source](https://github.com/ProtoConsent/demo) for a complete example.
+

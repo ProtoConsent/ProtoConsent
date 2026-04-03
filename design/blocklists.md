@@ -8,6 +8,15 @@ ProtoConsent includes a curated subset of domains from public blocklists, organi
 
 This is **not** a full ad/tracking blocker. The lists are drawn from public blocklists, curated with cross‑source validation and quality filters, and organized by purpose to provide meaningful default protection.
 
+## Contents
+
+1. [Overview](#1-overview)
+2. [Current state](#2-current-state)
+3. [Sources](#3-sources)
+4. [Curation process](#4-curation-process)
+5. [DNR format](#5-dnr-format)
+6. [Path‑based rules](#6-pathbased-rules)
+
 ## 2. Current state
 
 | File | Purpose | Domains |

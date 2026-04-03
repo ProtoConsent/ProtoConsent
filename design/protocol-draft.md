@@ -1,4 +1,4 @@
-# ProtoConsent Purpose-Signalling Protocol (Draft v0.1)
+# ProtoConsent Purpose-Signalling Protocol (Draft)
 
 This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../LICENSE-CC-BY-SA) file for details.
 
@@ -11,6 +11,17 @@ This document describes the protocol by which web pages can query the user's con
 **Scope:** data model, communication model, and SDK API surface.
 
 **Status:** draft. The communication mechanism is implemented via a content script bridge; this document defines the architecture.
+
+## Contents
+
+1. [Overview](#1-overview)
+2. [Data Model](#2-data-model)
+3. [Communication Model](#3-communication-model)
+4. [SDK API Surface](#4-sdk-api-surface)
+5. [Site Declaration (`.well-known/protoconsent.json`)](#5-site-declaration-well-knownprotocolconsentjson)
+6. [JSON Schema Formalization (Planned)](#6-json-schema-formalization-planned)
+7. [Implementation Status](#7-implementation-status)
+8. [Design Principles](#8-design-principles)
 
 ## 2. Data Model
 
@@ -77,14 +88,16 @@ Each domain has exactly one rule entry. Purpose values are booleans: `true` = al
 
 ```text
  Page context                Extension context
- ┌──────────┐  postMessage  ┌────────────────┐    chrome.storage   ┌─────────┐
- │  SDK     │ ←──────────→  │ Content script │ ←────────────────→  │ Storage │
- │  (page)  │               │ (bridge)       │                     │ (local) │
- └──────────┘               └────────────────┘                     └─────────┘
+ ┌──────────┐  postMessage  ┌────────────────┐  chrome.runtime  ┌────────────┐  chrome.storage  ┌─────────┐
+ │  SDK     │ ←──────────→  │ Content script │ ←──────────────→ │ Background │ ←──────────────→ │ Storage │
+ │  (page)  │               │ (bridge)       │                  │ (service   │                  │ (local) │
+ └──────────┘               └────────────────┘                  │  worker)   │                  └─────────┘
+                                                                └────────────┘
 ```
 
 - The **SDK** runs in the page's JavaScript context and cannot access extension APIs directly.
-- A **content script** injected by the extension acts as the bridge between the page and extension storage.
+- A **content script** injected by the extension acts as the bridge. It receives `postMessage` queries from the page and forwards them to the **background script** via `chrome.runtime.sendMessage`.
+- The **background script** resolves the query against stored rules and the active profile, and returns the result through the same chain.
 - Communication uses `window.postMessage` with structured messages identified by type prefix.
 
 ### 3.2 Message format (informative, subject to change)
@@ -159,7 +172,7 @@ Every method returns a `Promise` that resolves to `null` when the extension is n
 
 Websites can optionally declare their data-processing purposes by serving a static JSON file at `/.well-known/protoconsent.json`. This is a **voluntary, informational declaration** — it does not change how the extension enforces user preferences.
 
-The extension reads the file when the user opens the popup, caches it locally with a 24-hour TTL, and displays the site's claims alongside the user's own choices.
+The extension reads the file when the user opens the side panel in the popup, caches it locally (24‑hour TTL on success, 6‑hour TTL on failure), and displays the site's claims alongside the user's own choices.
 
 ### Minimal example
 
@@ -183,6 +196,10 @@ The extension reads the file when the user opens the popup, caches it locally wi
 
 The SDK enables **dynamic interaction** (page queries extension via JavaScript). The `.well-known` file enables **static declaration** (extension reads site metadata). A site can use one, both, or neither.
 
+### Additional fields
+
+Beyond the minimal `used` and `legal_basis` fields, each purpose entry can include `provider` (service provider name) and `sharing` (`"none"`, `"within_group"`, or `"third_parties"`). A top‑level `data_handling` object supports `storage_region` and `international_transfers`. A `rights_url` field links to the site's data subject rights page. See the full specification for details.
+
 Full specification: [`design/well-known-spec.md`](well-known-spec.md)
 
 ## 6. JSON Schema Formalization (Planned)
@@ -194,7 +211,7 @@ Formal JSON Schemas are planned for the configuration files:
 - `rules.schema.json` — validates the per-domain rules object
 - `message.schema.json` — validates the SDK ↔ extension message format
 
-Status: not yet created. This is the next planned step for protocol formalization.
+Status: planned for a future version. This is not a blocker for current functionality.
 
 ## 7. Implementation Status
 
@@ -211,10 +228,10 @@ Status: not yet created. This is the next planned step for protocol formalizatio
 | SDK messaging (actual communication) | Implemented (v0.1.0) |
 | Content script bridge | Implemented (v0.1.0) |
 | TypeScript type declarations | Implemented (v0.1.0) |
-| Conditional GPC header (Sec-GPC) | Implemented (v0.1.1) — per-site, driven by `triggers_gpc` in purposes.json |
-| Site declaration (`.well-known`) | Implemented (v0.1.1) — fetch with 24h cache, popup display |
+| Conditional GPC header (Sec-GPC) | Implemented (v0.1.1) — per-site, driven by `triggers_gpc` in purposes.json; also sets `navigator.globalPrivacyControl` via MAIN‑world content script |
+| Site declaration (`.well-known`) | Implemented (v0.1.1) — fetch with 24h/6h cache, popup side panel with Consent Commons icons |
 | JSON Schemas | Planned (protocol formalization) |
-| Demo sites using SDK | protoconsent.org live test (v0.1.0); additional demos planned |
+| Demo sites using SDK | [protoconsent.org](https://protoconsent.org/) live test (v0.1.0), [demo.protoconsent.org](https://demo.protoconsent.org) full-featured demo (v0.2.0); additional demos planned |
 
 ## 8. Design Principles
 

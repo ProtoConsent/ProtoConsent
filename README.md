@@ -10,60 +10,42 @@
   <img src="https://img.shields.io/badge/status-beta-yellow" alt="status: beta">
 </p>
 
-ProtoConsent is a browser extension that lets you control how websites may use your data — expressed in terms of purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking) rather than specific trackers or domains.
+ProtoConsent is a browser extension that lets you control how websites may use your data — expressed in terms of purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking) rather than specific trackers or domains. It is not a full ad blocker or a traditional consent management platform (CMP) — it is a personal "consent control panel" that lives in the browser and can coexist with existing blockers and consent tools.
 
 No central server, no tracking, no sharing of personal data. Preferences are enforced at the network level, per site, entirely from your browser.
 
-**Project website:** <https://protoconsent.org>
+**Project website:** <https://protoconsent.org> · **Live demo:** <https://demo.protoconsent.org>
 
 > Not yet in extension stores — install locally in developer mode on Chromium-based browsers. Firefox support planned.
 
-## What is ProtoConsent?
+## Key features
 
-ProtoConsent is a browser extension (initially for Chromium-based browsers, with Firefox support planned) that:
+- **Per‑site profiles:** assign a trust level (Strict, Balanced, Permissive) to each website, then refine individual purposes if needed.
+- **Purpose toggles** for six categories: functional, analytics, ads, personalisation, third‑party services, and advanced tracking.
+- **Network‑level enforcement** via static rulesets: 40 000+ curated tracker domains and 1 200+ path‑based rules from public blocklists, organized by purpose. See [blocklists.md](design/blocklists.md) for sources and curation criteria.
+- **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC header and `navigator.globalPrivacyControl`), sent only when privacy‑relevant purposes are denied — per site, not globally.
+- **Per‑purpose blocked request counter** with estimated performance impact, visible in the popup.
+- **Site declarations:** websites can publish a `.well-known/protoconsent.json` file declaring their data practices, displayed in a side panel with [Consent Commons](https://consentcommons.com/) icons.
+- **JavaScript SDK** (MIT licensed) and content script bridge for web pages to query user preferences. TypeScript declarations included.
+- **Onboarding** welcome page for first‑time users with profile selection.
+- **Purpose settings** page for customizing the global default profile.
 
-- Stores the user’s data-use preferences per site and per purpose (for example: functional, analytics, ads, personalisation, third-party services, advanced tracking).
-- Enforces those preferences by blocking or allowing network requests associated with each purpose.
-- Keeps all decisions and identity local to the browser by default: no central server, no tracking, no sharing of personal data.
+For a detailed roadmap and planned features, see [product-overview.md](design/product-overview.md).
 
-ProtoConsent is not a full ad blocker or a traditional consent management platform (CMP). It is a personal “consent control panel” that lives in the browser and can coexist with existing blockers and consent tools.
+## Getting started
 
-Websites can read user preferences through a JavaScript SDK or publish a `.well-known/protoconsent.json` file declaring their data practices — both without learning any real-world identity or cross-site tracking identifier.
+ProtoConsent is not yet in extension stores. To try it locally:
 
-## Goals
+1. Clone this repository.
+2. Open `chrome://extensions/` (or `edge://extensions/`) and enable **Developer mode**.
+3. Click **Load unpacked** and select the `extension/` folder (the one containing `manifest.json`).
+4. Open any site and click the ProtoConsent icon in the toolbar.
 
-- Give users a single, consistent place to manage their privacy and consent preferences.
-- Express preferences in terms of purposes of data use, not just domains, cookies or vendors.
-- Keep control and identity in the user’s browser by default, minimising or avoiding any server-side processing.
-- Align with existing and emerging web privacy standards where possible (for example, Permissions API, Storage Access API, Global Privacy Control).
-- Explore browser-level, purpose-based preference signals that other tools and standards discussions could build on.
+On first install, an onboarding page will guide you through selecting a default privacy profile. You can then adjust per‑site settings from the popup at any time.
 
-## Project status
+To see the extension in action without configuring anything, visit [demo.protoconsent.org](https://demo.protoconsent.org) — it includes a site declaration, an SDK live test, and a GPC signal check.
 
-The current Chromium extension provides:
-
-- Global default profile with per-site overrides via a browser action popup.
-- Purpose toggles for six categories: functional, analytics, ads, personalisation, third-party services, and advanced tracking.
-- Network-level enforcement via static rulesets: 40 000+ curated tracker domains and 1 200+ path-based rules from public blocklists, organized by purpose. See [blocklists.md](design/blocklists.md) for sources and curation criteria.
-- Conditional [Global Privacy Control](https://globalprivacycontrol.org/) (Sec-GPC) header, sent only when privacy-relevant purposes are denied.
-- Per-purpose blocked request counter with estimated performance impact, visible in the popup.
-- Onboarding welcome page for first-time users with profile selection.
-- Purpose settings page for customizing the global default profile.
-- Content script bridge and JavaScript SDK for web pages to query user preferences.
-- Site declaration support: websites can publish a `.well-known/protoconsent.json` file declaring their data practices, displayed in the popup as a side panel.
-- Visual icons from the [Consent Commons](https://consentcommons.com/) system for purposes, legal basis, sharing and international transfers.
-- TypeScript type declarations for SDK consumers.
-- Live SDK test on [protoconsent.org](https://protoconsent.org).
-
-For a more detailed roadmap and planned features, see [product-overview.md](design/product-overview.md).
-
-## Architecture overview
-
-ProtoConsent is a browser extension with a popup UI, a background service worker, and local storage for site rules and purpose preferences. Enforcement relies on declarative network rules in the browser.
-
-![ProtoConsent technical diagram](design/assets/diagrams/protoconsent-technical-diagram.png)
-
-See [architecture.md](design/architecture.md) for more details.
+For step‑by‑step instructions and test scenarios, see [testing-guide.md](design/testing-guide.md).
 
 ## Screenshots
 
@@ -95,35 +77,46 @@ ProtoConsent sends a [Sec-GPC](https://globalprivacycontrol.org/) header only wh
 
 Websites can publish a `.well-known/protoconsent.json` file to declare their data practices.
 The popup displays this in a side panel with [Consent Commons](https://consentcommons.com/) icons.
-Live example: [protoconsent.org](https://protoconsent.org/) (screenshot shown with localhost sample data):
+See the complete example at [demo.protoconsent.org](https://demo.protoconsent.org):
 
 ![Site declaration side panel](design/assets/screenshots/well-known-demo-detected.png)
 
-## Getting started (developer mode)
+## For websites
 
-For now ProtoConsent is only available as an unpacked extension.
+ProtoConsent offers two ways for websites to participate — both optional, both privacy‑preserving:
 
-- Clone this repository locally.
-- Load the folder as an unpacked extension in your Chromium-based browser   (Chrome, Edge, Brave) with Developer mode enabled.
-- Open any site, click the ProtoConsent icon, pick a profile and adjust the per‑purpose toggles.
+- **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, sharing scope). No SDK, no code changes — just a JSON file. See the [spec](design/well-known-spec.md) and the [demo site source](https://github.com/ProtoConsent/demo) for a complete example.
+- **Integrate the SDK:** import `sdk/protoconsent.js` (MIT) and call `get('analytics')` to read the user's preferences. Returns `true`, `false`, or `null` (no extension). See the [quick example](design/protocol-draft.md#quick-example) and [SDK source](sdk/protoconsent.js).
 
-For step‑by‑step instructions and example test scenarios, see [testing-guide.md](design/testing-guide.md).
+## Architecture overview
+
+ProtoConsent is a browser extension with a popup UI, a background service worker, and local storage for site rules and purpose preferences. Enforcement relies on declarative network rules in the browser.
+
+![ProtoConsent technical diagram](design/assets/diagrams/protoconsent-technical-diagram.png)
+
+See [architecture.md](design/architecture.md) for more details.
 
 ## Documentation
 
-ProtoConsent comes with a small set of public documents that describe the project from different angles:
+- **Product overview** – problem, solution, key features, roadmap, and openness: [product-overview.md](design/product-overview.md)
+- **Technical architecture** – components, data model, main flows, and design choices: [architecture.md](design/architecture.md)
+- **Purpose‑signalling protocol** – data model, communication mechanism, and SDK API surface: [protocol-draft.md](design/protocol-draft.md)
+- **Site declaration spec** – `.well-known/protoconsent.json` format for websites: [well-known-spec.md](design/well-known-spec.md)
+- **Blocklists management** – sources, curation process, and DNR format: [blocklists.md](design/blocklists.md)
+- **How to test the extension** – installation, test scenarios for blocking, SDK, GPC, and site declarations: [testing-guide.md](design/testing-guide.md)
+- **Icons and layers** – visual representation of profiles, purposes, and UI layers: [icons-and-layers.md](design/icons-and-layers.md)
 
-- **Product overview** – high-level description of the problem, solution, key features, roadmap, and openness: see [product-overview.md](design/product-overview.md).
-- **Technical architecture** – components, data model, main flows, and design choices: see [architecture.md](design/architecture.md).
-- **Icons and layers** – visual representation of profiles, purposes, and UI layers: see [icons-and-layers.md](design/icons-and-layers.md).
-- **How to test the extension** – practical steps to install the extension in developer mode and try it on real sites: see [testing-guide.md](design/testing-guide.md).
-- **Purpose-signalling protocol** – data model, communication mechanism, and SDK API surface: see [protocol-draft.md](design/protocol-draft.md).
-- **Site declaration spec** – `.well-known/protoconsent.json` format for websites to declare data practices: see [well-known-spec.md](design/well-known-spec.md).
-- **SDK quick start** – import `sdk/protoconsent.js` (MIT) and call `get('analytics')`. Returns `true`, `false`, or `null` (no extension). See the [quick example](design/protocol-draft.md#quick-example).
+## Goals
+
+- Give users a single, consistent place to manage their privacy and consent preferences.
+- Express preferences in terms of purposes of data use, not just domains, cookies or vendors.
+- Keep control and identity in the user's browser by default, minimising or avoiding any server-side processing.
+- Align with existing and emerging web privacy standards where possible (for example, Permissions API, Storage Access API, Global Privacy Control).
+- Explore browser-level, purpose-based preference signals that other tools and standards discussions could build on.
 
 ## Use of Generative AI
 
-This project occasionally uses generative AI tools for non-code tasks such as visuals, text translation, and spelling/grammar/orthography corrections. All project code and technical design are written and reviewed by human contributors, and the codebase is prepared as FLOS (GPL‑3.0‑or‑later) without “vibe-coding” or direct code generation from AI tools.
+This project occasionally uses generative AI tools for non-code tasks such as visuals, text translation, and spelling/grammar/orthography corrections. All project code and technical design are written and reviewed by human contributors, and the codebase is prepared as FLOS (GPL‑3.0‑or‑later) without "vibe-coding" or direct code generation from AI tools.
 
 ## License
 
