@@ -25,6 +25,7 @@ let currentProfile = "balanced";
 let currentPurposesState = {};
 let allRules = {};
 let lastGpcSignalsSent = 0;
+let lastGpcDomains = [];
 let requiredPurposeKeys = new Set();
 let activeMode = "consent";
 
@@ -89,17 +90,17 @@ function setActiveMode(mode) {
  // Get the count of matched DNR rules for the current tab.
  // Calls chrome.declarativeNetRequest.getMatchedRules({ tabId })
  // and fetches per-domain detail from the background's onRuleMatchedDebug tracker.
- // @returns {Promise<{blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains}>}
+ // @returns {Promise<{blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains}>}
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
-      return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+      return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
     }
 
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
 
     const tabId = tabs[0].id;
 
@@ -109,9 +110,10 @@ async function getBlockedRulesCount() {
       chrome.declarativeNetRequest.getDynamicRules(),
     ]);
 
-    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
 
     const blockedDomains = domainsResp?.data || {};
+    const gpcDomains = domainsResp?.gpcDomains || [];
 
     // Cache per-purpose domain and path counts for displayProtectionScope
     if (domainsResp?.purposeDomainCounts) {
@@ -160,10 +162,10 @@ async function getBlockedRulesCount() {
       }
     }
 
-    return { blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains };
+    return { blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
-    return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+    return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
   }
 }
 
@@ -178,11 +180,12 @@ async function displayBlockedCount() {
   const statRowEl = document.querySelector(".pc-header-stat");
 
   try {
-    const { blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains } = await getBlockedRulesCount();
+    const { blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains } = await getBlockedRulesCount();
     lastDomainHitCount = domainHitCount;
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
     lastGpcSignalsSent = gpc;
+    lastGpcDomains = gpcDomains;
 
     // domainHitCount maps purpose -> count from static rulesets only.
     // Supplement with blockedDomains (from onRuleMatchedDebug) to cover dynamic rule matches.
@@ -208,7 +211,14 @@ async function displayBlockedCount() {
           parts.push("~" + formatEstimatedTime(estimatedMs) + " faster");
         }
       }
-      if (gpc > 0) parts.push(gpc + " GPC signals sent");
+      if (gpc > 0) {
+        const domainCount = gpcDomains.length;
+        if (domainCount > 0) {
+          parts.push("GPC to " + domainCount + (domainCount === 1 ? " domain" : " domains"));
+        } else {
+          parts.push(gpc + " GPC signals");
+        }
+      }
 
       countEl.textContent = parts.length > 0
         ? parts.join(" · ")
@@ -233,7 +243,7 @@ async function displayBlockedCount() {
 
     // Debug panel (visible only when DEBUG_RULES = true)
     if (DEBUG_RULES) {
-      renderDebugPanel({ blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains });
+      renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains });
     }
   } catch (err) {
     console.error("ProtoConsent: error displaying blocked count:", err);
@@ -982,9 +992,16 @@ function updateGpcIndicator(observedGpc = lastGpcSignalsSent) {
   indicatorEl.classList.toggle("is-inactive", !expectedOn);
   labelEl.textContent = expectedOn ? "GPC on" : "GPC off";
   const expectedText = expectedOn ? "Expected: GPC on" : "Expected: GPC off";
-  const observedText = observedGpc > 0
-    ? "Observed: " + observedGpc + " GPC signals sent"
-    : "Observed: no GPC signals sent yet on this tab";
+  const domains = lastGpcDomains;
+  let observedText;
+  if (observedGpc > 0 && domains.length > 0) {
+    observedText = "Observed: GPC sent to " + domains.length + (domains.length === 1 ? " domain" : " domains")
+      + " (" + observedGpc + " requests)";
+  } else if (observedGpc > 0) {
+    observedText = "Observed: " + observedGpc + " GPC signals sent";
+  } else {
+    observedText = "Observed: no GPC signals sent yet on this tab";
+  }
   indicatorEl.title = expectedText + "\n" + observedText;
 }
 

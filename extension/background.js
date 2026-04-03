@@ -36,6 +36,13 @@ const tabBlockedDomains = new Map();
 // Maps dynamic block rule IDs to their purpose (rebuilt on each rule update).
 let dynamicBlockRuleMap = {};
 
+// Set of dynamic rule IDs that inject Sec-GPC: 1 (rebuilt on each rule update).
+let dynamicGpcSetIds = new Set();
+
+// Per-tab tracking of unique domains that received GPC (Sec-GPC: 1) signals.
+// Maps tabId -> Set<domain>
+const tabGpcDomains = new Map();
+
 // Last rebuild debug snapshot (served to popup on request)
 let lastRebuildDebug = {};
 
@@ -244,6 +251,7 @@ async function _rebuildAllDynamicRulesImpl() {
     const newRules = [];
     let nextRuleId = BASE_RULE_ID;
     const newDynamicBlockMap = {};
+    const newGpcSetIds = new Set();
 
     // 1. Resolve global default purposes (what applies to unconfigured sites)
     const globalPurposes = resolvePurposes({}, presets, defaultConfig);
@@ -344,8 +352,10 @@ async function _rebuildAllDynamicRulesImpl() {
 
     if (globalNeedsGPC) {
       // Global: send GPC on all requests by default
+      const gpcGlobalId = nextRuleId++;
+      newGpcSetIds.add(gpcGlobalId);
       newRules.push({
-        id: nextRuleId++,
+        id: gpcGlobalId,
         priority: 1,
         action: {
           type: "modifyHeaders",
@@ -377,8 +387,10 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     if (gpcAddSites.length > 0) {
+      const gpcAddId = nextRuleId++;
+      newGpcSetIds.add(gpcAddId);
       newRules.push({
-        id: nextRuleId++,
+        id: gpcAddId,
         priority: 2,
         action: {
           type: "modifyHeaders",
@@ -466,6 +478,7 @@ async function _rebuildAllDynamicRulesImpl() {
       if (DEBUG_RULES) lastRebuildDebug.error = e.message;
     }
     dynamicBlockRuleMap = newDynamicBlockMap;
+    dynamicGpcSetIds = newGpcSetIds;
     try {
       await chrome.declarativeNetRequest.updateEnabledRulesets({
         enableRulesetIds: enableIds,
@@ -596,10 +609,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (dLen) purposeDomainCounts[key] = dLen;
         if (pLen) purposePathCounts[key] = pLen;
       }
+      const gpcDomains = tabGpcDomains.get(message.tabId);
       sendResponse({
         data: tabBlockedDomains.get(message.tabId) || {},
         purposeDomainCounts,
         purposePathCounts,
+        gpcDomains: gpcDomains ? [...gpcDomains] : [],
       });
     });
     return true; // async response
@@ -638,7 +653,16 @@ if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
       purpose = dynamicBlockRuleMap[rule.ruleId];
     }
 
-    if (!purpose) return;
+    if (!purpose) {
+      // Track unique domains that received a GPC "set" signal
+      if (rule.rulesetId === "_dynamic" && dynamicGpcSetIds.has(rule.ruleId)) {
+        let domain;
+        try { domain = new URL(request.url).hostname; } catch (_) { return; }
+        if (!tabGpcDomains.has(request.tabId)) tabGpcDomains.set(request.tabId, new Set());
+        tabGpcDomains.get(request.tabId).add(domain);
+      }
+      return;
+    }
 
     let domain;
     try { domain = new URL(request.url).hostname; } catch (_) { return; }
@@ -656,10 +680,12 @@ if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading") {
     tabBlockedDomains.delete(tabId);
+    tabGpcDomains.delete(tabId);
   }
 });
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabBlockedDomains.delete(tabId);
+  tabGpcDomains.delete(tabId);
 });
 
 // Rebuild once on service worker startup (where supported)
