@@ -390,6 +390,9 @@ function replayHistoricalLog() {
   }
 }
 
+const LOG_MAX_LINES = 500;
+const LOG_NODES_PER_LINE = 3; // tsSpan + lineSpan + "\n" textNode
+
 function appendLogLine(text, type) {
   const pre = document.getElementById("pc-log-requests");
   if (!pre) return;
@@ -409,11 +412,19 @@ function appendLogLine(text, type) {
   tsSpan.className = "pc-log-line-ts";
   tsSpan.textContent = formatHHMMSS(Date.now()) + " ";
 
+  // Only auto-scroll if user is already near the bottom
+  const atBottom = (pre.scrollHeight - pre.scrollTop - pre.clientHeight) < 40;
+
   pre.appendChild(tsSpan);
   pre.appendChild(line);
   line.textContent = text;
   pre.appendChild(document.createTextNode("\n"));
 
-  // Auto-scroll to bottom
-  pre.scrollTop = pre.scrollHeight;
+  // Evict oldest lines when exceeding cap
+  const maxNodes = LOG_MAX_LINES * LOG_NODES_PER_LINE;
+  while (pre.childNodes.length > maxNodes) {
+    pre.removeChild(pre.firstChild);
+  }
+
+  if (atBottom) pre.scrollTop = pre.scrollHeight;
 }
