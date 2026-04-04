@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ProtoConsent - Purpose Settings</title>
+	<link rel="icon" type="image/png" sizes="32x32" href="../icons/protoconsent_icon_32.png">
+	<link rel="stylesheet" href="common.css">
+	<link rel="stylesheet" href="purposes-settings.css">
+</head>
+<body>
+	<div class="ps-root">
+		<header class="ps-header">
+			<div class="ps-brand" aria-hidden="true">
+				<img src="../icons/protoconsent_icon_32.png" alt="" width="16" height="16">
+				<span>ProtoConsent</span>
+			</div>
+			<div class="ps-hero">
+				<h1>Purpose Settings</h1>
+				<p class="ps-subtitle">Manage your default consent profile, purposes, and presets.</p>
+			</div>
+		</header>
+
+		<main>
+		<div id="status-msg" class="ps-status-msg" role="status">Loading configuration...</div>
+
+		<section id="default-profile-section" class="ps-section ps-default-profile-section ps-hidden">
+			<div class="ps-default-profile-row">
+				<div>
+					<label for="default-profile-select" class="ps-default-profile-label">Default profile</label>
+					<div class="ps-default-profile-desc">Applied to sites you haven't configured yet</div>
+				</div>
+				<div class="ps-default-profile-controls">
+					<select id="default-profile-select" class="ps-default-profile-select">
+						<option value="strict">Strict</option>
+						<option value="balanced" selected>Balanced</option>
+						<option value="permissive">Permissive</option>
+						<option value="custom">Custom</option>
+					</select>
+					<button id="reset-all-sites" class="ps-reset-all-btn" type="button">Reset all sites</button>
+				</div>
+			</div>
+			<div id="custom-toggles" class="ps-custom-toggles ps-hidden">
+				<!-- Dynamic toggles injected by JS -->
+			</div>
+		</section>
+
+		<section id="presets-section" class="ps-section ps-hidden">
+			<h2>Presets</h2>
+			<div id="preset-list"></div>
+		</section>
+
+		<section id="purposes-section" class="ps-section ps-hidden">
+			<div class="ps-section-head">
+				<h2>Purposes</h2>
+				<span class="ps-section-note">Informational only. Changes happen via profile selection above.</span>
+			</div>
+			<div id="purpose-list"></div>
+		</section>
+		</main>
+		<footer class="ps-footer">
+			<span id="viewer-version">ProtoConsent</span>
+			<div class="ps-footer-links">
+				<a href="onboarding.html" class="ps-footer-link" id="ps-welcome-link">Welcome guide</a>
+				<a href="https://consentcommons.com" class="ps-footer-link" target="_blank" rel="noopener noreferrer">Icons: Consent Commons</a>
+				<a href="https://github.com/ProtoConsent/ProtoConsent" class="ps-footer-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+				<a href="https://protoconsent.org" class="ps-footer-link" target="_blank" rel="noopener noreferrer">Website</a>
+			</div>
+		</footer>
+	</div>
+
+	<script src="purposes-settings.js"></script>
+</body>
+</html>

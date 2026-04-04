@@ -6,7 +6,7 @@
 // Loaded after popup.js; uses globals: currentDomain, currentProfile, currentPurposesState.
 
 // Render debug info into the collapsible debug panel.
-function renderDebugPanel({ blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains }) {
+function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains }) {
   const panel = document.getElementById("pc-debug-panel");
   const content = document.getElementById("pc-debug-content");
   if (!panel || !content) return;
@@ -77,7 +77,7 @@ function renderDebugPanel({ blocked, gpc, domainHitCount, rulesetHitCount, block
 
     // Tab match info
     lines.push("— tab matches —");
-    lines.push("  blocked: " + blocked + "  gpc: " + gpc);
+    lines.push("  blocked: " + blocked + "  gpc: " + gpc + " (" + (gpcDomains?.length || 0) + " domains)");
     lines.push("");
 
     // Ruleset breakdown (domain vs path)

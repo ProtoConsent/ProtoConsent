@@ -7,12 +7,23 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 Websites can declare their data-processing purposes by serving a static JSON file at:
 
 ```
-https://<domain>/.well-known/protoconsent.json
+http(s)://<host>/.well-known/protoconsent.json
 ```
+
+Only `http:` and `https:` are supported. The extension uses the page's actual protocol and host when fetching the file.
 
 This is a **voluntary, informational declaration**. It does not change how the ProtoConsent extension enforces user preferences. The extension always enforces the user's own profile and toggles — the `.well-known` file adds transparency by showing what the site claims alongside the user's choices.
 
 The format follows the pattern of other `.well-known` resources ([RFC 8615](https://www.rfc-editor.org/rfc/rfc8615)), such as `security.txt` and `change-password`.
+
+## Contents
+
+1. [Overview](#1-overview)
+2. [Schema](#2-schema)
+3. [Examples](#3-examples)
+4. [Extension behaviour](#4-extension-behaviour)
+5. [Hosting notes](#5-hosting-notes)
+6. [Relationship to other specifications](#6-relationship-to-other-specifications)
 
 ## 2. Schema
 
@@ -115,15 +126,19 @@ Only `functional` and `analytics` are declared. The remaining four purposes are 
 }
 ```
 
+### 3.4 Live example
+
+A complete declaration covering all six purposes, multiple legal bases, sharing scopes, data handling, and a rights URL is published at [demo.protoconsent.org](https://demo.protoconsent.org). Install the extension and open the side panel to see it rendered with Consent Commons icons.
+
 ## 4. Extension behaviour
 
 ### 4.1 Fetching
 
-The extension fetches `/.well-known/protoconsent.json` from the current site when the user opens the popup. The fetch is executed in the page's own context via `chrome.scripting.executeScript`, making it a same-origin request that requires no additional host permissions. Results are cached locally with a 24-hour TTL per domain.
+When the user opens the side panel in the popup, the popup sends a `PROTOCONSENT_FETCH_WELL_KNOWN` message to the background script with the current site's protocol and host. The background script fetches `<protocol>://<host>/.well-known/protoconsent.json` directly from its service worker context (using the extension's `host_permissions`). Results are cached locally with a 24‑hour TTL per domain.
 
 - If the file is not found (404), unreachable, or invalid JSON, no site declaration is shown. The negative result is cached for 6 hours to avoid repeated fetch attempts. No error is surfaced to the user.
-- The extension does **not** fetch the file on every navigation — only when the popup is opened and the cache is expired.
-- Works on both HTTP and HTTPS sites (same-origin fetch from the page context).
+- The extension does **not** fetch the file on every navigation — only when the user opens the side panel and the cache is expired.
+- Works on both HTTP and HTTPS sites, including local development servers with non‑default ports.
 
 ### 4.2 Validation
 
@@ -139,9 +154,10 @@ Invalid files are silently discarded.
 
 ### 4.3 Display
 
-When a valid declaration exists, the popup shows a "Site declaration" section:
+When a valid declaration exists, the popup shows a "Site declaration" side panel:
 
-- Each declared purpose: label + used/not used + legal basis, provider, and sharing scope (if present).
+- Each declared purpose: label + used/not used + legal basis, provider, and sharing scope (if present), illustrated with [Consent Commons](https://consentcommons.com/) icons.
+- Data handling details (storage region, international transfers) shown with corresponding Consent Commons icons when declared.
 - Purposes not declared by the site are shown as "—" (not declared) in a muted style.
 - If `rights_url` is present and uses `https://` or `http://`, a "Your rights" link is displayed.
 - The section is purely informational. The user's toggles remain the sole control for enforcement.
@@ -156,7 +172,7 @@ The `.well-known` file **never** modifies user preferences, DNR rules, or GPC he
 
 GitHub Pages uses Jekyll by default, which ignores directories starting with `.`. To serve the `.well-known` directory, add a `.nojekyll` file to the publication root (e.g. `docs/.nojekyll`). This disables Jekyll processing entirely.
 
-Then place the file at `docs/.well-known/protoconsent.json` (or root, depending on publishing source).
+Then place the file at `docs/.well-known/protoconsent.json` (or root, depending on publishing source). See the [protoconsent.org source](https://github.com/ProtoConsent/ProtoConsent/tree/main/docs) and [demo.protoconsent.org source](https://github.com/ProtoConsent/demo) for working examples.
 
 ### 5.2 Content-Type
 

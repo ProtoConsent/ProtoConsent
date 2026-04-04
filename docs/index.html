@@ -98,7 +98,7 @@
               tools, doesn’t replace them.
             </p>
           </div>
-        </section>    
+        </section>
 
         <!-- MAIN GRID -->
         <section class="grid">
@@ -167,6 +167,7 @@
             </p>
             <p>
               Unlike browser‑wide GPC toggles, ProtoConsent's signal is <strong>conditional and per‑site</strong>: it only fires when your purpose choices justify it. GPC already has legal weight under California's CCPA/CPRA and is under discussion in the EU.
+              <a href="https://demo.protoconsent.org/#gpc-test" target="_blank" rel="noopener noreferrer">Check it live on the demo site →</a>
             </p>
             <figure class="screenshot">
               <img src="assets/screenshots/gpc-demo-detected.png" alt="GPC signal detected on globalprivacycontrol.org">
@@ -188,11 +189,12 @@
             <figure class="screenshot">
               <img src="assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel with Consent Commons icons">
               <figcaption>
-                Site declaration displayed in a side panel with Consent Commons icons (screenshot from localhost with sample data).
+                Site declaration displayed in a side panel with Consent Commons icons. See the <a href="https://demo.protoconsent.org" target="_blank" rel="noopener noreferrer">demo site</a> for a complete example.
               </figcaption>
             </figure>
             <p>
               This site publishes its own <code><a href="/.well-known/protoconsent.json">.well-known/protoconsent.json</a></code> — install the extension and open the side panel to see it live.
+              For a complete declaration with all protocol fields, visit <a href="https://demo.protoconsent.org" target="_blank" rel="noopener noreferrer">demo.protoconsent.org</a>.
             </p>
             <p>
               <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/well-known-spec.md" target="_blank" rel="noopener noreferrer">Read the spec →</a>
@@ -215,7 +217,7 @@
               <li>See network-level enforcement in action — blocked requests, per-purpose stats, estimated time savings.</li>
               <li>Publish a <code>.well-known/protoconsent.json</code> on your site to declare your data practices.</li>
               <li>Integrate the SDK to read user preferences from your pages.</li>
-              <li><a href="#live-test">Try the live SDK test</a> on this page to see it working.</li>
+              <li><a href="#live-test">Try the live SDK test</a> on this page, or visit <a href="https://demo.protoconsent.org" target="_blank" rel="noopener noreferrer">demo.protoconsent.org</a> for a full-featured demo with site declaration, SDK and GPC signal check.</li>
               <li>Open issues or pull requests on GitHub to discuss or contribute.</li>
             </ul>
 
@@ -306,7 +308,7 @@ const all = await ProtoConsent.getAll();
             <li>Publish a <code>.well-known/protoconsent.json</code> on your site to declare your data practices.</li>
             <li>Integrate the <a href="https://github.com/ProtoConsent/ProtoConsent/tree/main/sdk" target="_blank" rel="noopener noreferrer">SDK</a> (MIT) to read user preferences from your pages.</li>
             <li>Open an <a href="https://github.com/ProtoConsent/ProtoConsent/issues" target="_blank" rel="noopener noreferrer">issue</a> or pull request on GitHub with feedback, bug reports, or ideas.</li>
-            <li><a href="#live-test">Try the live SDK test</a> on this page to see it working.</li>
+            <li><a href="#live-test">Try the live SDK test</a> on this page, or visit <a href="https://demo.protoconsent.org" target="_blank" rel="noopener noreferrer">demo.protoconsent.org</a> for a full-featured demo with site declaration, SDK and GPC signal check.</li>
             <li>Reach out at <a href="mailto:contact@protoconsent.org">contact@protoconsent.org</a> for questions or collaboration.</li>
           </ul>
         </section>

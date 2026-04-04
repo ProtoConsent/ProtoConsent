@@ -8,11 +8,23 @@ ProtoConsent is a client‑side system that adds purpose‑based privacy control
 
 The extension provides a popup interface to manage profiles and purposes per site, and a background component that translates those choices into declarative network rules. A JavaScript SDK and a content script bridge allow websites to read and react to the user’s choices via a local purpose‑signalling protocol.
 
+## Contents
+
+1. [Overview](#1-overview)
+2. [Components](#2-components)
+3. [Data model](#3-data-model)
+4. [Main flows](#4-main-flows)
+5. [Security and privacy by design](#5-security-and-privacy-by-design-non-normative)
+6. [Permissions rationale](#6-permissions-rationale)
+7. [Chrome declarativeNetRequest: priority and limits](#7-chrome-declarativenetrequest-priority-and-limits)
+8. [Design decisions](#8-design-decisions)
+9. [Extensibility](#9-extensibility)
+
 ## 2. Components
 
 **Popup UI** – The main user‑facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. Purpose categories are shown with [Consent Commons](https://consentcommons.com/) icons for visual clarity. When a site publishes a `.well-known/protoconsent.json` declaration, the popup displays it in a collapsible side panel with icons for legal basis, sharing and international transfers. The popup does not enforce anything directly; it sends messages to the background component when settings change.
 
-**Background script (service worker)** – Maintains per‑site rules, computes defaults for new domains, and translates user choices into declarative network rules. Enforcement stays in the browser; policy and UI logic stay in the extension.
+**Background script (service worker)** – Maintains per‑site rules, computes defaults for new domains, and translates user choices into declarative network rules. Also handles `.well-known/protoconsent.json` fetches on behalf of the popup: when the user opens the side panel, the popup sends a message to the background, which fetches the declaration from the site's origin and returns it for rendering. Enforcement stays in the browser; policy and UI logic stay in the extension.
 
 **Local storage** – All configuration lives in the browser’s extension storage: the mapping from domains to site rules (profile plus purpose overrides) and predefined profiles. No backend, no remote calls.
 
@@ -20,11 +32,11 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 *Static rulesets* handle global blocking. Each of the five blocking purposes (analytics, ads, personalization, third\_parties, advanced\_tracking) has two static rulesets declared in the manifest: one for domain‑based rules (`block_ads.json`) and one for path‑based rules (`block_ads_paths.json`). All start disabled; the background script enables or disables each ruleset based on the user's global profile. Because static rulesets draw from a separate Chrome‑managed pool (up to 30,000 rules), they leave the dynamic rule budget free for per‑site customisation.
 
-```
+```text
 Static rulesets (30,000 rule pool)
 ┌──────────────────────┐  ┌──────────────────────────┐
 │ block_ads            │  │ block_ads_paths          │
-│ 1 rule, 1206 domains │  │ 13 rules, urlFilter each │
+│ 1 rule, 12904 domains│  │ 529 rules, urlFilter each│
 │ requestDomains       │  │ e.g. ||google.com/adsense│
 │ priority 1           │  │ priority 1               │
 └──────────────────────┘  └──────────────────────────┘
@@ -48,7 +60,11 @@ When privacy‑relevant purposes (marked with `triggers_gpc` in `config/purposes
 
 Per‑site GPC overrides use `requestDomains` (the destination URL), not `initiatorDomains` (the page making the request). This means that trusting a site — for example, allowing all purposes on elpais.com — removes the GPC signal from requests *to* elpais.com, but third‑party requests *from* elpais.com to domains like google‑analytics.com still carry the global GPC signal. The same applies to cross‑origin iframes: an iframe from youtube.com embedded on a trusted elpais.com page still receives GPC from the global rule. Trusting a site does not imply trusting the third parties it loads.
 
+**Content script bridge** – A content script (`content-script.js`) declared in the manifest runs in the ISOLATED world on every page. It acts as a message bridge between the page‑level SDK and the extension’s background: it listens for `PROTOCONSENT_QUERY` messages from the page, forwards them to the background via `chrome.runtime.sendMessage`, and relays the response back. It does not access or modify page content.
+
 **protoconsent.js SDK** – A small, optional JavaScript library for web pages to read the user’s ProtoConsent preferences (e.g. whether analytics is allowed) via the content script bridge. The extension works without it; the SDK is for sites that want to adapt their behaviour to the user’s choices. TypeScript type declarations are also provided (`sdk/protoconsent.d.ts`).
+
+**Onboarding and purpose settings pages** – Two additional extension pages complement the popup. The onboarding page (`pages/onboarding.html`) opens on first install and guides new users through selecting a default privacy profile. The purpose settings page (`pages/purposes-settings.html`) lets users customise the global default profile by toggling individual purposes, accessible from the popup or `chrome://extensions`.
 
 ![ProtoConsent technical diagram](assets/diagrams/protoconsent-technical-diagram.png)
 
@@ -68,7 +84,11 @@ Three predefined profiles (“Strict”, “Balanced”, “Permissive”) map d
 
 **Page loads and makes network requests** – As the user navigates, third‑party requests are evaluated against the active rules for the current site. Requests tied to disabled purposes are blocked by the browser’s declarative rules; allowed purposes proceed normally.
 
-**Page reads preferences via SDK** – On sites that integrate the optional SDK, page code can query the user’s preferences (e.g. `get("analytics")`) and decide whether to load scripts or simplify consent prompts. This complements browser‑level enforcement — it does not replace it. A live test is available on [protoconsent.org](https://protoconsent.org/).
+**Page reads preferences via SDK** – On sites that integrate the optional SDK, page code can query the user’s preferences (e.g. `get("analytics")`) and decide whether to load scripts or simplify consent prompts. This complements browser‑level enforcement — it does not replace it. A live test is available on [protoconsent.org](https://protoconsent.org/) and [demo.protoconsent.org](https://demo.protoconsent.org).
+
+**Extension reads site declaration** – When the user opens the side panel in the popup, the popup sends a `PROTOCONSENT_FETCH_WELL_KNOWN` message to the background script, which fetches `<protocol>://<host>/.well-known/protoconsent.json` from the current site’s origin. If a valid declaration is found, the popup renders it in a collapsible side panel with Consent Commons icons for purposes, legal basis, sharing scope, and data handling. The declaration is cached (24 hours on success, 6 hours on failure) to avoid repeated fetches. The fetch uses the page’s actual protocol and host (including port), so it works on both production sites and local development servers.
+
+**First‑time onboarding** – On first install (when no default profile exists in storage), the background script opens the onboarding page. The user selects a profile (Strict, Balanced, or Permissive), which is saved as the global default. All sites then inherit this profile until the user creates per‑site overrides.
 
 ## 5. Security and privacy by design (non-normative)
 
@@ -81,15 +101,13 @@ Enforcement is based on built‑in browser APIs (declarativeNetRequest), so Prot
 The extension requests only the permissions it needs. Each one has a specific purpose:
 
 | Permission | Why it is needed |
-|---|---|
+| --- | --- |
 | `tabs` | Read the active tab's URL so the popup can identify which domain the user is managing and apply per‑site rules. |
 | `storage` | Persist user rules, profiles, and preferences locally in the browser's extension storage. No remote storage is used. |
 | `scripting` | Register the GPC content script (`gpc-signal.js`) into the MAIN world at runtime via `chrome.scripting.registerContentScripts`, so that `navigator.globalPrivacyControl` is set only on pages where the user's preferences require it. |
 | `declarativeNetRequest` | Create and manage dynamic blocking rules that enforce the user's purpose choices by blocking third‑party requests associated with denied purposes. Also used for conditional `Sec-GPC: 1` header injection via `modifyHeaders` rules. |
 | `declarativeNetRequestFeedback` | Query which DNR rules matched on the current tab (`getMatchedRules`) so the popup can display how many requests were blocked and how many received the GPC signal. This is a read‑only, diagnostic permission — it does not change enforcement behaviour. |
 | `host_permissions: <all_urls>` | Required by `declarativeNetRequest` to apply blocking and header rules across all domains, and by `scripting` to inject the GPC content script on any site. Without broad host access, per‑site enforcement would not work. |
-
-The content script declared in the manifest (`content-script.js`) runs in the ISOLATED world and acts as a message bridge between the page‑level SDK and the extension's background. It does not access or modify page content.
 
 ## 7. Chrome declarativeNetRequest: priority and limits
 
@@ -116,10 +134,10 @@ The `initiatorDomains` condition matches the **origin that initiated the request
 ### Resource limits
 
 | Limit | Value | ProtoConsent usage |
-|---|---|---|
+| --- | --- | --- |
 | Static rulesets (max declared) | 100 | 10 (5 domain + 5 path) |
 | Static rulesets (max enabled) | 50 | Up to 10 |
-| Static rules (total) | 30,000 | ~4,650 |
+| Static rules (total) | 30,000 | ~41,435 (40,233 domains + 1,202 path rules) |
 | Dynamic + session rules | 5,000 | ~13 (10 overrides + 3 GPC) |
 | `getMatchedRules` calls | 20 per 10 min | 1 per popup open |
 
@@ -145,8 +163,14 @@ Per‑site overrides are grouped by (category, action) rather than by individual
 
 All blocking rules exclude `main_frame` from `resourceTypes`. This ensures that users can always navigate to any URL directly — only third‑party subresources are blocked. A user typing `doubleclick.net` in the address bar will reach the site; only background requests to it from other pages are affected.
 
+### Path‑domain filtering in block overrides
+
+When building per‑site "block" override rules (for sites more restrictive than the global profile), the background script filters out `requestDomains` entries that overlap with the site's own `initiatorDomains`. Without this filter, a site like `google.com` that appears both as a tracker domain (in path‑based rules) and as the initiator would block its own first‑party requests. The filtering ensures that block overrides only target third‑party traffic, never the site's own resources.
+
 ## 9. Extensibility
 
-New purposes can be added as fields in the site rule without breaking existing preferences. Support for more browsers reuses the same concepts (popup, background, local storage, enforcement) and adapts only platform‑specific details.
+New purposes can be added as fields in the site rule without breaking existing preferences. The `.well-known/protoconsent.json` schema is versioned and designed to accommodate new fields without breaking existing declarations.
+
+Firefox support is planned as the next browser target. The extension architecture (popup, background, local storage, enforcement) maps directly to Firefox's WebExtensions API, with adaptations mainly in `declarativeNetRequest` availability and manifest format. The same popup UI, data model, and SDK work across browsers.
 
 The optional SDK and purpose‑signalling protocol are documented layers on top of the extension, not hard dependencies. Websites can adopt them at their own pace while the extension continues to work on its own. This lets ProtoConsent evolve as an open building block that others can adapt or embed without adopting the entire stack.

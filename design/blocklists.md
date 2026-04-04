@@ -6,25 +6,34 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 ProtoConsent includes a curated subset of domains from public blocklists, organized by purpose. These are stored as static DNR rulesets in `extension/rules/block_*.json` — one file per blocking purpose.
 
-This is **not** a full ad/tracking blocker. At this stage of development, the lists are intentionally focused: enough to provide meaningful default protection, few enough to audit and maintain manually.
+This is **not** a full ad/tracking blocker. The lists are drawn from public blocklists, curated with cross‑source validation and quality filters, and organized by purpose to provide meaningful default protection.
+
+## Contents
+
+1. [Overview](#1-overview)
+2. [Current state](#2-current-state)
+3. [Sources](#3-sources)
+4. [Curation process](#4-curation-process)
+5. [DNR format](#5-dnr-format)
+6. [Path‑based rules](#6-pathbased-rules)
 
 ## 2. Current state
 
 | File | Purpose | Domains |
-|------|---------|---------|
-| `block_ads.json` | Advertising networks | ~1206 |
-| `block_analytics.json` | Analytics and measurement | ~1776 |
-| `block_personalization.json` | DMPs, identity sync, personalization engines | ~105 |
-| `block_third_parties.json` | Social widgets, marketing platforms, push services | ~195 |
-| `block_advanced_tracking.json` | Fingerprinting, verification, cryptominers | ~1255 |
-| **Total** | | **~4537** |
+| --- | --- | --- |
+| `block_ads.json` | Advertising networks | ~12,904 |
+| `block_analytics.json` | Analytics and measurement | ~15,851 |
+| `block_personalization.json` | DMPs, identity sync, personalization engines | ~73 |
+| `block_third_parties.json` | Social widgets, marketing platforms, push services | ~171 |
+| `block_advanced_tracking.json` | Fingerprinting, verification, cryptominers | ~11,234 |
+| **Total** | | **~40,233** |
 
 ## 3. Sources
 
 The curation draws from 7 public blocklists:
 
 | Source | Type | Category hint | License |
-|--------|------|---------------|---------|
+| --- | --- | --- | --- |
 | [EasyList](https://easylist.to/) | Adblock filter list | Ads | GPL-3.0+ / CC BY-SA 3.0+ |
 | [EasyPrivacy](https://easylist.to/) | Adblock filter list | Analytics | GPL-3.0+ / CC BY-SA 3.0+ |
 | [Peter Lowe's list](https://pgl.yoyo.org/adservers/) | Domain list | Ads | No formal license¹ |
@@ -105,13 +114,13 @@ Path rules are stored in `block_*_paths.json` files (one per category) alongside
 ### Current path rule counts
 
 | File | Category | Rules | Example endpoints |
-|------|----------|-------|-------------------|
-| `block_analytics_paths.json` | Analytics | 34 | `google.com/pagead/`, `googletagmanager.com/gtag/js`, `facebook.com/tr/` |
-| `block_ads_paths.json` | Ads | 13 | `google.com/adsense/`, `fundingchoicesmessages.google.com/` |
-| `block_personalization_paths.json` | Personalization | 13 | `logx.optimizely.com/`, `segment.com/analytics.js/` |
-| `block_third_parties_paths.json` | Third parties | 25 | `facebook.com/plugins/`, `linkedin.com/embed/` |
-| `block_advanced_tracking_paths.json` | Advanced tracking | 31 | `privacymanager.io/`, `consent.cookiebot.com/` |
-| **Total** | | **116** | |
+| --- | --- | --- | --- |
+| `block_analytics_paths.json` | Analytics | 559 | `google.com/pagead/`, `googletagmanager.com/gtag/js`, `facebook.com/tr/` |
+| `block_ads_paths.json` | Ads | 529 | `google.com/adsense/`, `fundingchoicesmessages.google.com/` |
+| `block_personalization_paths.json` | Personalization | 13 | `logx.optimizely.com/`, `crwdcntrl.net/5/c=` |
+| `block_third_parties_paths.json` | Third parties | 73 | `facebook.com/plugins/`, `linkedin.com/embed/` |
+| `block_advanced_tracking_paths.json` | Advanced tracking | 28 | `privacymanager.io/`, `consent.cookiebot.com/` |
+| **Total** | | **1,202** | |
 
 ### Selection criteria for path rules
 
@@ -124,3 +133,5 @@ A path rule is added only when:
 ### Interaction with per‑site overrides
 
 Per‑site override rules use `requestDomains` to match both domain‑blocked and path‑blocked domains. When building overrides, the background script extracts the unique domains from path rules (e.g. `google.com` from `||google.com/pagead/`) and merges them into the override's `requestDomains`. This ensures that a Permissive site gets path‑based requests unblocked alongside domain‑based ones.
+
+For **block overrides**, path‑extracted domains that overlap with the initiator domains are filtered out. This prevents self‑referential blocking: without the filter, a Strict override on `elpais.com` would block all first‑party subdomains (`static.elpais.com`, `imagenes.elpais.com`, etc.) because DNR's `requestDomains` matching is subdomain‑inclusive. The tradeoff is that first‑party tracking pixels (e.g. `elpais.com/t.gif`) are not blocked by dynamic overrides — they are handled by the static path ruleset when the global profile blocks that category.

@@ -19,12 +19,15 @@ let presetsConfig = {};
 let purposeDomainCounts = {};
 let purposePathCounts = {};
 let currentDomain = null;
+let currentProtocol = "https:";
+let currentHost = null;
 let defaultProfile = "balanced";
 let defaultPurposes = null;
 let currentProfile = "balanced";
 let currentPurposesState = {};
 let allRules = {};
 let lastGpcSignalsSent = 0;
+let lastGpcDomains = [];
 let requiredPurposeKeys = new Set();
 let activeMode = "consent";
 
@@ -89,29 +92,34 @@ function setActiveMode(mode) {
  // Get the count of matched DNR rules for the current tab.
  // Calls chrome.declarativeNetRequest.getMatchedRules({ tabId })
  // and fetches per-domain detail from the background's onRuleMatchedDebug tracker.
- // @returns {Promise<{blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains}>}
+ // @returns {Promise<{blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains}>}
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
-      return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+      return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
     }
 
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
 
     const tabId = tabs[0].id;
 
-    const [matched, domainsResp, dynamicRules] = await Promise.all([
+    const [matchedResult, domainsResult, dynamicResult] = await Promise.allSettled([
       chrome.declarativeNetRequest.getMatchedRules({ tabId }),
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_BLOCKED_DOMAINS", tabId }),
       chrome.declarativeNetRequest.getDynamicRules(),
     ]);
 
-    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+    const matched = matchedResult.status === "fulfilled" ? matchedResult.value : null;
+    const domainsResp = domainsResult.status === "fulfilled" ? domainsResult.value : null;
+    const dynamicRules = dynamicResult.status === "fulfilled" ? dynamicResult.value : [];
+
+    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
 
     const blockedDomains = domainsResp?.data || {};
+    const gpcDomains = domainsResp?.gpcDomains || [];
 
     // Cache per-purpose domain and path counts for displayProtectionScope
     if (domainsResp?.purposeDomainCounts) {
@@ -160,10 +168,10 @@ async function getBlockedRulesCount() {
       }
     }
 
-    return { blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains };
+    return { blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
-    return { blocked: 0, gpc: 0, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+    return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
   }
 }
 
@@ -178,11 +186,12 @@ async function displayBlockedCount() {
   const statRowEl = document.querySelector(".pc-header-stat");
 
   try {
-    const { blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains } = await getBlockedRulesCount();
+    const { blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains } = await getBlockedRulesCount();
     lastDomainHitCount = domainHitCount;
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
     lastGpcSignalsSent = gpc;
+    lastGpcDomains = gpcDomains;
 
     // domainHitCount maps purpose -> count from static rulesets only.
     // Supplement with blockedDomains (from onRuleMatchedDebug) to cover dynamic rule matches.
@@ -198,7 +207,7 @@ async function displayBlockedCount() {
       }
     }
 
-    // Unified counter line: "X blocked · ~Ys faster · Z GPC signals sent"
+    // Unified counter line: "X blocked · ~Ys faster · Z GPC to domains"
     if (countEl) {
       const parts = [];
       if (blocked > 0) {
@@ -208,7 +217,14 @@ async function displayBlockedCount() {
           parts.push("~" + formatEstimatedTime(estimatedMs) + " faster");
         }
       }
-      if (gpc > 0) parts.push(gpc + " GPC signals sent");
+      if (gpc > 0) {
+        const domainCount = gpcDomains.length;
+        if (domainCount > 0) {
+          parts.push("GPC to " + domainCount + (domainCount === 1 ? " domain" : " domains"));
+        } else {
+          parts.push(gpc + " GPC signals");
+        }
+      }
 
       countEl.textContent = parts.length > 0
         ? parts.join(" · ")
@@ -231,9 +247,10 @@ async function displayBlockedCount() {
     displayProtectionScope();
     updateGpcIndicator(gpc);
 
-    // Debug panel (visible only when DEBUG_RULES = true)
+    // Debug panel (visible only when debug flag is set in storage)
+    await loadDebugFlag();
     if (DEBUG_RULES) {
-      renderDebugPanel({ blocked, gpc, domainHitCount, rulesetHitCount, blockedDomains });
+      renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains });
     }
   } catch (err) {
     console.error("ProtoConsent: error displaying blocked count:", err);
@@ -301,7 +318,7 @@ function displayProtectionScope() {
 
   const total = domainCount + pathCount;
   if (total > 0) {
-    scopeTextEl.textContent = "Protected from " + total + " tracking rules";
+    scopeTextEl.textContent = "Protected: " + total + " tracking rules";
     scopeTextEl.title = "";
     scopeEl.style.display = "flex";
   } else {
@@ -417,7 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (purposesLink) {
     purposesLink.addEventListener("click", (e) => {
       e.preventDefault();
-      chrome.tabs.create({ url: chrome.runtime.getURL("pages/purposes-editor.html") });
+      chrome.tabs.create({ url: chrome.runtime.getURL("pages/purposes-settings.html") });
     });
   }
 
@@ -477,6 +494,9 @@ async function loadConfigs() {
     fetch(presetsUrl)
   ]);
 
+  if (!purposesRes.ok) throw new Error("Failed to load purposes.json: HTTP " + purposesRes.status);
+  if (!presetsRes.ok) throw new Error("Failed to load presets.json: HTTP " + presetsRes.status);
+
   purposesConfig = await purposesRes.json();
   presetsConfig = await presetsRes.json();
 
@@ -525,6 +545,8 @@ async function initDomain() {
     }
     const hostname = url.hostname.replace(/^www\./, "");
     currentDomain = hostname;
+    currentProtocol = url.protocol;
+    currentHost = url.host;
     document.getElementById("pc-site-domain").textContent = hostname;
   } catch (e) {
     currentDomain = null;
@@ -548,24 +570,9 @@ async function loadRulesFromStorageSafe() {
   });
 }
 
-// Init profile selector
+// Init profile selector (event handler only; values set by initStateForDomain)
 function initProfileSelect() {
   const selectEl = document.getElementById("pc-profile-select");
-
-  if (currentDomain && allRules[currentDomain] && allRules[currentDomain].profile) {
-    currentProfile = allRules[currentDomain].profile;
-  }
-
-  // Show the custom option if the stored profile is custom
-  if (currentProfile === "custom") {
-    const customOption = selectEl.querySelector('option[value="custom"]');
-    if (customOption) {
-      customOption.disabled = false;
-      customOption.hidden = false;
-    }
-  }
-
-  selectEl.value = currentProfile;
 
   selectEl.addEventListener("change", () => {
     currentProfile = selectEl.value;
@@ -593,19 +600,15 @@ function initStateForDomain() {
 
   if (existing && existing.profile) {
     currentProfile = existing.profile;
-    const selectEl = document.getElementById("pc-profile-select");
 
     // Show the custom option if this domain uses it
     if (currentProfile === "custom") {
-      const customOption = selectEl.querySelector('option[value="custom"]');
+      const customOption = document.querySelector('#pc-profile-select option[value="custom"]');
       if (customOption) {
         customOption.disabled = false;
         customOption.hidden = false;
       }
     }
-
-    selectEl.value = currentProfile;
-
     // Start from profile defaults (if named preset) or empty (if custom)
     const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
     PURPOSES_TO_SHOW.forEach((key) => {
@@ -621,6 +624,10 @@ function initStateForDomain() {
   } else {
     applyPresetToCurrentDomain();
   }
+
+  // Sync select element with current profile
+  const selectEl = document.getElementById("pc-profile-select");
+  selectEl.value = currentProfile;
 
   // Force required purposes to true regardless of stored state
   for (const key of requiredPurposeKeys) {
@@ -698,7 +705,7 @@ function detectCustomProfile() {
 function createPurposeItemElement(purposeKey, cfg) {
   const isAllowed = currentPurposesState[purposeKey] !== false;
 
-  const itemEl = document.createElement("div");
+  const itemEl = document.createElement("li");
   itemEl.className = "pc-purpose-item";
   itemEl.dataset.purpose = purposeKey;
 
@@ -764,6 +771,7 @@ function createPurposeItemElement(purposeKey, cfg) {
   leftEl.appendChild(nameEl);
   leftEl.setAttribute("role", "button");
   leftEl.setAttribute("aria-expanded", "false");
+  leftEl.setAttribute("tabindex", "0");
 
   // Right side: toggle area (label + visual switch + Allowed/Blocked)
   const toggleLabelEl = document.createElement("label");
@@ -850,6 +858,13 @@ function createPurposeItemElement(purposeKey, cfg) {
     const nowCollapsed = !descEl.classList.contains("is-collapsed");
     updateDescriptionVisibility(nowCollapsed);
   });
+  leftEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const nowCollapsed = !descEl.classList.contains("is-collapsed");
+      updateDescriptionVisibility(nowCollapsed);
+    }
+  });
 
   // Start collapsed
   updateDescriptionVisibility(true);
@@ -917,6 +932,8 @@ function saveCurrentDomainRulesSafe() {
     chrome.storage.local.set({ rules: allRules }, () => {
       if (chrome.runtime.lastError) {
         console.error("ProtoConsent: error saving rules:", chrome.runtime.lastError);
+        const countEl = document.getElementById("pc-blocked-count");
+        if (countEl) countEl.textContent = "Error saving, try again";
       } else {
         notifyBackgroundRulesUpdated();
       }
@@ -982,9 +999,16 @@ function updateGpcIndicator(observedGpc = lastGpcSignalsSent) {
   indicatorEl.classList.toggle("is-inactive", !expectedOn);
   labelEl.textContent = expectedOn ? "GPC on" : "GPC off";
   const expectedText = expectedOn ? "Expected: GPC on" : "Expected: GPC off";
-  const observedText = observedGpc > 0
-    ? "Observed: " + observedGpc + " GPC signals sent"
-    : "Observed: no GPC signals sent yet on this tab";
+  const domains = lastGpcDomains;
+  let observedText;
+  if (observedGpc > 0 && domains.length > 0) {
+    observedText = "Observed: GPC sent to " + domains.length + (domains.length === 1 ? " domain" : " domains")
+      + " (" + observedGpc + " requests)";
+  } else if (observedGpc > 0) {
+    observedText = "Observed: " + observedGpc + " GPC signals sent";
+  } else {
+    observedText = "Observed: no GPC signals sent yet on this tab";
+  }
   indicatorEl.title = expectedText + "\n" + observedText;
 }
 
