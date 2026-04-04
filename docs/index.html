@@ -135,6 +135,7 @@
             <ul>
               <li><strong>Per‑site purpose profiles</strong>: choose how to treat functional, analytics, advertising, personalisation, third‑party services and advanced tracking for each domain.</li>
               <li><strong>Network‑level enforcement</strong>: uses browser extension APIs (such as declarative network rules) to block or allow requests related to specific purposes. The popup shows per‑purpose blocked counts and estimated performance savings.</li>
+              <li><strong>Log monitoring</strong>: a dedicated Log tab with real‑time request activity, blocked domains grouped by purpose with Consent Commons icons, and GPC signal tracking per domain with timestamps.</li>
               <li><strong>Conditional GPC signal</strong>: sends a <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec‑GPC</a> header only when privacy‑relevant purposes are denied — per site, not as a global on/off switch.</li>
               <li><strong>Site declarations</strong>: websites can publish a <code>.well-known/protoconsent.json</code> file declaring their data practices. The popup displays this alongside your preferences with <a href="https://consentcommons.com/" target="_blank" rel="noopener noreferrer">Consent Commons</a> icons.</li>
               <li><strong>Local‑only storage</strong>: no backend service and no external preference store.</li>
@@ -146,16 +147,17 @@
         <!-- BLOCKING STATS -->
         <section class="card card-spaced">
           <div class="card-title">What it looks like</div>
-          <h3>Network‑level blocking with per‑purpose stats</h3>
+          <h3>Network‑level blocking with full transparency</h3>
           <p>
             The extension applies simple, declarative network rules based on your toggles,
             without injecting scripts into pages or sending your data to a backend.
-            Each purpose shows how many requests were blocked and the estimated time saved.
+            The Log tab shows blocked domains grouped by purpose with Consent Commons icons,
+            real‑time request activity, and GPC signals per domain with timestamps.
           </p>
           <figure class="screenshot">
-            <img src="assets/screenshots/popup-blocked-detail.png" alt="ProtoConsent popup showing blocked requests per purpose">
+            <img src="assets/screenshots/popup-log-domains.png" alt="Log tab showing blocked domains grouped by purpose">
             <figcaption>
-              Per-purpose blocked request counts and estimated performance savings on a news site.
+              Blocked domains grouped by purpose in the Log tab.
             </figcaption>
           </figure>
         </section>
@@ -217,7 +219,7 @@
             </p>
             <ul>
               <li>Install the extension in developer mode and define purpose profiles per site.</li>
-              <li>See network-level enforcement in action — blocked requests, per-purpose stats, estimated time savings.</li>
+              <li>See network-level enforcement in action — blocked requests, per-purpose stats, estimated time savings, and a real-time Log tab with domain-level detail.</li>
               <li>Publish a <code>.well-known/protoconsent.json</code> on your site to declare your data practices.</li>
               <li>Integrate the SDK to read user preferences from your pages.</li>
               <li><a href="#live-test">Try the live SDK test</a> on this page, or visit <a href="https://demo.protoconsent.org" target="_blank" rel="noopener noreferrer">demo.protoconsent.org</a> for a full-featured demo with site declaration, SDK and GPC signal check.</li>

@@ -10,19 +10,30 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 ## Contents
 
-1. [Overview](#1-overview)
-2. [Components](#2-components)
-3. [Data model](#3-data-model)
-4. [Main flows](#4-main-flows)
-5. [Security and privacy by design](#5-security-and-privacy-by-design-non-normative)
-6. [Permissions rationale](#6-permissions-rationale)
-7. [Chrome declarativeNetRequest: priority and limits](#7-chrome-declarativenetrequest-priority-and-limits)
-8. [Design decisions](#8-design-decisions)
-9. [Extensibility](#9-extensibility)
+- [ProtoConsent – Technical architecture](#protoconsent--technical-architecture)
+  - [1. Overview](#1-overview)
+  - [Contents](#contents)
+  - [2. Components](#2-components)
+  - [3. Data model](#3-data-model)
+  - [4. Main flows](#4-main-flows)
+  - [5. Security and privacy by design (non-normative)](#5-security-and-privacy-by-design-non-normative)
+  - [6. Permissions rationale](#6-permissions-rationale)
+  - [7. Chrome declarativeNetRequest: priority and limits](#7-chrome-declarativenetrequest-priority-and-limits)
+    - [Priority resolution](#priority-resolution)
+    - [`requestDomains` matching](#requestdomains-matching)
+    - [`initiatorDomains` matching](#initiatordomains-matching)
+    - [Resource limits](#resource-limits)
+  - [8. Design decisions](#8-design-decisions)
+    - [Advanced tracking is always blocked](#advanced-tracking-is-always-blocked)
+    - [Iframe initiator behaviour](#iframe-initiator-behaviour)
+    - [Override grouping for scalability](#override-grouping-for-scalability)
+    - [`main_frame` exclusion](#main_frame-exclusion)
+    - [Path‑domain filtering in block overrides](#pathdomain-filtering-in-block-overrides)
+  - [9. Extensibility](#9-extensibility)
 
 ## 2. Components
 
-**Popup UI** – The main user‑facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. Purpose categories are shown with [Consent Commons](https://consentcommons.com/) icons for visual clarity. When a site publishes a `.well-known/protoconsent.json` declaration, the popup displays it in a collapsible side panel with icons for legal basis, sharing and international transfers. The popup does not enforce anything directly; it sends messages to the background component when settings change.
+**Popup UI** – The main user‑facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. Purpose categories are shown with [Consent Commons](https://consentcommons.com/) icons for visual clarity. When a site publishes a `.well-known/protoconsent.json` declaration, the popup displays it in a collapsible side panel with icons for legal basis, sharing and international transfers. A mode rail organises the interface: the Consent view shows purpose toggles and per‑purpose blocked stats; the Log view provides real‑time request monitoring, blocked domains grouped by purpose, and GPC signal tracking per domain. The popup does not enforce anything directly; it sends messages to the background component when settings change.
 
 **Background script (service worker)** – Maintains per‑site rules, computes defaults for new domains, and translates user choices into declarative network rules. Also handles `.well-known/protoconsent.json` fetches on behalf of the popup: when the user opens the side panel, the popup sends a message to the background, which fetches the declaration from the site's origin and returns it for rendering. Enforcement stays in the browser; policy and UI logic stay in the extension.
 
@@ -87,6 +98,8 @@ Three predefined profiles (“Strict”, “Balanced”, “Permissive”) map d
 **Page reads preferences via SDK** – On sites that integrate the optional SDK, page code can query the user’s preferences (e.g. `get("analytics")`) and decide whether to load scripts or simplify consent prompts. This complements browser‑level enforcement — it does not replace it. A live test is available on [protoconsent.org](https://protoconsent.org/) and [demo.protoconsent.org](https://demo.protoconsent.org).
 
 **Extension reads site declaration** – When the user opens the side panel in the popup, the popup sends a `PROTOCONSENT_FETCH_WELL_KNOWN` message to the background script, which fetches `<protocol>://<host>/.well-known/protoconsent.json` from the current site’s origin. If a valid declaration is found, the popup renders it in a collapsible side panel with Consent Commons icons for purposes, legal basis, sharing scope, and data handling. The declaration is cached (24 hours on success, 6 hours on failure) to avoid repeated fetches. The fetch uses the page’s actual protocol and host (including port), so it works on both production sites and local development servers.
+
+**Real‑time log monitoring** – When the user switches to the Log tab, the popup opens a persistent `chrome.runtime.connect` port (named `"log"`) to the background script. The background pushes `block` and `gpc` events through this port as they happen, and the popup appends timestamped entries to the Requests panel. Historical data (blocked domains by purpose and GPC signals) is replayed from the background’s in‑memory state when the panel first renders. The Domains panel shows a flat table of blocked domains grouped by purpose with Consent Commons icons, and the GPC panel lists domains that received `Sec‑GPC: 1` with request counts and first/last‑seen timestamps. All panels include a copy‑to‑clipboard button that formats content appropriately (plain text for console panels, tab‑separated text for tables).
 
 **First‑time onboarding** – On first install (when no default profile exists in storage), the background script opens the onboarding page. The user selects a profile (Strict, Balanced, or Permissive), which is saved as the global default. All sites then inherit this profile until the user creates per‑site overrides.
 

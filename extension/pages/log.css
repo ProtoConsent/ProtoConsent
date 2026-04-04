@@ -1,0 +1,231 @@
+/*
+ * ProtoConsent browser extension
+ * Copyright (C) 2026 ProtoConsent contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/* --- Log tab section --- */
+.pc-view[data-mode-view="log"] {
+  overflow: hidden;
+  min-width: 0;
+  max-width: 370px;
+}
+
+.pc-log-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.pc-log-site {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pc-text);
+}
+
+.pc-log-profile-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pc-accent);
+  background: #eef5ff;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+.pc-log-profile-global {
+  color: var(--pc-text-muted);
+  background: var(--pc-surface);
+  border-color: var(--pc-line);
+}
+
+.pc-log-purposes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px 8px;
+  font-size: 12px;
+  color: var(--pc-text-muted);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.pc-log-purpose-cell {
+  white-space: nowrap;
+}
+
+.pc-log-purpose-on {
+  color: #16a34a;
+}
+
+.pc-log-purpose-off {
+  color: #dc2626;
+}
+
+.pc-log-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--pc-line);
+  margin-bottom: 0;
+}
+
+.pc-log-tab {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 5px 8px 4px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--pc-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pc-log-tab:hover {
+  color: var(--pc-text);
+}
+
+.pc-log-tab.is-active {
+  color: var(--pc-accent);
+  border-bottom-color: var(--pc-accent);
+}
+
+.pc-log-tab[hidden] {
+  display: none;
+}
+
+.pc-log-panel {
+  display: none;
+  max-width: 100%;
+}
+
+.pc-log-panel.is-active {
+  display: block;
+}
+
+.pc-log-copy {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  border: 1px solid var(--pc-line);
+  border-radius: 4px;
+  background: none;
+  color: var(--pc-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pc-log-copy:hover {
+  color: var(--pc-text);
+  background: var(--pc-surface-soft);
+}
+
+.pc-log-content {
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--pc-text);
+  min-height: 280px;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  box-sizing: border-box;
+}
+
+.pc-log-console {
+  margin: 0;
+  padding: 6px 8px;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 10px;
+  line-height: 1.55;
+  color: #e2e8f0;
+  background: #1e293b;
+  border-radius: 0 0 8px 8px;
+  min-height: 280px;
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  width: 0;
+  min-width: 100%;
+  box-sizing: border-box;
+  scrollbar-gutter: stable;
+}
+
+.pc-log-empty {
+  color: var(--pc-text-muted);
+  font-style: italic;
+}
+
+/* Domains table */
+.pc-log-purpose-label {
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--pc-text-soft);
+  margin-bottom: 2px;
+}
+
+/* Shared log table styles */
+.pc-log-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.pc-log-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--pc-text-soft);
+  border-bottom: 1px solid var(--pc-line);
+  padding: 2px 4px;
+}
+
+.pc-log-table td {
+  padding: 1px 4px;
+  color: var(--pc-text);
+}
+
+.pc-log-table-count {
+  text-align: right;
+  color: var(--pc-text-muted);
+}
+
+.pc-log-table-time {
+  text-align: right;
+  color: var(--pc-text-muted);
+  white-space: nowrap;
+}
+
+.pc-log-domains-icon {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.pc-log-domains-icon img {
+  vertical-align: middle;
+}
+
+/* Log console line colors */
+.pc-log-line-block {
+  color: #fbbf24;
+}
+
+.pc-log-line-gpc {
+  color: #34d399;
+}
+
+.pc-log-line-ts {
+  color: #64748b;
+}

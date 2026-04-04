@@ -6,16 +6,38 @@ This document explains how to try the current version of ProtoConsent in a brows
 
 ## Contents
 
-1. [Requirements](#1-requirements)
-2. [Installing the Extension (Developer Mode)](#2-installing-the-extension-developer-mode)
-3. [Basic Test: Per‑Site Profile](#3-basic-test-persite-profile)
-4. [Purpose Toggles and Visible Effects](#4-purpose-toggles-and-visible-effects)
-5. [Example: Blocking Ads on elpais.com (DoubleClick)](#5-example-blocking-ads-on-elpaiscom-doubleclick)
-6. [Trying different sites, profiles and purposes](#6-trying-different-sites-profiles-and-purposes)
-7. [Testing the SDK query flow (content script bridge)](#7-testing-the-sdk-query-flow-content-script-bridge)
-8. [Testing Global Privacy Control (Sec-GPC header)](#8-testing-global-privacy-control-sec-gpc-header)
-9. [Enabling the debug panel](#9-enabling-the-debug-panel)
-10. [Testing site declarations (`.well-known/protoconsent.json`)](#10-testing-site-declarations-well-knownprotocolconsentjson)
+- [ProtoConsent – How to test the extension](#protoconsent--how-to-test-the-extension)
+  - [Contents](#contents)
+  - [1. Requirements](#1-requirements)
+  - [2. Installing the Extension (Developer Mode)](#2-installing-the-extension-developer-mode)
+  - [3. Basic Test: Per‑Site Profile](#3-basic-test-persite-profile)
+  - [4. Purpose Toggles and Visible Effects](#4-purpose-toggles-and-visible-effects)
+  - [5. Example: Blocking Ads on elpais.com (DoubleClick)](#5-example-blocking-ads-on-elpaiscom-doubleclick)
+    - [5.1 Baseline: Ads Allowed](#51-baseline-ads-allowed)
+    - [5.2 Ads Blocked with ProtoConsent](#52-ads-blocked-with-protoconsent)
+  - [6. Trying different sites, profiles and purposes](#6-trying-different-sites-profiles-and-purposes)
+    - [6.1 Functional (service)](#61-functional-service)
+    - [6.2 Analytics](#62-analytics)
+    - [6.3 Ads / Marketing](#63-ads--marketing)
+    - [6.4 Personalization / Profiling](#64-personalization--profiling)
+    - [6.5 Third-party sharing](#65-third-party-sharing)
+    - [6.6 Advanced tracking / fingerprinting](#66-advanced-tracking--fingerprinting)
+  - [7. Testing the SDK query flow (content script bridge)](#7-testing-the-sdk-query-flow-content-script-bridge)
+    - [7.1 Setup](#71-setup)
+    - [7.2 Querying from the browser console](#72-querying-from-the-browser-console)
+    - [7.3 Expected results](#73-expected-results)
+    - [7.4 Security validation](#74-security-validation)
+  - [8. Testing Global Privacy Control (Sec-GPC header)](#8-testing-global-privacy-control-sec-gpc-header)
+    - [8.1 GPC active (default with Balanced or Strict)](#81-gpc-active-default-with-balanced-or-strict)
+    - [8.2 GPC inactive (all privacy purposes allowed)](#82-gpc-inactive-all-privacy-purposes-allowed)
+    - [8.3 Verifying rules from the service worker console](#83-verifying-rules-from-the-service-worker-console)
+  - [9. Enabling the debug panel](#9-enabling-the-debug-panel)
+    - [9.1 Activate debug mode](#91-activate-debug-mode)
+    - [9.2 Deactivate debug mode](#92-deactivate-debug-mode)
+  - [10. Testing site declarations (`.well-known/protoconsent.json`)](#10-testing-site-declarations-well-knownprotoconsentjson)
+    - [10.1 Using demo.protoconsent.org](#101-using-demoprotoconsentorg)
+    - [10.2 What to check](#102-what-to-check)
+    - [10.3 Publishing your own declaration](#103-publishing-your-own-declaration)
 
 ## 1. Requirements
 
@@ -302,24 +324,26 @@ The popup includes a hidden debug panel that shows internal state (dynamic rules
 
 ### 9.1 Activate debug mode
 
-1. Open `chrome://extensions/` and click **Service Worker** under the ProtoConsent entry to open its console.
+1. Open the ProtoConsent popup, right-click it and choose **Inspect** to open its DevTools console.
 2. Run:
 
    ```js
    chrome.storage.local.set({ debug: true })
    ```
 
-3. Close and reopen the popup. A **Debug** section should appear at the bottom.
+3. Close and reopen the popup. A **Debug** section should appear at the bottom, and the **Debug** inner tab becomes visible in the Log view.
+
+> **Tip:** You can also run this command from the service worker console, but make sure you use a **live** console: after reloading the extension from `chrome://extensions/`, the previous SW console is disconnected and commands typed there will silently fail. Click **Inspect** on the service worker entry again to open a fresh console.
 
 ### 9.2 Deactivate debug mode
 
-1. In the same service worker console, run:
+1. In the same console (popup Inspect or a live SW console), run:
 
    ```js
    chrome.storage.local.remove("debug")
    ```
 
-2. Close and reopen the popup. The debug panel disappears.
+2. Close and reopen the popup. The debug panel and Log debug tab disappear.
 
 The flag persists across browser restarts until explicitly removed.
 

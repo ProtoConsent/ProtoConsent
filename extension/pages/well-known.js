@@ -94,6 +94,19 @@ function setWellKnownIndicator(state, titleText) {
     indicatorEl.classList.add("is-active");
     labelEl.textContent = "WK ok";
     indicatorEl.title = titleText || "Valid ProtoConsent .well-known declaration detected";
+    indicatorEl.style.cursor = "pointer";
+    if (!indicatorEl._wkClickBound) {
+      indicatorEl.setAttribute("role", "button");
+      indicatorEl.setAttribute("tabindex", "0");
+      indicatorEl.addEventListener("click", toggleSidePanel);
+      indicatorEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggleSidePanel();
+        }
+      });
+      indicatorEl._wkClickBound = true;
+    }
     return;
   }
 
@@ -201,6 +214,18 @@ function validateSiteDeclaration(json) {
   return hasValidPurpose;
 }
 
+function toggleSidePanel() {
+  const sideTab = document.getElementById("pc-side-tab");
+  const sidePanel = document.getElementById("pc-side-panel");
+  if (!sideTab || !sidePanel) return;
+  const isOpen = sidePanel.classList.toggle("is-open");
+  sideTab.classList.toggle("is-open", isOpen);
+  sideTab.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  sidePanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+  const layout = document.getElementById("popup-layout");
+  if (layout) layout.classList.toggle("has-side-panel", isOpen);
+}
+
 function renderSiteDeclaration(container, declaration) {
   container.innerHTML = "";
 
@@ -219,7 +244,7 @@ function renderSiteDeclaration(container, declaration) {
 
     const nameEl = document.createElement("span");
     nameEl.className = "pc-declaration-purpose";
-    nameEl.textContent = cfg.short_label || cfg.label || purposeKey;
+    nameEl.textContent = getPurposeLabel(purposeKey, "short");
 
     const checkEl = document.createElement("span");
     checkEl.className = "pc-declaration-check";
@@ -379,7 +404,7 @@ function renderSiteDeclaration(container, declaration) {
       // External domain: warning, not clickable (anti-phishing)
       const warnEl = document.createElement("span");
       warnEl.className = "pc-declaration-warning";
-      warnEl.textContent = "External domain — not clickable";
+      warnEl.textContent = "Different domain \u002D not clickable";
       rightsEl.appendChild(warnEl);
     }
     container.appendChild(rightsEl);
@@ -391,11 +416,6 @@ function renderSiteDeclaration(container, declaration) {
   if (sideTab && sidePanel && !sideTab.dataset.bound) {
     sideTab.dataset.bound = "1";
     sideTab.classList.add("is-visible");
-    sideTab.addEventListener("click", () => {
-      const isOpen = sidePanel.classList.toggle("is-open");
-      sideTab.classList.toggle("is-open", isOpen);
-      sideTab.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      sidePanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
-    });
+    sideTab.addEventListener("click", toggleSidePanel);
   }
 }
