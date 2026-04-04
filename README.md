@@ -57,7 +57,7 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 
 Basic blocking of tracking resources for the Ads purpose on a news site:
 
-![Blocking ProtoConsent config on elpais.com](design/assets/screenshots/test-elpais-blocked-detail.png)
+![Blocking ProtoConsent config on a news site](design/assets/screenshots/popup-blocked-detail.png)
 
 ### SDK live test on protoconsent.org
 
