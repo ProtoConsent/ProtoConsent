@@ -31,8 +31,7 @@ let blocklistsConfig = null;
 
 // Per-tab tracking of blocked domains for the popup detail view.
 // Maps tabId -> { purposeKey -> { domain -> count } }
-// Note: these Maps reset when the service worker terminates (by design 
-// Chrome persists DNR rules independently, only popup counters are affected).
+// Persisted to chrome.storage.session to survive SW idle/restart.
 const tabBlockedDomains = new Map();
 
 // Maps dynamic block rule IDs to their purpose (rebuilt on each rule update).
@@ -45,8 +44,55 @@ let dynamicGpcSetIds = new Set();
 // Maps tabId -> Set<domain>
 const tabGpcDomains = new Map();
 
+// Session persistence helpers:
+// Debounced write to chrome.storage.session (max once per 2s) to avoid
+// excessive writes on pages with many blocked requests.
+let sessionPersistTimer = null;
+function scheduleSessionPersist() {
+  if (sessionPersistTimer) return;
+  sessionPersistTimer = setTimeout(() => {
+    sessionPersistTimer = null;
+    persistTabDataToSession();
+  }, 2000);
+}
+
+function persistTabDataToSession() {
+  if (!chrome.storage.session) return;
+  // Convert Maps to plain objects for storage
+  const blocked = {};
+  for (const [tabId, data] of tabBlockedDomains) {
+    blocked[tabId] = data;
+  }
+  const gpc = {};
+  for (const [tabId, domains] of tabGpcDomains) {
+    gpc[tabId] = [...domains];
+  }
+  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc });
+}
+
+async function restoreTabDataFromSession() {
+  if (!chrome.storage.session) return;
+  try {
+    const result = await chrome.storage.session.get(['_tabBlocked', '_tabGpc']);
+    if (result._tabBlocked) {
+      for (const [tabId, data] of Object.entries(result._tabBlocked)) {
+        tabBlockedDomains.set(Number(tabId), data);
+      }
+    }
+    if (result._tabGpc) {
+      for (const [tabId, domains] of Object.entries(result._tabGpc)) {
+        tabGpcDomains.set(Number(tabId), new Set(domains));
+      }
+    }
+  } catch (_) { /* session storage may be empty on first run */ }
+}
+
 // Last rebuild debug snapshot (served to popup on request)
 let lastRebuildDebug = {};
+
+// Restore persisted tab data from session storage on every SW load.
+// This runs at the top level so it executes each time Chrome spins up the worker.
+restoreTabDataFromSession();
 
 
 // Cached in-memory copy of presets.json; loaded once per SW lifetime.
@@ -714,6 +760,7 @@ if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
         try { domain = new URL(request.url).hostname; } catch (_) { return; }
         if (!tabGpcDomains.has(request.tabId)) tabGpcDomains.set(request.tabId, new Set());
         tabGpcDomains.get(request.tabId).add(domain);
+        scheduleSessionPersist();
       }
       return;
     }
@@ -727,19 +774,30 @@ if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
     const tabData = tabBlockedDomains.get(request.tabId);
     if (!tabData[purpose]) tabData[purpose] = {};
     tabData[purpose][domain] = (tabData[purpose][domain] || 0) + 1;
+    scheduleSessionPersist();
   });
 }
 
-// Clear per-tab tracking on navigation (main frame only) and tab close.
+// Clear per-tab tracking on navigation and tab close.
+// Guard against multiple "loading" events per navigation cycle (e.g. redirects,
+// paywall logic on sites like wsj.com) which would wipe already-captured domains.
+const tabNavigating = new Set();
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading") {
-    tabBlockedDomains.delete(tabId);
-    tabGpcDomains.delete(tabId);
+    if (!tabNavigating.has(tabId)) {
+      tabNavigating.add(tabId);
+      tabBlockedDomains.delete(tabId);
+      tabGpcDomains.delete(tabId);
+      scheduleSessionPersist();
+    }
+  } else if (changeInfo.status === "complete") {
+    tabNavigating.delete(tabId);
   }
 });
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabBlockedDomains.delete(tabId);
   tabGpcDomains.delete(tabId);
+  scheduleSessionPersist();
 });
 
 // Rebuild once on service worker startup (where supported)
