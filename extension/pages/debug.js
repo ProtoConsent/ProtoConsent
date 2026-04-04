@@ -2,26 +2,28 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// debug.js — Debug panel rendering for the popup (only active when DEBUG_RULES = true).
+// debug.js — Debug panel rendering for the Log > Debug tab.
+// Renders directly into #pc-log-debug (only called when DEBUG_RULES = true).
 // Loaded after popup.js; uses globals: currentDomain, currentProfile, currentPurposesState.
 
-// Render debug info into the collapsible debug panel.
 function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains }) {
-  const panel = document.getElementById("pc-debug-panel");
-  const content = document.getElementById("pc-debug-content");
-  if (!panel || !content) return;
-
-  panel.hidden = false;
+  const content = document.getElementById("pc-log-debug");
+  if (!content) return;
 
   // Fetch background rebuild snapshot
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_DEBUG" }, (bg) => {
     const lines = [];
 
-    // Site info first
+    // Extension version
+    const manifest = chrome.runtime.getManifest();
+    lines.push("— ProtoConsent v" + manifest.version + " —");
+    lines.push("");
+
+    // Site info
     lines.push("— site: " + (currentDomain || "?") + " (profile: " + currentProfile + ") —");
     if (currentPurposesState) {
       const siteStr = Object.entries(currentPurposesState)
-        .map(([k, v]) => k + ":" + (v ? "✓" : "✗")).join("  ");
+        .map(([k, v]) => k + ":" + (v ? "\u2713" : "\u2717")).join("  ");
       lines.push("  " + siteStr);
     }
     lines.push("");
@@ -31,9 +33,26 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
       lines.push("— global profile: " + bg.globalProfile + " —");
       if (bg.globalPurposes) {
         const purposeStr = Object.entries(bg.globalPurposes)
-          .map(([k, v]) => k + ":" + (v ? "✓" : "✗")).join("  ");
+          .map(([k, v]) => k + ":" + (v ? "\u2713" : "\u2717")).join("  ");
         lines.push("  " + purposeStr);
       }
+      lines.push("");
+    }
+
+    // Log port status
+    const portStatus = (typeof logPort !== "undefined" && logPort) ? "connected" : "disconnected";
+    lines.push("— log port: " + portStatus + " (bg ports: " + (bg?.logPorts || 0) + ") —");
+    lines.push("");
+
+    // Session persistence check
+    if (bg && typeof bg.sessionKeys !== "undefined") {
+      lines.push("— session storage: " + bg.sessionKeys + " keys —");
+      lines.push("");
+    }
+
+    // Navigation guard status
+    if (bg && typeof bg.navigatingTabs !== "undefined") {
+      lines.push("— navigation guard: " + bg.navigatingTabs + " tabs navigating —");
       lines.push("");
     }
 
@@ -54,8 +73,8 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
       lines.push("  dynamic: " + bg.dynamicCount +
         " (" + bg.overrideCount + " overrides, " +
         bg.gpcGlobal + " GPC-g, " + bg.gpcPerSite + " GPC-s)");
-      if (bg.error) lines.push("  ⚠ ERROR: " + bg.error);
-      if (bg.rulesetError) lines.push("  ⚠ RULESET ERROR: " + bg.rulesetError);
+      if (bg.error) lines.push("  \u26A0 ERROR: " + bg.error);
+      if (bg.rulesetError) lines.push("  \u26A0 RULESET ERROR: " + bg.rulesetError);
       lines.push("");
     }
 
@@ -104,26 +123,11 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
       lines.push("— blocked domains —");
       for (const [purpose, domains] of Object.entries(blockedDomains).sort()) {
         for (const [domain, count] of Object.entries(domains).sort()) {
-          lines.push("  [" + purpose + "] " + domain + " ×" + count);
+          lines.push("  [" + purpose + "] " + domain + " \u00d7" + count);
         }
       }
     }
 
     content.textContent = lines.join("\n");
   });
-
-  // Copy button
-  const copyBtn = document.getElementById("pc-debug-copy");
-  if (copyBtn && !copyBtn._bound) {
-    copyBtn._bound = true;
-    copyBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const text = content.textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        copyBtn.textContent = "Copied!";
-        setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
-      });
-    });
-  }
 }

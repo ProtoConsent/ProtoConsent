@@ -11,6 +11,7 @@
   <title>ProtoConsent</title>
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="log.css">
   <link rel="icon" type="image/png" sizes="32x32" href="../icons/protoconsent_icon_32.png">
 </head>
 <body>
@@ -61,7 +62,7 @@
         <div class="pc-header-controls">
           <div class="pc-profile">
             <label for="pc-profile-select" class="pc-profile-label">Profile</label>
-            <select id="pc-profile-select" class="pc-profile-select">
+            <select id="pc-profile-select" class="pc-profile-select" title="Privacy profile - controls which purposes are allowed or blocked">
               <option value="strict">Strict</option>
               <option value="balanced" selected>Balanced</option>
               <option value="permissive">Permissive</option>
@@ -73,13 +74,11 @@
       </header>
 
       <div id="pc-mode-content" class="pc-mode-content">
-        <section id="pc-view-consent" class="pc-view is-active" data-mode-view="consent" role="tabpanel" aria-label="Consent settings">
+        <section id="pc-view-consent" class="pc-view" data-mode-view="consent" role="tabpanel" aria-label="Consent settings">
           <h2 class="visually-hidden">Consent settings</h2>
           <div class="pc-header-stat">
-            <button id="pc-blocked-count" class="pc-blocked-count" type="button" aria-expanded="false" aria-controls="pc-blocked-detail" aria-live="polite">loading...</button>
-            <span id="pc-blocked-chevron" class="pc-blocked-chevron" aria-hidden="true"></span>
+            <button id="pc-blocked-count" class="pc-blocked-count" type="button" aria-live="polite">loading...</button>
           </div>
-          <div id="pc-blocked-detail" class="pc-blocked-detail is-collapsed"></div>
           <div id="pc-protection-scope" class="pc-protection-scope">
             <span id="pc-protection-scope-text" class="pc-protection-scope-text"></span>
             <div class="pc-scope-indicators">
@@ -114,16 +113,35 @@
           </div>
         </section>
 
-        <section id="pc-view-log" class="pc-view pc-view-placeholder" data-mode-view="log" role="tabpanel" hidden aria-hidden="true">
-          <div class="pc-placeholder-card">
-            <div class="pc-placeholder-eyebrow">Log</div>
-            <h2 class="pc-placeholder-title">Local inspection and activity view</h2>
-            <p class="pc-placeholder-copy">This future mode will summarize blocked requests, GPC activity, and recent site-level events for debugging and transparency.</p>
-            <div class="pc-placeholder-list">
-              <div class="pc-placeholder-list-item">Blocked requests summary</div>
-              <div class="pc-placeholder-list-item">GPC signals per site</div>
-              <div class="pc-placeholder-list-item">Recent protection activity</div>
-            </div>
+        <section id="pc-view-log" class="pc-view" data-mode-view="log" role="tabpanel" hidden aria-hidden="true">
+          <div class="pc-log-header">
+            <span id="pc-log-site" class="pc-log-site"></span>
+            <span id="pc-log-profile-site" class="pc-log-profile-badge"></span>
+            <span id="pc-log-profile-global" class="pc-log-profile-badge pc-log-profile-global"></span>
+          </div>
+          <div id="pc-log-purposes" class="pc-log-purposes"></div>
+          <div class="pc-log-tabs" role="tablist">
+            <button class="pc-log-tab is-active" data-log-tab="requests" type="button" role="tab" aria-selected="true" aria-controls="pc-log-panel-requests" id="pc-log-tab-requests">Requests</button>
+            <button class="pc-log-tab" data-log-tab="domains" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-domains" id="pc-log-tab-domains">Domains</button>
+            <button class="pc-log-tab" data-log-tab="gpc" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-gpc" id="pc-log-tab-gpc">GPC</button>
+            <button class="pc-log-tab" data-log-tab="debug" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-debug" id="pc-log-tab-debug" hidden>Debug</button>
+            <button class="pc-log-tab" data-log-tab="others" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-others" id="pc-log-tab-others" hidden>Others</button>
+            <button id="pc-log-copy" class="pc-log-copy" type="button" title="Copy tab content to clipboard">Copy</button>
+          </div>
+          <div class="pc-log-panel is-active" data-log-panel="requests" role="tabpanel" id="pc-log-panel-requests" aria-labelledby="pc-log-tab-requests">
+            <pre id="pc-log-requests" class="pc-log-console"></pre>
+          </div>
+          <div class="pc-log-panel" data-log-panel="domains" role="tabpanel" id="pc-log-panel-domains" aria-labelledby="pc-log-tab-domains" hidden>
+            <div id="pc-log-domains" class="pc-log-content"></div>
+          </div>
+          <div class="pc-log-panel" data-log-panel="gpc" role="tabpanel" id="pc-log-panel-gpc" aria-labelledby="pc-log-tab-gpc" hidden>
+            <div id="pc-log-gpc" class="pc-log-content"></div>
+          </div>
+          <div class="pc-log-panel" data-log-panel="debug" role="tabpanel" id="pc-log-panel-debug" aria-labelledby="pc-log-tab-debug" hidden>
+            <pre id="pc-log-debug" class="pc-log-console"></pre>
+          </div>
+          <div class="pc-log-panel" data-log-panel="others" role="tabpanel" id="pc-log-panel-others" aria-labelledby="pc-log-tab-others" hidden>
+            <div class="pc-log-content pc-log-empty">Reserved for future use.</div>
           </div>
         </section>
       </div>
@@ -140,14 +158,6 @@
         </div>
       </footer>
 
-      <!-- Debug panel (hidden unless DEBUG_RULES = true in popup.js) -->
-      <details id="pc-debug-panel" class="pc-debug-panel" hidden>
-        <summary class="pc-debug-summary">
-          <span class="pc-debug-label">Debug <span class="pc-debug-chevron" aria-hidden="true">▸</span></span>
-          <button id="pc-debug-copy" class="pc-debug-copy" type="button" title="Copy to clipboard">Copy</button>
-        </summary>
-        <div id="pc-debug-content" class="pc-debug-content"></div>
-      </details>
     </div>
   </div>
 
@@ -155,5 +165,6 @@
   <script src="popup.js"></script>
   <script src="well-known.js"></script>
   <script src="debug.js"></script>
+  <script src="log.js"></script>
 </body>
 </html>
