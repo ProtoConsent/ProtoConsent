@@ -64,7 +64,7 @@ Per-purpose blocking stats on a news site, with links to the Log tab for full do
 
 The Log tab shows real-time request activity, blocked domains grouped by purpose, and GPC signals per domain:
 
-![Log tab with blocked domains](design/assets/screenshots/popup-log-domains.png)
+![Log tab with blocked domains](design/assets/screenshots/popup-log-requests.png)
 
 ## For websites
 
