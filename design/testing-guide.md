@@ -4,6 +4,19 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 This document explains how to try the current version of ProtoConsent in a browser using an unpacked extension, and how to observe its effects on real websites.
 
+## Contents
+
+1. [Requirements](#1-requirements)
+2. [Installing the Extension (Developer Mode)](#2-installing-the-extension-developer-mode)
+3. [Basic Test: Per‑Site Profile](#3-basic-test-persite-profile)
+4. [Purpose Toggles and Visible Effects](#4-purpose-toggles-and-visible-effects)
+5. [Example: Blocking Ads on elpais.com (DoubleClick)](#5-example-blocking-ads-on-elpaiscom-doubleclick)
+6. [Trying different sites, profiles and purposes](#6-trying-different-sites-profiles-and-purposes)
+7. [Testing the SDK query flow (content script bridge)](#7-testing-the-sdk-query-flow-content-script-bridge)
+8. [Testing Global Privacy Control (Sec-GPC header)](#8-testing-global-privacy-control-sec-gpc-header)
+9. [Enabling the debug panel](#9-enabling-the-debug-panel)
+10. [Testing site declarations (`.well-known/protoconsent.json`)](#10-testing-site-declarations-well-knownprotocolconsentjson)
+
 ## 1. Requirements
 
 - **A Chromium‑based browser** (for example, Chrome, Edge or Brave)
@@ -19,7 +32,7 @@ This document explains how to try the current version of ProtoConsent in a brows
   cd ProtoConsent
   ```
 
-  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `popup.html`, `popup.js`, `popup.css`, `well-known.js`, `debug.js`, `config/`, `rules/` and `icons/`) and the `sdk/` directory.
+  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `pages/` with the popup, onboarding and settings UI, `config/`, `rules/` and `icons/`) and the `sdk/` directory.
 
 2.2. **Load the extension in your browser:**
 
@@ -137,11 +150,11 @@ Below are example scenarios for each purpose.
 
 **Goal:** Separate basic ads from more advanced personalization or retargeting.
 
-- Reference domains (examples — full list in `extension/rules/block_*.json`): `ad.doubleclick.net`, `demdex.net`, `bluekai.com`, `tapad.com`, `liveramp.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `bluekai.com`, `crwdcntrl.net`, `acxiom.com`, `barilliance.com`, `audigent.com`.
 
 - Steps:
   1. On a site with banners and personalised or retargeted ads, keep **Ads / Marketing** allowed but set **Personalization / Profiling** to *Blocked*.
-  2. Filter in **Network** by `adnxs`, `adsrvr`, `doubleclick`.
+  2. Filter in **Network** by `bluekai`, `crwdcntrl`, `audigent`.
   3. Reload and compare the results with the case where Personalization is also allowed.
   4. This will not be perfect on every site, but it shows that ProtoConsent treats personalization as a separate purpose from “basic ads”.
 
@@ -149,13 +162,13 @@ Below are example scenarios for each purpose.
 
 **Goal:** Highlight third‑party data sharing and integrations.
 
-- Reference domains (examples — full list in `extension/rules/block_*.json`): `connect.facebook.net`, `hotjar.com`, `analytics.twitter.com`, `bat.bing.com`, `hubspot.com`.
+- Reference domains (examples — full list in `extension/rules/block_*.json`): `connect.facebook.net`, `addthis.com`, `addtoany.com`, `intercom.io`, `disqus.com`.
 
 - Steps:
   1. Choose a site that embeds social widgets, Hotjar or Microsoft/Bing tracking.
 
   2. Allow **Functional** and **Analytics**, but set **Third‑party sharing** to *Blocked*.
-  3. Filter by `facebook.net`, `hotjar`, `analytics.twitter.com` or `bat.bing.com` in **Network**.
+  3. Filter by `facebook.net`, `addthis`, `intercom` or `disqus` in **Network**.
   4. Reload and compare the results with the case where Third‑party sharing is also allowed.
 
 ### 6.6 Advanced tracking / fingerprinting
@@ -283,5 +296,53 @@ With Balanced as the default and one site set to custom (all allowed), the expec
 - `set GLOBAL` — the global GPC rule (privacy purposes denied by Balanced)
 - `remove ["example.com"]` — the per-site override that suppresses GPC for the permissive site
 
-Note: most blocking is now handled by static rulesets (enabled/disabled per category by the background script), not by dynamic rules. Dynamic rules are only used for per-site overrides and GPC headers.
+## 9. Enabling the debug panel
+
+The popup includes a hidden debug panel that shows internal state (dynamic rules, ruleset toggles, GPC mappings). It is off by default and controlled by a flag in local storage — no code changes needed.
+
+### 9.1 Activate debug mode
+
+1. Open `chrome://extensions/` and click **Service Worker** under the ProtoConsent entry to open its console.
+2. Run:
+
+   ```js
+   chrome.storage.local.set({ debug: true })
+   ```
+
+3. Close and reopen the popup. A **Debug** section should appear at the bottom.
+
+### 9.2 Deactivate debug mode
+
+1. In the same service worker console, run:
+
+   ```js
+   chrome.storage.local.remove("debug")
+   ```
+
+2. Close and reopen the popup. The debug panel disappears.
+
+The flag persists across browser restarts until explicitly removed.
+
+## 10. Testing site declarations (`.well-known/protoconsent.json`)
+
+ProtoConsent reads a `.well-known/protoconsent.json` file from any website to display the site's declared data practices in a side panel. The easiest way to test this is with the public demo site.
+
+### 10.1 Using demo.protoconsent.org
+
+1. Make sure the extension is loaded (see section 2).
+2. Open <https://demo.protoconsent.org> in a new tab.
+3. Open the ProtoConsent popup from the toolbar.
+4. Click the **Site** tab (side panel toggle) in the popup header.
+5. The side panel should show the site's declaration with [Consent Commons](https://consentcommons.com/) icons, including purposes, legal bases, providers, sharing scope, and data handling details.
+
+### 10.2 What to check
+
+- Each declared purpose shows its legal basis, provider, and sharing scope (if declared).
+- Purposes with `"used": false` are shown as not used.
+- The `rights_url` field links to the site's data rights page.
+- The declaration indicator (pill) in the popup header should be active (blue dot) when a valid declaration is found.
+
+### 10.3 Publishing your own declaration
+
+Any site can publish a `.well-known/protoconsent.json` file. See the [site declaration spec](well-known-spec.md) for the full format and the [demo site source](https://github.com/ProtoConsent/demo) for a complete example.
 

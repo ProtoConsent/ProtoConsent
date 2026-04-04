@@ -9,6 +9,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ProtoConsent</title>
+  <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="popup.css">
   <link rel="icon" type="image/png" sizes="32x32" href="../icons/protoconsent_icon_32.png">
 </head>
@@ -20,31 +21,31 @@
     </aside>
 
     <!-- Tab to toggle side panel (hidden until data loads) -->
-    <button id="pc-side-tab" class="pc-side-tab" title="Site declaration" aria-label="Toggle site declaration panel" aria-expanded="false" aria-controls="pc-side-panel">
+    <button id="pc-side-tab" class="pc-side-tab" type="button" title="Site declaration" aria-label="Toggle site declaration panel" aria-expanded="false" aria-controls="pc-side-panel">
       <span class="pc-side-tab-icon" aria-hidden="true">ℹ</span>
       <span class="pc-side-tab-chevron" aria-hidden="true">◂</span>
     </button>
 
-    <nav id="pc-mode-rail" class="pc-mode-rail" aria-label="Popup modes" hidden>
-      <button type="button" class="pc-mode-tab is-active" data-mode="consent" aria-pressed="true" title="Consent mode">
+    <div id="pc-mode-rail" class="pc-mode-rail" role="tablist" aria-label="Popup modes" hidden>
+      <button type="button" class="pc-mode-tab is-active" data-mode="consent" role="tab" aria-selected="true" aria-controls="pc-view-consent" title="Consent mode">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">CONSENT</text>
         </svg>
       </button>
-      <button type="button" class="pc-mode-tab" data-mode="enhanced" aria-pressed="false" title="Enhanced Protection mode">
+      <button type="button" class="pc-mode-tab" data-mode="enhanced" role="tab" aria-selected="false" aria-controls="pc-view-enhanced" title="Enhanced Protection mode">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">ENHANCED</text>
         </svg>
       </button>
-      <button type="button" class="pc-mode-tab" data-mode="log" aria-pressed="false" title="Log mode">
+      <button type="button" class="pc-mode-tab" data-mode="log" role="tab" aria-selected="false" aria-controls="pc-view-log" title="Log mode">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">LOG</text>
         </svg>
       </button>
-    </nav>
+    </div>
 
     <div id="popup-root">
       <h1 class="visually-hidden">ProtoConsent</h1>
@@ -72,28 +73,35 @@
       </header>
 
       <div id="pc-mode-content" class="pc-mode-content">
-        <section id="pc-view-consent" class="pc-view is-active" data-mode-view="consent">
+        <section id="pc-view-consent" class="pc-view is-active" data-mode-view="consent" role="tabpanel" aria-label="Consent settings">
+          <h2 class="visually-hidden">Consent settings</h2>
           <div class="pc-header-stat">
-            <button id="pc-blocked-count" class="pc-blocked-count" aria-expanded="false" aria-controls="pc-blocked-detail" aria-live="polite">loading...</button>
+            <button id="pc-blocked-count" class="pc-blocked-count" type="button" aria-expanded="false" aria-controls="pc-blocked-detail" aria-live="polite">loading...</button>
             <span id="pc-blocked-chevron" class="pc-blocked-chevron" aria-hidden="true"></span>
           </div>
           <div id="pc-blocked-detail" class="pc-blocked-detail is-collapsed"></div>
           <div id="pc-protection-scope" class="pc-protection-scope">
             <span id="pc-protection-scope-text" class="pc-protection-scope-text"></span>
-            <div id="pc-gpc-indicator" class="pc-gpc-indicator is-disabled" role="status" aria-live="polite" title="GPC unavailable on this page">
-              <span class="pc-gpc-dot" aria-hidden="true"></span>
-              <span id="pc-gpc-label">GPC off</span>
+            <div class="pc-scope-indicators">
+              <div id="pc-wk-indicator" class="pc-wk-indicator is-disabled" role="status" aria-live="polite" title=".well-known status unavailable">
+                <span class="pc-wk-dot" aria-hidden="true"></span>
+                <span id="pc-wk-label">WK n/a</span>
+              </div>
+              <div id="pc-gpc-indicator" class="pc-gpc-indicator is-disabled" role="status" aria-live="polite" title="GPC unavailable on this page">
+                <span class="pc-gpc-dot" aria-hidden="true"></span>
+                <span id="pc-gpc-label">GPC off</span>
+              </div>
             </div>
           </div>
 
           <main class="pc-main">
-            <div id="pc-purposes-list" class="pc-purposes-list">
+            <ul id="pc-purposes-list" class="pc-purposes-list" role="list">
               <!-- Purposes will be injected here by popup.js -->
-            </div>
+            </ul>
           </main>
         </section>
 
-        <section id="pc-view-enhanced" class="pc-view pc-view-placeholder" data-mode-view="enhanced" hidden aria-hidden="true">
+        <section id="pc-view-enhanced" class="pc-view pc-view-placeholder" data-mode-view="enhanced" role="tabpanel" hidden aria-hidden="true">
           <div class="pc-placeholder-card">
             <div class="pc-placeholder-eyebrow">Enhanced Protection</div>
             <h2 class="pc-placeholder-title">Additional network protection presets</h2>
@@ -106,7 +114,7 @@
           </div>
         </section>
 
-        <section id="pc-view-log" class="pc-view pc-view-placeholder" data-mode-view="log" hidden aria-hidden="true">
+        <section id="pc-view-log" class="pc-view pc-view-placeholder" data-mode-view="log" role="tabpanel" hidden aria-hidden="true">
           <div class="pc-placeholder-card">
             <div class="pc-placeholder-eyebrow">Log</div>
             <h2 class="pc-placeholder-title">Local inspection and activity view</h2>
@@ -123,8 +131,8 @@
       <footer class="pc-footer">
         <div class="pc-footer-content">
           <div class="pc-footer-links">
-            <button class="pc-footer-link" id="pc-toggle-descriptions" aria-expanded="false">Show details</button>
-            <a href="purposes-editor.html" class="pc-footer-link" id="pc-purposes-link">Purpose Settings</a>
+            <button class="pc-footer-link" type="button" id="pc-toggle-descriptions" aria-expanded="false">Show details</button>
+            <a href="purposes-settings.html" class="pc-footer-link" id="pc-purposes-link">Purpose Settings</a>
             <a href="https://protoconsent.org" class="pc-footer-link" target="_blank" rel="noopener noreferrer">
               Learn more
             </a>
@@ -134,8 +142,10 @@
 
       <!-- Debug panel (hidden unless DEBUG_RULES = true in popup.js) -->
       <details id="pc-debug-panel" class="pc-debug-panel" hidden>
-        <summary class="pc-debug-summary">Debug</summary>
-        <button id="pc-debug-copy" class="pc-debug-copy" type="button" title="Copy to clipboard">Copy</button>
+        <summary class="pc-debug-summary">
+          <span class="pc-debug-label">Debug <span class="pc-debug-chevron" aria-hidden="true">▸</span></span>
+          <button id="pc-debug-copy" class="pc-debug-copy" type="button" title="Copy to clipboard">Copy</button>
+        </summary>
         <div id="pc-debug-content" class="pc-debug-content"></div>
       </details>
     </div>

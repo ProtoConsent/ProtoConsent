@@ -133,7 +133,7 @@ function wireEvents() {
   // Settings link in confirmation screen
   document.getElementById('ob-link-settings').addEventListener('click', (e) => {
     e.preventDefault();
-    chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-editor.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-settings.html') });
   });
 }
 

@@ -9,31 +9,26 @@ html, body {
   padding: 0;
 }
 
-:root {
-  --pc-bg: #d8e3ef;
-  --pc-surface: #ffffff;
-  --pc-surface-soft: #f7fafc;
-  --pc-surface-strong: #eef5ff;
-  --pc-line: #d9e2ec;
-  --pc-line-strong: #bfd0e4;
-  --pc-text: #0f172a;
-  --pc-text-muted: #475569;
-  --pc-text-soft: #64748b;
-  --pc-accent: #1d4ed8;
-  --pc-accent-soft: #dbeafe;
-  --pc-accent-strong: #c7d2fe;
-  --pc-success: #15803d;
-  --pc-success-soft: #dcfce7;
-  --pc-danger: #b91c1c;
-  --pc-danger-soft: #fee2e2;
-  --pc-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
-}
-
 body {
   font-family: "Segoe UI Variable", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 13px;
   color: var(--pc-text);
   background: #fdfefe;
+}
+
+/* Thin scrollbar matching popup palette (Chromium only) */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1cad4;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9aa8b5;
 }
 
 /* Visually hidden but accessible to screen readers */
@@ -86,7 +81,7 @@ body {
 }
 
 .pc-mode-tab {
-  width: 14px;
+  width: 18px;
   min-height: 74px;
   border: none;
   border-radius: 999px;
@@ -251,7 +246,7 @@ body {
   line-height: 1;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #48617f;
+  color: #3b5068;
 }
 
 .pc-site {
@@ -266,7 +261,7 @@ body {
 .pc-site-label,
 .pc-profile-label {
   font-size: 11px;
-  color: #526274;
+  color: #3d5165;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -359,6 +354,65 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
+.pc-scope-indicators {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pc-wk-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--pc-line);
+  background-color: var(--pc-surface);
+  color: var(--pc-text-muted);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.pc-wk-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: #9ca3af;
+}
+
+.pc-wk-indicator.is-active {
+  color: #1e3a8a;
+  border-color: #bfd0e4;
+  background-color: #f3f8ff;
+}
+
+.pc-wk-indicator.is-active .pc-wk-dot {
+  background-color: #2563eb;
+}
+
+.pc-wk-indicator.is-inactive {
+  color: #6b7280;
+  border-color: #e5e7eb;
+  background-color: #f3f4f6;
+}
+
+.pc-wk-indicator.is-inactive .pc-wk-dot {
+  background-color: #9ca3af;
+}
+
+.pc-wk-indicator.is-disabled {
+  color: #6b7280;
+  border-color: #e5e7eb;
+  background-color: #f3f4f6;
+}
+
+.pc-wk-indicator.is-disabled .pc-wk-dot {
+  background-color: #9ca3af;
+}
+
 .pc-gpc-dot {
   width: 8px;
   height: 8px;
@@ -429,7 +483,7 @@ body {
 /* Purposes */
 .pc-main {
   margin-bottom: 10px;
-  padding: 2px 6px 2px 0;
+  padding: 2px 2px 2px 4px;
   border: none;
   border-radius: 12px;
   background: #ffffff;
@@ -440,6 +494,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .pc-purpose-item {
@@ -544,6 +601,7 @@ body {
 .pc-purpose-toggle {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 6px;
   cursor: pointer;
   flex-shrink: 0;
@@ -553,6 +611,7 @@ body {
 .pc-toggle-label {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   cursor: pointer;
   font-size: 10px;
@@ -561,6 +620,7 @@ body {
   letter-spacing: 0.03em;
   text-transform: uppercase;
   padding: 3px 7px;
+  min-width: 62px;
   border-radius: 999px;
   background-color: #f1f5f9;
   border: 1px solid #e2e8f0;
@@ -788,7 +848,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin: 6px 0 8px 0;
+  margin: 10px 0 8px 0;
   font-size: 11px;
   color: var(--pc-accent);
   font-weight: 600;
@@ -910,10 +970,11 @@ body {
 .pc-side-panel {
   width: 0;
   max-height: 0;
+  padding: 0;
   overflow: hidden;
   background: linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
   border-right: 1px solid var(--pc-line);
-  transition: width 0.2s ease;
+  transition: width 0.2s ease, padding 0.2s ease;
   box-sizing: border-box;
   border-top-left-radius: 14px;
   border-bottom-left-radius: 14px;
@@ -921,15 +982,16 @@ body {
 
 .pc-side-panel.is-open {
   width: 180px;
-  min-width: 180px;
-  max-height: none;
+  max-height: 600px;
   padding: 8px;
+  /* Open: snap everything instantly; close transition is on the base rule */
+  transition: none;
 }
 
 /* Tab bar on left edge — full height vertical strip */
 .pc-side-tab {
   display: none; /* hidden until declaration data loads */
-  width: 20px;
+  width: 24px;
   flex-shrink: 0;
   background: linear-gradient(180deg, #eef5ff 0%, #dbeafe 100%);
   border: none;
@@ -978,7 +1040,7 @@ body {
 .pc-declaration-title {
   font-weight: 600;
   color: var(--pc-accent);
-  font-size: 13px;
+  font-size: 12px;
   margin-bottom: 8px;
 }
 
@@ -1055,6 +1117,20 @@ body {
   text-decoration: underline;
 }
 
+.pc-declaration-link--url {
+  display: block;
+  font-size: 11px;
+  color: var(--pc-text-soft);
+  margin-bottom: 2px;
+  word-break: break-all;
+}
+
+.pc-declaration-warning {
+  color: var(--pc-danger);
+  font-size: 11px;
+  cursor: default;
+}
+
 /* Debug panel */
 .pc-debug-panel {
   margin: 6px 10px;
@@ -1065,6 +1141,10 @@ body {
 }
 
 .pc-debug-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 4px 8px;
   font-weight: 600;
   color: #6b7280;
@@ -1073,13 +1153,38 @@ body {
   user-select: none;
 }
 
+.pc-debug-summary::-webkit-details-marker {
+  display: none;
+}
+
+.pc-debug-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.pc-debug-chevron {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+  color: var(--pc-text-soft);
+  margin-left: 2px;
+  transform-origin: 45% 55%;
+  transition: transform 0.15s ease;
+}
+
+.pc-debug-panel[open] .pc-debug-chevron {
+  transform: rotate(90deg);
+}
+
 .pc-debug-summary:hover {
   color: #374151;
 }
 
 .pc-debug-copy {
-  display: block;
-  margin: 4px 8px 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
   font-size: 10px;
   padding: 1px 6px;
   border: 1px solid #d1d5db;

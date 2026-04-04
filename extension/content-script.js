@@ -39,7 +39,11 @@
     if (typeof msg.id !== 'string' || !msg.id) return;
     if (!VALID_ACTIONS.includes(msg.action)) return;
 
-    const domain = normalizeDomain(window.location.hostname);
+  // Runs in all frames (manifest all_frames: true).  In iframes, the
+  // query uses the iframe's own hostname, not the top-level page's.
+  // This is intentional: an iframe from ads.example.com queries consent
+  // for ads.example.com, not for the parent page.
+  const domain = normalizeDomain(window.location.hostname);
 
     // Set up a timeout in case the background doesn't respond
     let responded = false;

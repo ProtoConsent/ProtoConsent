@@ -38,7 +38,7 @@
   },
   "personalization": {
     "order": 4,
-    "label": "Personalization / Profiling",
+    "label": "Personalization",
     "short": "P",
     "short_label": "Personal",
     "icon": "../icons/purposes/personalization.png",
