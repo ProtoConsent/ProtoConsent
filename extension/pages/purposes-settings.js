@@ -263,7 +263,7 @@ function renderPresets(presets, purposes) {
 
 	const gpcDesc = document.createElement('span');
 	gpcDesc.className = 'ps-gpc-info-desc';
-	gpcDesc.textContent = '— privacy signal sent to websites when any of these purposes are denied';
+	gpcDesc.textContent = '\u002D privacy signal sent to websites when any of these purposes are denied';
 	gpcInfo.appendChild(gpcDesc);
 
 	gpcCard.appendChild(gpcInfo);

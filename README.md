@@ -27,6 +27,7 @@ No central server, no tracking, no sharing of personal data. Preferences are enf
 - **Network‑level enforcement** via static rulesets: 40 000+ curated tracker domains and 1 200+ path‑based rules from public blocklists, organized by purpose. See [blocklists.md](design/blocklists.md) for sources and curation criteria.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC header and `navigator.globalPrivacyControl`), sent only when privacy‑relevant purposes are denied — per site, not globally.
 - **Per‑purpose blocked request counter** with estimated performance impact, visible in the popup.
+- **Log monitoring tab** with three sub-tabs: real-time request log, blocked domains grouped by purpose with Consent Commons icons, and GPC signal tracking per domain with timestamps. Includes a copy-to-clipboard button for all tabs.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` file declaring their data practices, displayed in a side panel with [Consent Commons](https://consentcommons.com/) icons.
 - **JavaScript SDK** (MIT licensed) and content script bridge for web pages to query user preferences. TypeScript declarations included.
 - **Onboarding** welcome page for first‑time users with profile selection.
@@ -55,9 +56,15 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 
 ### Network-level blocking of tracking requests
 
-Basic blocking of tracking resources for the Ads purpose on a news site:
+Per-purpose blocking stats on a news site, with links to the Log tab for full domain-level detail:
 
-![Blocking ProtoConsent config on a news site](design/assets/screenshots/popup-blocked-detail.png)
+![Blocking ProtoConsent config on a news site](design/assets/screenshots/popup-log-domains.png)
+
+### Log monitoring with blocked domains and GPC tracking
+
+The Log tab shows real-time request activity, blocked domains grouped by purpose, and GPC signals per domain:
+
+![Log tab with blocked domains](design/assets/screenshots/popup-log-domains.png)
 
 ## For websites
 
@@ -95,7 +102,6 @@ See [architecture.md](design/architecture.md) for more details.
 ## What's next
 
 - Per-domain whitelist for quick false-positive recovery
-- Request log tab for full per-request transparency
 - Import/export of user configuration
 - Online validator for `.well-known/protoconsent.json` site declarations
 - Firefox support

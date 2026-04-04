@@ -65,7 +65,7 @@ function persistTabDataToSession() {
   }
   const gpc = {};
   for (const [tabId, domains] of tabGpcDomains) {
-    gpc[tabId] = [...domains];
+    gpc[tabId] = domains;
   }
   chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc });
 }
@@ -81,7 +81,7 @@ async function restoreTabDataFromSession() {
     }
     if (result._tabGpc) {
       for (const [tabId, domains] of Object.entries(result._tabGpc)) {
-        tabGpcDomains.set(Number(tabId), new Set(domains));
+        tabGpcDomains.set(Number(tabId), domains);
       }
     }
   } catch (_) { /* session storage may be empty on first run */ }
@@ -691,7 +691,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         data: tabBlockedDomains.get(message.tabId) || {},
         purposeDomainCounts,
         purposePathCounts,
-        gpcDomains: gpcDomains ? [...gpcDomains] : [],
+        gpcDomains: gpcDomains ? Object.keys(gpcDomains) : [],
+        gpcDomainCounts: gpcDomains || {},
       });
     });
     return true; // async response
@@ -707,8 +708,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   // Popup requests last rebuild debug snapshot
   if (message.type === "PROTOCONSENT_GET_DEBUG") {
-    sendResponse(lastRebuildDebug);
-    return;
+    const debugData = Object.assign({}, lastRebuildDebug, {
+      navigatingTabs: tabNavigating.size,
+      logPorts: logPorts.size,
+    });
+    // Session key count (async; chrome.storage.session may not exist in all browsers)
+    if (chrome.storage.session && chrome.storage.session.get) {
+      chrome.storage.session.get(null).then((s) => {
+        debugData.sessionKeys = Object.keys(s).length;
+        sendResponse(debugData);
+      }).catch(() => {
+        debugData.sessionKeys = -1;
+        sendResponse(debugData);
+      });
+    } else {
+      debugData.sessionKeys = -1;
+      sendResponse(debugData);
+    }
+    return true; // async response
   }
 
   // Popup requests .well-known fetch (via background to bypass page Service Workers)
@@ -737,6 +754,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 // Track blocked domains per tab for the popup detail view.
 // onRuleMatchedDebug fires for every matched rule (static + dynamic).
+// Also forwards events to connected log ports for real-time display.
+const logPorts = new Set();
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== "log") return;
+  logPorts.add(port);
+  port.onDisconnect.addListener(() => logPorts.delete(port));
+});
+
 if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
   chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((info) => {
     const { rule, request } = info;
@@ -758,9 +784,17 @@ if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
       if (rule.rulesetId === "_dynamic" && dynamicGpcSetIds.has(rule.ruleId)) {
         let domain;
         try { domain = new URL(request.url).hostname; } catch (_) { return; }
-        if (!tabGpcDomains.has(request.tabId)) tabGpcDomains.set(request.tabId, new Set());
-        tabGpcDomains.get(request.tabId).add(domain);
+        if (!tabGpcDomains.has(request.tabId)) tabGpcDomains.set(request.tabId, {});
+        const gpcData = tabGpcDomains.get(request.tabId);
+        const now = Date.now();
+        if (!gpcData[domain]) gpcData[domain] = { count: 0, firstSeen: now };
+        gpcData[domain].count++;
+        gpcData[domain].lastSeen = now;
         scheduleSessionPersist();
+        // Forward GPC event to log ports
+        for (const port of logPorts) {
+          try { port.postMessage({ type: "gpc", domain, tabId: request.tabId }); } catch (_) {}
+        }
       }
       return;
     }
@@ -775,6 +809,11 @@ if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
     if (!tabData[purpose]) tabData[purpose] = {};
     tabData[purpose][domain] = (tabData[purpose][domain] || 0) + 1;
     scheduleSessionPersist();
+
+    // Forward block event to log ports
+    for (const port of logPorts) {
+      try { port.postMessage({ type: "block", purpose, url: request.url, tabId: request.tabId }); } catch (_) {}
+    }
   });
 }
 
