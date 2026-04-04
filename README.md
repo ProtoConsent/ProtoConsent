@@ -4,6 +4,8 @@
   <img src="design/assets/logo/protoconsent_logo.png" alt="ProtoConsent logo" width="160">
 </p>
 
+<p align="center"><strong>One place to control how every website uses your data.</strong></p>
+
 <p align="center"><em>User‑side, purpose‑based consent for the web.</em></p>
 
 <p align="center">
@@ -16,7 +18,7 @@ No central server, no tracking, no sharing of personal data. Preferences are enf
 
 **Project website:** <https://protoconsent.org> · **Live demo:** <https://demo.protoconsent.org>
 
-> Not yet in extension stores — install locally in developer mode on Chromium-based browsers. Firefox support planned.
+> Pending review in Chrome Web Store, Edge Add-ons, and Opera Addons. In the meantime, install locally in developer mode on any Chromium-based browser. Firefox support planned.
 
 ## Key features
 
@@ -30,11 +32,9 @@ No central server, no tracking, no sharing of personal data. Preferences are enf
 - **Onboarding** welcome page for first‑time users with profile selection.
 - **Purpose settings** page for customizing the global default profile.
 
-For a detailed roadmap and planned features, see [product-overview.md](design/product-overview.md).
-
 ## Getting started
 
-ProtoConsent is not yet in extension stores. To try it locally:
+ProtoConsent is pending review in extension stores. To try it now:
 
 1. Clone this repository.
 2. Open `chrome://extensions/` (or `edge://extensions/`) and enable **Developer mode**.
@@ -58,26 +58,6 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 Basic blocking of tracking resources for the Ads purpose on a news site:
 
 ![Blocking ProtoConsent config on a news site](design/assets/screenshots/popup-blocked-detail.png)
-
-### SDK live test on protoconsent.org
-
-The project website includes a live test that shows your current preferences when the extension is installed:
-
-![SDK live test on protoconsent.org](design/assets/screenshots/sdk-demo-detected.png)
-
-### Global Privacy Control conditional signal
-
-ProtoConsent sends a [Sec-GPC](https://globalprivacycontrol.org/) header only when privacy-relevant purposes are denied — per site, not globally:
-
-![GPC signal detected on globalprivacycontrol.org](design/assets/screenshots/gpc-demo-detected.png)
-
-### Site declaration with Consent Commons icons
-
-Websites can publish a `.well-known/protoconsent.json` file to declare their data practices.
-The popup displays this in a side panel with [Consent Commons](https://consentcommons.com/) icons.
-See the complete example at [demo.protoconsent.org](https://demo.protoconsent.org):
-
-![Site declaration side panel](design/assets/screenshots/well-known-demo-detected.png)
 
 ## For websites
 
@@ -111,6 +91,38 @@ See [architecture.md](design/architecture.md) for more details.
 - Keep control and identity in the user's browser by default, minimising or avoiding any server-side processing.
 - Align with existing and emerging web privacy standards where possible (for example, Permissions API, Storage Access API, Global Privacy Control).
 - Explore browser-level, purpose-based preference signals that other tools and standards discussions could build on.
+
+## What's next
+
+- Per-domain whitelist for quick false-positive recovery
+- Request log tab for full per-request transparency
+- Import/export of user configuration
+- Online validator for `.well-known/protoconsent.json` site declarations
+- Firefox support
+
+For a detailed product description and roadmap, see [product-overview.md](design/product-overview.md).
+
+## More screenshots
+
+### SDK live test on protoconsent.org
+
+The project website includes a live test that shows your current preferences when the extension is installed:
+
+![SDK live test on protoconsent.org](design/assets/screenshots/sdk-demo-detected.png)
+
+### Global Privacy Control conditional signal
+
+ProtoConsent sends a [Sec-GPC](https://globalprivacycontrol.org/) header only when privacy-relevant purposes are denied — per site, not globally:
+
+![GPC signal detected on globalprivacycontrol.org](design/assets/screenshots/gpc-demo-detected.png)
+
+### Site declaration with Consent Commons icons
+
+Websites can publish a `.well-known/protoconsent.json` file to declare their data practices.
+The popup displays this in a side panel with [Consent Commons](https://consentcommons.com/) icons.
+See the complete example at [demo.protoconsent.org](https://demo.protoconsent.org):
+
+![Site declaration side panel](design/assets/screenshots/well-known-demo-detected.png)
 
 ## Use of Generative AI
 
