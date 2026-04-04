@@ -59,8 +59,6 @@ Basic blocking of tracking resources for the Ads purpose on a news site:
 
 ![Blocking ProtoConsent config on elpais.com](design/assets/screenshots/test-elpais-blocked-detail.png)
 
-![Blocking requests on elpais.com](design/assets/screenshots/test-elpais-blocked.png)
-
 ### SDK live test on protoconsent.org
 
 The project website includes a live test that shows your current preferences when the extension is installed:
