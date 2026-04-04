@@ -221,7 +221,7 @@ Status: planned for a future version. This is not a blocker for current function
 | Presets data model (`presets.json`) | Implemented (v0.1.0) |
 | Per-domain rules in storage | Implemented (v0.1.0) |
 | Extension enforcement (DNR) | Implemented (v0.1.0 — global + per-site; v0.1.1 — static rulesets, path-based blocking, override grouping; v0.2.0 — 40 000+ domains, 1 200+ path rules, blocklist audit) |
-| Extension popup UI | Implemented (v0.1.0 — profiles, toggles; v0.1.1 — blocked counter, per-purpose stats, .well-known side panel, debug panel; v0.2.0 — onboarding, purpose settings page) |
+| Extension popup UI | Implemented (v0.1.0 — profiles, toggles; v0.1.1 — blocked counter, per-purpose stats, .well-known side panel, debug panel; v0.2.0 — onboarding, purpose settings page; v0.2.1 — log monitoring tab, flood protection) |
 | Blocked request counter | Implemented (v0.1.1) — per-tab blocked count, per-purpose breakdown, domain detail |
 | Onboarding welcome page | Implemented (v0.2.0) |
 | SDK skeleton (API surface defined) | Implemented (v0.1.0) |
