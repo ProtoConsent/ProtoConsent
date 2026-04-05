@@ -480,8 +480,22 @@
         showError("The server returned a non-JSON response (Content-Type: " + (data.content_type || "unknown") + "). Make sure .well-known/protoconsent.json is a real JSON file, not an HTML error page.");
         return;
       }
+      if (data.error === "too_large") {
+        showError("File too large (" + Math.round((data.size || 0) / 1024) + " KB). A valid declaration should be under 50 KB.");
+        return;
+      }
+      if (data.error === "bad_redirect") {
+        showError("The server redirects to a different location (" + (data.location || "unknown") + "). The file should be served directly at https://" + domain + "/.well-known/protoconsent.json.");
+        return;
+      }
       if (!data.ok || !data.body) {
         showError("Unexpected response from validation service.");
+        return;
+      }
+
+      // Defense-in-depth size check (API enforces this too)
+      if (data.body.length > 51200) {
+        showError("File too large (" + Math.round(data.body.length / 1024) + " KB). A valid declaration should be under 50 KB.");
         return;
       }
 
@@ -508,16 +522,20 @@
     if (e.key === "Enter") fetchAndValidate();
   });
 
+  var MAX_FILE_SIZE = 50 * 1024; // 50 KB
+
   pasteBtn.addEventListener("click", function () {
     var text = jsonTextarea.value.trim();
     if (!text) {
       showError("Paste or load a JSON file first.");
       return;
     }
+    if (text.length > MAX_FILE_SIZE) {
+      showError("Input too large (" + Math.round(text.length / 1024) + " KB). A valid declaration should be under 50 KB.");
+      return;
+    }
     validateText(text);
   });
-
-  var MAX_FILE_SIZE = 50 * 1024; // 50 KB
 
   fileInput.addEventListener("change", function () {
     var file = fileInput.files[0];
