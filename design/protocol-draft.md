@@ -269,9 +269,10 @@ Status: planned for a future version. This is not a blocker for current function
 | Purposes data model (`purposes.json`) | Implemented (v0.1.0) |
 | Presets data model (`presets.json`) | Implemented (v0.1.0) |
 | Per-domain rules in storage | Implemented (v0.1.0) |
-| Extension enforcement (DNR) | Implemented (v0.1.0 — global + per-site; v0.1.1 — static rulesets, path-based blocking, override grouping; v0.2.0 — 40 000+ domains, 1 200+ path rules, blocklist audit) |
-| Extension popup UI | Implemented (v0.1.0 — profiles, toggles; v0.1.1 — blocked counter, per-purpose stats, .well-known side panel, debug panel; v0.2.0 — onboarding, purpose settings page; v0.2.1 — log monitoring tab, flood protection) |
+| Extension enforcement (DNR) | Implemented (v0.1.0 — global + per-site; v0.1.1 — static rulesets, path-based blocking, override grouping; v0.2.0 — 40 000+ domains, 1 200+ path rules, blocklist audit; v0.2.1 — domain whitelist with priority-3 allow rules) |
+| Extension popup UI | Implemented (v0.1.0 — profiles, toggles; v0.1.1 — blocked counter, per-purpose stats, .well-known side panel, debug panel; v0.2.0 — onboarding, purpose settings page; v0.2.1 — log monitoring tab, flood protection, domain whitelist) |
 | Blocked request counter | Implemented (v0.1.1) — per-tab blocked count, per-purpose breakdown, domain detail |
+| Domain whitelist | Implemented (v0.2.1) — per-site and global scope, priority-3 DNR allow rules, budget guard |
 | Onboarding welcome page | Implemented (v0.2.0) |
 | SDK skeleton (API surface defined) | Implemented (v0.1.0) |
 | SDK messaging (actual communication) | Implemented (v0.1.0) |
