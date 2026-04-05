@@ -19,9 +19,10 @@ This document describes the protocol by which web pages can query the user's con
 3. [Communication Model](#3-communication-model)
 4. [SDK API Surface](#4-sdk-api-surface)
 5. [Site Declaration (`.well-known/protoconsent.json`)](#5-site-declaration-well-knownprotocolconsentjson)
-6. [JSON Schema Formalization (Planned)](#6-json-schema-formalization-planned)
-7. [Implementation Status](#7-implementation-status)
-8. [Design Principles](#8-design-principles)
+6. [Global Privacy Control (GPC) integration](#6-global-privacy-control-gpc-integration)
+7. [JSON Schema Formalization (Planned)](#7-json-schema-formalization-planned)
+8. [Implementation Status](#8-implementation-status)
+9. [Design Principles](#9-design-principles)
 
 ## 2. Data Model
 
@@ -202,7 +203,55 @@ Beyond the minimal `used` and `legal_basis` fields, each purpose entry can inclu
 
 Full specification: [`design/well-known-spec.md`](well-known-spec.md)
 
-## 6. JSON Schema Formalization (Planned)
+## 6. Global Privacy Control (GPC) integration
+
+ProtoConsent sends the [Global Privacy Control](https://globalprivacycontrol.org/) signal conditionally, based on the user's resolved purpose state for each site. GPC is not a global toggle: it is derived from purpose decisions.
+
+### 6.1 Which purposes trigger GPC
+
+Each purpose in `config/purposes.json` has a `triggers_gpc` boolean field. When a purpose with `triggers_gpc: true` is denied for a given site, the extension activates GPC for that site.
+
+Current mapping:
+
+| Purpose | `triggers_gpc` | Rationale |
+| --- | --- | --- |
+| `functional` | `false` | Core site functionality; denying it does not imply a privacy opt-out. |
+| `analytics` | `false` | Site-internal measurement; typically first-party and not covered by GPC's opt-out scope. |
+| `ads` | `true` | Advertising and remarketing involve cross-site data sharing that GPC was designed to signal against. |
+| `personalization` | `false` | User-facing content adaptation; does not inherently involve cross-site tracking. |
+| `third_parties` | `true` | Data sharing with third parties is a core opt-out scenario for GPC. |
+| `advanced_tracking` | `true` | Cross-site fingerprinting and device tracking; GPC directly applies. |
+
+The rule: if **any** purpose with `triggers_gpc: true` is denied for a site, GPC is active for that site. If all such purposes are allowed (or the profile allows them), GPC is not sent.
+
+### 6.2 Mechanism
+
+When GPC is active for a site, two signals are sent:
+
+1. **`Sec-GPC: 1` HTTP header** — injected via `declarativeNetRequest` `modifyHeaders` rules on outgoing requests to the site's domain.
+2. **`navigator.globalPrivacyControl = true`** — set via a MAIN-world content script (`gpc-signal.js`), registered at runtime through `chrome.scripting.registerContentScripts`.
+
+When GPC is not active, neither signal is sent. There is no `Sec-GPC: 0` — absence of the header means no preference expressed.
+
+### 6.3 Per-site overrides
+
+GPC follows the same per-site override model as blocking (§2.3). A site assigned the Permissive profile with all purposes allowed will not receive GPC, even if the global default profile would trigger it. Conversely, a site with a Strict profile will receive GPC even if the global default is Permissive.
+
+The extension maintains up to three dynamic DNR rules for GPC:
+
+- **Global GPC rule** (priority 1): sends `Sec-GPC: 1` to all sites when the default profile triggers it.
+- **Per-site add rule** (priority 2): adds GPC for specific sites whose custom profile triggers it, when the global rule does not apply.
+- **Per-site remove rule** (priority 2): suppresses GPC for specific sites whose custom profile allows all GPC-triggering purposes, overriding the global rule.
+
+### 6.4 Relation to the GPC specification
+
+The [GPC specification](https://privacycg.github.io/gpc-spec/) defines GPC as a binary signal: the user either expresses a preference to opt out of sale/sharing, or does not. ProtoConsent respects this: it sends `Sec-GPC: 1` or nothing.
+
+The difference is in **when** the signal is sent. Most implementations treat GPC as a global preference (always on or always off). ProtoConsent derives the signal from the user's purpose-level decisions, making it conditional per site. This is compatible with the spec — the spec does not require the signal to be global — but it extends the practical semantics: the GPC signal reflects a structured privacy position, not a blanket opt-out.
+
+Canonical source: `extension/config/purposes.json` (field `triggers_gpc`)
+
+## 7. JSON Schema Formalization (Planned)
 
 Formal JSON Schemas are planned for the configuration files:
 
@@ -213,7 +262,7 @@ Formal JSON Schemas are planned for the configuration files:
 
 Status: planned for a future version. This is not a blocker for current functionality.
 
-## 7. Implementation Status
+## 8. Implementation Status
 
 | Component | Status |
 | --- | --- |
@@ -233,7 +282,7 @@ Status: planned for a future version. This is not a blocker for current function
 | JSON Schemas | Planned (protocol formalization) |
 | Demo sites using SDK | [protoconsent.org](https://protoconsent.org/) live test (v0.1.0), [demo.protoconsent.org](https://demo.protoconsent.org) full-featured demo (v0.2.0); additional demos planned |
 
-## 8. Design Principles
+## 9. Design Principles
 
 - **No central server:** all data stays local to the browser.
 - **Privacy by default:** the SDK reveals only purpose-level allow/deny per domain, never user identity or cross-site state.
