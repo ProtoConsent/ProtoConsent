@@ -2,11 +2,11 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Log tab: real-time request log, domain summary, GPC activity.
+// Log tab: real-time request log, domain summary, GPC activity, whitelist management.
 // Loaded after popup.js — shares globals: currentDomain, currentProfile,
 // currentPurposesState, purposesConfig, lastBlockedDomains, lastBlocked,
 // lastGpcDomains, lastGpcDomainCounts, lastGpcSignalsSent, lastPurposeStats,
-// PURPOSES_TO_SHOW, DEBUG_RULES.
+// lastWhitelist, PURPOSES_TO_SHOW, DEBUG_RULES.
 // Shared helpers from config.js: pluralize, getPurposeLabel, formatHHMM, formatHHMMSS.
 
 let logPort = null;
@@ -18,6 +18,7 @@ function refreshLogView() {
   refreshLogRequests();
   renderLogDomains();
   renderLogGpc();
+  renderLogWhitelist();
 }
 
 // --- One-time setup + refresh ----------------------------
@@ -49,6 +50,22 @@ function initLogInnerTabs() {
       setActiveLogTab(target);
     });
   });
+  // Arrow key navigation within tablist (WAI-ARIA Tabs pattern)
+  const tablist = document.querySelector(".pc-log-tabs");
+  if (tablist) {
+    tablist.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const visible = Array.from(tabs).filter(t => !t.hidden && t.className !== "pc-log-copy");
+      const idx = visible.indexOf(document.activeElement);
+      if (idx === -1) return;
+      e.preventDefault();
+      const next = e.key === "ArrowRight"
+        ? visible[(idx + 1) % visible.length]
+        : visible[(idx - 1 + visible.length) % visible.length];
+      next.focus();
+      next.click();
+    });
+  }
 }
 
 function initLogCopyButton() {
@@ -206,11 +223,11 @@ function renderLogDomains() {
   table.className = "pc-log-table";
 
   const colgroup = document.createElement("colgroup");
-  colgroup.innerHTML = '<col style="width:24px"><col style="width:auto"><col style="width:50px">';
+  colgroup.innerHTML = '<col style="width:24px"><col style="width:auto"><col style="width:50px"><col style="width:48px">';
   table.appendChild(colgroup);
 
   const thead = document.createElement("thead");
-  thead.innerHTML = '<tr><th></th><th>Domain</th><th style="text-align:right">Blocked</th></tr>';
+  thead.innerHTML = '<tr><th><span class="visually-hidden">Purpose</span></th><th>Domain</th><th style="text-align:right">Blocked</th><th>Whitelist</th></tr>';
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
@@ -244,9 +261,44 @@ function renderLogDomains() {
     tdCount.textContent = row.count;
     tdCount.className = "pc-log-table-count";
 
+    const tdAction = document.createElement("td");
+    tdAction.className = "pc-log-domains-action";
+    if (row.domain) {
+      const isWhitelisted = isWhitelistedHere(row.domain);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      if (isWhitelisted) {
+        // Determine the site key to pass to remove (prefer per-site over global)
+        const siteMap = lastWhitelist[row.domain] || {};
+        let siteKey = "*";
+        if (siteMap[currentDomain]) {
+          siteKey = currentDomain;
+        } else if (siteMap["*"]) {
+          siteKey = "*";
+        }
+        btn.className = "pc-log-allow-btn is-allowed";
+        btn.textContent = "Allowed";
+        btn.title = "Click to remove " + row.domain + " from whitelist" + (siteKey === "*" ? " (global)" : "");
+        btn.setAttribute("aria-label", "Remove " + row.domain + " from whitelist");
+        btn.setAttribute("aria-pressed", "true");
+        btn.dataset.wlDomain = row.domain;
+        btn.addEventListener("click", () => handleWhitelistRemove(row.domain, siteKey));
+      } else {
+        btn.className = "pc-log-allow-btn";
+        btn.textContent = "Allow";
+        btn.title = "Allow " + row.domain + " on this site";
+        btn.setAttribute("aria-label", "Allow " + row.domain + " on this site");
+        btn.setAttribute("aria-pressed", "false");
+        btn.dataset.wlDomain = row.domain;
+        btn.addEventListener("click", () => handleWhitelistAdd(row.domain, row.purpose));
+      }
+      tdAction.appendChild(btn);
+    }
+
     tr.appendChild(tdIcon);
     tr.appendChild(tdDomain);
     tr.appendChild(tdCount);
+    tr.appendChild(tdAction);
     tbody.appendChild(tr);
   }
   table.appendChild(tbody);
@@ -447,4 +499,235 @@ function appendLogLine(text, type) {
   }
 
   if (atBottom) pre.scrollTop = pre.scrollHeight;
+}
+
+// --- Whitelist helpers ------------------------------------
+
+// Check if a domain is whitelisted for the current site or globally.
+function isWhitelistedHere(domain) {
+  if (!lastWhitelist || !lastWhitelist[domain]) return false;
+  const siteMap = lastWhitelist[domain];
+  return !!(siteMap[currentDomain] || siteMap["*"]);
+}
+
+// --- Whitelist handlers -----------------------------------
+
+// Focus restore helper: after DOM rebuild, find button with matching data-wl-domain.
+function restoreWhitelistFocus(domain) {
+  if (!domain) return;
+  requestAnimationFrame(() => {
+    const btn = document.querySelector('button[data-wl-domain="' + CSS.escape(domain) + '"]');
+    if (btn) btn.focus();
+  });
+}
+
+function renderAndRestoreFocus(domain) {
+  renderLogDomains();
+  renderLogWhitelist();
+  restoreWhitelistFocus(domain);
+}
+
+function handleWhitelistAdd(domain, purpose) {
+  chrome.runtime.sendMessage(
+    { type: "PROTOCONSENT_WHITELIST_ADD", domain, purpose, site: currentDomain },
+    (resp) => {
+      void chrome.runtime.lastError;
+      if (resp?.ok) {
+        if (!lastWhitelist[domain]) lastWhitelist[domain] = {};
+        lastWhitelist[domain][currentDomain] = purpose;
+        renderAndRestoreFocus(domain);
+      }
+    }
+  );
+}
+
+function handleWhitelistRemove(domain, site) {
+  chrome.runtime.sendMessage(
+    { type: "PROTOCONSENT_WHITELIST_REMOVE", domain, site },
+    (resp) => {
+      void chrome.runtime.lastError;
+      if (resp?.ok) {
+        if (lastWhitelist[domain]) {
+          delete lastWhitelist[domain][site];
+          if (Object.keys(lastWhitelist[domain]).length === 0) delete lastWhitelist[domain];
+        }
+        renderAndRestoreFocus(domain);
+      }
+    }
+  );
+}
+
+function handleWhitelistToggleScope(domain, site) {
+  if (site === "*") {
+    // Global → per-site: replace "*" entry with current site
+    const purpose = lastWhitelist[domain]?.["*"];
+    if (!purpose) return;
+    chrome.runtime.sendMessage(
+      { type: "PROTOCONSENT_WHITELIST_REMOVE", domain, site: "*" },
+      (resp) => {
+        void chrome.runtime.lastError;
+        if (resp?.ok) {
+          chrome.runtime.sendMessage(
+            { type: "PROTOCONSENT_WHITELIST_ADD", domain, purpose, site: currentDomain },
+            (resp2) => {
+              void chrome.runtime.lastError;
+              if (resp2?.ok) {
+                if (lastWhitelist[domain]) delete lastWhitelist[domain]["*"];
+                if (!lastWhitelist[domain]) lastWhitelist[domain] = {};
+                lastWhitelist[domain][currentDomain] = purpose;
+                renderAndRestoreFocus(domain);
+              }
+            }
+          );
+        }
+      }
+    );
+  } else {
+    // Per-site → global
+    chrome.runtime.sendMessage(
+      { type: "PROTOCONSENT_WHITELIST_TOGGLE_SCOPE", domain, site },
+      (resp) => {
+        void chrome.runtime.lastError;
+        if (resp?.ok) {
+          if (lastWhitelist[domain]) {
+            const purpose = lastWhitelist[domain][site];
+            delete lastWhitelist[domain][site];
+            lastWhitelist[domain]["*"] = purpose;
+          }
+          renderAndRestoreFocus(domain);
+        }
+      }
+    );
+  }
+}
+
+// --- Whitelist panel --------------------------------------
+
+function renderLogWhitelist() {
+  const container = document.getElementById("pc-log-whitelist");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const wl = lastWhitelist || {};
+  // Flatten: each entry is { domain, site, purpose }
+  // site is a hostname (per-site) or "*" (global)
+  const entries = [];
+  for (const [domain, siteMap] of Object.entries(wl)) {
+    for (const [key, val] of Object.entries(siteMap)) {
+      entries.push({ domain, site: key, purpose: val });
+    }
+  }
+
+  if (entries.length === 0) {
+    container.innerHTML = '<div class="pc-log-empty">No whitelisted domains. Use the Allow button in the Domains tab.</div>';
+    return;
+  }
+
+  // Sort: global ("*") last, then by domain alphabetically
+  entries.sort((a, b) => {
+    if (a.site === "*" && b.site !== "*") return 1;
+    if (a.site !== "*" && b.site === "*") return -1;
+    return a.domain.localeCompare(b.domain);
+  });
+
+  const header = document.createElement("div");
+  header.className = "pc-log-purpose-label";
+  header.textContent = pluralize(entries.length, "whitelisted domain");
+  container.appendChild(header);
+
+  const table = document.createElement("table");
+  table.className = "pc-log-table";
+
+  const colgroup = document.createElement("colgroup");
+  colgroup.innerHTML = '<col style="width:24px"><col style="width:auto"><col style="width:54px"><col style="width:54px"><col style="width:54px">';
+  table.appendChild(colgroup);
+
+  const thead = document.createElement("thead");
+  thead.innerHTML = '<tr><th><span class="visually-hidden">Purpose</span></th><th>Domain</th><th><span class="visually-hidden">Remove</span></th><th>Scope</th><th><span class="visually-hidden">Change scope</span></th></tr>';
+  table.appendChild(thead);
+
+  const canToggle = !!currentDomain; // Disable scope toggle on chrome:// / new tab
+  const tbody = document.createElement("tbody");
+  for (const entry of entries) {
+    const cfg = purposesConfig[entry.purpose];
+    const tr = document.createElement("tr");
+    const isGlobal = entry.site === "*";
+    const hits = lastWhitelistHitDomains[entry.domain] || 0;
+    if (hits > 0) tr.className = "is-active";
+
+    const tdIcon = document.createElement("td");
+    tdIcon.className = "pc-log-domains-icon";
+    if (cfg && cfg.icon) {
+      const img = document.createElement("img");
+      img.src = cfg.icon;
+      img.width = 14;
+      img.height = 14;
+      img.alt = cfg.short || "";
+      img.title = getPurposeLabel(entry.purpose);
+      tdIcon.appendChild(img);
+    } else {
+      const purposeStr = String(entry.purpose);
+      tdIcon.textContent = cfg?.short || purposeStr.charAt(0).toUpperCase();
+      tdIcon.title = getPurposeLabel(purposeStr);
+    }
+
+    const tdDomain = document.createElement("td");
+    tdDomain.textContent = entry.domain;
+    tdDomain.title = hits > 0
+      ? entry.domain + " (" + hits + " allowed)"
+      : entry.domain;
+
+    const tdRemove = document.createElement("td");
+    tdRemove.className = "pc-log-domains-action";
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "pc-log-remove-btn";
+    removeBtn.textContent = "Remove";
+    removeBtn.title = "Remove " + entry.domain + " from whitelist";
+    removeBtn.setAttribute("aria-label", "Remove " + entry.domain + " from whitelist");
+    removeBtn.dataset.wlDomain = entry.domain;
+    removeBtn.addEventListener("click", () => handleWhitelistRemove(entry.domain, entry.site));
+    tdRemove.appendChild(removeBtn);
+
+    const tdScope = document.createElement("td");
+    tdScope.className = "pc-log-domains-action";
+    const scopeLabel = document.createElement("span");
+    scopeLabel.className = "pc-log-scope-label" + (isGlobal ? " is-global" : "");
+    scopeLabel.textContent = isGlobal ? "Global" : "Site";
+    scopeLabel.title = isGlobal ? "Allowed on all sites" : "Allowed on " + entry.site;
+    tdScope.appendChild(scopeLabel);
+
+    const tdToggle = document.createElement("td");
+    tdToggle.className = "pc-log-domains-action";
+    const toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
+    toggleBtn.className = "pc-log-scope-toggle-btn";
+    toggleBtn.textContent = isGlobal ? "\u2192 Site" : "\u2192 All";
+    toggleBtn.setAttribute("aria-label", isGlobal
+      ? "Make " + entry.domain + " site-only" + (currentDomain ? " (" + currentDomain + ")" : "")
+      : "Make " + entry.domain + " global (all sites)");
+    toggleBtn.dataset.wlDomain = entry.domain;
+    if (isGlobal) {
+      toggleBtn.title = canToggle
+        ? "Change to per-site (only " + currentDomain + ")"
+        : "Cannot change scope: no active site";
+    } else {
+      toggleBtn.title = "Change to global (all sites)";
+    }
+    if (!canToggle && isGlobal) {
+      toggleBtn.disabled = true;
+    } else {
+      toggleBtn.addEventListener("click", () => handleWhitelistToggleScope(entry.domain, entry.site));
+    }
+    tdToggle.appendChild(toggleBtn);
+
+    tr.appendChild(tdIcon);
+    tr.appendChild(tdDomain);
+    tr.appendChild(tdRemove);
+    tr.appendChild(tdScope);
+    tr.appendChild(tdToggle);
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  container.appendChild(table);
 }

@@ -63,7 +63,7 @@
           <section class="article-section">
             <h2>What data the extension handles</h2>
             <p>
-              ProtoConsent stores your per-site purpose preferences (profile and purpose toggles) in your browser's local extension storage (<code>chrome.storage.local</code>). This data never leaves your device.
+              ProtoConsent stores your per-site purpose preferences (profile and purpose toggles) and your domain whitelist in your browser's local extension storage (<code>chrome.storage.local</code>). This data never leaves your device.
             </p>
             <p>
               The extension does <strong>not</strong>:
@@ -81,8 +81,8 @@
             <h2>What the extension does locally</h2>
             <ul>
               <li>Reads the current tab URL to identify which domain you are managing</li>
-              <li>Stores your purpose preferences per site in local storage</li>
-              <li>Creates declarative network rules to block requests matching denied purposes</li>
+              <li>Stores your purpose preferences and domain whitelist per site in local storage</li>
+              <li>Creates declarative network rules to block requests matching denied purposes and to allow whitelisted domains</li>
               <li>Sends a <code>Sec-GPC: 1</code> header to sites where privacy-relevant purposes are denied</li>
               <li>Fetches <code>.well-known/protoconsent.json</code> from sites when you open the side panel in the popup, to display their declared data practices (cached locally, never forwarded)</li>
               <li>Queries matched blocking rules to display request counts in the popup</li>
@@ -118,6 +118,10 @@
                 <tr>
                   <td><code>declarativeNetRequestFeedback</code></td>
                   <td>Count blocked requests for the popup display</td>
+                </tr>
+                <tr>
+                  <td><code>webRequest</code></td>
+                  <td>Observe blocked requests and GPC headers in real time for the Log tab (read-only, no modification)</td>
                 </tr>
                 <tr>
                   <td><code>host_permissions (&lt;all_urls&gt;)</code></td>

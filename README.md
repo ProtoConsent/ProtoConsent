@@ -28,6 +28,7 @@ No central server, no tracking, no sharing of personal data. Preferences are enf
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC header and `navigator.globalPrivacyControl`), sent only when privacy‑relevant purposes are denied — per site, not globally.
 - **Per‑purpose blocked request counter** with estimated performance impact, visible in the popup. Badge counter on the extension icon shows per‑tab blocked requests at a glance.
 - **Log monitoring tab** with three sub-tabs: real-time request log, blocked domains grouped by purpose with Consent Commons icons, and GPC signal tracking per domain with timestamps. Works in both developer and store builds. Includes a copy-to-clipboard button for all tabs.
+- **Domain whitelist**: allow specific blocked domains per site or globally, with scope toggle (site-only or all sites) and active-domain highlighting. Managed from the Domains and Whitelist tabs in the Log view.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` file declaring their data practices, displayed in a side panel with [Consent Commons](https://consentcommons.com/) icons.
 - **JavaScript SDK** (MIT licensed) and content script bridge for web pages to query user preferences. TypeScript declarations included.
 - **Onboarding** welcome page for first‑time users with profile selection.
@@ -66,6 +67,14 @@ The Log tab shows real-time request activity, blocked domains grouped by purpose
 
 ![Log tab with blocked domains](design/assets/screenshots/popup-log-requests.png)
 
+### Domain whitelist management
+
+The Domains tab includes Allow/Allowed buttons for quick whitelist control. The Whitelist tab lists all whitelisted domains with scope (Site or Global) and toggle buttons:
+
+![Domains tab with whitelist buttons](design/assets/screenshots/popup-log-domains.png)
+
+![Whitelist tab with scope management](design/assets/screenshots/popup-log-whitelist.png)
+
 ## For websites
 
 ProtoConsent offers two ways for websites to participate — both optional, both privacy‑preserving:
@@ -101,7 +110,6 @@ See [architecture.md](design/architecture.md) for more details.
 
 ## What's next
 
-- Per-domain whitelist for quick false-positive recovery
 - Import/export of user configuration
 - Online validator for `.well-known/protoconsent.json` site declarations
 - Firefox support
