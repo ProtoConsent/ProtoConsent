@@ -43,6 +43,11 @@ This document explains how to try the current version of ProtoConsent in a brows
     - [11.2 Activating DNR debug mode](#112-activating-dnr-debug-mode)
     - [11.3 What changes](#113-what-changes)
     - [11.4 Deactivating DNR debug mode](#114-deactivating-dnr-debug-mode)
+  - [12. Testing the domain whitelist](#12-testing-the-domain-whitelist)
+    - [12.1 Allowing a blocked domain](#121-allowing-a-blocked-domain)
+    - [12.2 Removing a whitelisted domain](#122-removing-a-whitelisted-domain)
+    - [12.3 Per‑site vs global scope](#123-persite-vs-global-scope)
+    - [12.4 Verifying whitelist rules from the service worker console](#124-verifying-whitelist-rules-from-the-service-worker-console)
 
 ## 1. Requirements
 
@@ -419,4 +424,48 @@ The popup, log tab, badge counter, and debug panel all work in both modes — on
 
 1. Set `USE_DNR_DEBUG` back to `false` in `extension/config.js`.
 2. Reload the extension.
+
+## 12. Testing the domain whitelist
+
+The whitelist lets you allow specific blocked domains directly from the Log tab, so you can recover from false positives without changing your profile or purpose settings. Each whitelist entry can be scoped to a single site or applied globally.
+
+### 12.1 Allowing a blocked domain
+
+1. Visit a site with blocked domains (for example, a news site with the Balanced profile).
+2. Open the ProtoConsent popup and go to the **Log** tab → **Domains** panel.
+3. Find a blocked domain in the list. Each row has an **Allow** button on the right.
+4. Click **Allow**. The button changes to **Allowed** (green).
+5. Reload the page. The domain should no longer appear in the blocked count, and the corresponding requests should load normally.
+6. The **Whitelist** tab becomes visible in the Log view, listing the newly allowed domain.
+
+### 12.2 Removing a whitelisted domain
+
+1. Go to **Log** → **Whitelist** tab.
+2. Find the domain you allowed in the previous step. Click **Remove**.
+3. The domain disappears from the Whitelist tab.
+4. Reload the page. The domain should be blocked again and reappear in the blocked count.
+
+### 12.3 Per‑site vs global scope
+
+1. Allow a domain that appears on multiple sites (for example, `www.googletagmanager.com`).
+2. By default, the entry is scoped to the current site. In the **Whitelist** tab, the Scope column shows **Site** and displays the hostname.
+3. Click the scope toggle button (**→ All**) to switch the entry to **Global**. The scope changes to **Global**.
+4. Navigate to a different site where the same domain is blocked. Reload — the domain should now be allowed there too.
+5. To narrow the scope back, click **→ Site** in the Whitelist tab. The entry reverts to site-only, effective only on the current site.
+
+### 12.4 Verifying whitelist rules from the service worker console
+
+Open the service worker console for the extension and run:
+
+```js
+chrome.declarativeNetRequest.getDynamicRules().then(r => {
+  const wl = r.filter(x => x.action.type === 'allow');
+  console.log('Whitelist allow rules:', wl.length);
+  wl.forEach(x => console.log(' ', x.priority, x.condition.requestDomains));
+})
+```
+
+- Whitelisted domains appear as priority 3 `allow` rules.
+- Adding a domain creates or updates the rule; removing all whitelisted domains removes the rule entirely.
+- You can also check the raw storage with: `chrome.storage.local.get("whitelist", r => console.log(r))`.
 

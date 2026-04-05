@@ -229,3 +229,97 @@
 .pc-log-line-ts {
   color: #64748b;
 }
+
+/* Domain whitelist action column */
+.pc-log-domains-action {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.pc-log-allow-btn {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border: 1px solid var(--pc-line);
+  border-radius: 4px;
+  background: none;
+  color: var(--pc-accent);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.pc-log-allow-btn:hover {
+  background: var(--pc-accent-soft, #eef5ff);
+  border-color: var(--pc-accent);
+}
+
+.pc-log-allow-btn.is-allowed {
+  color: var(--pc-success, #15803d);
+  border-color: #b7dec0;
+  background: #eef9f1;
+}
+
+.pc-log-allow-btn.is-allowed:hover {
+  background: #fff4f4;
+  color: var(--pc-danger, #dc2626);
+  border-color: #efcaca;
+}
+
+.pc-log-remove-btn {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border: 1px solid #efcaca;
+  border-radius: 4px;
+  background: none;
+  color: var(--pc-danger, #dc2626);
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.pc-log-remove-btn:hover {
+  background: #fff4f4;
+}
+
+/* Scope label + toggle in whitelist tab */
+.pc-log-scope-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--pc-accent);
+}
+
+.pc-log-scope-label.is-global {
+  color: var(--pc-text-muted);
+}
+
+.pc-log-scope-toggle-btn {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border: 1px solid var(--pc-line);
+  border-radius: 4px;
+  background: none;
+  color: var(--pc-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.pc-log-scope-toggle-btn:hover {
+  color: var(--pc-text);
+  background: var(--pc-surface-soft);
+  border-color: var(--pc-accent);
+}
+
+/* Active whitelist row: domain loaded on current page */
+.pc-log-table tr.is-active {
+  background: #f0faf0;
+}
+
+.pc-log-table tr.is-active td:first-child {
+  border-left: 2px solid var(--pc-accent);
+}
