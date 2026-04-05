@@ -39,6 +39,8 @@
         </a>
         <div class="header-links-nav">
           <a class="header-link" href="index.html">Home</a>
+          <a class="header-link" href="why.html">Why ProtoConsent</a>
+          <a class="header-link" href="validate.html">Validate</a>
           <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
         </div>
       </header>
@@ -49,7 +51,7 @@
             <a href="index.html" class="article-back">&larr; Back to home</a>
             <h1 class="article-title">Privacy Policy</h1>
             <p class="article-subtitle">
-              Last updated: March 2026
+              Last updated: April 2026
             </p>
           </div>
 
@@ -139,6 +141,9 @@
             <p>
               This site publishes a <code><a href="/.well-known/protoconsent.json">.well-known/protoconsent.json</a></code> file declaring its own data practices, which the extension can read.
             </p>
+            <p>
+              The <strong>declaration validator</strong> (<a href="validate.html">validate.html</a>) can check a domain's <code>.well-known/protoconsent.json</code> file via a proxy hosted on third-party infrastructure (currently Cloudflare Workers, at <code>api.protoconsent.org</code>). When you use this feature, the domain you enter is sent to the proxy to fetch the file. The infrastructure provider may log standard request metadata (IP address, timestamp). No personal data is stored by ProtoConsent beyond the provider's standard logging. Paste and file upload validation run entirely in your browser with no network requests.
+            </p>
           </section>
 
           <section class="article-section">
@@ -171,7 +176,9 @@
         <div class="footer-links">
           <a href="index.html">Home</a>
           <a href="why.html">Why ProtoConsent</a>
+          <a href="validate.html">Validate</a>
           <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">GitHub repo</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent#readme" target="_blank" rel="noopener noreferrer">Technical README</a>
           <a href="mailto:contact@protoconsent.org">Contact</a>
         </div>
       </footer>
