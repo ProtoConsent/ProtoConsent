@@ -375,9 +375,13 @@ function renderSiteDeclaration(container, declaration) {
       : fullUrl;
 
     // Check if rights_url domain matches the current site (strip www.)
+    // Allow same domain or parent/subdomain relationship (same registrable domain)
     let rightsHost = "";
     try { rightsHost = new URL(fullUrl).hostname.replace(/^www\./, ""); } catch (_) {}
-    const isSameDomain = rightsHost === currentDomain;
+    const siteDomain = (currentDomain || "").replace(/^www\./, "");
+    const isSameDomain = rightsHost === siteDomain
+      || rightsHost.endsWith("." + siteDomain)
+      || siteDomain.endsWith("." + rightsHost);
 
     // Always show the full URL first so the user knows where the link goes
     const heading = document.createElement("span");
