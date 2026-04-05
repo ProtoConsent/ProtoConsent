@@ -28,19 +28,19 @@
     </button>
 
     <div id="pc-mode-rail" class="pc-mode-rail" role="tablist" aria-label="Popup modes" hidden>
-      <button type="button" class="pc-mode-tab is-active" data-mode="consent" role="tab" aria-selected="true" aria-controls="pc-view-consent" title="Consent mode">
+      <button type="button" class="pc-mode-tab is-active" id="pc-mode-tab-consent" data-mode="consent" role="tab" aria-selected="true" aria-controls="pc-view-consent" title="Consent mode">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">CONSENT</text>
         </svg>
       </button>
-      <button type="button" class="pc-mode-tab" data-mode="enhanced" role="tab" aria-selected="false" aria-controls="pc-view-enhanced" title="Enhanced Protection mode">
+      <button type="button" class="pc-mode-tab" id="pc-mode-tab-enhanced" data-mode="enhanced" role="tab" aria-selected="false" aria-controls="pc-view-enhanced" title="Enhanced Protection mode">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">ENHANCED</text>
         </svg>
       </button>
-      <button type="button" class="pc-mode-tab" data-mode="log" role="tab" aria-selected="false" aria-controls="pc-view-log" title="Log mode">
+      <button type="button" class="pc-mode-tab" id="pc-mode-tab-log" data-mode="log" role="tab" aria-selected="false" aria-controls="pc-view-log" title="Log mode">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">LOG</text>
@@ -74,7 +74,7 @@
       </header>
 
       <div id="pc-mode-content" class="pc-mode-content">
-        <section id="pc-view-consent" class="pc-view" data-mode-view="consent" role="tabpanel" aria-label="Consent settings">
+        <section id="pc-view-consent" class="pc-view" data-mode-view="consent" role="tabpanel" aria-labelledby="pc-mode-tab-consent">
           <h2 class="visually-hidden">Consent settings</h2>
           <div class="pc-header-stat">
             <button id="pc-blocked-count" class="pc-blocked-count" type="button" aria-live="polite" aria-controls="pc-view-log">loading...</button>
@@ -82,12 +82,12 @@
           <div id="pc-protection-scope" class="pc-protection-scope">
             <span id="pc-protection-scope-text" class="pc-protection-scope-text"></span>
             <div class="pc-scope-indicators">
-              <div id="pc-wk-indicator" class="pc-wk-indicator is-disabled" role="status" aria-live="polite" title=".well-known status unavailable">
-                <span class="pc-wk-dot" aria-hidden="true"></span>
+              <div id="pc-wk-indicator" class="pc-wk-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title=".well-known status unavailable">
+                <span class="pc-wk-dot pc-pill-dot" aria-hidden="true"></span>
                 <span id="pc-wk-label">WK n/a</span>
               </div>
-              <div id="pc-gpc-indicator" class="pc-gpc-indicator is-disabled" role="status" aria-live="polite" title="GPC unavailable on this page">
-                <span class="pc-gpc-dot" aria-hidden="true"></span>
+              <div id="pc-gpc-indicator" class="pc-gpc-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="GPC unavailable on this page">
+                <span class="pc-gpc-dot pc-pill-dot" aria-hidden="true"></span>
                 <span id="pc-gpc-label">GPC off</span>
               </div>
             </div>
@@ -100,7 +100,7 @@
           </main>
         </section>
 
-        <section id="pc-view-enhanced" class="pc-view pc-view-placeholder" data-mode-view="enhanced" role="tabpanel" hidden aria-hidden="true">
+        <section id="pc-view-enhanced" class="pc-view pc-view-placeholder" data-mode-view="enhanced" role="tabpanel" aria-labelledby="pc-mode-tab-enhanced" hidden aria-hidden="true">
           <div class="pc-placeholder-card">
             <div class="pc-placeholder-eyebrow">Enhanced Protection</div>
             <h2 class="pc-placeholder-title">Additional network protection presets</h2>
@@ -113,7 +113,7 @@
           </div>
         </section>
 
-        <section id="pc-view-log" class="pc-view" data-mode-view="log" role="tabpanel" hidden aria-hidden="true">
+        <section id="pc-view-log" class="pc-view" data-mode-view="log" role="tabpanel" aria-labelledby="pc-mode-tab-log" hidden aria-hidden="true">
           <div class="pc-log-header">
             <span id="pc-log-site" class="pc-log-site"></span>
             <span id="pc-log-profile-site" class="pc-log-profile-badge"></span>
