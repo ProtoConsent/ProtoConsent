@@ -119,6 +119,19 @@
           checks.push({ level: "warn", msg: PURPOSE_LABELS[key] + ': unknown sharing value "' + entry.sharing + '". Known values: ' + KNOWN_SHARING.join(", ") + "." });
         }
       }
+
+      if (entry.provider !== undefined) {
+        if (typeof entry.provider !== "string") {
+          checks.push({ level: "warn", msg: PURPOSE_LABELS[key] + ': "provider" should be a string.' });
+        }
+      }
+
+      // Extra fields in purpose entry
+      var knownPurposeFields = ["used", "legal_basis", "sharing", "provider"];
+      var extraPurposeFields = Object.keys(entry).filter(function (k) { return knownPurposeFields.indexOf(k) === -1; });
+      if (extraPurposeFields.length > 0) {
+        checks.push({ level: "info", msg: PURPOSE_LABELS[key] + ": extra fields (ignored by extension): " + extraPurposeFields.join(", ") + "." });
+      }
     }
 
     // 5. Not declared purposes
@@ -267,9 +280,19 @@
         basisEl.appendChild(document.createTextNode(entry.legal_basis.replace(/_/g, " ")));
       }
 
+      var detailEl = document.createElement("span");
+      detailEl.className = "vld-preview-detail";
+      if (entry) {
+        var details = [];
+        if (entry.provider) details.push(entry.provider);
+        if (entry.sharing) details.push("sharing: " + entry.sharing.replace(/_/g, " "));
+        if (details.length > 0) detailEl.textContent = details.join(" · ");
+      }
+
       row.appendChild(nameEl);
       row.appendChild(statusEl);
       row.appendChild(basisEl);
+      row.appendChild(detailEl);
       previewDiv.appendChild(row);
     }
 
@@ -306,7 +329,52 @@
     if (json.rights_url && /^https?:\/\//.test(json.rights_url)) {
       var rightsEl = document.createElement("div");
       rightsEl.className = "vld-preview-data";
-      rightsEl.textContent = "Rights: " + json.rights_url;
+
+      var fullUrl = json.rights_url;
+      var maxLen = 50;
+      var displayUrl = fullUrl.length > maxLen
+        ? fullUrl.slice(0, maxLen) + "[...]"
+        : fullUrl;
+
+      var heading = document.createElement("span");
+      heading.className = "vld-preview-purpose";
+      heading.textContent = "Rights URL";
+      rightsEl.appendChild(heading);
+
+      var urlLabel = document.createElement("span");
+      urlLabel.className = "vld-preview-link--url";
+      urlLabel.textContent = displayUrl;
+      urlLabel.title = fullUrl;
+      rightsEl.appendChild(urlLabel);
+
+      // Domain match check (only when validating a live domain)
+      var inputDomain = sanitizeDomain(domainInput.value);
+      if (inputDomain) {
+        var rightsHost = "";
+        try { rightsHost = new URL(fullUrl).hostname.replace(/^www\./, ""); } catch (_) {}
+        var siteDomain = inputDomain.replace(/^www\./, "");
+        var isSameDomain = rightsHost.indexOf(".") !== -1 && (
+          rightsHost === siteDomain
+          || rightsHost.endsWith("." + siteDomain)
+          || siteDomain.endsWith("." + rightsHost)
+        );
+
+        if (isSameDomain && rightsHost) {
+          var rightsLink = document.createElement("a");
+          rightsLink.href = fullUrl;
+          rightsLink.textContent = "See your rights \u2197";
+          rightsLink.target = "_blank";
+          rightsLink.rel = "noopener noreferrer";
+          rightsLink.className = "vld-preview-link";
+          rightsEl.appendChild(rightsLink);
+        } else if (rightsHost) {
+          var warnEl = document.createElement("span");
+          warnEl.className = "vld-preview-warning";
+          warnEl.textContent = "Different domain \u2013 not clickable";
+          rightsEl.appendChild(warnEl);
+        }
+      }
+
       previewDiv.appendChild(rightsEl);
     }
   }
