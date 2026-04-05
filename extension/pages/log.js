@@ -348,10 +348,10 @@ function renderLogGpc() {
 
   const header = document.createElement("div");
   header.className = "pc-log-purpose-label";
-  let gpcHeaderText = dateStr + " \u002D Sec-GPC: 1 sent to " + pluralize(domains.length, "domain") +
-    " (" + pluralize(totalSignals, "request") + ")";
+  let gpcHeaderText = "Sec-GPC: 1 \u2192 " + pluralize(domains.length, "domain") +
+    ", " + pluralize(totalSignals, "request");
   if (uncapturedGpc > 0) {
-    gpcHeaderText += " (" + uncapturedGpc + " not captured)";
+    gpcHeaderText += " (" + uncapturedGpc + " uncaptured)";
   }
   header.textContent = gpcHeaderText;
   container.appendChild(header);
@@ -364,7 +364,7 @@ function renderLogGpc() {
   table.appendChild(colgroup);
 
   const thead = document.createElement("thead");
-  thead.innerHTML = '<tr><th>Domain</th><th style="text-align:right">Reqs</th><th style="text-align:right" title="First -- last seen">Time</th></tr>';
+  thead.innerHTML = '<tr><th>Domain \u00b7 ' + dateStr + '</th><th style="text-align:right">Reqs</th><th style="text-align:right" title="First -- last seen">Time</th></tr>';
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
