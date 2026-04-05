@@ -40,6 +40,7 @@ function sanitizeDeclaration(raw) {
     clean.purposes = {};
     for (const [key, entry] of Object.entries(raw.purposes)) {
       if (typeof key !== "string" || key.length > 50) continue;
+      if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
       if (!entry || typeof entry !== "object") continue;
       const p = { used: entry.used === true };
       if (typeof entry.legal_basis === "string" && KNOWN_LEGAL_BASIS.includes(entry.legal_basis)) {
@@ -379,9 +380,11 @@ function renderSiteDeclaration(container, declaration) {
     let rightsHost = "";
     try { rightsHost = new URL(fullUrl).hostname.replace(/^www\./, ""); } catch (_) {}
     const siteDomain = (currentDomain || "").replace(/^www\./, "");
-    const isSameDomain = rightsHost === siteDomain
+    const isSameDomain = rightsHost.includes(".") && (
+      rightsHost === siteDomain
       || rightsHost.endsWith("." + siteDomain)
-      || siteDomain.endsWith("." + rightsHost);
+      || siteDomain.endsWith("." + rightsHost)
+    );
 
     // Always show the full URL first so the user knows where the link goes
     const heading = document.createElement("span");
