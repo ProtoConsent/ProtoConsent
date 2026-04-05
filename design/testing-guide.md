@@ -38,6 +38,11 @@ This document explains how to try the current version of ProtoConsent in a brows
     - [10.1 Using demo.protoconsent.org](#101-using-demoprotoconsentorg)
     - [10.2 What to check](#102-what-to-check)
     - [10.3 Publishing your own declaration](#103-publishing-your-own-declaration)
+  - [11. Switching to DNR debug mode](#11-switching-to-dnr-debug-mode)
+    - [11.1 When to use it](#111-when-to-use-it)
+    - [11.2 Activating DNR debug mode](#112-activating-dnr-debug-mode)
+    - [11.3 What changes](#113-what-changes)
+    - [11.4 Deactivating DNR debug mode](#114-deactivating-dnr-debug-mode)
 
 ## 1. Requirements
 
@@ -369,4 +374,49 @@ ProtoConsent reads a `.well-known/protoconsent.json` file from any website to di
 ### 10.3 Publishing your own declaration
 
 Any site can publish a `.well-known/protoconsent.json` file. See the [site declaration spec](well-known-spec.md) for the full format and the [demo site source](https://github.com/ProtoConsent/demo) for a complete example.
+
+## 11. Switching to DNR debug mode
+
+By default, the extension uses `webRequest` events to track blocked requests and GPC signals. This is the same code path in both unpacked (developer) and store builds, which ensures you test what you ship.
+
+For rule-level debugging — for example, when developing or troubleshooting blocklist rules — you can switch to `onRuleMatchedDebug`, a Chrome API that reports the exact rule ID and ruleset for every matched request. This API is only available in unpacked extensions.
+
+### 11.1 When to use it
+
+- Developing or testing new blocklist rules and you need to see which exact rule matched.
+- Investigating whether a request was blocked by a static ruleset, a dynamic override, or a GPC header rule.
+- Comparing Chrome's rule matching against the webRequest-based hostname lookup.
+
+For normal testing and day-to-day use, leave `USE_DNR_DEBUG` off.
+
+### 11.2 Activating DNR debug mode
+
+1. Open `extension/config.js`.
+2. Change `USE_DNR_DEBUG` from `false` to `true`:
+
+   ```js
+   const USE_DNR_DEBUG = true;
+   ```
+
+3. Reload the extension from `chrome://extensions/`.
+4. The debug panel (Log → Debug tab) will show `data source: onRuleMatchedDebug` to confirm the switch.
+
+> **Note:** This only works in unpacked extensions. In store builds, `onRuleMatchedDebug` does not exist and the flag has no effect — the extension continues using `webRequest` automatically.
+
+### 11.3 What changes
+
+| Feature | webRequest (default) | onRuleMatchedDebug |
+| --- | --- | --- |
+| Purpose attribution | Hostname lookup against blocklists | Exact rulesetId → purpose |
+| Rule-level detail | Not available | ruleId and rulesetId per match |
+| GPC detection | Header presence in onSendHeaders | Exact GPC rule ID per match |
+| Other extensions' blocks | Filtered by our blocklists (may miss edge cases) | Only our rules, guaranteed |
+| Works in store builds | Yes | No |
+
+The popup, log tab, badge counter, and debug panel all work in both modes — only the data source changes.
+
+### 11.4 Deactivating DNR debug mode
+
+1. Set `USE_DNR_DEBUG` back to `false` in `extension/config.js`.
+2. Reload the extension.
 
