@@ -200,21 +200,13 @@ body {
   margin-top: 12px;
 }
 
-.pc-placeholder-pill,
-.pc-placeholder-list-item {
+.pc-placeholder-pill {
   font-size: 11px;
   color: var(--pc-accent);
   background: #eef5ff;
   border: 1px solid #dbeafe;
   border-radius: 999px;
   padding: 4px 8px;
-}
-
-.pc-placeholder-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 12px;
 }
 
 /* Header */
@@ -352,7 +344,8 @@ body {
   cursor: not-allowed;
 }
 
-.pc-gpc-indicator {
+/* Shared pill indicator base */
+.pc-pill-indicator {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -364,6 +357,29 @@ body {
   background-color: var(--pc-surface);
   color: var(--pc-text-muted);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.pc-pill-indicator.is-inactive {
+  color: #6b7280;
+  border-color: #e5e7eb;
+  background-color: #f3f4f6;
+}
+
+.pc-pill-indicator.is-disabled {
+  color: #6b7280;
+  border-color: #e5e7eb;
+  background-color: #f3f4f6;
+}
+
+.pc-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pc-pill-indicator.is-disabled .pc-pill-dot {
+  background-color: #9ca3af;
 }
 
 .pc-scope-indicators {
@@ -373,25 +389,8 @@ body {
   flex-shrink: 0;
 }
 
-.pc-wk-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--pc-line);
-  background-color: var(--pc-surface);
-  color: var(--pc-text-muted);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-}
-
+/* WK-specific */
 .pc-wk-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
   background-color: #9ca3af;
 }
 
@@ -405,32 +404,13 @@ body {
   background-color: #2563eb;
 }
 
-.pc-wk-indicator.is-inactive {
-  color: #6b7280;
-  border-color: #e5e7eb;
-  background-color: #f3f4f6;
-}
-
 .pc-wk-indicator.is-inactive .pc-wk-dot {
   background-color: #9ca3af;
 }
 
-.pc-wk-indicator.is-disabled {
-  color: #6b7280;
-  border-color: #e5e7eb;
-  background-color: #f3f4f6;
-}
-
-.pc-wk-indicator.is-disabled .pc-wk-dot {
-  background-color: #9ca3af;
-}
-
+/* GPC-specific */
 .pc-gpc-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-  background-color: #ef4444;
+  background-color: #dc2626;
 }
 
 .pc-gpc-indicator.is-active {
@@ -444,17 +424,7 @@ body {
 }
 
 .pc-gpc-indicator.is-inactive .pc-gpc-dot {
-  background-color: #dc2626;
-}
-
-.pc-gpc-indicator.is-disabled {
-  color: #6b7280;
-  border-color: #e5e7eb;
-  background-color: #f3f4f6;
-}
-
-.pc-gpc-indicator.is-disabled .pc-gpc-dot {
-  background-color: #9ca3af;
+  background-color: #f87171;
 }
 
 .pc-reload-btn {
@@ -703,16 +673,11 @@ body {
 
 .pc-purpose-item.is-required .pc-toggle-switch.is-on.is-disabled {
   background-color: #6fb082;
+  cursor: not-allowed;
 }
 
 .pc-toggle-switch.is-on .pc-toggle-switch-knob {
   transform: translateX(14px);
-}
-
-/* Required purpose: disabled toggle — softer green, non-interactive */
-.pc-toggle-switch.is-on.is-disabled {
-  background-color: #aad1b4;
-  cursor: not-allowed;
 }
 
 .pc-purpose-item.is-required .pc-purpose-toggle {
@@ -764,12 +729,6 @@ body {
   margin-top: 2px;
   padding: 6px 8px 0 8px;
   border-top: 1px solid #e8edf3;
-}
-
-.pc-footer-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
 }
 
 .pc-footer-content {

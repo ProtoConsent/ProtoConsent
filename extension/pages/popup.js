@@ -123,13 +123,14 @@ function setActiveMode(mode) {
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
+  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
-      return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+      return EMPTY_BLOCKED_RESULT;
     }
 
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tabs || !tabs[0]) return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+    if (!tabs || !tabs[0]) return EMPTY_BLOCKED_RESULT;
 
     const tabId = tabs[0].id;
 
@@ -143,7 +144,7 @@ async function getBlockedRulesCount() {
     const domainsResp = domainsResult.status === "fulfilled" ? domainsResult.value : null;
     const dynamicRules = dynamicResult.status === "fulfilled" ? dynamicResult.value : [];
 
-    if (!matched || !matched.rulesMatchedInfo) return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+    if (!matched || !matched.rulesMatchedInfo) return EMPTY_BLOCKED_RESULT;
 
     const blockedDomains = domainsResp?.data || {};
     const gpcDomains = domainsResp?.gpcDomains || [];
@@ -199,7 +200,7 @@ async function getBlockedRulesCount() {
     return { blocked, gpc, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
-    return { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+    return EMPTY_BLOCKED_RESULT;
   }
 }
 
@@ -537,6 +538,15 @@ async function loadRulesFromStorageSafe() {
   });
 }
 
+// Show or hide the "Custom" option in the profile selector
+function setCustomOptionVisible(visible) {
+  const customOption = document.querySelector('#pc-profile-select option[value="custom"]');
+  if (customOption) {
+    customOption.disabled = !visible;
+    customOption.hidden = !visible;
+  }
+}
+
 // Init profile selector (event handler only; values set by initStateForDomain)
 function initProfileSelect() {
   const selectEl = document.getElementById("pc-profile-select");
@@ -545,11 +555,7 @@ function initProfileSelect() {
     currentProfile = selectEl.value;
     // When switching to a named preset, hide the custom option
     if (currentProfile !== "custom") {
-      const customOption = selectEl.querySelector('option[value="custom"]');
-      if (customOption) {
-        customOption.disabled = true;
-        customOption.hidden = true;
-      }
+      setCustomOptionVisible(false);
     }
     applyPresetToCurrentDomain();
     renderPurposesList();
@@ -557,6 +563,13 @@ function initProfileSelect() {
     displayProtectionScope();
     updateGpcIndicator();
   });
+}
+
+// Force required purposes (e.g. functional) to true regardless of stored state
+function forceRequiredPurposes() {
+  for (const key of requiredPurposeKeys) {
+    currentPurposesState[key] = true;
+  }
 }
 
 // Init currentPurposesState for this domain, resolving profile inheritance
@@ -570,11 +583,7 @@ function initStateForDomain() {
 
     // Show the custom option if this domain uses it
     if (currentProfile === "custom") {
-      const customOption = document.querySelector('#pc-profile-select option[value="custom"]');
-      if (customOption) {
-        customOption.disabled = false;
-        customOption.hidden = false;
-      }
+      setCustomOptionVisible(true);
     }
     // Start from profile defaults (if named preset) or empty (if custom)
     const profilePurposes = (presetsConfig[currentProfile] && presetsConfig[currentProfile].purposes) || {};
@@ -596,10 +605,7 @@ function initStateForDomain() {
   const selectEl = document.getElementById("pc-profile-select");
   selectEl.value = currentProfile;
 
-  // Force required purposes to true regardless of stored state
-  for (const key of requiredPurposeKeys) {
-    currentPurposesState[key] = true;
-  }
+  forceRequiredPurposes();
 }
 
 // Apply preset values for currentProfile into currentPurposesState
@@ -618,10 +624,7 @@ function applyPresetToCurrentDomain() {
     currentPurposesState[purposeKey] = presetValue !== false;
   });
 
-  // Force required purposes to true
-  for (const key of requiredPurposeKeys) {
-    currentPurposesState[key] = true;
-  }
+  forceRequiredPurposes();
 }
 
 // Check if current toggles match the active preset; if not, switch to "custom".
@@ -638,11 +641,7 @@ function detectCustomProfile() {
       if (matches) {
         currentProfile = presetKey;
         const selectEl = document.getElementById("pc-profile-select");
-        const customOption = selectEl.querySelector('option[value="custom"]');
-        if (customOption) {
-          customOption.disabled = true;
-          customOption.hidden = true;
-        }
+        setCustomOptionVisible(false);
         selectEl.value = presetKey;
         return;
       }
@@ -659,11 +658,7 @@ function detectCustomProfile() {
   if (!matchesPreset) {
     currentProfile = "custom";
     const selectEl = document.getElementById("pc-profile-select");
-    const customOption = selectEl.querySelector('option[value="custom"]');
-    if (customOption) {
-      customOption.disabled = false;
-      customOption.hidden = false;
-    }
+    setCustomOptionVisible(true);
     selectEl.value = "custom";
   }
 }
