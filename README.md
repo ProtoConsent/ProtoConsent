@@ -26,8 +26,8 @@ No central server, no tracking, no sharing of personal data. Preferences are enf
 - **Purpose toggles** for six categories: functional, analytics, ads, personalisation, third‑party services, and advanced tracking.
 - **Network‑level enforcement** via static rulesets: 40 000+ curated tracker domains and 1 200+ path‑based rules from public blocklists, organized by purpose. See [blocklists.md](design/blocklists.md) for sources and curation criteria.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC header and `navigator.globalPrivacyControl`), sent only when privacy‑relevant purposes are denied — per site, not globally.
-- **Per‑purpose blocked request counter** with estimated performance impact, visible in the popup.
-- **Log monitoring tab** with three sub-tabs: real-time request log, blocked domains grouped by purpose with Consent Commons icons, and GPC signal tracking per domain with timestamps. Includes a copy-to-clipboard button for all tabs.
+- **Per‑purpose blocked request counter** with estimated performance impact, visible in the popup. Badge counter on the extension icon shows per‑tab blocked requests at a glance.
+- **Log monitoring tab** with three sub-tabs: real-time request log, blocked domains grouped by purpose with Consent Commons icons, and GPC signal tracking per domain with timestamps. Works in both developer and store builds. Includes a copy-to-clipboard button for all tabs.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` file declaring their data practices, displayed in a side panel with [Consent Commons](https://consentcommons.com/) icons.
 - **JavaScript SDK** (MIT licensed) and content script bridge for web pages to query user preferences. TypeScript declarations included.
 - **Onboarding** welcome page for first‑time users with profile selection.

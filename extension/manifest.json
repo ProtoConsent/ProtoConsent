@@ -33,7 +33,8 @@
     "storage",
     "scripting",
     "declarativeNetRequest",
-    "declarativeNetRequestFeedback"
+    "declarativeNetRequestFeedback",
+    "webRequest"
   ],
 
   "host_permissions": [

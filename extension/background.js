@@ -5,6 +5,10 @@
 // background.js - ProtoConsent enforcement using declarativeNetRequest
 importScripts("config.js");
 
+// Resolved once at startup: use onRuleMatchedDebug only when both opted-in
+// (USE_DNR_DEBUG in config.js) and available (unpacked extension).
+const useDnrDebug = USE_DNR_DEBUG && !!chrome.declarativeNetRequest.onRuleMatchedDebug;
+
 // We assign IDs for dynamic rules starting from 1 upwards
 const BASE_RULE_ID = 1;
 
@@ -40,12 +44,32 @@ let dynamicBlockRuleMap = {};
 // Set of dynamic rule IDs that inject Sec-GPC: 1 (rebuilt on each rule update).
 let dynamicGpcSetIds = new Set();
 
+// Reverse index: maps each hostname to its purpose key(s), so we can
+// determine which purpose blocked a request given only the hostname.
+// Built after loadBlocklistsConfig(). Used by onErrorOccurred.
+let reverseHostIndex = null;
+
+// Set of currently-enabled static blocking rulesets (e.g. "block_analytics").
+// Updated on each rebuildAllDynamicRules cycle. Used to disambiguate purpose
+// when a domain appears in multiple blocklists.
+let enabledBlockRulesets = new Set();
+
+// GPC (Global Privacy Control) configuration snapshot — updated on each rebuild.
+// gpcGlobalActive: true if the global GPC rule is on (applies to all requests by default).
+// gpcAddDomains: sites that override global to ADD GPC (requestDomains targets).
+// gpcRemoveDomains: sites that override global to REMOVE GPC (requestDomains targets).
+// Used by onSendHeaders to filter out browser-native GPC signals (e.g. Brave/Firefox
+// send Sec-GPC natively; we only count signals injected by our own rules).
+let gpcGlobalActive = false;
+let gpcAddDomains = new Set();
+let gpcRemoveDomains = new Set();
+
 // Per-tab tracking of unique domains that received GPC (Sec-GPC: 1) signals.
 // Maps tabId -> Set<domain>
 const tabGpcDomains = new Map();
 
 // Session persistence helpers:
-// Debounced write to chrome.storage.session (max once per 2s) to avoid
+// Throttled write to chrome.storage.session (max once per 2s) to avoid
 // excessive writes on pages with many blocked requests.
 let sessionPersistTimer = null;
 function scheduleSessionPersist() {
@@ -94,12 +118,37 @@ let lastRebuildDebug = {};
 // This runs at the top level so it executes each time Chrome spins up the worker.
 restoreTabDataFromSession();
 
+// Badge: show blocked request count per tab on the extension icon.
+// Uses our tabBlockedDomains as source (not Chrome's getMatchedRules total)
+// so the number matches what the popup and log display.
+chrome.action.setBadgeBackgroundColor({ color: "#6b7280" });
+
+function updateBadgeForTab(tabId) {
+  const tabData = tabBlockedDomains.get(tabId);
+  if (!tabData) {
+    chrome.action.setBadgeText({ tabId, text: "" });
+    return;
+  }
+  let total = 0;
+  for (const domains of Object.values(tabData)) {
+    for (const count of Object.values(domains)) {
+      total += count;
+    }
+  }
+  chrome.action.setBadgeText({ tabId, text: total > 0 ? String(total) : "" });
+}
 
 // Cached in-memory copy of presets.json; loaded once per SW lifetime.
 let presetsConfig = null;
 
 // Cached in-memory copy of purposes.json; loaded once per SW lifetime.
 let purposesConfig = null;
+
+// Start loading blocklists early so the reverse hostname index is ready
+// when the first onErrorOccurred event arrives. We don't await the result
+// here — rebuildAllDynamicRules awaits it later. This call must stay below
+// the presetsConfig/purposesConfig declarations or they will be undefined.
+loadBlocklistsConfig();
 
 
 // Load domain and path-domain lists from static rulesets (rules/block_*.json, rules/block_*_paths.json).
@@ -147,7 +196,58 @@ async function loadBlocklistsConfig() {
     config[key] = entry;
   }
   blocklistsConfig = config;
+  reverseHostIndex = buildReverseHostIndex(config);
   return blocklistsConfig;
+}
+
+// Build a hostname-to-purpose lookup from the blocklists.
+// Returns Map<hostname, string[]> where each value is an array of purpose keys.
+// A domain may appear in multiple purposes (e.g. both "analytics" and "ads").
+// ~40K entries; built once when blocklists are loaded.
+function buildReverseHostIndex(config) {
+  const index = new Map();
+  for (const purpose of PURPOSES_FOR_ENFORCEMENT) {
+    const entry = config[purpose];
+    if (!entry) continue;
+    const allDomains = (entry.domains || []).concat(entry.pathDomains || []);
+    for (const domain of allDomains) {
+      const existing = index.get(domain);
+      if (existing) {
+        if (!existing.includes(purpose)) existing.push(purpose);
+      } else {
+        index.set(domain, [purpose]);
+      }
+    }
+  }
+  return index;
+}
+
+// Resolve ALL matching purposes for a blocked hostname using the lookup index.
+// Walks up the domain hierarchy to handle subdomain matching (declarativeNetRequest's
+// requestDomains matches all subdomains, so "tracker.google-analytics.com" matches
+// "google-analytics.com"). Returns an array of purpose keys (may be empty).
+// In developer mode, onRuleMatchedDebug fires once per matching ruleset;
+// this replicates that behavior for onErrorOccurred (which fires once per request).
+function resolvePurposesFromHostname(hostname) {
+  if (!reverseHostIndex) return [];
+  let h = hostname;
+  while (h) {
+    const purposes = reverseHostIndex.get(h);
+    if (purposes) {
+      // Filter to purposes with active blocking (static rulesets or dynamic overrides)
+      const activeDynamic = new Set(Object.values(dynamicBlockRuleMap));
+      const active = purposes.filter(p =>
+        enabledBlockRulesets.has("block_" + p) ||
+        enabledBlockRulesets.has("block_" + p + "_paths") ||
+        activeDynamic.has(p)
+      );
+      return active.length > 0 ? active : purposes;
+    }
+    const dot = h.indexOf(".");
+    if (dot < 0) break;
+    h = h.slice(dot + 1);
+  }
+  return [];
 }
 
 // Load presets.json once when the service worker starts.
@@ -250,7 +350,7 @@ function getAllRulesFromStorage() {
   });
 }
 
-// Serialization guard: if a rebuild is already running, queue one re-run at the end.
+// Sequential guard: if a rebuild is already running, queue one re-run at the end.
 let _rebuildRunning = false;
 let _rebuildQueued = false;
 
@@ -259,8 +359,8 @@ let _rebuildQueued = false;
 // 1) Enable/disable static rulesets (domain + path) for global blocking per category.
 // 2) Build per-site dynamic overrides (block/allow) grouped by category.
 // 3) Build GPC header rules (global + per-site overrides).
-// 4) Atomic-swap all dynamic rules in a single updateDynamicRules call.
-// 5) Update static rulesets AFTER dynamic (over-block during gap, never under-block).
+// 4) Replace all dynamic rules in a single updateDynamicRules call.
+// 5) Update static rulesets AFTER dynamic (may temporarily block too much, but never too little).
 async function rebuildAllDynamicRules() {
   if (_rebuildRunning) {
     _rebuildQueued = true;
@@ -331,10 +431,13 @@ async function _rebuildAllDynamicRulesImpl() {
       }
     }
 
+    // Track which static rulesets are actively blocking (for onErrorOccurred disambiguation)
+    enabledBlockRulesets = new Set(enableIds);
+
     // 3. Per-site overrides (priority 2 — override static rules where site differs)
     //    First pass: group sites by (category, action) so we can batch all sites
-    //    into one initiatorDomains array per rule. This reduces from O(categories × sites)
-    //    to O(categories × 2) — max 10 dynamic rules regardless of how many custom sites.
+    //    into one initiatorDomains array per rule. This keeps the rule count
+    //    proportional to categories (max 10 dynamic rules), not to the number of custom sites.
     //    Override requestDomains merges domain + pathDomain lists so both domain-based
     //    and path-based static rules are overridden for the site.
     const allowOverrides = {}; // purposeKey -> [site1, site2, ...]
@@ -497,6 +600,13 @@ async function _rebuildAllDynamicRulesImpl() {
       });
     }
 
+    // Snapshot GPC config for the onSendHeaders production filter.
+    // This tells the production listener which domains should receive GPC,
+    // filtering out native browser GPC signals that we didn't inject.
+    gpcGlobalActive = globalNeedsGPC;
+    gpcAddDomains = new Set(gpcAddSites);
+    gpcRemoveDomains = new Set(gpcRemoveSites);
+
     if (DEBUG_RULES) {
       const overrideCount = newRules.filter(r => r.condition.initiatorDomains).length;
       const gpcGlobal = newRules.filter(r =>
@@ -538,8 +648,8 @@ async function _rebuildAllDynamicRulesImpl() {
 
     // 5. Apply changes: dynamic rules FIRST, then static rulesets.
     //    Order matters for security: during the brief gap between calls,
-    //    "new dynamic + old static" may over-block (safe), whereas the
-    //    reverse order "new static + old dynamic" could under-block.
+    //    "new dynamic + old static" may block too much (safe), whereas the
+    //    reverse order "new static + old dynamic" could let requests through.
     //    Each wrapped in its own try/catch to surface errors independently.
     try {
       await chrome.declarativeNetRequest.updateDynamicRules({
@@ -763,7 +873,7 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => logPorts.delete(port));
 });
 
-if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
+if (useDnrDebug) {
   chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((info) => {
     const { rule, request } = info;
     if (request.tabId < 0) return;
@@ -809,12 +919,130 @@ if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
     if (!tabData[purpose]) tabData[purpose] = {};
     tabData[purpose][domain] = (tabData[purpose][domain] || 0) + 1;
     scheduleSessionPersist();
+    updateBadgeForTab(request.tabId);
 
     // Forward block event to log ports
     for (const port of logPorts) {
       try { port.postMessage({ type: "block", purpose, url: request.url, tabId: request.tabId }); } catch (_) {}
     }
   });
+}
+
+// Standard data source: webRequest.onErrorOccurred for ERR_BLOCKED_BY_CLIENT.
+// Used by default in both developer and store builds (USE_DNR_DEBUG = false).
+// Provides URL and tabId but no ruleId — purpose resolved via reverse hostname index.
+// Known limitation: other extensions blocking the same request produce false positives
+// (mitigated by filtering against our blocklists via reverseHostIndex).
+if (!useDnrDebug) {
+  try {
+    chrome.webRequest.onErrorOccurred.addListener(
+    (details) => {
+      if (details.error !== "net::ERR_BLOCKED_BY_CLIENT") return;
+      if (details.tabId < 0) return;
+
+      let hostname;
+      try { hostname = new URL(details.url).hostname; } catch (_) { return; }
+
+      // Resolve ALL matching purposes; empty means not in our blocklists
+      // (likely blocked by another extension — skip to avoid counting someone else's blocks)
+      const purposes = resolvePurposesFromHostname(hostname);
+      if (!purposes.length) return;
+
+      // Update tabBlockedDomains for each matching purpose (mirrors dev behavior
+      // where onRuleMatchedDebug fires once per matching ruleset)
+      if (!tabBlockedDomains.has(details.tabId)) {
+        tabBlockedDomains.set(details.tabId, {});
+      }
+      const tabData = tabBlockedDomains.get(details.tabId);
+      for (const purpose of purposes) {
+        if (!tabData[purpose]) tabData[purpose] = {};
+        tabData[purpose][hostname] = (tabData[purpose][hostname] || 0) + 1;
+      }
+      scheduleSessionPersist();
+      updateBadgeForTab(details.tabId);
+
+      // Forward block event to connected log ports (one per purpose, same as dev)
+      for (const purpose of purposes) {
+        for (const port of logPorts) {
+          try {
+            port.postMessage({ type: "block", purpose, url: details.url, tabId: details.tabId });
+          } catch (_) {}
+        }
+      }
+    },
+    { urls: ["<all_urls>"] }
+  );
+  } catch (e) {
+    console.warn("ProtoConsent: onErrorOccurred listener not available:", e.message);
+  }
+
+  // Standard GPC tracking: webRequest.onSendHeaders observes final request headers.
+  // If Chrome applies DNR modifyHeaders (Sec-GPC: 1) before this event, we can detect
+  // which domains received the GPC signal. Same data structure as onRuleMatchedDebug path.
+  // If DNR headers are NOT visible here, this listener harmlessly captures nothing.
+  // Filter: only count GPC for domains where OUR rules inject the header, not native browser GPC.
+  try {
+  chrome.webRequest.onSendHeaders.addListener(
+    (details) => {
+      if (details.tabId < 0) return;
+      if (!details.requestHeaders) return;
+
+      const hasGpc = details.requestHeaders.some(
+        h => h.name.toLowerCase() === "sec-gpc" && h.value === "1"
+      );
+      if (!hasGpc) return;
+
+      let domain;
+      try { domain = new URL(details.url).hostname; } catch (_) { return; }
+
+      // Check if OUR DNR rules would inject GPC for this domain.
+      // DNR requestDomains matches subdomains, so "tracker.example.com" matches
+      // a rule targeting "example.com". Walk up labels to replicate DNR behavior.
+      if (gpcGlobalActive) {
+        // Global rule sends GPC to all domains, except per-site remove overrides.
+        // Check if this domain matches any gpcRemoveDomains entry (subdomain-aware).
+        if (gpcRemoveDomains.size > 0) {
+          let h = domain;
+          while (h) {
+            if (gpcRemoveDomains.has(h)) return; // Excluded by per-site override
+            const dot = h.indexOf(".");
+            if (dot < 0) break;
+            h = h.slice(dot + 1);
+          }
+        }
+      } else {
+        // No global rule — GPC only for per-site add overrides.
+        if (gpcAddDomains.size === 0) return;
+        let matched = false;
+        let h = domain;
+        while (h) {
+          if (gpcAddDomains.has(h)) { matched = true; break; }
+          const dot = h.indexOf(".");
+          if (dot < 0) break;
+          h = h.slice(dot + 1);
+        }
+        if (!matched) return;
+      }
+
+      if (!tabGpcDomains.has(details.tabId)) tabGpcDomains.set(details.tabId, {});
+      const gpcData = tabGpcDomains.get(details.tabId);
+      const now = Date.now();
+      if (!gpcData[domain]) gpcData[domain] = { count: 0, firstSeen: now };
+      gpcData[domain].count++;
+      gpcData[domain].lastSeen = now;
+      scheduleSessionPersist();
+
+      // Forward GPC event to log ports
+      for (const port of logPorts) {
+        try { port.postMessage({ type: "gpc", domain, tabId: details.tabId }); } catch (_) {}
+      }
+    },
+    { urls: ["<all_urls>"] },
+    ["requestHeaders"]
+  );
+  } catch (e) {
+    console.warn("ProtoConsent: onSendHeaders listener not available:", e.message);
+  }
 }
 
 // Clear per-tab tracking on navigation and tab close.
@@ -828,6 +1056,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabBlockedDomains.delete(tabId);
       tabGpcDomains.delete(tabId);
       scheduleSessionPersist();
+      chrome.action.setBadgeText({ tabId, text: "" });
     }
   } else if (changeInfo.status === "complete") {
     tabNavigating.delete(tabId);
