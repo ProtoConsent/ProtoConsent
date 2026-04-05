@@ -125,6 +125,7 @@
             <button class="pc-log-tab" data-log-tab="domains" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-domains" id="pc-log-tab-domains">Domains</button>
             <button class="pc-log-tab" data-log-tab="gpc" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-gpc" id="pc-log-tab-gpc">GPC</button>
             <button class="pc-log-tab" data-log-tab="debug" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-debug" id="pc-log-tab-debug" hidden>Debug</button>
+            <button class="pc-log-tab" data-log-tab="whitelist" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-whitelist" id="pc-log-tab-whitelist">Whitelist</button>
             <button class="pc-log-tab" data-log-tab="others" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-others" id="pc-log-tab-others" hidden>Others</button>
             <button id="pc-log-copy" class="pc-log-copy" type="button" title="Copy tab content to clipboard">Copy</button>
           </div>
@@ -139,6 +140,9 @@
           </div>
           <div class="pc-log-panel" data-log-panel="debug" role="tabpanel" id="pc-log-panel-debug" aria-labelledby="pc-log-tab-debug" hidden>
             <pre id="pc-log-debug" class="pc-log-console"></pre>
+          </div>
+          <div class="pc-log-panel" data-log-panel="whitelist" role="tabpanel" id="pc-log-panel-whitelist" aria-labelledby="pc-log-tab-whitelist" hidden>
+            <div id="pc-log-whitelist" class="pc-log-content"></div>
           </div>
           <div class="pc-log-panel" data-log-panel="others" role="tabpanel" id="pc-log-panel-others" aria-labelledby="pc-log-tab-others" hidden>
             <div class="pc-log-content pc-log-empty">Reserved for future use.</div>

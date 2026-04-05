@@ -2,11 +2,11 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Log tab: real-time request log, domain summary, GPC activity.
+// Log tab: real-time request log, domain summary, GPC activity, whitelist management.
 // Loaded after popup.js — shares globals: currentDomain, currentProfile,
 // currentPurposesState, purposesConfig, lastBlockedDomains, lastBlocked,
 // lastGpcDomains, lastGpcDomainCounts, lastGpcSignalsSent, lastPurposeStats,
-// PURPOSES_TO_SHOW, DEBUG_RULES.
+// lastWhitelist, PURPOSES_TO_SHOW, DEBUG_RULES.
 // Shared helpers from config.js: pluralize, getPurposeLabel, formatHHMM, formatHHMMSS.
 
 let logPort = null;
@@ -18,6 +18,7 @@ function refreshLogView() {
   refreshLogRequests();
   renderLogDomains();
   renderLogGpc();
+  renderLogWhitelist();
 }
 
 // --- One-time setup + refresh ----------------------------
@@ -206,11 +207,11 @@ function renderLogDomains() {
   table.className = "pc-log-table";
 
   const colgroup = document.createElement("colgroup");
-  colgroup.innerHTML = '<col style="width:24px"><col style="width:auto"><col style="width:50px">';
+  colgroup.innerHTML = '<col style="width:24px"><col style="width:auto"><col style="width:50px"><col style="width:48px">';
   table.appendChild(colgroup);
 
   const thead = document.createElement("thead");
-  thead.innerHTML = '<tr><th></th><th>Domain</th><th style="text-align:right">Blocked</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>Domain</th><th style="text-align:right">Blocked</th><th>Whitelist</th></tr>';
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
@@ -244,9 +245,30 @@ function renderLogDomains() {
     tdCount.textContent = row.count;
     tdCount.className = "pc-log-table-count";
 
+    const tdAction = document.createElement("td");
+    tdAction.className = "pc-log-domains-action";
+    if (row.domain) {
+      const isWhitelisted = !!(lastWhitelist && lastWhitelist[row.domain]);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      if (isWhitelisted) {
+        btn.className = "pc-log-allow-btn is-allowed";
+        btn.textContent = "Allowed";
+        btn.title = "Click to remove " + row.domain + " from whitelist";
+        btn.addEventListener("click", () => handleWhitelistRemove(row.domain, row.purpose));
+      } else {
+        btn.className = "pc-log-allow-btn";
+        btn.textContent = "Allow";
+        btn.title = "Allow " + row.domain + " globally";
+        btn.addEventListener("click", () => handleWhitelistAdd(row.domain, row.purpose));
+      }
+      tdAction.appendChild(btn);
+    }
+
     tr.appendChild(tdIcon);
     tr.appendChild(tdDomain);
     tr.appendChild(tdCount);
+    tr.appendChild(tdAction);
     tbody.appendChild(tr);
   }
   table.appendChild(tbody);
@@ -447,4 +469,125 @@ function appendLogLine(text, type) {
   }
 
   if (atBottom) pre.scrollTop = pre.scrollHeight;
+}
+
+// --- Whitelist handlers -----------------------------------
+
+function handleWhitelistAdd(domain, purpose) {
+  chrome.runtime.sendMessage(
+    { type: "PROTOCONSENT_WHITELIST_ADD", domain, purpose },
+    (resp) => {
+      void chrome.runtime.lastError;
+      if (resp?.ok) {
+        if (!lastWhitelist[domain]) lastWhitelist[domain] = {};
+        lastWhitelist[domain][purpose] = true;
+        renderLogDomains();
+        renderLogWhitelist();
+      }
+    }
+  );
+}
+
+function handleWhitelistRemove(domain, purpose) {
+  chrome.runtime.sendMessage(
+    { type: "PROTOCONSENT_WHITELIST_REMOVE", domain, purpose },
+    (resp) => {
+      void chrome.runtime.lastError;
+      if (resp?.ok) {
+        if (lastWhitelist[domain]) {
+          delete lastWhitelist[domain][purpose];
+          if (Object.keys(lastWhitelist[domain]).length === 0) delete lastWhitelist[domain];
+        }
+        renderLogDomains();
+        renderLogWhitelist();
+      }
+    }
+  );
+}
+
+// --- Whitelist panel --------------------------------------
+
+function renderLogWhitelist() {
+  const container = document.getElementById("pc-log-whitelist");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const wl = lastWhitelist || {};
+  const entries = [];
+  for (const [domain, purposes] of Object.entries(wl)) {
+    for (const purpose of Object.keys(purposes)) {
+      entries.push({ domain, purpose });
+    }
+  }
+
+  if (entries.length === 0) {
+    container.innerHTML = '<div class="pc-log-empty">No whitelisted domains. Use the Allow button in the Domains tab.</div>';
+    return;
+  }
+
+  // Sort by purpose order, then domain alphabetically
+  const purposeOrder = PURPOSES_TO_SHOW || [];
+  entries.sort((a, b) => {
+    const pa = purposeOrder.indexOf(a.purpose);
+    const pb = purposeOrder.indexOf(b.purpose);
+    if (pa !== pb) return (pa === -1 ? 999 : pa) - (pb === -1 ? 999 : pb);
+    return a.domain.localeCompare(b.domain);
+  });
+
+  const header = document.createElement("div");
+  header.className = "pc-log-purpose-label";
+  header.textContent = pluralize(entries.length, "whitelisted domain");
+  container.appendChild(header);
+
+  const table = document.createElement("table");
+  table.className = "pc-log-table";
+
+  const colgroup = document.createElement("colgroup");
+  colgroup.innerHTML = '<col style="width:24px"><col style="width:auto"><col style="width:54px">';
+  table.appendChild(colgroup);
+
+  const thead = document.createElement("thead");
+  thead.innerHTML = '<tr><th></th><th>Domain</th><th></th></tr>';
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  for (const entry of entries) {
+    const cfg = purposesConfig[entry.purpose];
+    const tr = document.createElement("tr");
+
+    const tdIcon = document.createElement("td");
+    tdIcon.className = "pc-log-domains-icon";
+    if (cfg && cfg.icon) {
+      const img = document.createElement("img");
+      img.src = cfg.icon;
+      img.width = 14;
+      img.height = 14;
+      img.alt = cfg.short || "";
+      img.title = getPurposeLabel(entry.purpose);
+      tdIcon.appendChild(img);
+    } else {
+      tdIcon.textContent = cfg?.short || entry.purpose.charAt(0).toUpperCase();
+      tdIcon.title = getPurposeLabel(entry.purpose);
+    }
+
+    const tdDomain = document.createElement("td");
+    tdDomain.textContent = entry.domain;
+
+    const tdAction = document.createElement("td");
+    tdAction.className = "pc-log-domains-action";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pc-log-remove-btn";
+    btn.textContent = "Remove";
+    btn.title = "Remove " + entry.domain + " from whitelist";
+    btn.addEventListener("click", () => handleWhitelistRemove(entry.domain, entry.purpose));
+    tdAction.appendChild(btn);
+
+    tr.appendChild(tdIcon);
+    tr.appendChild(tdDomain);
+    tr.appendChild(tdAction);
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  container.appendChild(table);
 }

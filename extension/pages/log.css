@@ -229,3 +229,57 @@
 .pc-log-line-ts {
   color: #64748b;
 }
+
+/* Domain whitelist action column */
+.pc-log-domains-action {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.pc-log-allow-btn {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border: 1px solid var(--pc-line);
+  border-radius: 4px;
+  background: none;
+  color: var(--pc-accent);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.pc-log-allow-btn:hover {
+  background: var(--pc-accent-soft, #eef5ff);
+  border-color: var(--pc-accent);
+}
+
+.pc-log-allow-btn.is-allowed {
+  color: var(--pc-success, #16a34a);
+  border-color: #b7dec0;
+  background: #eef9f1;
+}
+
+.pc-log-allow-btn.is-allowed:hover {
+  background: #fff4f4;
+  color: var(--pc-danger, #dc2626);
+  border-color: #efcaca;
+}
+
+.pc-log-remove-btn {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border: 1px solid #efcaca;
+  border-radius: 4px;
+  background: none;
+  color: var(--pc-danger, #dc2626);
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.pc-log-remove-btn:hover {
+  background: #fff4f4;
+}

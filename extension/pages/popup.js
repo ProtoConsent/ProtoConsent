@@ -28,6 +28,7 @@ let allRules = {};
 let lastGpcSignalsSent = 0;
 let lastGpcDomains = [];
 let lastGpcDomainCounts = {};
+let lastWhitelist = {};
 let requiredPurposeKeys = new Set();
 let activeMode = "consent";
 
@@ -149,6 +150,7 @@ async function getBlockedRulesCount() {
     const blockedDomains = domainsResp?.data || {};
     const gpcDomains = domainsResp?.gpcDomains || [];
     const gpcDomainCounts = domainsResp?.gpcDomainCounts || {};
+    lastWhitelist = domainsResp?.whitelist || {};
 
     // Cache per-purpose domain and path counts for displayProtectionScope
     if (domainsResp?.purposeDomainCounts) {

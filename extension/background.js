@@ -350,6 +350,16 @@ function getAllRulesFromStorage() {
   });
 }
 
+// Utility: get the domain whitelist from storage.
+// Returns an object mapping domain -> { purposeKey: true, ... }.
+function getWhitelistFromStorage() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["whitelist"], (result) => {
+      resolve(result.whitelist || {});
+    });
+  });
+}
+
 // Sequential guard: if a rebuild is already running, queue one re-run at the end.
 let _rebuildRunning = false;
 let _rebuildQueued = false;
@@ -358,9 +368,10 @@ let _rebuildQueued = false;
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
 // 1) Enable/disable static rulesets (domain + path) for global blocking per category.
 // 2) Build per-site dynamic overrides (block/allow) grouped by category.
-// 3) Build GPC header rules (global + per-site overrides).
-// 4) Replace all dynamic rules in a single updateDynamicRules call.
-// 5) Update static rulesets AFTER dynamic (may temporarily block too much, but never too little).
+// 3) Build whitelist allow rules (priority 3 - global domain exceptions).
+// 4) Build GPC header rules (global + per-site overrides).
+// 5) Replace all dynamic rules in a single updateDynamicRules call.
+// 6) Update static rulesets AFTER dynamic (may temporarily block too much, but never too little).
 async function rebuildAllDynamicRules() {
   if (_rebuildRunning) {
     _rebuildQueued = true;
@@ -392,11 +403,12 @@ async function _rebuildAllDynamicRulesImpl() {
     // which loadBlocklistsConfig needs to know which rule files to read.
     await loadPurposesConfig();
 
-    const [rulesByDomain, blocklists, presets, defaultConfig] = await Promise.all([
+    const [rulesByDomain, blocklists, presets, defaultConfig, whitelist] = await Promise.all([
       getAllRulesFromStorage(),
       loadBlocklistsConfig(),
       loadPresetsConfig(),
       getDefaultProfileConfig(),
+      getWhitelistFromStorage(),
     ]);
 
     // Collect existing dynamic rule IDs for the atomic swap at the end
@@ -515,7 +527,23 @@ async function _rebuildAllDynamicRulesImpl() {
       }
     }
 
-    // 4. GPC header rules — inject Sec-GPC: 1 when privacy purposes are denied.
+    // 4. Whitelist allow rules (priority 3 - always win over blocks and per-site overrides).
+    //    A single rule with all whitelisted domains in requestDomains.
+    //    No initiatorDomains - the whitelist is global (applies to all visited sites).
+    const whitelistedDomains = Object.keys(whitelist);
+    if (whitelistedDomains.length > 0) {
+      newRules.push({
+        id: nextRuleId++,
+        priority: 3,
+        action: { type: "allow" },
+        condition: {
+          requestDomains: whitelistedDomains,
+          resourceTypes: BLOCK_RESOURCE_TYPES,
+        },
+      });
+    }
+
+    // 5. GPC header rules — inject Sec-GPC: 1 when privacy purposes are denied.
     //
     // Per-site overrides use requestDomains (the destination), not initiatorDomains
     // (the page making the request). This means: trusting elpais.com (custom, all
@@ -642,6 +670,7 @@ async function _rebuildAllDynamicRulesImpl() {
         gpcGlobal,
         gpcPerSite,
         overrideDetails,
+        whitelistDomainCount: whitelistedDomains.length,
         ts: Date.now(),
       };
     }
@@ -787,7 +816,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (PURPOSES_FOR_ENFORCEMENT.length === 0) {
       rebuildAllDynamicRules();
     }
-    loadBlocklistsConfig().then(bl => {
+    Promise.all([loadBlocklistsConfig(), getWhitelistFromStorage()]).then(([bl, whitelist]) => {
       const purposeDomainCounts = {};
       const purposePathCounts = {};
       for (const key of PURPOSES_FOR_ENFORCEMENT) {
@@ -803,6 +832,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         purposePathCounts,
         gpcDomains: gpcDomains ? Object.keys(gpcDomains) : [],
         gpcDomainCounts: gpcDomains || {},
+        whitelist,
       });
     });
     return true; // async response
@@ -858,6 +888,42 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       })
       .then(data => sendResponse({ data: data || null }))
       .catch(() => sendResponse({ data: null }));
+    return true; // async response
+  }
+
+  // Popup requests adding a domain to the whitelist
+  if (message.type === "PROTOCONSENT_WHITELIST_ADD") {
+    const { domain, purpose } = message;
+    if (!domain || !purpose) { sendResponse({ ok: false }); return; }
+    getWhitelistFromStorage().then(whitelist => {
+      if (!whitelist[domain]) whitelist[domain] = {};
+      whitelist[domain][purpose] = true;
+      chrome.storage.local.set({ whitelist }, () => {
+        rebuildAllDynamicRules();
+        sendResponse({ ok: true });
+      });
+    });
+    return true; // async response
+  }
+
+  // Popup requests removing a domain from the whitelist
+  if (message.type === "PROTOCONSENT_WHITELIST_REMOVE") {
+    const { domain, purpose } = message;
+    if (!domain) { sendResponse({ ok: false }); return; }
+    getWhitelistFromStorage().then(whitelist => {
+      if (whitelist[domain]) {
+        if (purpose) {
+          delete whitelist[domain][purpose];
+          if (Object.keys(whitelist[domain]).length === 0) delete whitelist[domain];
+        } else {
+          delete whitelist[domain];
+        }
+      }
+      chrome.storage.local.set({ whitelist }, () => {
+        rebuildAllDynamicRules();
+        sendResponse({ ok: true });
+      });
+    });
     return true; // async response
   }
 });
