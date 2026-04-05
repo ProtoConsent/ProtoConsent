@@ -187,12 +187,19 @@ function renderLogDomains() {
     }
   }
 
-  // Summary header — use pre-computed total from popup.js
-  const totalBlocked = lastBlocked || rows.reduce((sum, r) => sum + r.count, 0);
+  // Use getMatchedRules total (same source as popup) for the header.
+  // When the service worker was idle and missed some events, show the gap.
+  const tableSum = rows.reduce((sum, r) => sum + r.count, 0);
+  const totalBlocked = lastBlocked || tableSum;
+  const uncaptured = totalBlocked - tableSum;
   const header = document.createElement("div");
   header.className = "pc-log-purpose-label";
-  header.textContent = pluralize(totalBlocked, "blocked request") +
+  let headerText = pluralize(totalBlocked, "blocked request") +
     " across " + orderedPurposes.length + (orderedPurposes.length !== 1 ? " categories" : " category");
+  if (uncaptured > 0) {
+    headerText += " (" + uncaptured + " not captured)";
+  }
+  header.textContent = headerText;
   container.appendChild(header);
 
   const table = document.createElement("table");
@@ -257,7 +264,12 @@ function renderLogGpc() {
   const counts = lastGpcDomainCounts || {};
 
   if (domains.length === 0) {
-    container.innerHTML = '<div class="pc-log-empty">No GPC signals sent for this tab.</div>';
+    if (lastGpcSignalsSent > 0) {
+      container.innerHTML = '<div class="pc-log-empty">Sec-GPC: 1 sent to ' +
+        pluralize(lastGpcSignalsSent, "request") + ' (domain names not captured)</div>';
+    } else {
+      container.innerHTML = '<div class="pc-log-empty">No GPC signals sent for this tab.</div>';
+    }
     return;
   }
 
@@ -272,7 +284,11 @@ function renderLogGpc() {
     return { firstSeen: v.firstSeen, lastSeen: v.lastSeen };
   }
 
-  const totalSignals = lastGpcSignalsSent || domains.reduce((sum, d) => sum + getCount(d), 0);
+  // Use getMatchedRules total (same source as popup) for the header.
+  // When the service worker was idle and missed some events, show the gap.
+  const tableSumGpc = domains.reduce((sum, d) => sum + getCount(d), 0);
+  const totalSignals = lastGpcSignalsSent || tableSumGpc;
+  const uncapturedGpc = totalSignals - tableSumGpc;
   const today = new Date();
   const dateStr = today.getFullYear() + "-" +
     String(today.getMonth() + 1).padStart(2, "0") + "-" +
@@ -280,8 +296,12 @@ function renderLogGpc() {
 
   const header = document.createElement("div");
   header.className = "pc-log-purpose-label";
-  header.textContent = dateStr + " \u002D Sec-GPC: 1 sent to " + pluralize(domains.length, "domain") +
+  let gpcHeaderText = dateStr + " \u002D Sec-GPC: 1 sent to " + pluralize(domains.length, "domain") +
     " (" + pluralize(totalSignals, "request") + ")";
+  if (uncapturedGpc > 0) {
+    gpcHeaderText += " (" + uncapturedGpc + " not captured)";
+  }
+  header.textContent = gpcHeaderText;
   container.appendChild(header);
 
   const table = document.createElement("table");

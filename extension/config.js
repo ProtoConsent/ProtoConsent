@@ -7,6 +7,12 @@
 // Deactivate:          chrome.storage.local.remove("debug")
 let DEBUG_RULES = false;
 
+// Prefer onRuleMatchedDebug (declarativeNetRequest debug API) when available.
+// Default false: use webRequest (same code path in developer and store builds).
+// Set to true for precise rule-level debugging during blocklist development.
+// In store builds onRuleMatchedDebug does not exist, so this flag has no effect.
+const USE_DNR_DEBUG = false;
+
 async function loadDebugFlag() {
   try {
     const { debug } = await chrome.storage.local.get("debug");

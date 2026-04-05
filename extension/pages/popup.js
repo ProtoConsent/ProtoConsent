@@ -6,7 +6,7 @@
 // DEBUG_RULES loaded from config.js via <script> in popup.html
 // .well-known logic in well-known.js, debug panel in debug.js
 
-// Estimated time saved per blocked request (ms) — conservative heuristic
+// Estimated time saved per blocked request (ms) — conservative approximation
 // Accounts for DNS + connection + download of typical third-party tracking scripts
 const ESTIMATED_MS_PER_BLOCKED_REQUEST = 50;
 
@@ -207,6 +207,8 @@ async function getBlockedRulesCount() {
 let lastPurposeStats = {};
 let lastBlockedDomains = {};
 let lastBlocked = 0;
+let displayRetries = 0;
+const MAX_DISPLAY_RETRIES = 2;
 
 async function displayBlockedCount() {
   const countEl = document.getElementById("pc-blocked-count");
@@ -249,7 +251,7 @@ async function displayBlockedCount() {
         if (domainCount > 0) {
           parts.push("GPC to " + pluralize(domainCount, "domain"));
         } else {
-          parts.push(pluralize(gpc, "GPC signal"));
+          parts.push("GPC to " + pluralize(gpc, "request"));
         }
       }
 
@@ -281,6 +283,19 @@ async function displayBlockedCount() {
     // Refresh Log tab panels if currently active
     if (activeMode === "log" && typeof refreshLogView === "function") {
       refreshLogView();
+    }
+
+    // Auto-retry: if Chrome has counted blocked/GPC matches but our listener
+    // hasn't captured domain names yet (the service worker may have been idle
+    // when the first requests arrived), re-fetch after a short delay so the
+    // user sees domains without needing to reopen the popup.
+    const hasDomainData = blockedDomains && Object.keys(blockedDomains).length > 0;
+    const hasGpcData = gpcDomains && gpcDomains.length > 0;
+    if (((blocked > 0 && !hasDomainData) || (gpc > 0 && !hasGpcData)) && displayRetries < MAX_DISPLAY_RETRIES) {
+      displayRetries++;
+      setTimeout(displayBlockedCount, 1500);
+    } else {
+      displayRetries = 0;
     }
   } catch (err) {
     console.error("ProtoConsent: error displaying blocked count:", err);
@@ -921,7 +936,7 @@ function isSupportedWebUrl(urlStr) {
   }
 }
 
-// Predictive semaphore: active when any purpose with triggers_gpc is blocked in the current configuration.
+// Returns true when any purpose with triggers_gpc is blocked in the current configuration.
 function expectedGpcEnabled() {
   if (!currentDomain || !Array.isArray(gpcPurposeKeys) || gpcPurposeKeys.length === 0) return false;
   return gpcPurposeKeys.some((key) => currentPurposesState[key] === false);

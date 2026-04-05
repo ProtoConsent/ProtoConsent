@@ -14,9 +14,11 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_DEBUG" }, (bg) => {
     const lines = [];
 
-    // Extension version
+    // Extension version and data source
     const manifest = chrome.runtime.getManifest();
     lines.push("— ProtoConsent v" + manifest.version + " —");
+    const source = USE_DNR_DEBUG ? "onRuleMatchedDebug" : "webRequest";
+    lines.push("  data source: " + source);
     lines.push("");
 
     // Site info
@@ -72,7 +74,7 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
       lines.push("  disabled: " + (bg.disableIds.join(", ") || "(none)"));
       lines.push("  dynamic: " + bg.dynamicCount +
         " (" + bg.overrideCount + " overrides, " +
-        bg.gpcGlobal + " GPC-g, " + bg.gpcPerSite + " GPC-s)");
+        bg.gpcGlobal + " GPC global, " + bg.gpcPerSite + " GPC per-site)");
       if (bg.error) lines.push("  \u26A0 ERROR: " + bg.error);
       if (bg.rulesetError) lines.push("  \u26A0 RULESET ERROR: " + bg.rulesetError);
       lines.push("");
@@ -94,14 +96,14 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
       lines.push("");
     }
 
-    // Tab match info
-    lines.push("— tab matches —");
+    // Tab match info (from Chrome's getMatchedRules — persisted counts, always accurate)
+    lines.push("— tab matches (getMatchedRules) —");
     lines.push("  blocked: " + blocked + "  gpc: " + gpc + " (" + (gpcDomains?.length || 0) + " domains)");
     lines.push("");
 
-    // Ruleset breakdown (domain vs path)
+    // Ruleset breakdown (from Chrome's getMatchedRules — per rulesetId)
     if (Object.keys(rulesetHitCount).length) {
-      lines.push("— ruleset hits —");
+      lines.push("— ruleset hits (getMatchedRules) —");
       for (const [id, count] of Object.entries(rulesetHitCount).sort()) {
         const tag = id.endsWith("_paths") ? " (path)" : id === "_dynamic_block" ? " (dynamic)" : " (domain)";
         lines.push("  " + id + ": " + count + tag);
@@ -109,18 +111,18 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
       lines.push("");
     }
 
-    // Purpose breakdown
+    // Purpose breakdown (from Chrome's getMatchedRules — derived from rulesetId)
     if (Object.keys(domainHitCount).length) {
-      lines.push("— purpose hits —");
+      lines.push("— purpose hits (getMatchedRules) —");
       for (const [purpose, count] of Object.entries(domainHitCount).sort()) {
         lines.push("  " + purpose + ": " + count);
       }
       lines.push("");
     }
 
-    // Blocked domains detail
+    // Blocked domains detail (from our event listener — may have gaps if service worker was idle)
     if (Object.keys(blockedDomains).length) {
-      lines.push("— blocked domains —");
+      lines.push("— blocked domains (event listener) —");
       for (const [purpose, domains] of Object.entries(blockedDomains).sort()) {
         for (const [domain, count] of Object.entries(domains).sort()) {
           lines.push("  [" + purpose + "] " + domain + " \u00d7" + count);
