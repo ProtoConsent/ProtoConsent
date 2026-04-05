@@ -37,7 +37,7 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 **Background script (service worker)** – Maintains per‑site rules, computes defaults for new domains, and translates user choices into declarative network rules. Also handles `.well-known/protoconsent.json` fetches on behalf of the popup: when the user opens the side panel, the popup sends a message to the background, which fetches the declaration from the site's origin and returns it for rendering. Enforcement stays in the browser; policy and UI logic stay in the extension.
 
-**Local storage** – All configuration lives in the browser’s extension storage: the mapping from domains to site rules (profile plus purpose overrides) and predefined profiles. No backend, no remote calls.
+**Local storage** – All configuration lives in the browser’s extension storage: the mapping from domains to site rules (profile plus purpose overrides), predefined profiles, and the domain whitelist. No backend, no remote calls.
 
 **Enforcement (declarativeNetRequest + GPC)** – The background component uses a two‑tier rule model to balance scalability with flexibility:
 
@@ -56,6 +56,7 @@ Static rulesets (30,000 rule pool)
 Dynamic rules (5,000 rule pool)
 ┌──────────────────────────────────────────────┐
 │ Per-site overrides: max 10 rules (priority 2)│
+│ Whitelist allow:    1+ rules  (priority 3)   │
 │ GPC global: 1 rule        (priority 1)       │
 │ GPC per-site: max 2 rules (priority 2)       │
 └──────────────────────────────────────────────┘
@@ -66,6 +67,8 @@ Dynamic rules (5,000 rule pool)
 *Path‑based rules* complement domain rules for high‑value domains that cannot be blocked entirely — such as `google.com`, `facebook.com`, or `linkedin.com`. These rules use `urlFilter` patterns (e.g. `||google.com/pagead/`, `||facebook.com/tr/`) to block specific tracking endpoints while allowing the rest of the domain. See [blocklists.md](blocklists.md) §6 for details.
 
 *Dynamic rules* handle per‑site customisation. When a user configures a site differently from the global profile, the background script creates override rules at priority 2 that take precedence over the static rules at priority 1. Overrides are grouped by (category, action) rather than by site: one "allow ads" rule covers all permissive sites via `initiatorDomains`, keeping the dynamic rule count constant regardless of how many custom sites exist. This design supports hundreds of custom sites within Chrome's 5,000 dynamic rule limit.
+
+*Whitelist allow rules* let users unblock specific domains that were caught by the static rulesets. These rules use priority 3, so they always win over both static blocks (priority 1) and per‑site overrides (priority 2). Each entry can be scoped per site (using `initiatorDomains`) or global (no initiator filter). Global entries are batched into a single rule; per‑site entries are grouped by site, one rule per unique site. Domain validation prevents invalid hostnames from entering storage or DNR rules, and storage writes are serialized to avoid concurrent conflicts.
 
 When privacy‑relevant purposes (marked with `triggers_gpc` in `config/purposes.json`) are denied, the extension also injects a conditional `Sec-GPC: 1` header via `modifyHeaders` rules and sets `navigator.globalPrivacyControl` via a MAIN‑world content script, signalling the user's opt‑out to the receiving server. Per‑site overrides ensure that GPC is only sent where the user's preferences call for it. The core idea: express user intent as purposes, let the browser enforce it.
 
@@ -86,6 +89,12 @@ For each domain, the extension stores a rule that combines a profile with purpos
 `rules[domain] = { profile, purposes: { functional, analytics, ads, personalization, third_parties, advanced_tracking } }`
 
 where each purpose resolves to “allowed” or “denied”. By default, all purpose values are inherited from the active profile (preset). When the user overrides a specific purpose for a domain, only that override is stored; the rest continue to inherit from the profile. In storage, purpose values are booleans (`true` = allowed, `false` = denied). All data is stored locally in the browser’s extension storage in a compact format that can evolve over time through straightforward migrations.
+
+The domain whitelist is stored separately under a `whitelist` key:
+
+`whitelist[domain] = { site: purpose, ... }`
+
+where each key is either a hostname (per‑site scope) or `”*”` (global scope), and the value is the purpose category that was originally blocked. This structure allows the same domain to be whitelisted globally on one scope and per‑site on another, though the UI prevents conflicting entries.
 
 Three predefined profiles (“Strict”, “Balanced”, “Permissive”) map directly to purpose states and act as templates. When the user selects a profile, its values fill in the purposes; any per‑purpose change after that is tracked as an explicit override.
 
@@ -139,7 +148,7 @@ When multiple rules match the same request, Chrome applies the following precede
 2. At the same priority, dynamic rules beat static rules.
 3. At the same priority and source, `allow` beats `block`.
 
-ProtoConsent uses this model deliberately: static rulesets block at priority 1, per‑site overrides at priority 2. A user who allows ads on a specific site gets a dynamic allow rule that cleanly overrides the global static block without modifying it.
+ProtoConsent uses this model deliberately: static rulesets block at priority 1, per‑site overrides at priority 2, and whitelist allow rules at priority 3. A user who allows ads on a specific site gets a dynamic allow rule that cleanly overrides the global static block without modifying it. A whitelisted domain gets a priority‑3 allow rule that wins over both static blocks and per‑site overrides.
 
 ### `requestDomains` matching
 
@@ -156,10 +165,10 @@ The `initiatorDomains` condition matches the **origin that initiated the request
 | Static rulesets (max declared) | 100 | 10 (5 domain + 5 path) |
 | Static rulesets (max enabled) | 50 | Up to 10 |
 | Static rules (total) | 30,000 | ~41,435 (40,233 domains + 1,202 path rules) |
-| Dynamic + session rules | 5,000 | ~13 (10 overrides + 3 GPC) |
+| Dynamic + session rules | 5,000 | ~13 base (10 overrides + 3 GPC) + whitelist rules |
 | `getMatchedRules` calls | 20 per 10 min | 1 per popup open |
 
-The separation between static and dynamic rule pools is the key insight. By moving global blocking to static rulesets, the full dynamic budget is available for per‑site overrides. With a maximum of ~13 dynamic rules regardless of how many custom sites exist, ProtoConsent can support hundreds of custom sites.
+The separation between static and dynamic rule pools is the key insight. By moving global blocking to static rulesets, the full dynamic budget is available for per‑site overrides and whitelist entries. With a maximum of ~13 base dynamic rules regardless of how many custom sites exist, plus one whitelist rule per unique site scope, ProtoConsent can support hundreds of custom sites and whitelist entries.
 
 ## 8. Design decisions
 

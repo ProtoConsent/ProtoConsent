@@ -29,6 +29,7 @@ let lastGpcSignalsSent = 0;
 let lastGpcDomains = [];
 let lastGpcDomainCounts = {};
 let lastWhitelist = {};
+let lastWhitelistHitDomains = {};
 let requiredPurposeKeys = new Set();
 let activeMode = "consent";
 
@@ -163,6 +164,7 @@ async function getBlockedRulesCount() {
     // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)
     const dynamicBlockIds = new Set();
     const dynamicGpcIds = new Set();
+    const dynamicWhitelistDomains = {}; // ruleId → requestDomains[]
     for (const rule of dynamicRules) {
       if (rule.action.type === "block") {
         dynamicBlockIds.add(rule.id);
@@ -171,11 +173,15 @@ async function getBlockedRulesCount() {
           h => h.header === "Sec-GPC" && h.operation === "set"
         );
         if (isGpcSet) dynamicGpcIds.add(rule.id);
+      } else if (rule.action.type === "allow") {
+        dynamicWhitelistDomains[rule.id] = rule.condition?.requestDomains || [];
       }
     }
 
     let blocked = 0;
     let gpc = 0;
+    let whitelistHits = 0;
+    const whitelistHitDomains = {}; // domain → count
     const domainHitCount = {};
     const rulesetHitCount = {}; // rulesetId → count (for debug)
     for (const info of matched.rulesMatchedInfo) {
@@ -197,9 +203,16 @@ async function getBlockedRulesCount() {
       else if (rulesetId === "_dynamic" && dynamicGpcIds.has(info.rule.ruleId)) {
         gpc++;
       }
+      // Whitelist allow rule (dynamic)
+      else if (rulesetId === "_dynamic" && dynamicWhitelistDomains[info.rule.ruleId]) {
+        whitelistHits++;
+        for (const d of dynamicWhitelistDomains[info.rule.ruleId]) {
+          whitelistHitDomains[d] = (whitelistHitDomains[d] || 0) + 1;
+        }
+      }
     }
 
-    return { blocked, gpc, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains };
+    return { blocked, gpc, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
     return EMPTY_BLOCKED_RESULT;
@@ -218,12 +231,13 @@ async function displayBlockedCount() {
   const statRowEl = document.querySelector(".pc-header-stat");
 
   try {
-    const { blocked, gpc, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains } = await getBlockedRulesCount();
+    const { blocked, gpc, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains } = await getBlockedRulesCount();
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
     lastGpcSignalsSent = gpc;
     lastGpcDomains = gpcDomains;
     lastGpcDomainCounts = gpcDomainCounts;
+    lastWhitelistHitDomains = whitelistHitDomains || {};
 
     // domainHitCount maps purpose -> count from static rulesets only.
     // Supplement with blockedDomains (from onRuleMatchedDebug) to cover dynamic rule matches.

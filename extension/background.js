@@ -12,6 +12,10 @@ const useDnrDebug = USE_DNR_DEBUG && !!chrome.declarativeNetRequest.onRuleMatche
 // We assign IDs for dynamic rules starting from 1 upwards
 const BASE_RULE_ID = 1;
 
+// Reserve dynamic rule slots for core enforcement (overrides + GPC).
+// Whitelist rules are trimmed if they would exceed the remaining budget.
+const DYNAMIC_RULE_RESERVE = 50;
+
 // Resource types for blocking rules (not main_frame — that would block the page itself)
 const BLOCK_RESOURCE_TYPES = [
   "script", "xmlhttprequest", "image", "sub_frame", "ping", "other"
@@ -43,6 +47,10 @@ let dynamicBlockRuleMap = {};
 
 // Set of dynamic rule IDs that inject Sec-GPC: 1 (rebuilt on each rule update).
 let dynamicGpcSetIds = new Set();
+
+// Maps dynamic whitelist allow rule IDs to their requestDomains array,
+// so getMatchedRules in the popup can count whitelist hits per domain.
+let dynamicWhitelistMap = {};
 
 // Reverse index: maps each hostname to its purpose key(s), so we can
 // determine which purpose blocked a request given only the hostname.
@@ -351,13 +359,27 @@ function getAllRulesFromStorage() {
 }
 
 // Utility: get the domain whitelist from storage.
-// Returns an object mapping domain -> { purposeKey: true, ... }.
+// Returns an object mapping domain -> { site: purpose, ... }.
+// site is a hostname (per-site) or "*" (global).
 function getWhitelistFromStorage() {
   return new Promise((resolve) => {
     chrome.storage.local.get(["whitelist"], (result) => {
       resolve(result.whitelist || {});
     });
   });
+}
+
+// Validate domain: must look like a hostname (letters, digits, hyphens, dots, at least one dot).
+const VALID_HOSTNAME_RE = /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
+function isValidHostname(s) {
+  return typeof s === "string" && s.length <= 253 && VALID_HOSTNAME_RE.test(s);
+}
+
+// Serialized whitelist write queue to prevent concurrent read-modify-write conflicts.
+let _wlQueue = Promise.resolve();
+function withWhitelist(fn) {
+  _wlQueue = _wlQueue.then(() => getWhitelistFromStorage().then(fn));
+  return _wlQueue;
 }
 
 // Sequential guard: if a rebuild is already running, queue one re-run at the end.
@@ -419,6 +441,7 @@ async function _rebuildAllDynamicRulesImpl() {
     let nextRuleId = BASE_RULE_ID;
     const newDynamicBlockMap = {};
     const newGpcSetIds = new Set();
+    const newWhitelistMap = {};
 
     // 1. Resolve global default purposes (what applies to unconfigured sites)
     const globalPurposes = resolvePurposes({}, presets, defaultConfig);
@@ -528,19 +551,71 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     // 4. Whitelist allow rules (priority 3 - always win over blocks and per-site overrides).
-    //    A single rule with all whitelisted domains in requestDomains.
-    //    No initiatorDomains - the whitelist is global (applies to all visited sites).
-    const whitelistedDomains = Object.keys(whitelist);
-    if (whitelistedDomains.length > 0) {
+    //    Global entries ("*") → one rule without initiatorDomains.
+    //    Per-site entries → grouped by site, one rule per site with initiatorDomains.
+    //    Budget: whitelist rules are capped so core rules always have room.
+    const globalWhitelistDomains = [];
+    const perSiteWhitelist = {}; // site -> [domain, ...]
+
+    for (const [domain, siteMap] of Object.entries(whitelist)) {
+      if (!isValidHostname(domain)) continue; // skip corrupted entries
+      for (const site of Object.keys(siteMap)) {
+        if (site === "*") {
+          globalWhitelistDomains.push(domain);
+        } else if (isValidHostname(site)) {
+          if (!perSiteWhitelist[site]) perSiteWhitelist[site] = [];
+          perSiteWhitelist[site].push(domain);
+        }
+      }
+    }
+
+    // Cap whitelist rules to the remaining budget after core rules + reserve.
+    const maxDynamic = chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES || 5000;
+    const coreRuleCount = newRules.length; // overrides + blocks so far (before whitelist)
+    const whitelistBudget = maxDynamic - coreRuleCount - DYNAMIC_RULE_RESERVE;
+    // 1 rule for global (if any) + 1 rule per site
+    const whitelistRulesNeeded = (globalWhitelistDomains.length > 0 ? 1 : 0) +
+      Object.keys(perSiteWhitelist).length;
+
+    if (whitelistRulesNeeded > whitelistBudget) {
+      console.warn("ProtoConsent: whitelist needs " + whitelistRulesNeeded +
+        " rules but budget is " + whitelistBudget +
+        " (core: " + coreRuleCount + ", reserve: " + DYNAMIC_RULE_RESERVE + "). " +
+        "Some per-site whitelist entries will be dropped.");
+    }
+
+    let whitelistRulesAdded = 0;
+
+    if (globalWhitelistDomains.length > 0 && whitelistRulesAdded < whitelistBudget) {
+      const wlId = nextRuleId++;
+      newWhitelistMap[wlId] = globalWhitelistDomains;
       newRules.push({
-        id: nextRuleId++,
+        id: wlId,
         priority: 3,
         action: { type: "allow" },
         condition: {
-          requestDomains: whitelistedDomains,
+          requestDomains: globalWhitelistDomains,
           resourceTypes: BLOCK_RESOURCE_TYPES,
         },
       });
+      whitelistRulesAdded++;
+    }
+
+    for (const [site, domains] of Object.entries(perSiteWhitelist)) {
+      if (whitelistRulesAdded >= whitelistBudget) break;
+      const wlId = nextRuleId++;
+      newWhitelistMap[wlId] = domains;
+      newRules.push({
+        id: wlId,
+        priority: 3,
+        action: { type: "allow" },
+        condition: {
+          requestDomains: domains,
+          initiatorDomains: [site],
+          resourceTypes: BLOCK_RESOURCE_TYPES,
+        },
+      });
+      whitelistRulesAdded++;
     }
 
     // 5. GPC header rules — inject Sec-GPC: 1 when privacy purposes are denied.
@@ -670,7 +745,11 @@ async function _rebuildAllDynamicRulesImpl() {
         gpcGlobal,
         gpcPerSite,
         overrideDetails,
-        whitelistDomainCount: whitelistedDomains.length,
+        whitelistDomainCount: Object.keys(whitelist).length,
+        whitelistGlobalCount: globalWhitelistDomains.length,
+        whitelistPerSiteCount: Object.values(perSiteWhitelist).reduce((s, d) => s + d.length, 0),
+        whitelistRuleCount: (globalWhitelistDomains.length > 0 ? 1 : 0) + Object.keys(perSiteWhitelist).length,
+        whitelistSites: Object.keys(perSiteWhitelist),
         ts: Date.now(),
       };
     }
@@ -687,6 +766,7 @@ async function _rebuildAllDynamicRulesImpl() {
       });
       dynamicBlockRuleMap = newDynamicBlockMap;
       dynamicGpcSetIds = newGpcSetIds;
+      dynamicWhitelistMap = newWhitelistMap;
     } catch (e) {
       console.error("updateDynamicRules failed:", e.message, "rules:", newRules.length);
       if (DEBUG_RULES) lastRebuildDebug.error = e.message;
@@ -893,14 +973,32 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   // Popup requests adding a domain to the whitelist
   if (message.type === "PROTOCONSENT_WHITELIST_ADD") {
-    const { domain, purpose } = message;
-    if (!domain || !purpose) { sendResponse({ ok: false }); return; }
-    getWhitelistFromStorage().then(whitelist => {
+    const { domain, purpose, site } = message;
+    if (!domain || !purpose || !isValidHostname(domain)) {
+      sendResponse({ ok: false }); return;
+    }
+    const siteKey = (site && isValidHostname(site)) ? site : "*";
+    withWhitelist(whitelist => {
       if (!whitelist[domain]) whitelist[domain] = {};
-      whitelist[domain][purpose] = true;
-      chrome.storage.local.set({ whitelist }, () => {
-        rebuildAllDynamicRules();
-        sendResponse({ ok: true });
+      // Remove conflicting scope (if adding per-site, remove global and vice versa)
+      if (siteKey === "*") {
+        // Going global: remove all per-site entries for this domain
+        whitelist[domain] = {};
+      } else {
+        // Going per-site: remove global entry if present
+        delete whitelist[domain]["*"];
+      }
+      whitelist[domain][siteKey] = purpose;
+      return new Promise(resolve => {
+        chrome.storage.local.set({ whitelist }, () => {
+          if (chrome.runtime.lastError) {
+            sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+          } else {
+            rebuildAllDynamicRules();
+            sendResponse({ ok: true });
+          }
+          resolve();
+        });
       });
     });
     return true; // async response
@@ -908,20 +1006,64 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   // Popup requests removing a domain from the whitelist
   if (message.type === "PROTOCONSENT_WHITELIST_REMOVE") {
-    const { domain, purpose } = message;
+    const { domain, site } = message;
     if (!domain) { sendResponse({ ok: false }); return; }
-    getWhitelistFromStorage().then(whitelist => {
+    withWhitelist(whitelist => {
       if (whitelist[domain]) {
-        if (purpose) {
-          delete whitelist[domain][purpose];
-          if (Object.keys(whitelist[domain]).length === 0) delete whitelist[domain];
+        if (site) {
+          delete whitelist[domain][site];
+          if (Object.keys(whitelist[domain]).length === 0) {
+            delete whitelist[domain];
+          }
         } else {
           delete whitelist[domain];
         }
       }
-      chrome.storage.local.set({ whitelist }, () => {
-        rebuildAllDynamicRules();
-        sendResponse({ ok: true });
+      return new Promise(resolve => {
+        chrome.storage.local.set({ whitelist }, () => {
+          if (chrome.runtime.lastError) {
+            sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+          } else {
+            rebuildAllDynamicRules();
+            sendResponse({ ok: true });
+          }
+          resolve();
+        });
+      });
+    });
+    return true; // async response
+  }
+
+  // Popup requests toggling whitelist scope between per-site and global
+  if (message.type === "PROTOCONSENT_WHITELIST_TOGGLE_SCOPE") {
+    const { domain, site } = message;
+    if (!domain || !site) { sendResponse({ ok: false }); return; }
+    withWhitelist(whitelist => {
+      if (!whitelist[domain]) { sendResponse({ ok: false }); return Promise.resolve(); }
+      if (site === "*") {
+        // Currently global → make per-site: need the caller to provide the target site
+        // This case is handled by WHITELIST_ADD with a specific site
+        sendResponse({ ok: false });
+        return Promise.resolve();
+      }
+      // Currently per-site → make global: move entry from site key to "*"
+      const purpose = whitelist[domain][site];
+      if (!purpose) {
+        sendResponse({ ok: false });
+        return Promise.resolve();
+      }
+      // Clean all entries, set global
+      whitelist[domain] = { "*": purpose };
+      return new Promise(resolve => {
+        chrome.storage.local.set({ whitelist }, () => {
+          if (chrome.runtime.lastError) {
+            sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+          } else {
+            rebuildAllDynamicRules();
+            sendResponse({ ok: true, whitelist });
+          }
+          resolve();
+        });
       });
     });
     return true; // async response

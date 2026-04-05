@@ -96,6 +96,18 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
       lines.push("");
     }
 
+    // Whitelist
+    if (bg && bg.whitelistDomainCount > 0) {
+      lines.push("— whitelist —");
+      lines.push("  domains: " + bg.whitelistDomainCount +
+        " (" + bg.whitelistGlobalCount + " global, " + bg.whitelistPerSiteCount + " per-site)");
+      lines.push("  DNR rules: " + bg.whitelistRuleCount);
+      if (bg.whitelistSites && bg.whitelistSites.length) {
+        lines.push("  sites: " + bg.whitelistSites.join(", "));
+      }
+      lines.push("");
+    }
+
     // Tab match info (from Chrome's getMatchedRules — persisted counts, always accurate)
     lines.push("— tab matches (getMatchedRules) —");
     lines.push("  blocked: " + blocked + "  gpc: " + gpc + " (" + (gpcDomains?.length || 0) + " domains)");
