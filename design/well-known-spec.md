@@ -24,6 +24,7 @@ The format follows the pattern of other `.well-known` resources ([RFC 8615](http
 4. [Extension behaviour](#4-extension-behaviour)
 5. [Hosting notes](#5-hosting-notes)
 6. [Relationship to other specifications](#6-relationship-to-other-specifications)
+7. [Online validator](#7-online-validator)
 
 ## 2. Schema
 
@@ -184,3 +185,7 @@ The file should be served with `Content-Type: application/json`. Most web server
 - **Consent Commons:** the purpose categories and legal basis values align with the [Consent Commons](https://consentcommons.com/) taxonomy. See `icons-and-layers.md` for the visual mapping.
 - **ProtoConsent SDK:** the SDK enables dynamic interaction (page queries extension). The `.well-known` file enables static declaration (extension reads site). Both are complementary: a site can use one, both, or neither.
 - **GPC (`Sec-GPC`):** GPC signals user preference (browser → site). `.well-known/protoconsent.json` signals site practices (site → browser). They are complementary directions.
+
+## 7. Online validator
+
+An online validator is available at [protoconsent.org/validate.html](https://protoconsent.org/validate.html) to check whether a `.well-known/protoconsent.json` file is valid and reachable. It supports checking a live domain, pasting JSON, or loading a file from disk.

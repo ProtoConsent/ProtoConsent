@@ -79,7 +79,7 @@ The Domains tab includes Allow/Allowed buttons for quick whitelist control. The 
 
 ProtoConsent offers two ways for websites to participate — both optional, both privacy‑preserving:
 
-- **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, sharing scope). No SDK, no code changes — just a JSON file. See the [spec](design/well-known-spec.md) and the [demo site source](https://github.com/ProtoConsent/demo) for a complete example.
+- **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, sharing scope). No SDK, no code changes — just a JSON file. See the [spec](design/well-known-spec.md), the [demo site source](https://github.com/ProtoConsent/demo) for a complete example, and the [online validator](https://protoconsent.org/validate.html) to check your file.
 - **Integrate the SDK:** import `sdk/protoconsent.js` (MIT) and call `get('analytics')` to read the user's preferences. Returns `true`, `false`, or `null` (no extension). See the [quick example](design/protocol-draft.md#quick-example) and [SDK source](sdk/protoconsent.js).
 
 ## Architecture overview
@@ -111,7 +111,6 @@ See [architecture.md](design/architecture.md) for more details.
 ## What's next
 
 - Import/export of user configuration
-- Online validator for `.well-known/protoconsent.json` site declarations
 - Firefox support
 
 For a detailed product description and roadmap, see [product-overview.md](design/product-overview.md).

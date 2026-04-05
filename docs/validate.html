@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Validate your .well-known/protoconsent.json</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/logo/protoconsent_logo_bold.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/protoconsent_logo_32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Check whether your .well-known/protoconsent.json file is valid and correctly served. Free online validator for the ProtoConsent protocol.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Validate your .well-known/protoconsent.json">
+  <meta property="og:description" content="Check whether your .well-known/protoconsent.json file is valid and correctly served.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://protoconsent.org/validate.html">
+  <meta property="og:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Validate your .well-known/protoconsent.json">
+  <meta name="twitter:description" content="Check whether your .well-known/protoconsent.json file is valid and correctly served.">
+  <meta name="twitter:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src https://api.protoconsent.org; form-action 'none'; base-uri 'none';">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <header>
+        <a href="index.html" class="brand">
+          <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
+          <div class="brand-name">ProtoConsent</div>
+        </a>
+        <div class="header-links-nav">
+          <a class="header-link" href="index.html">Home</a>
+          <a class="header-link" href="why.html">Why ProtoConsent</a>
+          <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        </div>
+      </header>
+
+      <main>
+        <article class="article">
+          <div class="article-header">
+            <a href="index.html" class="article-back">&larr; Back to home</a>
+            <h1 class="article-title">Validate your declaration</h1>
+            <p class="article-subtitle">
+              Check whether your <code>.well-known/protoconsent.json</code> file is valid and reachable.
+            </p>
+          </div>
+
+          <!-- Fetch from domain -->
+          <section class="article-section">
+            <h2>Check a live domain</h2>
+            <p>Enter a domain to fetch and validate its declaration.</p>
+            <div class="vld-input-row">
+              <label for="vld-domain" class="vld-label">Domain</label>
+              <div class="vld-field-group">
+                <input type="text" id="vld-domain" class="vld-input" placeholder="example.com" autocomplete="off" spellcheck="false">
+                <button type="button" id="vld-fetch-btn" class="btn-primary vld-btn">Validate</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Paste or load JSON -->
+          <section class="article-section">
+            <h2>Or paste / load your JSON</h2>
+            <div class="vld-input-row">
+              <label for="vld-json" class="vld-label">JSON content</label>
+              <textarea id="vld-json" class="vld-textarea" rows="10" placeholder='{"protoconsent":"0.1","purposes":{...}}'></textarea>
+              <div class="vld-actions">
+                <button type="button" id="vld-paste-btn" class="btn-primary vld-btn">Validate JSON</button>
+                <label class="vld-file-label">
+                  Load file
+                  <input type="file" id="vld-file" accept=".json,application/json" class="vld-file-input">
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <!-- Results -->
+          <section class="article-section" id="vld-results-section" hidden>
+            <h2>Results</h2>
+            <div id="vld-results"></div>
+          </section>
+
+          <!-- Preview -->
+          <section class="article-section" id="vld-preview-section" hidden>
+            <h2>Preview</h2>
+            <p>This is how the extension would display your declaration.</p>
+            <div id="vld-preview" class="vld-preview-box"></div>
+          </section>
+
+          <!-- Manual check -->
+          <section class="article-section">
+            <h2>Manual check</h2>
+            <p>You can also verify reachability from the command line:</p>
+            <div class="code-block">curl -I https://your-domain.com/.well-known/protoconsent.json</div>
+            <p>A successful response should return <code>200 OK</code> with <code>Content-Type: application/json</code>.</p>
+          </section>
+
+          <!-- Spec reference -->
+          <section class="article-section">
+            <h2>Specification</h2>
+            <p>
+              See the <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/well-known-spec.md" target="_blank" rel="noopener noreferrer">full .well-known specification</a> for schema details, examples, and hosting notes.
+            </p>
+          </section>
+        </article>
+      </main>
+
+      <footer>
+        <div>
+          ProtoConsent is a browser extension exploring browser-level, purpose-based consent controls for the open web.
+        </div>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="why.html">Why ProtoConsent</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">GitHub repo</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent#readme" target="_blank" rel="noopener noreferrer">Technical README</a>
+          <a href="mailto:contact@protoconsent.org">Contact</a>
+          <a href="privacy.html">Privacy</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <script src="validate.js"></script>
+</body>
+</html>
