@@ -46,7 +46,17 @@ From a request‑flow perspective, ProtoConsent works in a few simple steps. Fir
 
 **Long‑term:** Strengthen ProtoConsent’s security posture (risk assessment, hardening, security processes) and work with regulators, browser vendors, and civil‑society organisations so that purpose‑based controls can become part of mainstream web practice.
 
-**Already delivered:** purpose‑signalling [protocol specification](protocol-draft.md), [JavaScript SDK](../sdk/protoconsent.js) with [TypeScript declarations](../sdk/protoconsent.d.ts), [site declaration spec](well-known-spec.md) (`.well-known/protoconsent.json`), conditional [GPC signal](https://globalprivacycontrol.org/), enforcement with 40 000+ curated tracker domains and 1 200+ path‑based rules organized in static rulesets by purpose (see [blocklists.md](blocklists.md)), per‑purpose blocked request counter with estimated performance impact, log monitoring tab with real‑time request log, blocked domains by purpose, and GPC signal tracking per domain, domain whitelist with per‑site and global scope, [Consent Commons](https://consentcommons.com/) icons, onboarding welcome page for first‑time users, purpose settings page for custom global profiles, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org), and a [testing guide](testing-guide.md) for early adopters.
+**Already delivered:**
+
+| Version | Features |
+|---------|----------|
+| v0.1.0 | Purpose/preset data models, per-domain rules in storage, DNR enforcement (global + per-site), popup UI (profiles, toggles), [JavaScript SDK](../sdk/protoconsent.js) + [TypeScript declarations](../sdk/protoconsent.d.ts), content script bridge |
+| v0.1.1 | Static rulesets + path-based blocking, blocked request counter (per-tab, per-purpose, domain detail), conditional [GPC signal](https://globalprivacycontrol.org/) (Sec-GPC + navigator.globalPrivacyControl), [.well-known side panel](well-known-spec.md) with [Consent Commons](https://consentcommons.com/) icons, debug panel |
+| v0.2.0 | 40 000+ curated tracker domains + 1 200+ path rules ([blocklists.md](blocklists.md)), onboarding welcome page, purpose settings page, full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
+| v0.2.1 | Log monitoring tab (real-time request log, blocked domains by purpose, GPC tracking), session persistence, webRequest visibility for production builds |
+| v0.2.2 | Domain whitelist (per-site + global scope, priority-3 DNR allow rules, budget guard) |
+| **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
+| **Documentation** | [Protocol spec](protocol-draft.md), [.well-known spec](well-known-spec.md), [testing guide](testing-guide.md), [blocklist methodology](blocklists.md), [architecture overview](architecture.md) |
 
 ## 6. Openness and licensing
 
