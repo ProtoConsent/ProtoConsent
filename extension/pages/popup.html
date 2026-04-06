@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="popup.css">
   <link rel="stylesheet" href="log.css">
+  <link rel="stylesheet" href="css/enhanced.css">
   <link rel="icon" type="image/png" sizes="32x32" href="../icons/protoconsent_icon_32.png">
 </head>
 <body>
@@ -80,7 +81,10 @@
             <button id="pc-blocked-count" class="pc-blocked-count" type="button" aria-live="polite" aria-controls="pc-view-log">loading...</button>
           </div>
           <div id="pc-protection-scope" class="pc-protection-scope">
-            <span id="pc-protection-scope-text" class="pc-protection-scope-text"></span>
+            <div class="pc-scope-left">
+              <span id="pc-protection-scope-text" class="pc-protection-scope-text"></span>
+              <span id="pc-enhanced-scope" class="pc-enhanced-scope" aria-live="polite"></span>
+            </div>
             <div class="pc-scope-indicators">
               <div id="pc-wk-indicator" class="pc-wk-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title=".well-known status unavailable">
                 <span class="pc-wk-dot pc-pill-dot" aria-hidden="true"></span>
@@ -100,17 +104,14 @@
           </main>
         </section>
 
-        <section id="pc-view-enhanced" class="pc-view pc-view-placeholder" data-mode-view="enhanced" role="tabpanel" aria-labelledby="pc-mode-tab-enhanced" hidden aria-hidden="true">
-          <div class="pc-placeholder-card">
-            <div class="pc-placeholder-eyebrow">Enhanced Protection</div>
-            <h2 class="pc-placeholder-title">Additional network protection presets</h2>
-            <p class="pc-placeholder-copy">This future mode will activate stronger rulesets and curated list presets without replacing the consent-first flow.</p>
-            <div class="pc-placeholder-pills">
-              <span class="pc-placeholder-pill">Basic</span>
-              <span class="pc-placeholder-pill">Full</span>
-              <span class="pc-placeholder-pill">Custom</span>
-            </div>
+        <section id="pc-view-enhanced" class="pc-view" data-mode-view="enhanced" role="tabpanel" aria-labelledby="pc-mode-tab-enhanced" hidden aria-hidden="true">
+          <h2 class="visually-hidden">Enhanced Protection</h2>
+          <div id="ep-preset-bar" class="ep-preset-bar">
+            <span class="ep-preset-label">Protection</span>
+            <div id="ep-preset-buttons" class="ep-preset-buttons" role="radiogroup" aria-label="Enhanced protection preset"></div>
           </div>
+          <div id="ep-lists" class="ep-lists"></div>
+          <div id="ep-status" class="ep-status" aria-live="polite"></div>
         </section>
 
         <section id="pc-view-log" class="pc-view" data-mode-view="log" role="tabpanel" aria-labelledby="pc-mode-tab-log" hidden aria-hidden="true">
@@ -170,5 +171,6 @@
   <script src="well-known.js"></script>
   <script src="debug.js"></script>
   <script src="log.js"></script>
+  <script src="js/enhanced.js"></script>
 </body>
 </html>

@@ -126,7 +126,7 @@ body {
   flex: 1;
   min-width: 0;
   box-sizing: border-box;
-  padding: 12px 10px 10px 10px;
+  padding: 10px 10px 8px 10px;
   overflow: hidden;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   border: 1px solid #b8c7d8;
@@ -451,7 +451,7 @@ body {
 
 /* Purposes */
 .pc-main {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   padding: 2px 2px 2px 4px;
   border: none;
   border-radius: 12px;
@@ -471,7 +471,7 @@ body {
 .pc-purpose-item {
   background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 6px 10px 8px;
   border: 1px solid var(--pc-line);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
@@ -707,14 +707,56 @@ body {
   text-decoration: underline;
 }
 
+/* Enhanced count indicator in counter bar */
+.pc-counter-enhanced {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.pc-counter-enhanced-icon {
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Enhanced stat banner in consent tab (kept for future use)
+.pc-enhanced-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #78350f;
+  padding: 6px 10px;
+  margin-top: 4px;
+  border: 1px solid #d97706;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fffcf0 0%, #fef3c7 100%);
+  cursor: pointer;
+  list-style: none;
+}
+
+.pc-enhanced-stat:hover {
+  background: #fef3c7;
+}
+
+.pc-enhanced-stat-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+*/
+
 /* Footer */
 .pc-footer {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-top: 2px;
-  padding: 6px 8px 0 8px;
+  margin-top: 0;
+  padding: 5px 8px 0 8px;
   border-top: 1px solid #e8edf3;
 }
 
@@ -806,22 +848,33 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin: 10px 0 8px 0;
+  margin: 6px 0;
   font-size: 11px;
-  color: var(--pc-accent);
   font-weight: 600;
-  padding: 0 4px 0 4px;
-  border-bottom: 0;
+  padding: 0 4px;
 }
 
 .pc-protection-scope:empty {
   display: none;
 }
 
-.pc-protection-scope-text {
-  min-width: 0;
+.pc-scope-left {
   flex: 1 1 auto;
-  text-align: left;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pc-protection-scope-text {
+  color: var(--pc-accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-enhanced-scope {
+  color: #b45309;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -891,7 +944,7 @@ body {
   overflow-y: auto;
 }
 
-/* Tab bar on left edge — full height vertical strip */
+/* Tab bar on left edge - full height vertical strip */
 .pc-side-tab {
   display: none; /* hidden until declaration data loads */
   width: 24px;

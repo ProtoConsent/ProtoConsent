@@ -2,9 +2,6 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// TODO: Add import/export (JSON)
-// TODO: Add i18n support (load labels from localized config)
-
 async function init() {
 	const statusEl = document.getElementById('status-msg');
 	try {
@@ -21,6 +18,7 @@ async function init() {
 		initDefaultProfile(purposes);
 		renderPurposes(purposes);
 		renderPresets(presets, purposes);
+		renderEnhancedPresets();
 
 		const versionEl = document.getElementById('viewer-version');
 		if (versionEl) {
@@ -122,6 +120,7 @@ function initDefaultProfile(purposes) {
 	// Toggle visibility and save on dropdown change
 	selectEl.addEventListener('change', () => {
 		const value = selectEl.value;
+		updateConsentPresetHighlight(value);
 
 		if (value === 'custom') {
 			togglesContainer.classList.remove('ps-hidden');
@@ -221,82 +220,260 @@ function renderPurposes(purposes) {
 	section.classList.remove('ps-hidden');
 }
 
+function updateConsentPresetHighlight(activeProfile) {
+	const container = document.getElementById('preset-list');
+	if (!container) return;
+	const cards = container.querySelectorAll('.ps-preset-card');
+	cards.forEach(card => {
+		card.classList.remove('ps-consent-preset-active');
+		const badge = card.querySelector('.ps-consent-current-badge');
+		if (badge) badge.remove();
+	});
+	// Named presets are in order: strict, balanced, permissive → index 0, 1, 2
+	// Custom card has id="custom-preset-card"
+	if (activeProfile === 'custom') {
+		const customCard = document.getElementById('custom-preset-card');
+		if (customCard) {
+			customCard.classList.add('ps-consent-preset-active');
+			const name = customCard.querySelector('.ps-preset-name');
+			if (name && !name.querySelector('.ps-consent-current-badge')) {
+				const badge = document.createElement('span');
+				badge.className = 'ps-consent-current-badge';
+				badge.textContent = ' (default)';
+				name.appendChild(badge);
+			}
+		}
+	} else {
+		// Match by data attribute
+		const target = container.querySelector('.ps-preset-card[data-preset="' + activeProfile + '"]');
+		if (target) {
+			target.classList.add('ps-consent-preset-active');
+			const name = target.querySelector('.ps-preset-name');
+			if (name) {
+				const badge = document.createElement('span');
+				badge.className = 'ps-consent-current-badge';
+				badge.textContent = ' (default)';
+				name.appendChild(badge);
+			}
+		}
+	}
+}
+
 function renderPresets(presets, purposes) {
 	const container = document.getElementById('preset-list');
 	const section = document.getElementById('presets-section');
 	if (!container || !section) return;
 
-	for (const preset of Object.values(presets)) {
-		const card = document.createElement('div');
-		card.className = 'ps-preset-card';
+	// Read current default profile to highlight active card
+	chrome.storage.local.get(['defaultProfile', 'defaultPurposes'], (result) => {
+		const activeProfile = result.defaultProfile || 'balanced';
 
-		const name = document.createElement('div');
-		name.className = 'ps-preset-name';
-		name.textContent = preset.label;
-		card.appendChild(name);
+		for (const [presetKey, preset] of Object.entries(presets)) {
+			const card = document.createElement('div');
+			card.className = 'ps-preset-card';
+			card.dataset.preset = presetKey;
+			if (presetKey === activeProfile) card.classList.add('ps-consent-preset-active');
 
-		const pills = document.createElement('div');
-		pills.className = 'ps-preset-purposes';
-		for (const [pKey, allowed] of Object.entries(preset.purposes)) {
+			const name = document.createElement('div');
+			name.className = 'ps-preset-name';
+			name.textContent = preset.label;
+			if (presetKey === activeProfile) {
+				const badge = document.createElement('span');
+				badge.className = 'ps-consent-current-badge';
+				badge.textContent = ' (default)';
+				name.appendChild(badge);
+			}
+			card.appendChild(name);
+
+			const pills = document.createElement('div');
+			pills.className = 'ps-preset-purposes';
+			for (const [pKey, allowed] of Object.entries(preset.purposes)) {
+				const pill = document.createElement('span');
+				pill.className = 'ps-preset-pill ' + (allowed ? 'allowed' : 'denied');
+				pill.textContent = (purposes[pKey] ? purposes[pKey].short : pKey) + (allowed ? ' \u2713' : ' \u2717');
+				pills.appendChild(pill);
+			}
+			card.appendChild(pills);
+
+			container.appendChild(card);
+		}
+		section.classList.remove('ps-hidden');
+
+		// Custom preset card (updated live by initDefaultProfile)
+		const customCard = document.createElement('div');
+		customCard.className = 'ps-preset-card';
+		customCard.id = 'custom-preset-card';
+		if (activeProfile === 'custom') customCard.classList.add('ps-consent-preset-active');
+
+		const customName = document.createElement('div');
+		customName.className = 'ps-preset-name';
+		customName.textContent = 'Custom';
+		if (activeProfile === 'custom') {
+			const badge = document.createElement('span');
+			badge.className = 'ps-consent-current-badge';
+			badge.textContent = ' (default)';
+			customName.appendChild(badge);
+		}
+		customCard.appendChild(customName);
+
+		const customPills = document.createElement('div');
+		customPills.className = 'ps-preset-purposes';
+		customPills.id = 'custom-preset-pills';
+
+		// Populate pills from stored custom purposes, or derive from active preset
+		const storedPurposes = result.defaultPurposes;
+		const sortedKeys = Object.keys(purposes)
+			.sort((a, b) => (purposes[a].order || 0) - (purposes[b].order || 0));
+		for (const key of sortedKeys) {
+			let allowed;
+			if (storedPurposes) {
+				allowed = purposes[key].required ? true : (storedPurposes[key] !== false);
+			} else {
+				// No custom profile saved yet - show what the active preset allows
+				const presetDef = presets[activeProfile];
+				allowed = presetDef ? (presetDef.purposes[key] !== false) : true;
+			}
 			const pill = document.createElement('span');
 			pill.className = 'ps-preset-pill ' + (allowed ? 'allowed' : 'denied');
-			pill.textContent = (purposes[pKey] ? purposes[pKey].short : pKey) + (allowed ? ' \u2713' : ' \u2717');
-			pills.appendChild(pill);
+			pill.textContent = (purposes[key] ? purposes[key].short : key) + (allowed ? ' \u2713' : ' \u2717');
+			customPills.appendChild(pill);
 		}
-		card.appendChild(pills);
 
-		container.appendChild(card);
-	}
-	section.classList.remove('ps-hidden');
+		customCard.appendChild(customPills);
+		container.appendChild(customCard);
 
-	// GPC signal info row — read-only, shows which purposes trigger Sec-GPC
-	const gpcCard = document.createElement('div');
-	gpcCard.className = 'ps-preset-card';
+		// GPC signal info row - read-only, shows which purposes trigger Sec-GPC
+		const gpcCard = document.createElement('div');
+		gpcCard.className = 'ps-preset-card';
 
-	const gpcInfo = document.createElement('div');
-	gpcInfo.className = 'ps-gpc-info-row';
+		const gpcInfo = document.createElement('div');
+		gpcInfo.className = 'ps-gpc-info-row';
 
-	const gpcName = document.createElement('span');
-	gpcName.className = 'ps-gpc-info-name';
-	gpcName.textContent = 'GPC (Global Privacy Control)';
-	gpcInfo.appendChild(gpcName);
+		const gpcName = document.createElement('span');
+		gpcName.className = 'ps-gpc-info-name';
+		gpcName.textContent = 'GPC (Global Privacy Control)';
+		gpcInfo.appendChild(gpcName);
 
-	const gpcDesc = document.createElement('span');
-	gpcDesc.className = 'ps-gpc-info-desc';
-	gpcDesc.textContent = '\u002D privacy signal sent to websites when any of these purposes are denied';
-	gpcInfo.appendChild(gpcDesc);
+		const gpcDesc = document.createElement('span');
+		gpcDesc.className = 'ps-gpc-info-desc';
+		gpcDesc.textContent = '\u002D privacy signal sent to websites when any of these purposes are denied';
+		gpcInfo.appendChild(gpcDesc);
 
-	gpcCard.appendChild(gpcInfo);
+		gpcCard.appendChild(gpcInfo);
 
-	const gpcPills = document.createElement('div');
-	gpcPills.className = 'ps-preset-purposes';
-	const gpcEntries = Object.values(purposes)
-		.sort((a, b) => (a.order || 0) - (b.order || 0));
-	for (const pDef of gpcEntries) {
-		if (!pDef.triggers_gpc) continue;
-		const pill = document.createElement('span');
-		pill.className = 'ps-preset-pill gpc';
-		pill.textContent = pDef.short + ' \u2717';
-		gpcPills.appendChild(pill);
-	}
-	gpcCard.appendChild(gpcPills);
-	container.appendChild(gpcCard);
+		const gpcPills = document.createElement('div');
+		gpcPills.className = 'ps-preset-purposes';
+		const gpcEntries = Object.values(purposes)
+			.sort((a, b) => (a.order || 0) - (b.order || 0));
+		for (const pDef of gpcEntries) {
+			if (!pDef.triggers_gpc) continue;
+			const pill = document.createElement('span');
+			pill.className = 'ps-preset-pill gpc';
+			pill.textContent = pDef.short + ' \u2717';
+			gpcPills.appendChild(pill);
+		}
+		gpcCard.appendChild(gpcPills);
+		container.appendChild(gpcCard);
+	});
+}
 
-	// Always render custom preset card (updated live by initDefaultProfile)
-	const customCard = document.createElement('div');
-	customCard.className = 'ps-preset-card';
-	customCard.id = 'custom-preset-card';
+function renderEnhancedPresets() {
+	const container = document.getElementById('enhanced-preset-list');
+	const section = document.getElementById('enhanced-presets-section');
+	if (!container || !section) return;
 
-	const customName = document.createElement('div');
-	customName.className = 'ps-preset-name';
-	customName.textContent = 'Custom (your default)';
-	customCard.appendChild(customName);
+	Promise.all([
+		fetch(chrome.runtime.getURL('config/enhanced-lists.json')).then(r => {
+			if (!r.ok) throw new Error("enhanced-lists.json: HTTP " + r.status);
+			return r.json();
+		}),
+		new Promise(resolve => {
+			chrome.storage.local.get(['enhancedPreset'], r => resolve(r.enhancedPreset || 'off'));
+		}),
+		new Promise(resolve => {
+			chrome.storage.local.get(['enhancedLists'], r => resolve(r.enhancedLists || {}));
+		}),
+	]).then(([catalog, currentPreset, enhancedLists]) => {
+		const presets = [
+			{ id: 'off', label: 'Off', desc: 'Only ProtoConsent core lists (default)' },
+			{ id: 'basic', label: 'Basic', desc: 'Conservative third-party lists' },
+			{ id: 'full', label: 'Full', desc: 'All available third-party lists' },
+		];
 
-	const customPills = document.createElement('div');
-	customPills.className = 'ps-preset-purposes';
-	customPills.id = 'custom-preset-pills';
-	customCard.appendChild(customPills);
-	container.appendChild(customCard);
+		for (const preset of presets) {
+			const card = document.createElement('div');
+			card.className = 'ps-preset-card';
+			if (currentPreset === preset.id) card.classList.add('ps-preset-active');
+
+			const name = document.createElement('div');
+			name.className = 'ps-preset-name';
+			name.textContent = preset.label;
+			if (currentPreset === preset.id) {
+				const badge = document.createElement('span');
+				badge.className = 'ps-enhanced-current-badge';
+				badge.textContent = ' (current)';
+				name.appendChild(badge);
+			}
+			card.appendChild(name);
+
+			const desc = document.createElement('p');
+			desc.className = 'ps-purpose-desc';
+			desc.textContent = preset.desc;
+			card.appendChild(desc);
+
+			// Show which lists are included in this preset
+			const pills = document.createElement('div');
+			pills.className = 'ps-preset-purposes';
+			for (const [listId, listDef] of Object.entries(catalog)) {
+				const included = preset.id === 'full' ||
+					(preset.id === 'basic' && listDef.preset === 'basic');
+				if (preset.id === 'off') continue;
+				const pill = document.createElement('span');
+				pill.className = 'ps-preset-pill ' + (included ? 'allowed' : 'denied');
+				pill.textContent = listDef.name + (included ? ' \u2713' : ' \u2717');
+				pills.appendChild(pill);
+			}
+			if (preset.id !== 'off') card.appendChild(pills);
+			container.appendChild(card);
+		}
+
+		// Custom indicator
+		if (currentPreset === 'custom') {
+			const customCard = document.createElement('div');
+			customCard.className = 'ps-preset-card ps-preset-active';
+			const customName = document.createElement('div');
+			customName.className = 'ps-preset-name';
+			customName.textContent = 'Custom';
+			const badge = document.createElement('span');
+			badge.className = 'ps-enhanced-current-badge';
+			badge.textContent = ' (current)';
+			customName.appendChild(badge);
+			customCard.appendChild(customName);
+			const customDesc = document.createElement('p');
+			customDesc.className = 'ps-purpose-desc';
+			customDesc.textContent = 'Individual lists toggled from the Enhanced tab in the popup.';
+			customCard.appendChild(customDesc);
+
+			// Pills showing per-list enabled/disabled state
+			const pills = document.createElement('div');
+			pills.className = 'ps-preset-purposes';
+			for (const [listId, listDef] of Object.entries(catalog)) {
+				const listData = enhancedLists[listId];
+				if (!listData) continue;
+				const enabled = !!listData.enabled;
+				const pill = document.createElement('span');
+				pill.className = 'ps-preset-pill ' + (enabled ? 'allowed' : 'denied');
+				pill.textContent = listDef.name + (enabled ? ' \u2713' : ' \u2717');
+				pills.appendChild(pill);
+			}
+			customCard.appendChild(pills);
+			container.appendChild(customCard);
+		}
+
+		section.classList.remove('ps-hidden');
+	}).catch(err => {
+		console.warn('ProtoConsent: failed to load enhanced presets:', err);
+	});
 }
 
 function notifyBackground() {
