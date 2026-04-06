@@ -71,8 +71,6 @@ The Log tab shows real-time request activity, blocked domains grouped by purpose
 
 The Domains tab includes Allow/Allowed buttons for quick whitelist control. The Whitelist tab lists all whitelisted domains with scope (Site or Global) and toggle buttons:
 
-![Domains tab with whitelist buttons](design/assets/screenshots/popup-log-domains.png)
-
 ![Whitelist tab with scope management](design/assets/screenshots/popup-log-whitelist.png)
 
 ## For websites
