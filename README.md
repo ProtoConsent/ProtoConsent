@@ -49,20 +49,31 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 
 ## Screenshots
 
-![ProtoConsent popup](design/assets/screenshots/popup-profile.png)
+<table>
+<tr>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-profile.png" alt="ProtoConsent popup" height="520"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-enhanced-basic.png" alt="Enhanced Protection tab" height="520"></td>
+</tr>
+<tr>
+<td align="center"><img src="design/assets/screenshots/popup-log-domains.png" alt="Log tab with blocked domains" height="520"></td>
+<td align="center"><img src="design/assets/screenshots/popup-log-gpc.png" alt="GPC signal tracking" height="520"></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="100"></td>
+<td align="center"><img src="design/assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel" width="600"></td><td width="100"></td>
+</table>
 
-![Log tab with blocked domains](design/assets/screenshots/popup-log-domains.png)
-
-![GPC signal tracking](design/assets/screenshots/popup-log-gpc.png)
-
-![Enhanced Protection tab](design/assets/screenshots/popup-enhanced-basic.png)
-
-![Site declaration side panel](design/assets/screenshots/well-known-demo-detected.png)
 ### Domain whitelist management
 
-The Domains tab includes Allow/Allowed buttons for quick whitelist control. The Whitelist tab lists all whitelisted domains with scope (Site or Global) and toggle buttons:
+The Domains tab includes Allow/Allowed buttons for quick whitelist control. The Whitelist tab lists all whitelisted domains with scope (Site or Global) and toggle buttons.
 
-![Whitelist tab with scope management](design/assets/screenshots/popup-log-whitelist.png)
+<table>
+<tr><td width="200"></td>
+<td align="center"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Whitelist tab with scope management" width="400"></td><td width="200"></td>
+</tr>
+</table>
 
 ## For websites
 
