@@ -65,6 +65,7 @@ const ENHANCED_EXTRA_CATEGORIES = {
 
 let cnameMap = null;       // { disguised_domain: trackerIndex }
 let cnameTrackers = null;  // trackers[index] = "real-tracker.com"
+let cnameLoadDiag = null;  // Diagnostic reason if load fails (shown in debug panel)
 
 // Lookup CNAME tracker for a domain, with www. prefix fallback.
 function lookupCname(domain) {
@@ -90,9 +91,15 @@ function loadCnameData(callback) {
       if (data && data.map && data.trackers) {
         cnameMap = data.map;
         cnameTrackers = data.trackers;
+        cnameLoadDiag = null;
         if (callback) callback(true);
         return;
       }
+      cnameLoadDiag = "enabled but data missing - re-download from Enhanced Protection";
+    } else if (meta) {
+      cnameLoadDiag = "list disabled";
+    } else {
+      cnameLoadDiag = "list not found in storage";
     }
     if (callback) callback(false);
   });
