@@ -528,6 +528,11 @@ async function _rebuildAllDynamicRulesImpl() {
     ]);
     const enhancedData = await getAllEnhancedDataFromStorage(enhancedListsMeta);
 
+    // GPC toggle: default to true if not set
+    const gpcEnabled = await new Promise(resolve => {
+      chrome.storage.local.get(["gpcEnabled"], r => resolve(r.gpcEnabled !== false));
+    });
+
     // Collect existing dynamic rule IDs for the atomic swap at the end
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
     const existingIds = existingRules.map((r) => r.id);
@@ -793,7 +798,7 @@ async function _rebuildAllDynamicRulesImpl() {
     // signal - trusting a site does not imply trusting the third parties it loads.
     // The same applies to cross-origin iframes: an iframe from youtube.com on a
     // trusted elpais.com page still receives GPC from the global rule.
-    const globalNeedsGPC = gpcPurposes.some(p => !globalPurposes[p]);
+    const globalNeedsGPC = gpcEnabled && gpcPurposes.some(p => !globalPurposes[p]);
 
     if (globalNeedsGPC) {
       // Global: send GPC on all requests by default
@@ -820,7 +825,7 @@ async function _rebuildAllDynamicRulesImpl() {
 
     for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
       const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
-      const siteNeedsGPC = gpcPurposes.some(p => !sitePurposes[p]);
+      const siteNeedsGPC = gpcEnabled && gpcPurposes.some(p => !sitePurposes[p]);
 
       if (siteNeedsGPC === globalNeedsGPC) continue;
 
@@ -954,7 +959,7 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     // Update the GPC content script registration to match the new rule state
-    await updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes);
+    await updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled);
 
   } catch (e) {
     console.error("ProtoConsent: failed to rebuild dynamic rules:", e);
@@ -966,12 +971,15 @@ async function _rebuildAllDynamicRulesImpl() {
 // Receives pre-computed data from the rebuild to avoid re-reading storage.
 const GPC_SCRIPT_ID = "protoconsent-gpc";
 
-async function updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes) {
+async function updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled) {
   if (!chrome.scripting?.registerContentScripts) return;
 
   try {
     // Always unregister first to start fresh
     await chrome.scripting.unregisterContentScripts({ ids: [GPC_SCRIPT_ID] }).catch(() => {});
+
+    // If GPC is globally disabled, unregister and return
+    if (!gpcEnabled) return;
 
     const globalNeedsGPC = gpcPurposes.length > 0 && gpcPurposes.some(p => !globalPurposes[p]);
 
@@ -981,7 +989,7 @@ async function updateGPCContentScript(rulesByDomain, presets, defaultConfig, glo
 
     for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
       const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
-      const siteNeedsGPC = gpcPurposes.some(p => !sitePurposes[p]);
+      const siteNeedsGPC = gpcEnabled && gpcPurposes.some(p => !sitePurposes[p]);
 
       if (siteNeedsGPC === globalNeedsGPC) continue;
 
