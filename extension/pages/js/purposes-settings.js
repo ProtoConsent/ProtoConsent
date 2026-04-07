@@ -567,3 +567,168 @@ function notifyBackground() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// --- Export / Import ---
+
+const EXPORT_KEYS = [
+	"defaultProfile", "defaultPurposes", "rules", "whitelist",
+	"gpcEnabled", "chStrippingEnabled", "enhancedPreset", "enhancedLists"
+];
+
+const VALID_PROFILES = ["strict", "balanced", "permissive", "custom"];
+const VALID_ENHANCED_PRESETS = ["off", "basic", "full", "custom"];
+
+const IMPORT_MAX_BYTES = 512 * 1024; // 512 KB
+
+const DANGEROUS_KEYS = ["__proto__", "constructor", "prototype"];
+
+// Strip dangerous keys from an object (shallow)
+function sanitizeObjectKeys(obj) {
+	const clean = {};
+	for (const key of Object.keys(obj)) {
+		if (DANGEROUS_KEYS.includes(key)) continue;
+		clean[key] = obj[key];
+	}
+	return clean;
+}
+
+function validateImport(data) {
+	const clean = {};
+	const errors = [];
+
+	if ("defaultProfile" in data) {
+		if (VALID_PROFILES.includes(data.defaultProfile)) clean.defaultProfile = data.defaultProfile;
+		else errors.push("defaultProfile: invalid value");
+	}
+	if ("defaultPurposes" in data) {
+		const dp = data.defaultPurposes;
+		if (typeof dp === "object" && dp !== null && !Array.isArray(dp) &&
+			Object.values(dp).every(v => typeof v === "boolean")) {
+			clean.defaultPurposes = sanitizeObjectKeys(dp);
+		} else errors.push("defaultPurposes: must be {key: boolean}");
+	}
+	if ("rules" in data) {
+		const r = data.rules;
+		if (typeof r === "object" && r !== null && !Array.isArray(r)) {
+			clean.rules = sanitizeObjectKeys(r);
+		} else errors.push("rules: must be an object");
+	}
+	if ("whitelist" in data) {
+		const w = data.whitelist;
+		if (typeof w === "object" && w !== null && !Array.isArray(w)) {
+			clean.whitelist = sanitizeObjectKeys(w);
+		} else errors.push("whitelist: must be an object");
+	}
+	if ("gpcEnabled" in data) {
+		if (typeof data.gpcEnabled === "boolean") clean.gpcEnabled = data.gpcEnabled;
+		else errors.push("gpcEnabled: must be boolean");
+	}
+	if ("chStrippingEnabled" in data) {
+		if (typeof data.chStrippingEnabled === "boolean") clean.chStrippingEnabled = data.chStrippingEnabled;
+		else errors.push("chStrippingEnabled: must be boolean");
+	}
+	if ("enhancedPreset" in data) {
+		if (VALID_ENHANCED_PRESETS.includes(data.enhancedPreset)) clean.enhancedPreset = data.enhancedPreset;
+		else errors.push("enhancedPreset: invalid value");
+	}
+	if ("enhancedLists" in data) {
+		const el = data.enhancedLists;
+		if (typeof el === "object" && el !== null && !Array.isArray(el)) {
+			clean.enhancedLists = sanitizeObjectKeys(el);
+		} else errors.push("enhancedLists: must be an object");
+	}
+
+	return { clean, errors };
+}
+
+function initDataSection() {
+	const exportBtn = document.getElementById('export-btn');
+	const importBtn = document.getElementById('import-btn');
+	const importFile = document.getElementById('import-file');
+	const statusEl = document.getElementById('data-status');
+	if (!exportBtn || !importBtn || !importFile || !statusEl) return;
+
+	function showStatus(msg, isError) {
+		statusEl.textContent = msg;
+		statusEl.className = 'ps-data-status' + (isError ? ' ps-data-status-error' : '');
+		statusEl.classList.remove('ps-hidden');
+		setTimeout(() => statusEl.classList.add('ps-hidden'), 4000);
+	}
+
+	exportBtn.addEventListener('click', () => {
+		chrome.storage.local.get(EXPORT_KEYS, (data) => {
+			const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'protoconsent-config.json';
+			a.click();
+			URL.revokeObjectURL(url);
+			showStatus('Configuration exported.', false);
+		});
+	});
+
+	importBtn.addEventListener('click', () => importFile.click());
+
+	importFile.addEventListener('change', () => {
+		const file = importFile.files[0];
+		if (!file) return;
+		importFile.value = '';
+
+		if (!file.name.endsWith('.json')) {
+			showStatus('Only .json files are accepted.', true);
+			return;
+		}
+
+		if (file.size > IMPORT_MAX_BYTES) {
+			showStatus('File too large (max 512 KB).', true);
+			return;
+		}
+
+		const reader = new FileReader();
+		reader.onerror = () => {
+			showStatus('Failed to read file.', true);
+		};
+		reader.onload = (e) => {
+			let data;
+			try {
+				data = JSON.parse(e.target.result);
+			} catch {
+				showStatus('Invalid JSON file.', true);
+				return;
+			}
+
+			if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+				showStatus('Invalid configuration format.', true);
+				return;
+			}
+
+			// Only import known keys with type validation
+			const { clean: toWrite, errors } = validateImport(data);
+
+			if (Object.keys(toWrite).length === 0) {
+				showStatus('No valid settings found.' + (errors.length ? ' ' + errors[0] : ''), true);
+				return;
+			}
+
+			if (errors.length > 0) {
+				console.warn('ProtoConsent import: skipped invalid keys:', errors);
+			}
+
+			if (!confirm('This will overwrite your current settings. Continue?')) return;
+
+			chrome.storage.local.set(toWrite, () => {
+				if (chrome.runtime.lastError) {
+					showStatus('Storage error: ' + chrome.runtime.lastError.message, true);
+					return;
+				}
+				notifyBackground();
+				showStatus('Imported ' + Object.keys(toWrite).length + ' settings. Reloading...', false);
+				setTimeout(() => location.reload(), 1200);
+			});
+		};
+		reader.readAsText(file);
+	});
+}
+
+document.addEventListener('DOMContentLoaded', initDataSection);
