@@ -284,6 +284,7 @@ function renderLogDomains(initialVisible) {
     }
 
     const tdDomain = document.createElement("td");
+    tdDomain.className = "pc-log-table-domain";
     if (row.domain) {
       tdDomain.textContent = row.domain;
     } else {
@@ -438,6 +439,7 @@ function renderLogGpc() {
   for (const [domain, count, time] of sorted) {
     const tr = document.createElement("tr");
     const tdDomain = document.createElement("td");
+    tdDomain.className = "pc-log-table-domain";
     tdDomain.textContent = domain;
     const tdCount = document.createElement("td");
     tdCount.textContent = count;
@@ -777,6 +779,7 @@ function renderLogWhitelist() {
     }
 
     const tdDomain = document.createElement("td");
+    tdDomain.className = "pc-log-table-domain";
     tdDomain.textContent = entry.domain;
     tdDomain.title = hits > 0
       ? entry.domain + " (" + hits + " allowed)"

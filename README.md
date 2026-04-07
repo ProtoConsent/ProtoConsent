@@ -101,7 +101,7 @@ See [product-overview.md](design/product-overview.md) for the full roadmap.
 
 ## Use of Generative AI
 
-This project occasionally uses generative AI tools for non-code tasks such as visuals, translation, and spelling corrections. All code and technical design are written and reviewed by human contributors.
+This project occasionally uses generative AI tools for non-code tasks such as visuals, translation, and spelling corrections. All code and technical design are written and reviewed by human contributors, and the codebase is prepared as FLOS (GPL‑3.0‑or‑later) without "vibe-coding" or direct code generation from AI tools.
 
 ## License
 

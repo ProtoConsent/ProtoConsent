@@ -314,6 +314,11 @@ async function displayBlockedCount() {
         countEl.classList.add("has-blocked", "clickable");
         countEl.title = "Click to see blocked domains in Log tab";
         if (statRowEl) statRowEl.classList.add("clickable");
+      } else if (gpc > 0) {
+        countEl.classList.add("clickable");
+        countEl.classList.remove("has-blocked");
+        countEl.title = "Click to see GPC signals in Log tab";
+        if (statRowEl) statRowEl.classList.add("clickable");
       } else {
         countEl.classList.remove("has-blocked", "clickable");
         countEl.title = "";
@@ -469,7 +474,16 @@ function renderEnhancedScopeLine(el, enabledCount, totalDomains) {
 
 // Navigate to the Log tab
 function navigateToLog(innerTab) {
-  const tab = (typeof innerTab === "string") ? innerTab : "domains";
+  let tab;
+  if (typeof innerTab === "string") {
+    tab = innerTab;
+  } else if (lastBlocked > 0) {
+    tab = "domains";
+  } else if (lastGpcSignalsSent > 0) {
+    tab = "gpc";
+  } else {
+    tab = "domains";
+  }
   if (typeof setActiveMode === "function") setActiveMode("log");
   if (typeof initLogTab === "function") initLogTab();
   if (typeof setActiveLogTab === "function") setActiveLogTab(tab);

@@ -257,6 +257,14 @@
   vertical-align: middle;
 }
 
+/* Truncate long domain names in fixed-layout tables */
+.pc-log-table .pc-log-table-domain {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
+}
+
 .pc-log-allow-btn {
   font-family: inherit;
   font-size: 10px;

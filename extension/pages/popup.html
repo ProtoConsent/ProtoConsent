@@ -122,22 +122,22 @@
           </div>
           <div id="pc-log-purposes" class="pc-log-purposes"></div>
           <div class="pc-log-tabs" role="tablist">
-            <button class="pc-log-tab is-active" data-log-tab="requests" type="button" role="tab" aria-selected="true" aria-controls="pc-log-panel-requests" id="pc-log-tab-requests">Requests</button>
-            <button class="pc-log-tab" data-log-tab="domains" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-domains" id="pc-log-tab-domains">Domains</button>
+            <button class="pc-log-tab is-active" data-log-tab="domains" type="button" role="tab" aria-selected="true" aria-controls="pc-log-panel-domains" id="pc-log-tab-domains">Domains</button>
             <button class="pc-log-tab" data-log-tab="gpc" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-gpc" id="pc-log-tab-gpc">GPC</button>
+            <button class="pc-log-tab" data-log-tab="requests" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-requests" id="pc-log-tab-requests">Requests</button>
             <button class="pc-log-tab" data-log-tab="whitelist" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-whitelist" id="pc-log-tab-whitelist">Whitelist</button>
             <button class="pc-log-tab" data-log-tab="debug" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-debug" id="pc-log-tab-debug" hidden>Debug</button>
             <button class="pc-log-tab" data-log-tab="others" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-others" id="pc-log-tab-others" hidden>Others</button>
             <button id="pc-log-copy" class="pc-log-copy" type="button" title="Copy tab content to clipboard">Copy</button>
           </div>
-          <div class="pc-log-panel is-active" data-log-panel="requests" role="tabpanel" id="pc-log-panel-requests" aria-labelledby="pc-log-tab-requests">
-            <pre id="pc-log-requests" class="pc-log-console"></pre>
-          </div>
-          <div class="pc-log-panel" data-log-panel="domains" role="tabpanel" id="pc-log-panel-domains" aria-labelledby="pc-log-tab-domains" hidden>
+          <div class="pc-log-panel is-active" data-log-panel="domains" role="tabpanel" id="pc-log-panel-domains" aria-labelledby="pc-log-tab-domains">
             <div id="pc-log-domains" class="pc-log-content" aria-live="polite"></div>
           </div>
           <div class="pc-log-panel" data-log-panel="gpc" role="tabpanel" id="pc-log-panel-gpc" aria-labelledby="pc-log-tab-gpc" hidden>
             <div id="pc-log-gpc" class="pc-log-content"></div>
+          </div>
+          <div class="pc-log-panel" data-log-panel="requests" role="tabpanel" id="pc-log-panel-requests" aria-labelledby="pc-log-tab-requests" hidden>
+            <pre id="pc-log-requests" class="pc-log-console"></pre>
           </div>
           <div class="pc-log-panel" data-log-panel="whitelist" role="tabpanel" id="pc-log-panel-whitelist" aria-labelledby="pc-log-tab-whitelist" hidden>
             <div id="pc-log-whitelist" class="pc-log-content" aria-live="polite"></div>

@@ -164,7 +164,67 @@ function setEnhancedPreset(preset) {
     // Restore focus to the active preset button
     const active = document.querySelector('#ep-preset-buttons [aria-checked="true"]');
     if (active) active.focus();
+    // If switching to basic or full, auto-download missing lists for that preset
+    if (preset === "basic" || preset === "full") {
+      const missing = Object.keys(epCatalog).filter(id => {
+        if (epLists[id]) return false;
+        if (preset === "basic") return epCatalog[id].preset === "basic";
+        return true; // full: all lists
+      });
+      if (missing.length > 0) downloadPresetLists(missing);
+    }
   });
+}
+
+// --- Download lists triggered by preset selection ---
+
+function downloadPresetLists(listIds) {
+  const total = listIds.length;
+  // Disable preset buttons during download
+  const presetBtns = document.querySelectorAll(".ep-preset-btn");
+  for (const b of presetBtns) b.disabled = true;
+  // Mark each card's Download button as pending
+  for (const listId of listIds) {
+    const cardBtn = document.querySelector('.ep-list-download-btn[data-list-id="' + listId + '"]');
+    if (cardBtn) {
+      cardBtn.disabled = true;
+      cardBtn.textContent = "Pending…";
+      cardBtn.classList.add("is-pending");
+    }
+  }
+  let completed = 0;
+  let failed = 0;
+  for (const listId of listIds) {
+    const cardBtn = document.querySelector('.ep-list-download-btn[data-list-id="' + listId + '"]');
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
+      if (chrome.runtime.lastError) resp = null;
+      completed++;
+      if (!resp?.ok) {
+        failed++;
+        if (cardBtn) {
+          cardBtn.textContent = "Failed";
+          cardBtn.classList.remove("is-pending");
+          cardBtn.classList.add("is-failed");
+        }
+      } else if (cardBtn) {
+        cardBtn.textContent = "Done";
+        cardBtn.classList.remove("is-pending");
+      }
+      if (completed >= total) {
+        // Re-enable preset buttons
+        const btns = document.querySelectorAll(".ep-preset-btn");
+        for (const b of btns) b.disabled = false;
+        const statusEl = document.getElementById("ep-status");
+        if (statusEl) {
+          statusEl.textContent = failed > 0
+            ? "Downloaded " + (total - failed) + " of " + total + " lists, " + failed + " failed"
+            : "All " + total + " lists downloaded";
+          statusEl.className = "ep-status" + (failed > 0 ? " ep-status-warn" : " ep-status-active");
+        }
+        setTimeout(() => refreshEnhancedState(), 500);
+      }
+    });
+  }
 }
 
 // --- List cards ---
@@ -441,28 +501,36 @@ function updateAllEnhancedLists(btnEl) {
   }
   let completed = 0;
   let failed = 0;
+  let skipped = 0;
   for (const listId of downloadedIds) {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
       if (chrome.runtime.lastError) resp = null;
       completed++;
       if (!resp?.ok) failed++;
+      else if (resp.skipped) skipped++;
       if (btnEl) {
         btnEl.textContent = completed + "/" + total + "…";
       }
       if (completed >= total) {
         if (btnEl) {
           btnEl.disabled = false;
-          btnEl.textContent = failed > 0
-            ? failed + " failed"
-            : "Done";
+          if (failed > 0) btnEl.textContent = failed + " failed";
+          else if (skipped === total) btnEl.textContent = "Up to date";
+          else btnEl.textContent = "Done";
         }
         // Announce completion via aria-live region
         const statusEl = document.getElementById("ep-status");
         if (statusEl) {
-          statusEl.textContent = failed > 0
-            ? "Updated " + (total - failed) + " of " + total + " lists, " + failed + " failed"
-            : "All " + total + " lists updated";
-          statusEl.className = "ep-status" + (failed > 0 ? " ep-status-warn" : " ep-status-active");
+          if (failed > 0) {
+            statusEl.textContent = "Updated " + (total - failed) + " of " + total + " lists, " + failed + " failed";
+            statusEl.className = "ep-status ep-status-warn";
+          } else if (skipped === total) {
+            statusEl.textContent = "All " + total + " lists already up to date";
+            statusEl.className = "ep-status ep-status-active";
+          } else {
+            statusEl.textContent = (total - skipped) + " of " + total + " lists updated" + (skipped > 0 ? ", " + skipped + " already current" : "");
+            statusEl.className = "ep-status ep-status-active";
+          }
         }
         setTimeout(() => refreshEnhancedState(), 500);
       }

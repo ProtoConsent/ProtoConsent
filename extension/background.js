@@ -1377,8 +1377,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               getEnhancedListsFromStorage(),
               getEnhancedPresetFromStorage(),
             ]).then(([lists, preset]) => {
+              // Skip storage write and rebuild if version is unchanged (update, not first download)
+              const existing = lists[listId];
+              if (existing && data.version && existing.version === data.version) {
+                sendResponse({ ok: true, skipped: true, domainCount: existing.domainCount, pathRuleCount: existing.pathRuleCount });
+                return;
+              }
               // Preserve user's enabled state on update; use preset logic only for new downloads
-              const existingEnabled = lists[listId]?.enabled;
+              const existingEnabled = existing?.enabled;
               let shouldEnable;
               if (existingEnabled !== undefined) {
                 shouldEnable = existingEnabled;
