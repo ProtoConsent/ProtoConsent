@@ -58,6 +58,11 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 ![Enhanced Protection tab](design/assets/screenshots/popup-enhanced-basic.png)
 
 ![Site declaration side panel](design/assets/screenshots/well-known-demo-detected.png)
+### Domain whitelist management
+
+The Domains tab includes Allow/Allowed buttons for quick whitelist control. The Whitelist tab lists all whitelisted domains with scope (Site or Global) and toggle buttons:
+
+![Whitelist tab with scope management](design/assets/screenshots/popup-log-whitelist.png)
 
 ## For websites
 
