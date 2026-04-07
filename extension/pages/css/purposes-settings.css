@@ -248,12 +248,16 @@ body {
   color: #1e3a8a;
 }
 
-.ps-gpc-info-row {
+.ps-gpc-toggle-row {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 8px;
-  flex-wrap: wrap;
+}
+
+.ps-gpc-toggle-row > div:first-child {
+  flex: 1;
+  min-width: 0;
 }
 
 .ps-gpc-info-name {
@@ -264,6 +268,19 @@ body {
 .ps-gpc-info-desc {
   color: var(--pc-text-muted);
   font-size: 11px;
+  margin-top: 2px;
+}
+
+.ps-gpc-toggle-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pc-text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ps-gpc-toggle {
+  cursor: pointer;
 }
 
 .ps-default-profile-row {

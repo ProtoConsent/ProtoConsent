@@ -33,6 +33,7 @@ let lastWhitelist = {};
 let lastWhitelistHitDomains = {};
 let requiredPurposeKeys = new Set();
 let activeMode = "consent";
+let gpcGlobalEnabled = true;
 
 function getActivePurposes() {
   const core = PURPOSES_TO_SHOW.filter(p => lastPurposeStats[p] || lastBlockedDomains[p]);
@@ -588,10 +589,11 @@ async function loadDefaultProfile() {
   if (!chrome.storage || !chrome.storage.local) return;
 
   return new Promise((resolve) => {
-    chrome.storage.local.get(["defaultProfile", "defaultPurposes"], (result) => {
+    chrome.storage.local.get(["defaultProfile", "defaultPurposes", "gpcEnabled"], (result) => {
       defaultProfile = result.defaultProfile || "balanced";
       defaultPurposes = result.defaultPurposes || null;
       currentProfile = defaultProfile;
+      gpcGlobalEnabled = result.gpcEnabled !== false;
       resolve();
     });
   });
@@ -1035,6 +1037,7 @@ function isSupportedWebUrl(urlStr) {
 
 // Returns true when any purpose with triggers_gpc is blocked in the current configuration.
 function expectedGpcEnabled() {
+  if (!gpcGlobalEnabled) return false;
   if (!currentDomain || !Array.isArray(gpcPurposeKeys) || gpcPurposeKeys.length === 0) return false;
   return gpcPurposeKeys.some((key) => currentPurposesState[key] === false);
 }
@@ -1050,6 +1053,14 @@ function updateGpcIndicator(observedGpc = lastGpcSignalsSent) {
     indicatorEl.classList.add("is-disabled");
     labelEl.textContent = "GPC n/a";
     indicatorEl.title = "GPC unavailable on this page";
+    return;
+  }
+
+  if (!gpcGlobalEnabled) {
+    indicatorEl.classList.remove("is-active", "is-inactive");
+    indicatorEl.classList.add("is-disabled");
+    labelEl.textContent = "GPC off";
+    indicatorEl.title = "GPC globally disabled in Purpose Settings";
     return;
   }
 

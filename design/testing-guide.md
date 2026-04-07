@@ -28,7 +28,8 @@ This document is part of the ProtoConsent project and is licensed under the Crea
   - [8. Testing Global Privacy Control (Sec-GPC header)](#8-testing-global-privacy-control-sec-gpc-header)
     - [8.1 GPC active (default with Balanced or Strict)](#81-gpc-active-default-with-balanced-or-strict)
     - [8.2 GPC inactive (all privacy purposes allowed)](#82-gpc-inactive-all-privacy-purposes-allowed)
-    - [8.3 Verifying rules from the service worker console](#83-verifying-rules-from-the-service-worker-console)
+    - [8.3 GPC globally disabled](#83-gpc-globally-disabled)
+    - [8.4 Verifying rules from the service worker console](#84-verifying-rules-from-the-service-worker-console)
   - [9. Enabling the debug panel](#9-enabling-the-debug-panel)
     - [9.1 Activate debug mode](#91-activate-debug-mode)
     - [9.2 Deactivate debug mode](#92-deactivate-debug-mode)
@@ -314,7 +315,15 @@ GPC signal detected on a site with privacy purposes denied:
 2. Reload the page.
 3. Check **Request Headers** again. `Sec-GPC` should **not** appear.
 
-### 8.3 Verifying rules from the service worker console
+### 8.3 GPC globally disabled
+
+1. Open Purpose Settings and uncheck the GPC toggle.
+2. Reload a site that previously showed `Sec-GPC: 1` (e.g. Balanced profile on `elpais.com`).
+3. Check **Request Headers**. `Sec-GPC` should **not** appear.
+4. In the popup, the GPC pill should show "GPC off" (greyed out) with tooltip "GPC globally disabled in Purpose Settings".
+5. Re-enable the toggle in Purpose Settings, reload the site, and verify `Sec-GPC: 1` returns.
+
+### 8.4 Verifying rules from the service worker console
 
 Open the service worker console for the extension and run:
 
