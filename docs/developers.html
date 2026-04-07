@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Developers – ProtoConsent</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/logo/protoconsent_logo_bold.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/protoconsent_logo_32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Build with ProtoConsent: read user consent preferences from the browser, declare your site's data practices, or adapt behaviour with the SDK.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Developers – ProtoConsent">
+  <meta property="og:description" content="Read user consent preferences from the browser, declare your site's data practices, or adapt behaviour with the SDK.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://protoconsent.org/developers.html">
+  <meta property="og:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Developers – ProtoConsent">
+  <meta name="twitter:description" content="Read user consent preferences from the browser, declare your site's data practices, or adapt behaviour with the SDK.">
+  <meta name="twitter:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+  <div class="page">
+    <div class="container">
+      <header>
+        <a href="index.html" class="brand">
+          <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
+          <div class="brand-name">ProtoConsent</div>
+        </a>
+        <nav class="header-links-nav" aria-label="Main">
+          <a class="header-link" href="index.html">Home</a>
+          <a class="header-link" href="why.html">Why ProtoConsent</a>
+          <a class="header-link" href="validate.html">Validate</a>
+          <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        </nav>
+      </header>
+
+      <main id="main-content">
+        <!-- HERO -->
+        <section class="hero">
+          <h1 class="hero-title">Build with ProtoConsent</h1>
+          <p class="hero-subtitle">
+            Read user consent preferences directly from the browser. No backend, no identity, no tracking
+          </p>
+          <div class="hero-badges">
+            <div class="badge">
+              <span class="badge-dot"></span>
+              <span>Optional integration</span>
+            </div>
+            <div class="badge">
+              <span class="badge-dot"></span>
+              <span>Read-only</span>
+            </div>
+            <div class="badge">
+              <span class="badge-dot"></span>
+              <span>MIT SDK</span>
+            </div>
+            <div class="badge">
+              <span class="badge-dot"></span>
+              <span>Null-safe</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- HOW THE BROWSER ENFORCES -->
+        <section class="card card-spaced card-muted">
+          <div class="card-title">How the browser enforces</div>
+          <div class="card-inset">
+          <h2>What ProtoConsent does</h2>
+          <p>
+            ProtoConsent is a browser extension that lets users define how different data‑use purposes should be treated on each site, then applies those rules locally in the browser. All preferences and enforcement happen on the user's device.
+          </p>
+          <ul>
+            <li><strong>Per‑site purpose profiles</strong>: choose how to treat functional, analytics, advertising, personalisation, third‑party services and advanced tracking for each domain.</li>
+            <li><strong>Network‑level enforcement</strong>: uses browser extension APIs to block or allow requests related to specific purposes, with observable results.</li>
+            <li><strong>Optional enhanced protection</strong>: activate curated third‑party blocklists for broader coverage, with presets or individual list control.</li>
+            <li><strong>Conditional GPC signal</strong>: sends <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec‑GPC</a> only when privacy‑relevant purposes are denied, per site, not globally.</li>
+            <li><strong>Site declarations</strong>: websites can publish a <code>.well-known/protoconsent.json</code> to declare their data practices. No SDK required.</li>
+            <li><strong>Local‑only, composable</strong>: runs entirely in the browser. Designed to sit alongside existing consent tools.</li>
+          </ul>
+          <figure class="screenshot">
+            <img src="assets/screenshots/popup-log-domains.png" alt="Log tab showing blocked domains grouped by purpose">
+            <figcaption>
+              Blocked domains grouped by purpose in the Log tab.
+            </figcaption>
+          </figure>
+          </div>
+        </section>
+
+        <!-- WHAT DEVELOPERS CAN DO -->
+        <section class="grid grid-spaced">
+          <article class="card card-mint">
+            <div class="card-title">Read preferences</div>
+            <h2>Query consent state per site</h2>
+            <p>
+              The SDK returns <code>true</code>, <code>false</code>, or <code>null</code> (extension absent) for each purpose. Per-site only, fully local.
+            </p>
+            <p>
+              <a href="#sdk-path">See the SDK integration &rarr;</a>
+            </p>
+          </article>
+
+          <article class="card card-alt">
+            <div class="card-title">Adapt behaviour</div>
+            <h2>Don't negotiate, respond</h2>
+            <p>
+              Use the signal to load or skip scripts, simplify banners, or respect user choices without guessing. The extension enforces at the network level regardless. The SDK lets you adapt gracefully.
+            </p>
+          </article>
+        </section>
+
+        <!-- GPC -->
+        <section class="card card-spaced">
+          <div class="card-title">Global Privacy Control</div>
+          <h2>A legally recognised privacy signal, per site</h2>
+          <p>
+            ProtoConsent sends the <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec‑GPC</a> header automatically when privacy‑relevant purposes (ads, third‑party sharing, advanced tracking) are denied for a site.
+          </p>
+          <p>
+            Unlike browser‑wide GPC toggles, ProtoConsent's signal is <strong>conditional and per‑site</strong>: it only fires when your purpose choices justify it. GPC already has legal weight under California's CCPA/CPRA and is under discussion in the EU.
+          </p>
+          <p>
+            <a href="https://demo.protoconsent.org/#gpc-test" target="_blank" rel="noopener noreferrer">Check it live on the demo site &rarr;</a>
+          </p>
+          <figure class="screenshot">
+            <img src="assets/screenshots/gpc-demo-detected.png" alt="GPC signal detected on globalprivacycontrol.org">
+            <figcaption>
+              GPC signal detected on globalprivacycontrol.org when privacy purposes are denied.
+            </figcaption>
+          </figure>
+        </section>
+
+        <!-- INTEGRATION PATHS -->
+        <section class="card card-spaced card-muted">
+          <div class="card-title">Path A: Zero code</div>
+          <div class="card-inset">
+          <h2>Declare data practices</h2>
+          <p>
+            <strong>Best for:</strong> publishers, static sites, any website.
+          </p>
+          <p>
+            Publish a <code>.well-known/protoconsent.json</code> file at your domain root declaring which purposes your site uses, what legal basis it claims, and which third parties it integrates. The extension reads this file and displays it in a side panel with <a href="https://consentcommons.com/" target="_blank" rel="noopener noreferrer">Consent Commons</a> icons. One static file is all it takes.
+          </p>
+          <figure class="screenshot">
+            <img src="assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel with Consent Commons icons">
+            <figcaption>
+              Site declaration displayed with Consent Commons icons. See the <a href="https://demo.protoconsent.org" target="_blank" rel="noopener noreferrer">demo site</a> for a complete example.
+            </figcaption>
+          </figure>
+          <p>
+            <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/well-known-spec.md" target="_blank" rel="noopener noreferrer">Read the spec &rarr;</a>
+            &nbsp;&middot;&nbsp;
+            <a href="validate.html">Validate your file &rarr;</a>
+            &nbsp;&middot;&nbsp;
+            <a href="https://github.com/ProtoConsent/demo" target="_blank" rel="noopener noreferrer">Demo site source &rarr;</a>
+          </p>
+          </div>
+        </section>
+
+        <section class="card card-spaced card-alt" id="sdk-path">
+          <div class="card-title">Path B: SDK</div>
+          <div class="card-inset">
+          <h2>Read user preferences in 3 lines</h2>
+          <p>
+            <strong>Best for:</strong> any website that wants to read user preferences and adapt accordingly.
+          </p>
+          <pre class="code-block"><span class="code-comment">// Load the SDK (ES module, MIT licensed)</span>
+import ProtoConsent from 'protoconsent.js';
+
+<span class="code-comment">// Check a single purpose</span>
+const allowed = await ProtoConsent.get('analytics');
+if (allowed) loadAnalytics();
+
+<span class="code-comment">// Or read all purposes at once</span>
+const all = await ProtoConsent.getAll();
+<span class="code-comment">// { functional: true, analytics: false, ads: false, ... }</span></pre>
+          <p>
+            Returns <code>null</code> if the extension is not installed. Safe by default, always graceful.
+          </p>
+          <p>
+            <strong>Full API:</strong> <code>get(purpose)</code>, <code>getAll()</code>, <code>getProfile()</code>.
+          </p>
+          <p>
+            <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/protocol-draft.md#4-sdk-api-surface" target="_blank" rel="noopener noreferrer">Protocol spec &rarr;</a>
+            &nbsp;&middot;&nbsp;
+            <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/sdk/protoconsent.js" target="_blank" rel="noopener noreferrer">SDK source &rarr;</a>
+            &nbsp;&middot;&nbsp;
+            <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/sdk/protoconsent.d.ts" target="_blank" rel="noopener noreferrer">TypeScript declarations &rarr;</a>
+          </p>
+          </div>
+        </section>
+
+        <!-- WHAT IT IS NOT + TRUST -->
+        <section class="grid grid-spaced">
+          <article class="card">
+            <div class="card-title">What ProtoConsent is not</div>
+            <ul>
+              <li><strong>Not a CMP</strong>: it does not manage consent on behalf of your site or negotiate with vendors.</li>
+              <li><strong>Not a tracking API</strong>: the SDK transmits no identity, no cookies, no cross-site state.</li>
+              <li><strong>Not a browser-wide toggle</strong>: preferences are per-site and per-purpose, not global.</li>
+            </ul>
+            <p>
+              Website participation is optional and does not affect user-side enforcement.
+            </p>
+          </article>
+
+          <article class="card card-mint">
+            <div class="card-title">Trust and guarantees</div>
+            <ul>
+              <li>SDK communication is fully local, via the content script bridge.</li>
+              <li>Everything runs in the browser: local storage, local enforcement, local decisions.</li>
+              <li>Open source: extension (GPL-3.0+), SDK (MIT). Inspectable behaviour.</li>
+              <li>Observable enforcement: users see blocked requests, GPC signals, and domain-level detail.</li>
+            </ul>
+          </article>
+        </section>
+
+        <!-- LIVE SDK TEST -->
+        <section class="card card-spaced sdk-demo-card" id="live-test">
+          <div class="card-title">Live test</div>
+          <h2>Your preferences for this site</h2>
+          <p>
+            This section queries the ProtoConsent extension in real time using the SDK protocol.
+            If the extension is installed, your current preferences for protoconsent.org are shown below.
+          </p>
+          <div id="sdk-demo-result"></div>
+        </section>
+
+        <!-- GO DEEPER -->
+        <section class="card card-spaced">
+          <div class="card-title">Go deeper</div>
+          <h2>Specifications and architecture</h2>
+          <ul>
+            <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/protocol-draft.md" target="_blank" rel="noopener noreferrer">Protocol specification</a></li>
+            <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/well-known-spec.md" target="_blank" rel="noopener noreferrer">.well-known specification</a></li>
+            <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/architecture.md" target="_blank" rel="noopener noreferrer">Architecture overview</a></li>
+            <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/blocklists.md" target="_blank" rel="noopener noreferrer">Blocklist methodology</a></li>
+            <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/design-rationale.md" target="_blank" rel="noopener noreferrer">Design rationale</a></li>
+            <li><a href="https://github.com/ProtoConsent/ProtoConsent/issues" target="_blank" rel="noopener noreferrer">GitHub issues</a></li>
+          </ul>
+          <p>
+            Questions or integration ideas? <a href="https://github.com/ProtoConsent/ProtoConsent/issues" target="_blank" rel="noopener noreferrer">Open an issue</a> or <a href="mailto:contact@protoconsent.org">contact us</a>.
+          </p>
+        </section>
+      </main>
+
+      <footer>
+        <div>
+          ProtoConsent is a browser extension for browser‑level, purpose‑based consent controls on the open web.
+        </div>
+        <nav class="footer-links" aria-label="Footer">
+          <a href="index.html">Home</a>
+          <a href="why.html">Why ProtoConsent</a>
+          <a href="validate.html">Validate</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">Source code</a>
+          <a href="mailto:contact@protoconsent.org">Contact</a>
+          <a href="privacy.html">Privacy</a>
+        </nav>
+      </footer>
+    </div>
+  </div>
+  <script src="assets/js/sdk-demo.js"></script>
+</body>
+</html>
