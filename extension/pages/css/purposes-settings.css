@@ -251,6 +251,16 @@ body {
   margin-bottom: 0;
 }
 
+#enhanced-preset-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+#enhanced-preset-list > .ps-preset-card {
+  margin-bottom: 0;
+}
+
 .ps-preset-pill {
   font-weight: 600;
 }
@@ -510,7 +520,8 @@ body {
   }
 
   #preset-list,
-  #purpose-list {
+  #purpose-list,
+  #enhanced-preset-list {
     grid-template-columns: 1fr;
   }
 

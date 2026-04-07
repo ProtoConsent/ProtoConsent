@@ -511,34 +511,37 @@ function renderEnhancedPresets() {
 			for (const [listId, listDef] of Object.entries(catalog)) {
 				const included = preset.id === 'full' ||
 					(preset.id === 'basic' && listDef.preset === 'basic');
-				if (preset.id === 'off') continue;
 				const pill = document.createElement('span');
 				pill.className = 'ps-preset-pill ' + (included ? 'allowed' : 'denied');
 				pill.textContent = listDef.name + (included ? ' \u2713' : ' \u2717');
 				pills.appendChild(pill);
 			}
-			if (preset.id !== 'off') card.appendChild(pills);
+			card.appendChild(pills);
 			container.appendChild(card);
 		}
 
-		// Custom indicator
+		// Custom card (always visible)
+		const customCard = document.createElement('div');
+		customCard.className = 'ps-preset-card';
+		if (currentPreset === 'custom') customCard.classList.add('ps-preset-active');
+		const customName = document.createElement('div');
+		customName.className = 'ps-preset-name';
+		customName.textContent = 'Custom';
 		if (currentPreset === 'custom') {
-			const customCard = document.createElement('div');
-			customCard.className = 'ps-preset-card ps-preset-active';
-			const customName = document.createElement('div');
-			customName.className = 'ps-preset-name';
-			customName.textContent = 'Custom';
 			const badge = document.createElement('span');
 			badge.className = 'ps-enhanced-current-badge';
 			badge.textContent = ' (current)';
 			customName.appendChild(badge);
-			customCard.appendChild(customName);
-			const customDesc = document.createElement('p');
-			customDesc.className = 'ps-purpose-desc';
-			customDesc.textContent = 'Individual lists toggled from the Enhanced tab in the popup.';
-			customCard.appendChild(customDesc);
+		}
+		customCard.appendChild(customName);
+		const customDesc = document.createElement('p');
+		customDesc.className = 'ps-purpose-desc';
+		customDesc.textContent = 'Individual lists toggled from the Enhanced tab in the popup.';
+		customCard.appendChild(customDesc);
 
-			// Pills showing per-list enabled/disabled state
+		// Pills showing per-list enabled/disabled state (only if any downloaded)
+		const hasDownloaded = Object.keys(enhancedLists).length > 0;
+		if (hasDownloaded) {
 			const pills = document.createElement('div');
 			pills.className = 'ps-preset-purposes';
 			for (const [listId, listDef] of Object.entries(catalog)) {
@@ -551,8 +554,8 @@ function renderEnhancedPresets() {
 				pills.appendChild(pill);
 			}
 			customCard.appendChild(pills);
-			container.appendChild(customCard);
 		}
+		container.appendChild(customCard);
 
 		section.classList.remove('ps-hidden');
 	}).catch(err => {
