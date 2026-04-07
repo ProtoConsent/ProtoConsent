@@ -120,6 +120,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
 }
 
 .ep-list-icon {
@@ -139,6 +140,19 @@
   white-space: nowrap;
 }
 
+.ep-list-chevron {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+  color: var(--pc-text-soft);
+  transition: transform 0.15s ease;
+  transform: rotate(-90deg);
+}
+
+.ep-list-card.is-expanded .ep-list-chevron {
+  transform: rotate(0deg);
+}
+
 .ep-category-pill {
   display: inline-flex;
   align-items: center;
@@ -151,6 +165,12 @@
   border-radius: 999px;
   padding: 1px 6px 1px 4px;
   flex-shrink: 0;
+}
+
+.ep-info-pill {
+  color: var(--pc-accent, #2563eb);
+  border-color: var(--pc-accent, #2563eb);
+  padding: 1px 6px;
 }
 
 .ep-list-toggle {
@@ -221,10 +241,14 @@
 }
 
 .ep-list-info {
-  display: flex;
+  display: none;
   flex-wrap: wrap;
   gap: 4px 8px;
   margin-top: 3px;
+}
+
+.ep-list-card.is-expanded .ep-list-info {
+  display: flex;
 }
 
 .ep-list-desc {
@@ -242,9 +266,14 @@
 }
 
 .ep-list-meta {
+  display: none;
   font-size: 10px;
   color: var(--pc-text-soft);
   margin-top: 2px;
+}
+
+.ep-list-card.is-expanded .ep-list-meta {
+  display: block;
 }
 
 /* Status bar */

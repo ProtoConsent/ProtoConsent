@@ -23,6 +23,8 @@ function refreshLogView() {
 
 // --- One-time setup + refresh ---
 function initLogTab() {
+  // Load CNAME map if not already loaded
+  if (!cnameMap) loadCnameData();
   // Show debug inner tab only when DEBUG_RULES is on
   const debugTab = document.querySelector('[data-log-tab="debug"]');
   if (debugTab) debugTab.hidden = !DEBUG_RULES;
@@ -251,7 +253,7 @@ function renderLogDomains(initialVisible) {
     tdIcon.className = "pc-log-domains-icon";
     if (row.purpose.startsWith("enhanced:")) {
       const img = document.createElement("img");
-      img.src = "../icons/purposes/enhanced.svg";
+      img.src = ENHANCED_ICON;
       img.width = 14;
       img.height = 14;
       img.alt = "EP";
@@ -283,10 +285,31 @@ function renderLogDomains(initialVisible) {
       tdIcon.title = getPurposeLabel(row.purpose);
     }
 
+    // CNAME cloaking: place in icon column if room, otherwise before domain
+    const realTracker = row.domain ? lookupCname(row.domain) : null;
+    let cnameBeforeDomain = null;
+    if (realTracker) {
+      const cnameIcon = document.createElement("span");
+      cnameIcon.className = "pc-log-cname-icon";
+      cnameIcon.textContent = "\u21C9";
+      cnameIcon.title = "CNAME cloaked\n" + row.domain + " \u2192 " + realTracker;
+      cnameIcon.setAttribute("aria-label", "CNAME cloaked: " + realTracker);
+      const visibleImgs = tdIcon.querySelectorAll('img:not([style*="display: none"])').length;
+      const iconCount = visibleImgs + (tdIcon.textContent.trim() ? 1 : 0);
+      if (iconCount < 2) {
+        cnameIcon.style.marginLeft = iconCount > 0 ? "2px" : "";
+        tdIcon.appendChild(cnameIcon);
+      } else {
+        cnameIcon.textContent = "\u21C9 ";
+        cnameBeforeDomain = cnameIcon;
+      }
+    }
+
     const tdDomain = document.createElement("td");
     tdDomain.className = "pc-log-table-domain";
     if (row.domain) {
-      tdDomain.textContent = row.domain;
+      if (cnameBeforeDomain) tdDomain.appendChild(cnameBeforeDomain);
+      tdDomain.appendChild(document.createTextNode(row.domain));
     } else {
       tdDomain.textContent = "(domain names not captured)";
       tdDomain.className = "pc-log-empty";
@@ -563,6 +586,24 @@ function appendLogLine(text, type) {
   pre.appendChild(tsSpan);
   pre.appendChild(line);
   line.textContent = text;
+
+  // CNAME cloaking indicator in stream
+  if (cnameMap && cnameTrackers) {
+    const urlMatch = text.match(/\] (?:https?:\/\/)?([^\/\s:]+)/);
+    if (urlMatch) {
+      const hostname = urlMatch[1].toLowerCase();
+      const realTracker = lookupCname(hostname);
+      if (realTracker) {
+        const tag = document.createElement("span");
+        tag.className = "pc-log-cname-icon";
+        tag.textContent = " \u21C9";
+        tag.title = "CNAME cloaked\n" + hostname + " \u2192 " + realTracker;
+        tag.setAttribute("aria-label", "CNAME cloaked: " + realTracker);
+        line.appendChild(tag);
+      }
+    }
+  }
+
   pre.appendChild(document.createTextNode("\n"));
 
   // Evict oldest lines when exceeding cap
@@ -746,7 +787,7 @@ function renderLogWhitelist() {
     const purposeStr = String(entry.purpose);
     if (purposeStr.startsWith("enhanced:")) {
       const img = document.createElement("img");
-      img.src = "../icons/purposes/enhanced.svg";
+      img.src = ENHANCED_ICON;
       img.width = 14;
       img.height = 14;
       img.alt = "EP";

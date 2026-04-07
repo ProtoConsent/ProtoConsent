@@ -53,10 +53,78 @@ function formatHHMMSS(ts) {
   return formatHHMM(ts) + ":" + String(d.getSeconds()).padStart(2, "0");
 }
 
+// Enhanced Protection shield icon path (used by popup, log, enhanced tab).
+const ENHANCED_ICON = "../icons/purposes/enhanced.svg";
+
 // Non-purpose categories used by enhanced lists (not part of Consent Commons).
 const ENHANCED_EXTRA_CATEGORIES = {
   security: { icon: "../icons/purposes/security.svg", short: "Sec", label: "Security" },
 };
+
+// --- CNAME cloaking shared state and helpers ---
+
+let cnameMap = null;       // { disguised_domain: trackerIndex }
+let cnameTrackers = null;  // trackers[index] = "real-tracker.com"
+
+// Lookup CNAME tracker for a domain, with www. prefix fallback.
+function lookupCname(domain) {
+  if (!cnameMap || !cnameTrackers) return null;
+  let idx = cnameMap[domain];
+  if (idx === undefined) {
+    idx = domain.startsWith("www.")
+      ? cnameMap[domain.slice(4)]
+      : cnameMap["www." + domain];
+  }
+  return idx !== undefined && idx !== null ? cnameTrackers[idx] : null;
+}
+
+// Load CNAME data from storage if the list is enabled.
+// Populates cnameMap and cnameTrackers globals.
+// Calls optional callback(loaded: boolean) when done.
+function loadCnameData(callback) {
+  if (cnameMap) { if (callback) callback(true); return; }
+  chrome.storage.local.get(["enhancedLists", "enhancedData_cname_trackers"], (r) => {
+    const meta = r.enhancedLists && r.enhancedLists.cname_trackers;
+    if (meta && meta.enabled) {
+      const data = r.enhancedData_cname_trackers;
+      if (data && data.map && data.trackers) {
+        cnameMap = data.map;
+        cnameTrackers = data.trackers;
+        if (callback) callback(true);
+        return;
+      }
+    }
+    if (callback) callback(false);
+  });
+}
+
+// --- Client Hints stripping shared constants ---
+
+// High-entropy Client Hints headers stripped when advanced_tracking is denied.
+// Lowercase for DNR modifyHeaders; UI can derive display names from these.
+const HIGH_ENTROPY_CH = [
+  "sec-ch-ua-full-version-list",
+  "sec-ch-ua-platform-version",
+  "sec-ch-ua-arch",
+  "sec-ch-ua-bitness",
+  "sec-ch-ua-model",
+  "sec-ch-ua-wow64",
+  "sec-ch-ua-form-factors",
+];
+
+// Display-friendly names for the CH headers (same order as HIGH_ENTROPY_CH).
+const HIGH_ENTROPY_CH_LABELS = HIGH_ENTROPY_CH.map(h =>
+  "Sec-CH-UA-" + h.replace("sec-ch-ua-", "").split("-").map(
+    w => w.charAt(0).toUpperCase() + w.slice(1)
+  ).join("-")
+);
+
+// Read chStrippingEnabled from storage (defaults to true).
+function getChStrippingEnabled(callback) {
+  chrome.storage.local.get(["chStrippingEnabled"], (r) => {
+    callback(r.chStrippingEnabled !== false);
+  });
+}
 
 // Resolve enhanced list category → icon/label info.
 // Returns { icon, short, label } from purposesConfig or ENHANCED_EXTRA_CATEGORIES,
