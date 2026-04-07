@@ -46,3 +46,27 @@ function formatHHMMSS(ts) {
   if (isNaN(d.getTime())) return "--:--:--";
   return formatHHMM(ts) + ":" + String(d.getSeconds()).padStart(2, "0");
 }
+
+// Non-purpose categories used by enhanced lists (not part of Consent Commons).
+const ENHANCED_EXTRA_CATEGORIES = {
+  security: { icon: "../icons/purposes/security.svg", short: "Sec", label: "Security" },
+};
+
+// Resolve enhanced list category → icon/label info.
+// Returns { icon, short, label } from purposesConfig or ENHANCED_EXTRA_CATEGORIES,
+// or null if no category. Depends on globals: enhancedCatalogConfig (popup.js),
+// epCatalog (enhanced.js), purposesConfig (popup.js).
+function getEnhancedCategoryInfo(listId) {
+  // Prefer the always-loaded catalog; fall back to epCatalog (enhanced tab)
+  const catalog = (typeof enhancedCatalogConfig !== "undefined" && Object.keys(enhancedCatalogConfig).length > 0)
+    ? enhancedCatalogConfig
+    : (typeof epCatalog !== "undefined" ? epCatalog : null);
+  if (!catalog) return null;
+  const def = catalog[listId];
+  if (!def || !def.category) return null;
+  // Try purposes first, then extra categories
+  const cfg = (typeof purposesConfig !== "undefined" ? purposesConfig[def.category] : null)
+    || ENHANCED_EXTRA_CATEGORIES[def.category];
+  if (!cfg) return null;
+  return { icon: cfg.icon, short: cfg.short || "", label: cfg.label || def.category };
+}

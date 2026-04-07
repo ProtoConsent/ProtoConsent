@@ -2,7 +2,7 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// sdk-demo.js — Live test for the ProtoConsent SDK on protoconsent.org.
+// sdk-demo.js: Live test for the ProtoConsent SDK on protoconsent.org.
 // Queries the extension via postMessage and displays the result.
 
 (function () {

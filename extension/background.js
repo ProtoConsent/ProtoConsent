@@ -12,11 +12,11 @@ const useDnrDebug = USE_DNR_DEBUG && !!chrome.declarativeNetRequest.onRuleMatche
 // We assign IDs for dynamic rules starting from 1 upwards
 const BASE_RULE_ID = 1;
 
-// Reserve dynamic rule slots for core enforcement (overrides + GPC).
+// Reserve dynamic rule slots for core enforcement (overrides + GPC + enhanced).
 // Whitelist rules are trimmed if they would exceed the remaining budget.
-const DYNAMIC_RULE_RESERVE = 50;
+const DYNAMIC_RULE_RESERVE = 100;
 
-// Resource types for blocking rules (not main_frame — that would block the page itself)
+// Resource types for blocking rules (not main_frame - that would block the page itself)
 const BLOCK_RESOURCE_TYPES = [
   "script", "xmlhttprequest", "image", "sub_frame", "ping", "other"
 ];
@@ -24,7 +24,7 @@ const BLOCK_RESOURCE_TYPES = [
 // Resource types for GPC header injection (includes main_frame for the server signal)
 const GPC_RESOURCE_TYPES = ["main_frame", ...BLOCK_RESOURCE_TYPES];
 
-// Purposes we currently enforce — derived at runtime from purposes.json keys.
+// Purposes we currently enforce - derived at runtime from purposes.json keys.
 let PURPOSES_FOR_ENFORCEMENT = [];
 
 // Purposes that trigger the Sec-GPC header when denied.
@@ -32,8 +32,8 @@ let PURPOSES_FOR_ENFORCEMENT = [];
 let gpcPurposes = [];
 
 // Cached domain and path-domain lists extracted from static rulesets (rules/block_*.json).
-// Curated subset of public blocklists — not a full ad/tracking blocker.
-// Sources: OISD big/small, HaGeZi Pro/Light/Ultimate, EasyPrivacy/EasyList, Disconnect.me
+// Curated subset of public blocklists - not a full ad/tracking blocker.
+// Sources: OISD big/small, HaGeZi Pro/TIF, EasyPrivacy/EasyList, Peter Lowe's
 // Loaded once per SW lifetime. Maps purposeKey -> { domains: string[], pathDomains: string[] }.
 let blocklistsConfig = null;
 
@@ -52,17 +52,26 @@ let dynamicGpcSetIds = new Set();
 // so getMatchedRules in the popup can count whitelist hits per domain.
 let dynamicWhitelistMap = {};
 
+// Maps dynamic enhanced block rule IDs to their list ID (e.g. "easyprivacy").
+// Used by onErrorOccurred / onRuleMatchedDebug for attribution.
+let dynamicEnhancedMap = {};
+
 // Reverse index: maps each hostname to its purpose key(s), so we can
 // determine which purpose blocked a request given only the hostname.
 // Built after loadBlocklistsConfig(). Used by onErrorOccurred.
 let reverseHostIndex = null;
+
+// Enhanced reverse index: maps hostname → listId for Enhanced Protection lists.
+// Built during rebuild from cached enhanced list domains. Used by onErrorOccurred
+// to attribute blocks to enhanced lists when core reverse index has no match.
+let enhancedReverseIndex = null;
 
 // Set of currently-enabled static blocking rulesets (e.g. "block_analytics").
 // Updated on each rebuildAllDynamicRules cycle. Used to disambiguate purpose
 // when a domain appears in multiple blocklists.
 let enabledBlockRulesets = new Set();
 
-// GPC (Global Privacy Control) configuration snapshot — updated on each rebuild.
+// GPC (Global Privacy Control) configuration snapshot - updated on each rebuild.
 // gpcGlobalActive: true if the global GPC rule is on (applies to all requests by default).
 // gpcAddDomains: sites that override global to ADD GPC (requestDomains targets).
 // gpcRemoveDomains: sites that override global to REMOVE GPC (requestDomains targets).
@@ -154,7 +163,7 @@ let purposesConfig = null;
 
 // Start loading blocklists early so the reverse hostname index is ready
 // when the first onErrorOccurred event arrives. We don't await the result
-// here — rebuildAllDynamicRules awaits it later. This call must stay below
+// here - rebuildAllDynamicRules awaits it later. This call must stay below
 // the presetsConfig/purposesConfig declarations or they will be undefined.
 loadBlocklistsConfig();
 
@@ -254,6 +263,17 @@ function resolvePurposesFromHostname(hostname) {
     const dot = h.indexOf(".");
     if (dot < 0) break;
     h = h.slice(dot + 1);
+  }
+  // Check Enhanced Protection lists
+  if (enhancedReverseIndex) {
+    h = hostname;
+    while (h) {
+      const listId = enhancedReverseIndex.get(h);
+      if (listId) return ["enhanced:" + listId];
+      const dot = h.indexOf(".");
+      if (dot < 0) break;
+      h = h.slice(dot + 1);
+    }
   }
   return [];
 }
@@ -375,6 +395,79 @@ function isValidHostname(s) {
   return typeof s === "string" && s.length <= 253 && VALID_HOSTNAME_RE.test(s);
 }
 
+// Get Enhanced Protection list state from storage.
+// Returns an object mapping listId -> { enabled, version, domainCount, pathRuleCount, lastFetched }
+// Domain/path data is stored separately in enhancedData_{listId} keys for performance.
+function getEnhancedListsFromStorage() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["enhancedLists"], (result) => {
+      resolve(result.enhancedLists || {});
+    });
+  });
+}
+
+// Read the heavy domain/path arrays for one enhanced list from storage.
+// Currently unused - kept for future use (e.g. single-list update or detail view).
+// See getAllEnhancedDataFromStorage below for the batch version used by rebuild.
+function getEnhancedDataFromStorage(listId) {
+  const key = "enhancedData_" + listId;
+  return new Promise((resolve) => {
+    chrome.storage.local.get([key], (result) => {
+      resolve(result[key] || null);
+    });
+  });
+}
+
+// Get heavy domain/path data for all enabled enhanced lists.
+function getAllEnhancedDataFromStorage(lists) {
+  const enabledIds = Object.entries(lists).filter(([, v]) => v.enabled).map(([k]) => k);
+  if (enabledIds.length === 0) return Promise.resolve({});
+  const keys = enabledIds.map(id => "enhancedData_" + id);
+  return new Promise((resolve) => {
+    chrome.storage.local.get(keys, (result) => {
+      const out = {};
+      for (const id of enabledIds) {
+        const data = result["enhancedData_" + id];
+        if (data) out[id] = data;
+      }
+      resolve(out);
+    });
+  });
+}
+
+// Get Enhanced Protection preset from storage ("off" | "basic" | "full" | "custom")
+function getEnhancedPresetFromStorage() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["enhancedPreset"], (result) => {
+      resolve(result.enhancedPreset || "off");
+    });
+  });
+}
+
+// Serialize read-modify-write on enhancedLists to avoid race conditions
+// when multiple FETCH/REMOVE/TOGGLE handlers run concurrently.
+let enhancedStorageChain = Promise.resolve();
+
+function withEnhancedStorageLock(fn) {
+  enhancedStorageChain = enhancedStorageChain.then(fn, fn);
+  return enhancedStorageChain;
+}
+
+// Cached enhanced lists catalog (loaded from config/enhanced-lists.json)
+let enhancedListsCatalog = null;
+
+function loadEnhancedListsCatalog() {
+  if (enhancedListsCatalog) return Promise.resolve(enhancedListsCatalog);
+  return fetch(chrome.runtime.getURL("config/enhanced-lists.json"))
+    .then(r => r.json())
+    .then(data => { enhancedListsCatalog = data; return data; })
+    .catch(e => {
+      console.warn("ProtoConsent: failed to load enhanced-lists.json:", e.message);
+      enhancedListsCatalog = {};
+      return {};
+    });
+}
+
 // Serialized whitelist write queue to prevent concurrent read-modify-write conflicts.
 let _wlQueue = Promise.resolve();
 function withWhitelist(fn) {
@@ -421,17 +514,19 @@ async function _rebuildAllDynamicRulesImpl() {
   }
 
   try {
-    // loadPurposesConfig must run first — it populates PURPOSES_FOR_ENFORCEMENT
+    // loadPurposesConfig must run first - it populates PURPOSES_FOR_ENFORCEMENT
     // which loadBlocklistsConfig needs to know which rule files to read.
     await loadPurposesConfig();
 
-    const [rulesByDomain, blocklists, presets, defaultConfig, whitelist] = await Promise.all([
+    const [rulesByDomain, blocklists, presets, defaultConfig, whitelist, enhancedListsMeta] = await Promise.all([
       getAllRulesFromStorage(),
       loadBlocklistsConfig(),
       loadPresetsConfig(),
       getDefaultProfileConfig(),
       getWhitelistFromStorage(),
+      getEnhancedListsFromStorage(),
     ]);
+    const enhancedData = await getAllEnhancedDataFromStorage(enhancedListsMeta);
 
     // Collect existing dynamic rule IDs for the atomic swap at the end
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
@@ -442,6 +537,7 @@ async function _rebuildAllDynamicRulesImpl() {
     const newDynamicBlockMap = {};
     const newGpcSetIds = new Set();
     const newWhitelistMap = {};
+    const newEnhancedMap = {};
 
     // 1. Resolve global default purposes (what applies to unconfigured sites)
     const globalPurposes = resolvePurposes({}, presets, defaultConfig);
@@ -469,7 +565,7 @@ async function _rebuildAllDynamicRulesImpl() {
     // Track which static rulesets are actively blocking (for onErrorOccurred disambiguation)
     enabledBlockRulesets = new Set(enableIds);
 
-    // 3. Per-site overrides (priority 2 — override static rules where site differs)
+    // 3. Per-site overrides (priority 2 - override static rules where site differs)
     //    First pass: group sites by (category, action) so we can batch all sites
     //    into one initiatorDomains array per rule. This keeps the rule count
     //    proportional to categories (max 10 dynamic rules), not to the number of custom sites.
@@ -477,13 +573,16 @@ async function _rebuildAllDynamicRulesImpl() {
     //    and path-based static rules are overridden for the site.
     const allowOverrides = {}; // purposeKey -> [site1, site2, ...]
     const blockOverrides = {}; // purposeKey -> [site1, site2, ...]
+    const permissiveSites = []; // sites where all purposes are allowed (excludes enhanced)
 
     for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
       const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
 
+      let allAllowed = true;
       for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
         const siteAllows = sitePurposes[purposeKey];
         const globalAllows = globalPurposes[purposeKey];
+        if (!siteAllows) allAllowed = false;
 
         if (siteAllows === globalAllows) continue;
 
@@ -495,6 +594,7 @@ async function _rebuildAllDynamicRulesImpl() {
           blockOverrides[purposeKey].push(domain);
         }
       }
+      if (allAllowed) permissiveSites.push(domain);
     }
 
     // Second pass: emit one rule per (category, action) with all sites grouped
@@ -519,7 +619,7 @@ async function _rebuildAllDynamicRulesImpl() {
 
       if (blockOverrides[purposeKey]?.length) {
         // Path-extracted domains (e.g. "elpais.com" from ||elpais.com/t.gif)
-        // are too broad as requestDomains — DNR matches all subdomains, so
+        // are too broad as requestDomains - DNR matches all subdomains, so
         // "elpais.com" would block static.elpais.com, imagenes.elpais.com, etc.
         // When one overlaps with an initiatorDomain the rule blocks the site's
         // own first-party resources.  Filter those out; the static path ruleset
@@ -618,13 +718,79 @@ async function _rebuildAllDynamicRulesImpl() {
       whitelistRulesAdded++;
     }
 
-    // 5. GPC header rules — inject Sec-GPC: 1 when privacy purposes are denied.
+    // 5. Enhanced Protection lists (dynamic block rules, priority 2).
+    //    Each enabled list produces one domain rule and optional path rules.
+    //    Domain/path data is stored in separate enhancedData_* keys for performance.
+    //    Sites with all purposes allowed (permissive) are excluded.
+    const enhancedExclude = permissiveSites.length > 0 ? permissiveSites : undefined;
+
+    for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
+      if (!listMeta.enabled) continue;
+      const listData = enhancedData[listId];
+      if (!listData) continue;
+
+      if (listData.domains?.length) {
+        const rId = nextRuleId++;
+        newEnhancedMap[rId] = listId;
+        const condition = {
+          requestDomains: listData.domains,
+          resourceTypes: BLOCK_RESOURCE_TYPES,
+        };
+        if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+        newRules.push({
+          id: rId,
+          priority: 2,
+          action: { type: "block" },
+          condition,
+        });
+      }
+
+      if (listData.pathRules?.length) {
+        for (const pr of listData.pathRules) {
+          const rId = nextRuleId++;
+          newEnhancedMap[rId] = listId;
+          const condition = {
+            urlFilter: pr.urlFilter,
+            resourceTypes: BLOCK_RESOURCE_TYPES,
+          };
+          if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+          newRules.push({
+            id: rId,
+            priority: 2,
+            action: { type: "block" },
+            condition,
+          });
+        }
+      }
+    }
+
+    // Build enhanced reverse index for onErrorOccurred attribution
+    const newEnhancedReverseIndex = new Map();
+    for (const [listId, listData] of Object.entries(enhancedData)) {
+      if (listData.domains?.length) {
+        for (const d of listData.domains) {
+          newEnhancedReverseIndex.set(d, listId);
+        }
+      }
+      // Also index hostnames from path rules (urlFilter: "||domain/path")
+      if (listData.pathRules?.length) {
+        for (const pr of listData.pathRules) {
+          const m = pr.urlFilter?.match(/^\|\|([^/]+)/);
+          if (m && !newEnhancedReverseIndex.has(m[1])) {
+            newEnhancedReverseIndex.set(m[1], listId);
+          }
+        }
+      }
+    }
+    enhancedReverseIndex = newEnhancedReverseIndex;
+
+    // 6. GPC header rules - inject Sec-GPC: 1 when privacy purposes are denied.
     //
     // Per-site overrides use requestDomains (the destination), not initiatorDomains
     // (the page making the request). This means: trusting elpais.com (custom, all
     // allowed) removes GPC from requests TO elpais.com, but third-party requests
     // FROM elpais.com to e.g. google-analytics.com still carry the global GPC
-    // signal — trusting a site does not imply trusting the third parties it loads.
+    // signal - trusting a site does not imply trusting the third parties it loads.
     // The same applies to cross-origin iframes: an iframe from youtube.com on a
     // trusted elpais.com page still receives GPC from the global rule.
     const globalNeedsGPC = gpcPurposes.some(p => !globalPurposes[p]);
@@ -648,7 +814,7 @@ async function _rebuildAllDynamicRulesImpl() {
       });
     }
 
-    // Per-site GPC overrides — grouped into max 2 rules (add/remove)
+    // Per-site GPC overrides - grouped into max 2 rules (add/remove)
     const gpcAddSites = [];
     const gpcRemoveSites = [];
 
@@ -684,7 +850,7 @@ async function _rebuildAllDynamicRulesImpl() {
       });
     }
 
-    // GPC remove rule for permissive sites — popup filters these out
+    // GPC remove rule for permissive sites - popup filters these out
     // by only counting "set" operations, not "remove"
     if (gpcRemoveSites.length > 0) {
       newRules.push({
@@ -750,11 +916,15 @@ async function _rebuildAllDynamicRulesImpl() {
         whitelistPerSiteCount: Object.values(perSiteWhitelist).reduce((s, d) => s + d.length, 0),
         whitelistRuleCount: (globalWhitelistDomains.length > 0 ? 1 : 0) + Object.keys(perSiteWhitelist).length,
         whitelistSites: Object.keys(perSiteWhitelist),
+        enhancedCount: Object.values(enhancedListsMeta).filter(l => l.enabled).length,
+        enhancedListIds: Object.entries(enhancedListsMeta)
+          .filter(([, l]) => l.enabled).map(([id]) => id),
+        enhancedRules: Object.keys(newEnhancedMap).length,
         ts: Date.now(),
       };
     }
 
-    // 5. Apply changes: dynamic rules FIRST, then static rulesets.
+    // 7. Apply changes: dynamic rules FIRST, then static rulesets.
     //    Order matters for security: during the brief gap between calls,
     //    "new dynamic + old static" may block too much (safe), whereas the
     //    reverse order "new static + old dynamic" could let requests through.
@@ -767,6 +937,7 @@ async function _rebuildAllDynamicRulesImpl() {
       dynamicBlockRuleMap = newDynamicBlockMap;
       dynamicGpcSetIds = newGpcSetIds;
       dynamicWhitelistMap = newWhitelistMap;
+      dynamicEnhancedMap = newEnhancedMap;
     } catch (e) {
       console.error("updateDynamicRules failed:", e.message, "rules:", newRules.length);
       if (DEBUG_RULES) lastRebuildDebug.error = e.message;
@@ -1068,6 +1239,249 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     });
     return true; // async response
   }
+
+  // Enhanced Protection: get current state (catalog + enabled lists + preset)
+  if (message.type === "PROTOCONSENT_ENHANCED_GET_STATE") {
+    Promise.all([
+      loadEnhancedListsCatalog(),
+      getEnhancedListsFromStorage(),
+      getEnhancedPresetFromStorage(),
+    ]).then(([catalog, lists, preset]) => {
+      sendResponse({ catalog, lists, preset });
+    });
+    return true; // async response
+  }
+
+  // Enhanced Protection: set preset (off / basic / full)
+  if (message.type === "PROTOCONSENT_ENHANCED_SET_PRESET") {
+    const preset = message.preset;
+    if (!["off", "basic", "full", "custom"].includes(preset)) {
+      sendResponse({ ok: false }); return;
+    }
+    loadEnhancedListsCatalog().then(catalog => {
+      withEnhancedStorageLock(() => {
+        return getEnhancedListsFromStorage().then(lists => {
+          for (const [listId, listDef] of Object.entries(catalog)) {
+            if (!lists[listId]) continue; // not downloaded - skip
+            if (preset === "off") {
+              lists[listId].enabled = false;
+            } else if (preset === "basic") {
+              lists[listId].enabled = listDef.preset === "basic";
+            } else if (preset === "full") {
+              lists[listId].enabled = true;
+            }
+            // "custom" does not change individual toggles
+          }
+          return new Promise(resolve => {
+            chrome.storage.local.set({ enhancedLists: lists, enhancedPreset: preset }, () => {
+              if (chrome.runtime.lastError) {
+                sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                resolve();
+                return;
+              }
+              rebuildAllDynamicRules();
+              sendResponse({ ok: true });
+              resolve();
+            });
+          });
+        });
+      });
+    });
+    return true; // async response
+  }
+
+  // Enhanced Protection: toggle a single list
+  if (message.type === "PROTOCONSENT_ENHANCED_TOGGLE") {
+    const { listId, enabled } = message;
+    if (!listId || typeof enabled !== "boolean") {
+      sendResponse({ ok: false }); return;
+    }
+    withEnhancedStorageLock(() => {
+      return getEnhancedListsFromStorage().then(lists => {
+        if (!lists[listId]) {
+          sendResponse({ ok: false, error: "List not downloaded" }); return;
+        }
+        lists[listId].enabled = enabled;
+        return new Promise(resolve => {
+          chrome.storage.local.set({
+            enhancedLists: lists,
+            enhancedPreset: "custom",
+          }, () => {
+            if (chrome.runtime.lastError) {
+              sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+              resolve();
+              return;
+            }
+            rebuildAllDynamicRules();
+            sendResponse({ ok: true });
+            resolve();
+          });
+        });
+      });
+    });
+    return true; // async response
+  }
+
+  // Enhanced Protection: fetch (download) a list from its source
+  if (message.type === "PROTOCONSENT_ENHANCED_FETCH") {
+    const { listId } = message;
+    if (!listId) { sendResponse({ ok: false }); return; }
+    Promise.all([
+      loadEnhancedListsCatalog(),
+    ]).then(([catalog]) => {
+      const listDef = catalog[listId];
+      if (!listDef || !listDef.fetch_url) {
+        sendResponse({ ok: false, error: "Unknown list or no fetch URL" }); return;
+      }
+      // Resolve relative paths as extension-local URLs
+      const fetchUrl = listDef.fetch_url.startsWith("http")
+        ? listDef.fetch_url
+        : chrome.runtime.getURL(listDef.fetch_url);
+      // Fallback: if primary CDN fails, try raw GitHub
+      const fallbackUrl = fetchUrl.includes("cdn.jsdelivr.net/gh/")
+        ? fetchUrl.replace("https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/", "https://raw.githubusercontent.com/ProtoConsent/data/main/")
+        : null;
+      // 30-second timeout to avoid hanging on network issues
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const fetchOpts = { credentials: "omit", signal: controller.signal };
+      const tryFetch = (url) => fetch(url, fetchOpts).then(res => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      });
+      (tryFetch(fetchUrl).catch(err => {
+        if (fallbackUrl && err.name !== "AbortError") return tryFetch(fallbackUrl);
+        throw err;
+      }))
+        .then(data => {
+          clearTimeout(timeoutId);
+          // Validate format
+          if (!data.rules || !Array.isArray(data.rules)) {
+            throw new Error("Invalid list format: missing rules array");
+          }
+          // Extract domains and path rules
+          const domains = [];
+          const pathRules = [];
+          for (const rule of data.rules) {
+            if (rule.condition?.requestDomains) {
+              for (const d of rule.condition.requestDomains) domains.push(d);
+            }
+            if (rule.condition?.urlFilter) {
+              pathRules.push({ urlFilter: rule.condition.urlFilter });
+            }
+          }
+          // Serialize the read-modify-write to prevent concurrent FETCH
+          // handlers from overwriting each other's list data.
+          return withEnhancedStorageLock(() => {
+            return Promise.all([
+              getEnhancedListsFromStorage(),
+              getEnhancedPresetFromStorage(),
+            ]).then(([lists, preset]) => {
+              // Skip storage write and rebuild if version is unchanged (update, not first download)
+              const existing = lists[listId];
+              if (existing && data.version && existing.version === data.version) {
+                sendResponse({ ok: true, skipped: true, domainCount: existing.domainCount, pathRuleCount: existing.pathRuleCount });
+                return;
+              }
+              // Preserve user's enabled state on update; use preset logic only for new downloads
+              const existingEnabled = existing?.enabled;
+              let shouldEnable;
+              if (existingEnabled !== undefined) {
+                shouldEnable = existingEnabled;
+              } else {
+                shouldEnable = true;
+                if (preset === "off") shouldEnable = false;
+                else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                // "full" and "custom" → enable by default
+              }
+              lists[listId] = {
+                enabled: shouldEnable,
+                version: data.version || null,
+                lastFetched: Date.now(),
+                domainCount: domains.length,
+                pathRuleCount: pathRules.length,
+              };
+              const storageUpdate = {
+                enhancedLists: lists,
+                ["enhancedData_" + listId]: {
+                  domains,
+                  pathRules: pathRules.length > 0 ? pathRules : undefined,
+                },
+              };
+              return new Promise(resolve => {
+                chrome.storage.local.set(storageUpdate, () => {
+                  if (chrome.runtime.lastError) {
+                    sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                    resolve();
+                    return;
+                  }
+                  rebuildAllDynamicRules();
+                  sendResponse({ ok: true, domainCount: domains.length, pathRuleCount: pathRules.length });
+                  resolve();
+                });
+              });
+            });
+          });
+        })
+        .catch(err => {
+          clearTimeout(timeoutId);
+          sendResponse({ ok: false, error: err.name === "AbortError" ? "Download timed out" : err.message });
+        });
+    });
+    return true; // async response
+  }
+
+  // Enhanced Protection: remove downloaded list data from storage
+  if (message.type === "PROTOCONSENT_ENHANCED_REMOVE") {
+    const { listId } = message;
+    if (!listId) { sendResponse({ ok: false }); return; }
+    withEnhancedStorageLock(() => {
+      return Promise.all([
+        getEnhancedListsFromStorage(),
+        loadEnhancedListsCatalog(),
+        getEnhancedPresetFromStorage(),
+      ]).then(([lists, catalog, preset]) => {
+        if (!lists[listId]) {
+          sendResponse({ ok: true }); return;
+        }
+        delete lists[listId];
+        // Recalculate preset: if current preset is "full" or "basic" and the
+        // actual enabled state no longer matches, switch to "custom".
+        let newPreset = preset;
+        if (preset === "full" || preset === "basic") {
+          for (const [id, def] of Object.entries(catalog)) {
+            const data = lists[id];
+            if (!data) continue; // not downloaded - skip
+            const shouldBeEnabled = preset === "full" ? true : def.preset === "basic";
+            const isEnabled = data ? !!data.enabled : false;
+            if (shouldBeEnabled !== isEnabled) {
+              newPreset = "custom";
+              break;
+            }
+          }
+        }
+        return new Promise(resolve => {
+          chrome.storage.local.set({ enhancedLists: lists, enhancedPreset: newPreset }, () => {
+            if (chrome.runtime.lastError) {
+              sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+              resolve();
+              return;
+            }
+            chrome.storage.local.remove("enhancedData_" + listId, () => {
+              if (chrome.runtime.lastError) {
+                // Data key removal failed - log but still report success
+                // since the list metadata was already updated.
+              }
+              rebuildAllDynamicRules();
+              sendResponse({ ok: true });
+              resolve();
+            });
+          });
+        });
+      });
+    });
+    return true; // async response
+  }
 });
 
 // Track blocked domains per tab for the popup detail view.
@@ -1095,6 +1509,10 @@ if (useDnrDebug) {
     // Dynamic block override
     else if (rule.rulesetId === "_dynamic" && dynamicBlockRuleMap[rule.ruleId]) {
       purpose = dynamicBlockRuleMap[rule.ruleId];
+    }
+    // Enhanced Protection list block
+    else if (rule.rulesetId === "_dynamic" && dynamicEnhancedMap[rule.ruleId]) {
+      purpose = "enhanced:" + dynamicEnhancedMap[rule.ruleId];
     }
 
     if (!purpose) {
@@ -1138,7 +1556,7 @@ if (useDnrDebug) {
 
 // Standard data source: webRequest.onErrorOccurred for ERR_BLOCKED_BY_CLIENT.
 // Used by default in both developer and store builds (USE_DNR_DEBUG = false).
-// Provides URL and tabId but no ruleId — purpose resolved via reverse hostname index.
+// Provides URL and tabId but no ruleId - purpose resolved via reverse hostname index.
 // Known limitation: other extensions blocking the same request produce false positives
 // (mitigated by filtering against our blocklists via reverseHostIndex).
 if (!useDnrDebug) {
@@ -1152,7 +1570,7 @@ if (!useDnrDebug) {
       try { hostname = new URL(details.url).hostname; } catch (_) { return; }
 
       // Resolve ALL matching purposes; empty means not in our blocklists
-      // (likely blocked by another extension — skip to avoid counting someone else's blocks)
+      // (likely blocked by another extension - skip to avoid counting someone else's blocks)
       const purposes = resolvePurposesFromHostname(hostname);
       if (!purposes.length) return;
 
@@ -1219,7 +1637,7 @@ if (!useDnrDebug) {
           }
         }
       } else {
-        // No global rule — GPC only for per-site add overrides.
+        // No global rule - GPC only for per-site add overrides.
         if (gpcAddDomains.size === 0) return;
         let matched = false;
         let h = domain;

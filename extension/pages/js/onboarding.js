@@ -127,8 +127,26 @@ function wireEvents() {
     }
   });
 
-  // Save button
-  document.getElementById('ob-save').addEventListener('click', save);
+  // Get Started → go to features screen
+  document.getElementById('ob-save').addEventListener('click', () => {
+    goToScreen('ob-features');
+  });
+
+  // Skip → save balanced and go to done
+  document.getElementById('ob-skip').addEventListener('click', () => {
+    selectedProfile = RECOMMENDED;
+    save(() => goToScreen('ob-done-screen'));
+  });
+
+  // Done → save selected profile and go to done
+  document.getElementById('ob-done').addEventListener('click', () => {
+    save(() => goToScreen('ob-done-screen'));
+  });
+
+  // Back → return to profile selection
+  document.getElementById('ob-back').addEventListener('click', () => {
+    goToScreen('ob-setup');
+  });
 
   // Settings link in confirmation screen
   document.getElementById('ob-link-settings').addEventListener('click', (e) => {
@@ -148,7 +166,14 @@ function selectCard(card) {
   selectedProfile = card.dataset.profile;
 }
 
-function save() {
+function goToScreen(screenId) {
+  const screens = document.querySelectorAll('.ob-screen');
+  screens.forEach((s) => s.classList.add('ob-hidden'));
+  const target = document.getElementById(screenId);
+  if (target) target.classList.remove('ob-hidden');
+}
+
+function save(callback) {
   const data = {
     defaultProfile: selectedProfile,
     onboardingComplete: true
@@ -160,11 +185,11 @@ function save() {
       void chrome.runtime.lastError;
     });
 
-    // Show confirmation
-    document.getElementById('ob-setup').classList.add('ob-hidden');
-    document.getElementById('ob-done').classList.remove('ob-hidden');
+    // Show chosen profile name
     document.getElementById('ob-chosen-profile').textContent =
       presets[selectedProfile]?.label || selectedProfile;
+
+    if (callback) callback();
   });
 }
 

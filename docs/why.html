@@ -30,6 +30,7 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
   <div class="page">
     <div class="container">
       <header>
@@ -37,44 +38,47 @@
             <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
             <div class="brand-name">ProtoConsent</div>
           </a>
-        <div class="header-links-nav">
+        <nav class="header-links-nav" aria-label="Main">
           <a class="header-link" href="index.html">Home</a>
+          <a class="header-link" href="developers.html">Developers</a>
           <a class="header-link" href="validate.html">Validate</a>
           <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
-        </div>
+        </nav>
       </header>
 
-      <main>
+      <main id="main-content">
         <article class="article">
           <div class="article-header">
             <a href="index.html" class="article-back">&larr; Back to home</a>
             <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent logo" class="hero-logo" width="72" height="72">
             <h1 class="article-title">Why ProtoConsent</h1>
             <p class="article-subtitle">
-              Consent banners don't work for users. We think purpose-based controls belong in the browser.
+              Purpose-based controls belong in the browser
             </p>
           </div>
+
+          <section class="hero-meta">
+            <div class="hero-meta-inner">
+              <p>
+                Express, enforce, observe
+              </p>
+            </div>
+          </section>
 
           <section class="article-section">
             <h2>The problem with consent today</h2>
             <p>
-              Every time you visit a website, you're asked to make privacy decisions through a consent banner. Accept all, reject all, or wade through dozens of vendor-specific toggles you didn't ask for. Most people click "accept" just to access the content. That's not informed consent — it's consent fatigue.
-            </p>
-            <p>
-              The result: regulators expect consent to be specific and freely given, but the mechanism is designed to exhaust users into compliance. Consent dialogs are fragmented per site, use inconsistent language, and are often built with dark patterns that nudge towards "accept all."
-            </p>
-            <p>
-              Meanwhile, the tools that exist sit at two unhelpful extremes. Content blockers work at the level of domains and filter lists — effective, but blunt. Consent management platforms (CMPs) work at the level of each individual website and its vendors — flexible for the site, but opaque to the user. There's nothing in between.
+              Every website asks you to make privacy decisions through a banner. Most people click "accept" just to get to the content. That's consent fatigue, not informed choice. Meanwhile, blockers operate on domains and filter lists (effective but blunt), and CMPs operate per site and vendor (flexible for sites, opaque for users). There's no consistent browser-level layer in between.
             </p>
           </section>
 
           <section class="article-section">
             <h2>The missing layer</h2>
             <p>
-              There is no simple, browser-level place where you can say: "on this site, I allow functional use and analytics, but never ads or advanced tracking" — and have that preference enforced consistently, without relying on each site to honour it.
+              There is no simple, browser-level place where you can say: "on this site, I allow functional use and analytics, but never ads or advanced tracking", and have that preference enforced consistently, without relying on each site to honour it.
             </p>
             <p>
-              ProtoConsent fills that gap. It's a browser extension that lets you define how different <strong>purposes</strong> of data use should be treated — per site and from a single interface. Instead of deciding vendor by vendor in each cookie banner, you set high-level profiles (Strict, Balanced, Permissive) and adjust individual purpose toggles (functional, analytics, ads, personalisation, third-party services, advanced tracking).
+              ProtoConsent fills that gap. It's a browser extension that lets you define how different <strong>purposes</strong> of data use should be treated, per site and from a single interface. Instead of deciding vendor by vendor in each cookie banner, you set high-level profiles (Strict, Balanced, Permissive) and adjust individual purpose toggles (functional, analytics, ads, personalisation, third-party services, advanced tracking).
             </p>
             <p>
               The key difference: ProtoConsent organises decisions around <em>what your data is used for</em>, not around which company is asking. This maps directly to how privacy regulation frames consent, and it's how most people actually think about their choices.
@@ -87,61 +91,53 @@
               ProtoConsent is a Chromium extension (Firefox planned) that runs entirely on your device:
             </p>
             <ul>
-              <li><strong>Per-site profiles</strong> — assign a general trust level (Strict, Balanced, Permissive) to any website, then refine specific purposes if you care about the details.</li>
-              <li><strong>Network-level enforcement</strong> — the browser's own blocking APIs (declarativeNetRequest) prevent requests associated with disabled purposes from reaching remote servers. The popup shows per-purpose blocked counts and estimated performance savings.</li>
-              <li><strong>Conditional GPC signal</strong> — sends a <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec-GPC</a> header only when privacy-relevant purposes are denied for a site. Not a global toggle — a per-site, purpose-driven signal with legal weight under CCPA/CPRA.</li>
-              <li><strong>Site declarations</strong> — websites can publish a <code>.well-known/protoconsent.json</code> file declaring their data practices. The popup displays this in a side panel with <a href="https://consentcommons.com/" target="_blank" rel="noopener noreferrer">Consent Commons</a> icons — no SDK required, just a static file.</li>
-              <li><strong>Local-only storage</strong> — no backend, no account, no cloud sync. All your preferences stay in your browser.</li>
-              <li><strong>Optional SDK</strong> — websites that choose to respect ProtoConsent can read a minimal, privacy-preserving signal from the browser ("is analytics allowed here?") without learning your identity or tracking you across sites.</li>
+              <li><strong>Per-site profiles and purpose toggles</strong>: assign a trust level to any website and refine specific purposes (functional, analytics, ads, personalisation, third-party services, advanced tracking).</li>
+              <li><strong>Network-level enforcement</strong>: the browser blocks requests associated with disabled purposes before they leave your device.</li>
+              <li><strong>Conditional GPC signal</strong>: sends <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec-GPC</a> only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.</li>
+              <li><strong>Optional site cooperation</strong>: websites can declare practices via <code>.well-known/protoconsent.json</code> or adapt behaviour via the SDK. Neither is required.</li>
             </ul>
             <p>
-              When a site's embedded scripts try to contact analytics, ads, or tracking services, ProtoConsent checks whether that purpose is allowed for the current domain. If it's not, the request is blocked before it leaves your browser. If it is, it proceeds normally. No on-page scripts, no external servers, no new tracking mechanisms.
+              Enforcement uses standard browser extension capabilities and runs entirely locally. No on-page scripts, no backend.
             </p>
           </section>
 
           <section class="article-section">
             <h2>What ProtoConsent does not do</h2>
             <p>
-              ProtoConsent is not a full ad blocker, not a VPN, and not a replacement for consent management platforms. It doesn't remove cookie banners from the page and doesn't claim to solve every privacy problem.
+              ProtoConsent is not designed as a full ad blocker, though its optional enhanced lists provide broader coverage. It is not a VPN, and not a replacement for consent management platforms. It doesn't remove cookie banners from the page and doesn't claim to solve every privacy problem.
             </p>
             <p>
-              What it does is add a layer that didn't exist: a personal consent control panel in the browser, organised around purposes, that can work alongside the tools you already use. Think of it as complementary to your existing setup — content blockers, privacy-focused browsers, or CMP preferences — not a replacement for any of them.
+              What it does is add a layer that didn't exist: a personal consent control panel in the browser, organised around purposes, that can work alongside the tools you already use. Think of it as complementary to your existing setup: content blockers, privacy-focused browsers, or CMP preferences, not a replacement for any of them.
             </p>
           </section>
 
           <section class="article-section">
             <h2>Why now</h2>
             <p>
-              Browser APIs have matured to the point where real enforcement is possible without injecting scripts into every page. Manifest V3 extensions, declarativeNetRequest, and the Storage Access API provide the technical foundation for purpose-based controls that are fast, safe, and sandboxed.
+              Browser extension APIs have matured enough for real enforcement without injecting scripts into pages. At the same time, regulators and standards bodies are actively discussing how browsers should mediate consent. ProtoConsent already sends a conditional <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">GPC</a> signal with legal weight under CCPA/CPRA, per site, not as a global switch.
             </p>
             <p>
-              At the same time, regulators and standards bodies are actively discussing how browsers should mediate consent. ProtoConsent already sends a conditional <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Global Privacy Control</a> (Sec-GPC) header — a signal with legal weight under California's CCPA/CPRA — only when privacy-relevant purposes are denied per site, not as a blunt global switch. The Permissions API, Storage Access API, and ongoing W3C privacy work all point in the same direction: the browser as a consent agent, not just a consent display.
-            </p>
-            <p>
-              ProtoConsent is a working implementation in that direction — open, inspectable, and aligned with where the web is heading.
+              The Permissions API, Storage Access API, and ongoing W3C privacy work all point in the same direction: the browser as a consent agent, not just a consent display. ProtoConsent is a working implementation in that direction. Open, inspectable, and aligned with where the web is heading.
             </p>
           </section>
 
           <section class="article-section">
-            <h2>Current status</h2>
+            <h2>Design principles</h2>
+            <ul>
+              <li><strong>Purpose-based</strong>: decisions are organised around what data is used for, not which company is asking.</li>
+              <li><strong>User-side</strong>: enforcement happens in the browser, not delegated to sites or backends.</li>
+              <li><strong>Observable</strong>: users see the effects of their choices: blocked requests, GPC signals, domain-level detail.</li>
+              <li><strong>Voluntary</strong>: site cooperation (declarations, SDK) is optional and does not change user-side enforcement.</li>
+            </ul>
             <p>
-              The Chromium extension works and can be installed locally in developer mode. It provides purpose toggles for six categories, enforces choices via 40 000+ curated tracker domains and 1 200+ path-based rules organized in static rulesets by purpose, sends a conditional GPC signal, shows per-purpose blocked request counts with estimated performance savings, supports site declarations via <code>.well-known/protoconsent.json</code> with Consent Commons icons, and includes a JavaScript SDK (MIT) with TypeScript declarations for sites that want to read user preferences.
+              For the full design rationale, see the <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/design-rationale.md" target="_blank" rel="noopener noreferrer">design rationale</a> on GitHub.
             </p>
-            <p>
-              ProtoConsent is pending review in Chrome Web Store, Edge Add-ons, and Opera Addons. It is fully functional for local installation on any Chromium-based browser, with Firefox support planned.
-            </p>
-            <div class="pill-row">
-              <span class="pill">Open source (GPL-3.0+)</span>
-              <span class="pill">SDK: MIT</span>
-              <span class="pill">Feedback welcome</span>
-              <span class="pill">Open to collaboration</span>
-            </div>
           </section>
 
           <section class="article-section">
             <h2>Get involved</h2>
             <p>
-              ProtoConsent is free and open source — GPL-3.0+ for the extension, MIT for the SDK, CC BY-SA 4.0 for documentation. Everything is developed in public on GitHub.
+              ProtoConsent is free and open source: GPL-3.0+ for the extension, MIT for the SDK, CC BY-SA 4.0 for documentation. Everything is developed in public on GitHub.
             </p>
             <ul>
               <li>Publish a <code>.well-known/protoconsent.json</code> on your site to declare your data practices.</li>
@@ -156,16 +152,15 @@
 
       <footer>
         <div>
-          ProtoConsent is a browser extension exploring browser‑level, purpose‑based consent controls for the open web.
+          ProtoConsent is a browser extension for browser‑level, purpose‑based consent controls on the open web.
         </div>
-        <div class="footer-links">
+        <nav class="footer-links" aria-label="Footer">
           <a href="index.html">Home</a>
           <a href="validate.html">Validate</a>
-          <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">GitHub repo</a>
-          <a href="https://github.com/ProtoConsent/ProtoConsent#readme" target="_blank" rel="noopener noreferrer">Technical README</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">Source code</a>
           <a href="mailto:contact@protoconsent.org">Contact</a>
           <a href="privacy.html">Privacy</a>
-        </div>
+        </nav>
       </footer>
     </div>
   </div>

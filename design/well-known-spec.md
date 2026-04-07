@@ -12,7 +12,7 @@ http(s)://<host>/.well-known/protoconsent.json
 
 Only `http:` and `https:` are supported. The extension uses the page's actual protocol and host when fetching the file.
 
-This is a **voluntary, informational declaration**. It does not change how the ProtoConsent extension enforces user preferences. The extension always enforces the user's own profile and toggles — the `.well-known` file adds transparency by showing what the site claims alongside the user's choices.
+This is a **voluntary, informational declaration**. It does not change how the ProtoConsent extension enforces user preferences. The extension always enforces the user's own profile and toggles. The `.well-known` file adds transparency by showing what the site claims alongside the user's choices.
 
 The format follows the pattern of other `.well-known` resources ([RFC 8615](https://www.rfc-editor.org/rfc/rfc8615)), such as `security.txt` and `change-password`.
 
@@ -48,7 +48,7 @@ Each key must match a canonical ProtoConsent purpose (`functional`, `analytics`,
 | `provider` | string | no | Name of the service provider (e.g. `"Plausible"`, `"Google Analytics"`). |
 | `sharing` | string | no | Data sharing scope: `"none"`, `"within_group"`, or `"third_parties"`. |
 
-**Three-state model:** purposes not included in the object are treated as **not declared** — the site makes no claim about them. This is distinct from `"used": false` (the site explicitly states it does not use that purpose).
+**Three-state model:** purposes not included in the object are treated as **not declared**: the site makes no claim about them. This is distinct from `"used": false` (the site explicitly states it does not use that purpose).
 
 ### 2.3 Data handling (`data_handling`)
 
@@ -63,12 +63,12 @@ Valid values for the `legal_basis` field, aligned with GDPR Article 6(1):
 
 | Value | GDPR basis |
 |-------|------------|
-| `consent` | Art. 6(1)(a) — Consent |
-| `contractual` | Art. 6(1)(b) — Performance of a contract |
-| `legal_obligation` | Art. 6(1)(c) — Legal obligation |
-| `vital_interest` | Art. 6(1)(d) — Protection of vital interests |
-| `public_interest` | Art. 6(1)(e) — Public interest or official authority |
-| `legitimate_interest` | Art. 6(1)(f) — Legitimate interests |
+| `consent` | Art. 6(1)(a): Consent |
+| `contractual` | Art. 6(1)(b): Performance of a contract |
+| `legal_obligation` | Art. 6(1)(c): Legal obligation |
+| `vital_interest` | Art. 6(1)(d): Protection of vital interests |
+| `public_interest` | Art. 6(1)(e): Public interest or official authority |
+| `legitimate_interest` | Art. 6(1)(f): Legitimate interests |
 
 ## 3. Examples
 
@@ -84,7 +84,7 @@ Valid values for the `legal_basis` field, aligned with GDPR Article 6(1):
 }
 ```
 
-Only `functional` and `analytics` are declared. The remaining four purposes are **not declared** — the site makes no claim about them.
+Only `functional` and `analytics` are declared. The remaining four purposes are **not declared**: the site makes no claim about them.
 
 ### 3.2 E-commerce with ads and third-party sharing
 
@@ -138,7 +138,7 @@ A complete declaration covering all six purposes, multiple legal bases, sharing 
 When the user opens the side panel in the popup, the popup sends a `PROTOCONSENT_FETCH_WELL_KNOWN` message to the background script with the current site's protocol and host. The background script fetches `<protocol>://<host>/.well-known/protoconsent.json` directly from its service worker context (using the extension's `host_permissions`). Results are cached locally with a 24‑hour TTL per domain.
 
 - If the file is not found (404), unreachable, or invalid JSON, no site declaration is shown. The negative result is cached for 6 hours to avoid repeated fetch attempts. No error is surfaced to the user.
-- The extension does **not** fetch the file on every navigation — only when the user opens the side panel and the cache is expired.
+- The extension does **not** fetch the file on every navigation: only when the user opens the side panel and the cache is expired.
 - Works on both HTTP and HTTPS sites, including local development servers with non‑default ports.
 
 ### 4.2 Validation
@@ -181,7 +181,7 @@ The file should be served with `Content-Type: application/json`. Most web server
 
 ## 6. Relationship to other specifications
 
-- **`security.txt` (RFC 9116):** similar pattern — a `.well-known` file for machine-readable site metadata. ProtoConsent follows the same convention.
+- **`security.txt` (RFC 9116):** similar pattern: a `.well-known` file for machine-readable site metadata. ProtoConsent follows the same convention.
 - **Consent Commons:** the purpose categories and legal basis values align with the [Consent Commons](https://consentcommons.com/) taxonomy. See `icons-and-layers.md` for the visual mapping.
 - **ProtoConsent SDK:** the SDK enables dynamic interaction (page queries extension). The `.well-known` file enables static declaration (extension reads site). Both are complementary: a site can use one, both, or neither.
 - **GPC (`Sec-GPC`):** GPC signals user preference (browser → site). `.well-known/protoconsent.json` signals site practices (site → browser). They are complementary directions.

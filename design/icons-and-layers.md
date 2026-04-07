@@ -32,7 +32,7 @@ When a website publishes a `.well-known/protoconsent.json` declaration, the popu
 | `public_interest` | ![](../extension/icons/declaration/public_interest.png) | Public building | `icons/declaration/public_interest.png` |
 | `vital_interest` | ![](../extension/icons/declaration/vital_interest.png) | Heart | `icons/declaration/vital_interest.png` |
 
-Icons are rendered at 14×14 next to the legal basis text. The label “legitimate_interest” is abbreviated to “legit. interest” for space. The value `legal_obligation` uses the generic temple/columns icon (the Consent Commons section header for legal basis) as there is no specific icon for this value.
+Icons are rendered at 14×14 next to the legal basis text. The label “legitimate_interest” is abbreviated to “legit. interest” for space. The value `legal_obligation` uses the generic temple/columns icon (the Consent Commons section header for legal basis) as Consent Commons does not include one for this basis.
 
 ## 3. Data sharing icon (site declaration panel)
 
@@ -51,7 +51,18 @@ Icons are rendered at 14×14 next to the legal basis text. The label “legitima
 
 The following Consent Commons icons are not used in the current version:
 
-- **Data subject rights** (portability, complaint, withdraw consent, transparency): ProtoConsent uses a single `rights_url` link instead of individual right icons. These rights are legally mandated under GDPR, so there is little variability to declare.
-- **Data retention modifiers** (3+, 3−, 3×, 3++): retention periods are not modeled in the current schema. This is the most likely candidate for a future schema extension, potentially as an optional field per purpose.
-- **International transfers with safeguards**: the current schema uses a boolean (`international_transfers: true/false`). A future version could evolve this to an enum (e.g. `”none”`, `”safeguarded”`, `”unrestricted”`) to capture whether Standard Contractual Clauses or adequacy decisions apply.
-- **Other unused icons**: CV/recruitment, commercial communications (subsumed by ads), generic “other data”, data reception (reverse direction of sharing).
+- **Data subject rights** (portability, complaint, withdraw consent, transparency): ProtoConsent uses a single `rights_url` link instead of individual right icons. These rights are legally mandated under GDPR, so sites don't differ much here.
+- **Data retention modifiers** (3+, 3−, 3×, 3++): retention periods are not modeled in the current schema. Retention periods are the most likely future addition to the schema.
+- **International transfers with safeguards**: the current schema uses a boolean (`international_transfers: true/false`). A future version could expand this to an enum (e.g. `”none”`, `”safeguarded”`, `”unrestricted”`) to capture whether Standard Contractual Clauses or adequacy decisions apply.
+- **Other unused icons**: CV/recruitment, commercial communications (covered by ads), generic “other data”, data reception (reverse direction of sharing).
+
+## 6. Enhanced Protection icons
+
+Enhanced Protection uses two additional SVG icons that are not part of the Consent Commons system:
+
+| Purpose | Icon | Consent Commons icon | File | Notes |
+|---------|------|---------------------|------|-------|
+| `enhanced` | <img src="../extension/icons/purposes/enhanced.png" width="60"> | Orange shield | `icons/purposes/enhanced.png` | Identifies Enhanced Protection blocks in counter bar, Log domains and whitelist panels |
+| `security` | <img src="../extension/icons/purposes/security.png" width="60"> | B&W shield with checkmark | `icons/purposes/security.png` | ProtoConsent‑specific (not Consent Commons). Used for lists like Blocklist Project Phishing |
+
+Icons are PNG files at 125×125 (matching purposes icons in §1) and SVG originals at 18×18. The `enhanced` shield appears as primary icon for all enhanced blocks; category icons (from §1 or `security`) appear next to it as a category marker.

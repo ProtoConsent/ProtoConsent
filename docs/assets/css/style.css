@@ -8,14 +8,33 @@
   --pc-bg-light: #dbeafe;
   --pc-blue: #1e3a8a;
   --pc-body-bg: #f3f4f6;
+  --pc-card-muted: #ebedf1;
   --pc-text-main: #111827;
   --pc-muted: #6b7280;
   --pc-border: #e5e7eb;
   --pc-white: #ffffff;
+  --pc-accent: #2563eb;
 }
 
 * {
   box-sizing: border-box;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--pc-blue);
+  color: var(--pc-white);
+  padding: 8px 16px;
+  border-radius: 0 0 6px 0;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  left: 0;
 }
 
 body {
@@ -125,8 +144,8 @@ main {
 }
 
 .hero-meta {
-  border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
+  border-top: 1px solid var(--pc-border);
+  border-bottom: 1px solid var(--pc-border);
   background: var(--pc-bg-light);
   padding: 0.75rem 1.5rem;
 }
@@ -193,12 +212,6 @@ main {
   gap: 6px;
 }
 
-.hero-footnote {
-  font-size: 13px;
-  color: var(--pc-muted);
-  margin-top: 8px;
-}
-
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.4fr);
@@ -216,7 +229,7 @@ main {
   background-color: var(--pc-white);
   border-radius: 10px;
   border: 1px solid var(--pc-border);
-  padding: 18px 16px 16px;
+  padding: 18px 24px 16px;
   display: flex;
   flex-direction: column;
 }
@@ -246,7 +259,7 @@ main {
 
 .card ul {
   margin: 10px 0 0;
-  padding-left: 16px;
+  padding-left: 28px;
 }
 
 .card li {
@@ -269,7 +282,7 @@ main {
   border: 1px solid rgba(30, 58, 138, 0.12);
 }
 
-.audience-block {
+.audience-block + .audience-block {
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px dashed var(--pc-border);
@@ -311,13 +324,34 @@ footer {
   margin-top: 14px;
 }
 
+/* Alternating card backgrounds */
+.card-alt {
+  background-color: var(--pc-bg-light);
+  border-color: rgba(30, 58, 138, 0.1);
+}
+
+.card-mint {
+  background-color: #ecfdf5;
+  border-color: rgba(16, 120, 80, 0.1);
+}
+
+.card-alt .card-title {
+  color: var(--pc-blue);
+}
+
+/* Muted grey card */
+.card.card-muted {
+  background-color: var(--pc-card-muted);
+  border-color: #d4d7dc;
+}
+
 .cta-text {
   margin-bottom: 6px;
 }
 
 .screenshot {
-  margin: 12px 0 14px;
-  padding: 0;
+  margin: 0 0 14px;
+  padding: 24px 0 0;
   text-align: center;
 }
 
@@ -348,6 +382,16 @@ footer {
 
 .code-comment {
   color: #94a3b8;
+}
+
+/* Card inset panel (white box inside colored cards) */
+
+.card .card-inset {
+  background-color: var(--pc-white);
+  border: 1px solid var(--pc-border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-top: 6px;
 }
 
 /* SDK live test */
@@ -412,46 +456,6 @@ footer {
   flex-shrink: 0;
 }
 
-/* Collapsible card (details/summary) */
-details.card {
-  padding: 0;
-}
-
-details.card > summary {
-  cursor: pointer;
-  list-style: none;
-  padding: 14px 16px;
-}
-
-details.card > summary::-webkit-details-marker {
-  display: none;
-}
-
-details.card > summary::after {
-  content: "▸";
-  float: right;
-  color: var(--pc-muted);
-  font-size: 12px;
-}
-
-details.card[open] > summary::after {
-  content: "▾";
-}
-
-details.card[open] > summary {
-  border-bottom: 1px solid var(--pc-border);
-  margin-bottom: 0;
-}
-
-details.card > p,
-details.card > ul {
-  padding: 0 16px;
-}
-
-details.card > p:first-of-type {
-  margin-top: 12px;
-}
-
 /* Article page (why.html) */
 
 .article {
@@ -486,6 +490,11 @@ details.card > p:first-of-type {
   color: var(--pc-muted);
   margin: 0;
   line-height: 1.5;
+}
+
+.article .hero-meta {
+  border-top: none;
+  margin-bottom: 24px;
 }
 
 .article-section {

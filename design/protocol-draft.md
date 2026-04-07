@@ -153,11 +153,11 @@ The SDK exposes a minimal read-only API for web pages:
 
 | Member | Type | Returns |
 | --- | --- | --- |
-| `ProtoConsent.get(purpose)` | method | `Promise<boolean\|null>` — `true` = allowed, `false` = denied, `null` = extension not present |
-| `ProtoConsent.getAll()` | method | `Promise<object\|null>` — all purpose states, or `null` |
-| `ProtoConsent.getProfile()` | method | `Promise<string\|null>` — `"strict"`, `"balanced"`, `"permissive"`, or `null` |
-| `ProtoConsent.version` | property | `string` — SDK version |
-| `ProtoConsent.purposes` | property | `string[]` — the valid purpose keys |
+| `ProtoConsent.get(purpose)` | method | `Promise<boolean\|null>`: `true` = allowed, `false` = denied, `null` = extension not present |
+| `ProtoConsent.getAll()` | method | `Promise<object\|null>`: all purpose states, or `null` |
+| `ProtoConsent.getProfile()` | method | `Promise<string\|null>`: `"strict"`, `"balanced"`, `"permissive"`, or `null` |
+| `ProtoConsent.version` | property | `string`: SDK version |
+| `ProtoConsent.purposes` | property | `string[]`: the valid purpose keys |
 
 Reference implementation: `sdk/protoconsent.js` (MIT licensed)
 
@@ -167,7 +167,7 @@ Reference implementation: `sdk/protoconsent.js` (MIT licensed)
 <script type="module">
   import ProtoConsent from 'protoconsent.js';
 
-  // Check a single purpose — returns true, false, or null (no extension)
+  // Check a single purpose: returns true, false, or null (no extension)
   const allowed = await ProtoConsent.get('analytics');
   if (allowed) {
     // user allows analytics on this site
@@ -184,11 +184,11 @@ Reference implementation: `sdk/protoconsent.js` (MIT licensed)
 </script>
 ```
 
-Every method returns a `Promise` that resolves to `null` when the extension is not installed — no errors, no retries, no side effects.
+Every method returns a `Promise` that resolves to `null` when the extension is not installed: no errors, no retries, no side effects.
 
 ## 5. Site Declaration (`.well-known/protoconsent.json`)
 
-Websites can optionally declare their data-processing purposes by serving a static JSON file at `/.well-known/protoconsent.json`. This is a **voluntary, informational declaration** — it does not change how the extension enforces user preferences.
+Websites can optionally declare their data-processing purposes by serving a static JSON file at `/.well-known/protoconsent.json`. This is a **voluntary, informational declaration**: it does not change how the extension enforces user preferences.
 
 The extension reads the file when the user opens the side panel in the popup, caches it locally (24‑hour TTL on success, 6‑hour TTL on failure), and displays the site's claims alongside the user's own choices.
 
@@ -206,9 +206,9 @@ The extension reads the file when the user opens the side panel in the popup, ca
 
 ### Three-state model
 
-- `"used": true` — the site declares it uses this purpose.
-- `"used": false` — the site explicitly declares it does **not** use this purpose.
-- **Key absent** — the site makes no claim (not declared).
+- `"used": true`: the site declares it uses this purpose.
+- `"used": false`: the site explicitly declares it does **not** use this purpose.
+- **Key absent**: the site makes no claim (not declared).
 
 ### Complementary to the SDK
 
@@ -245,10 +245,10 @@ The rule: if **any** purpose with `triggers_gpc: true` is denied for a site, GPC
 
 When GPC is active for a site, two signals are sent:
 
-1. **`Sec-GPC: 1` HTTP header** — injected via `declarativeNetRequest` `modifyHeaders` rules on outgoing requests to the site's domain.
-2. **`navigator.globalPrivacyControl = true`** — set via a MAIN-world content script (`gpc-signal.js`), registered at runtime through `chrome.scripting.registerContentScripts`.
+1. **`Sec-GPC: 1` HTTP header**: injected via `declarativeNetRequest` `modifyHeaders` rules on outgoing requests to the site's domain.
+2. **`navigator.globalPrivacyControl = true`**: set via a MAIN-world content script (`gpc-signal.js`), registered at runtime through `chrome.scripting.registerContentScripts`.
 
-When GPC is not active, neither signal is sent. There is no `Sec-GPC: 0` — absence of the header means no preference expressed.
+When GPC is not active, neither signal is sent. There is no `Sec-GPC: 0`: absence of the header means no preference expressed.
 
 ### 6.3 Per-site overrides
 
@@ -264,7 +264,7 @@ The extension maintains up to three dynamic DNR rules for GPC:
 
 The [GPC specification](https://privacycg.github.io/gpc-spec/) defines GPC as a binary signal: the user either expresses a preference to opt out of sale/sharing, or does not. ProtoConsent respects this: it sends `Sec-GPC: 1` or nothing.
 
-The difference is in **when** the signal is sent. Most implementations treat GPC as a global preference (always on or always off). ProtoConsent derives the signal from the user's purpose-level decisions, making it conditional per site. This is compatible with the spec — the spec does not require the signal to be global — but it extends the practical semantics: the GPC signal reflects a structured privacy position, not a blanket opt-out.
+The difference is in **when** the signal is sent. Most implementations treat GPC as a global preference (always on or always off). ProtoConsent derives the signal from the user's purpose-level decisions, making it conditional per site. This is compatible with the spec, the spec does not require the signal to be global, but it extends the practical semantics: the GPC signal reflects a structured privacy position, not a blanket opt-out.
 
 Canonical source: `extension/config/purposes.json` (field `triggers_gpc`)
 
@@ -272,33 +272,29 @@ Canonical source: `extension/config/purposes.json` (field `triggers_gpc`)
 
 Formal JSON Schemas are planned for the configuration files:
 
-- `purposes.schema.json` — validates the purposes definition structure
-- `presets.schema.json` — validates the profiles/presets structure
-- `rules.schema.json` — validates the per-domain rules object
-- `message.schema.json` — validates the SDK ↔ extension message format
+- `purposes.schema.json`: validates the purposes definition structure
+- `presets.schema.json`: validates the profiles/presets structure
+- `rules.schema.json`: validates the per-domain rules object
+- `message.schema.json`: validates the SDK ↔ extension message format
 
 Status: planned for a future version. This is not a blocker for current functionality.
 
-## 8. Implementation Status
+## 8. Protocol Implementation Status
 
 | Component | Status |
 | --- | --- |
 | Purposes data model (`purposes.json`) | Implemented (v0.1.0) |
 | Presets data model (`presets.json`) | Implemented (v0.1.0) |
-| Per-domain rules in storage | Implemented (v0.1.0) |
-| Extension enforcement (DNR) | Implemented (v0.1.0 — global + per-site; v0.1.1 — static rulesets, path-based blocking, override grouping; v0.2.0 — 40 000+ domains, 1 200+ path rules, blocklist audit; v0.2.2 — domain whitelist with priority-3 allow rules) |
-| Extension popup UI | Implemented (v0.1.0 — profiles, toggles; v0.1.1 — blocked counter, per-purpose stats, .well-known side panel, debug panel; v0.2.0 — onboarding, purpose settings page; v0.2.1 — log monitoring tab, flood protection; v0.2.2 — domain whitelist) |
-| Blocked request counter | Implemented (v0.1.1) — per-tab blocked count, per-purpose breakdown, domain detail |
-| Domain whitelist | Implemented (v0.2.2) — per-site and global scope, priority-3 DNR allow rules, budget guard |
-| Onboarding welcome page | Implemented (v0.2.0) |
 | SDK skeleton (API surface defined) | Implemented (v0.1.0) |
 | SDK messaging (actual communication) | Implemented (v0.1.0) |
 | Content script bridge | Implemented (v0.1.0) |
 | TypeScript type declarations | Implemented (v0.1.0) |
-| Conditional GPC header (Sec-GPC) | Implemented (v0.1.1) — per-site, driven by `triggers_gpc` in purposes.json; also sets `navigator.globalPrivacyControl` via MAIN‑world content script |
-| Site declaration (`.well-known`) | Implemented (v0.1.1) — fetch with 24h/6h cache, popup side panel with Consent Commons icons |
+| Conditional GPC header (Sec-GPC) | Implemented (v0.1.1): per-site, driven by `triggers_gpc` in purposes.json; also sets `navigator.globalPrivacyControl` via MAIN-world content script |
+| Site declaration (`.well-known`) | Implemented (v0.1.1): fetch with 24h/6h cache, popup side panel with Consent Commons icons |
 | JSON Schemas | Planned (protocol formalization) |
 | Demo sites using SDK | [protoconsent.org](https://protoconsent.org/) live test (v0.1.0), [demo.protoconsent.org](https://demo.protoconsent.org) full-featured demo (v0.2.0); additional demos planned |
+
+For extension-level implementation status (UI, enforcement, blocklists), see [product-overview.md](product-overview.md).
 
 ## 9. Design Principles
 

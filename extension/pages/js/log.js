@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Log tab: real-time request log, domain summary, GPC activity, whitelist management.
-// Loaded after popup.js — shares globals: currentDomain, currentProfile,
+// Loaded after popup.js - shares globals: currentDomain, currentProfile,
 // currentPurposesState, purposesConfig, lastBlockedDomains, lastBlocked,
 // lastGpcDomains, lastGpcDomainCounts, lastGpcSignalsSent, lastPurposeStats,
 // lastWhitelist, PURPOSES_TO_SHOW, DEBUG_RULES.
@@ -12,7 +12,7 @@
 let logPort = null;
 let logInitialized = false;
 
-// --- Single entry point: refresh all Log panels -----------
+// --- Single entry point: refresh all Log panels ---
 function refreshLogView() {
   renderLogHeader();
   refreshLogRequests();
@@ -21,7 +21,7 @@ function refreshLogView() {
   renderLogWhitelist();
 }
 
-// --- One-time setup + refresh ----------------------------
+// --- One-time setup + refresh ---
 function initLogTab() {
   // Show debug inner tab only when DEBUG_RULES is on
   const debugTab = document.querySelector('[data-log-tab="debug"]');
@@ -39,7 +39,7 @@ function initLogTab() {
   refreshLogView();
 }
 
-// --- Inner tab switching ---------------------------------
+// --- Inner tab switching ---
 
 function initLogInnerTabs() {
   const tabs = document.querySelectorAll(".pc-log-tab");
@@ -55,7 +55,7 @@ function initLogInnerTabs() {
   if (tablist) {
     tablist.addEventListener("keydown", (e) => {
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-      const visible = Array.from(tabs).filter(t => !t.hidden && t.className !== "pc-log-copy");
+      const visible = Array.from(tabs).filter(t => !t.hidden && !t.classList.contains("pc-log-copy"));
       const idx = visible.indexOf(document.activeElement);
       if (idx === -1) return;
       e.preventDefault();
@@ -90,7 +90,14 @@ function formatPanelForCopy(panel) {
   const pre = panel.querySelector("pre");
   if (pre) return pre.textContent;
 
-  // For table-based panels (domains, gpc), format with tabs
+  // For table-based panels (domains, gpc), format with tabs.
+  // If lazy-loaded rows exist, expand them first so copy gets everything.
+  const showMore = panel.querySelector(".pc-log-show-more");
+  let expandLimit = 200;
+  while (showMore && showMore.parentNode && expandLimit-- > 0) {
+    showMore.click();
+  }
+
   const lines = [];
   const header = panel.querySelector(".pc-log-purpose-label");
   if (header) lines.push(header.textContent);
@@ -128,7 +135,7 @@ function setActiveLogTab(name) {
   });
 }
 
-// --- Header: site + profile + purposes --------------------
+// --- Header: site + profile + purposes ---
 
 function renderLogHeader() {
   const siteEl = document.getElementById("pc-log-site");
@@ -172,9 +179,9 @@ function renderLogHeader() {
   }
 }
 
-// --- Domains panel ---------------------------------------
+// --- Domains panel ---
 
-function renderLogDomains() {
+function renderLogDomains(initialVisible) {
   const container = document.getElementById("pc-log-domains");
   if (!container) return;
   container.innerHTML = "";
@@ -223,20 +230,47 @@ function renderLogDomains() {
   table.className = "pc-log-table";
 
   const colgroup = document.createElement("colgroup");
-  colgroup.innerHTML = '<col style="width:24px"><col style="width:auto"><col style="width:50px"><col style="width:48px">';
+  colgroup.innerHTML = '<col style="width:34px"><col style="width:auto"><col style="width:50px"><col style="width:48px">';
   table.appendChild(colgroup);
 
   const thead = document.createElement("thead");
   thead.innerHTML = '<tr><th><span class="visually-hidden">Purpose</span></th><th>Domain</th><th style="text-align:right">Blocked</th><th>Whitelist</th></tr>';
   table.appendChild(thead);
 
+  const DOMAIN_PAGE_SIZE = 50;
+  // If caller preserved previous visible count, show at least that many
+  const firstBatch = (initialVisible && initialVisible > DOMAIN_PAGE_SIZE)
+    ? Math.min(initialVisible, rows.length)
+    : DOMAIN_PAGE_SIZE;
   const tbody = document.createElement("tbody");
-  for (const row of rows) {
+
+  function buildDomainRow(row) {
     const tr = document.createElement("tr");
 
     const tdIcon = document.createElement("td");
     tdIcon.className = "pc-log-domains-icon";
-    if (row.cfg && row.cfg.icon) {
+    if (row.purpose.startsWith("enhanced:")) {
+      const img = document.createElement("img");
+      img.src = "../icons/purposes/enhanced.svg";
+      img.width = 14;
+      img.height = 14;
+      img.alt = "EP";
+      img.title = "Enhanced: " + (row.purpose.split(":")[1] || "");
+      img.onerror = function() { tdIcon.textContent = "EP"; };
+      tdIcon.appendChild(img);
+      const catInfo = getEnhancedCategoryInfo(row.purpose.split(":")[1]);
+      if (catInfo) {
+        const catImg = document.createElement("img");
+        catImg.src = catInfo.icon;
+        catImg.width = 12;
+        catImg.height = 12;
+        catImg.alt = catInfo.short;
+        catImg.title = catInfo.label;
+        catImg.style.marginLeft = "2px";
+        catImg.onerror = function() { this.style.display = "none"; };
+        tdIcon.appendChild(catImg);
+      }
+    } else if (row.cfg && row.cfg.icon) {
       const img = document.createElement("img");
       img.src = row.cfg.icon;
       img.width = 14;
@@ -250,6 +284,7 @@ function renderLogDomains() {
     }
 
     const tdDomain = document.createElement("td");
+    tdDomain.className = "pc-log-table-domain";
     if (row.domain) {
       tdDomain.textContent = row.domain;
     } else {
@@ -268,7 +303,6 @@ function renderLogDomains() {
       const btn = document.createElement("button");
       btn.type = "button";
       if (isWhitelisted) {
-        // Determine the site key to pass to remove (prefer per-site over global)
         const siteMap = lastWhitelist[row.domain] || {};
         let siteKey = "*";
         if (siteMap[currentDomain]) {
@@ -299,13 +333,45 @@ function renderLogDomains() {
     tr.appendChild(tdDomain);
     tr.appendChild(tdCount);
     tr.appendChild(tdAction);
-    tbody.appendChild(tr);
+    return tr;
   }
+
+  // Render first batch into a fragment (single DOM insert)
+  const frag = document.createDocumentFragment();
+  const firstPage = rows.slice(0, firstBatch);
+  for (const row of firstPage) {
+    frag.appendChild(buildDomainRow(row));
+  }
+  tbody.appendChild(frag);
   table.appendChild(tbody);
   container.appendChild(table);
+
+  // "Show more" for remaining rows
+  if (rows.length > firstBatch) {
+    let shown = firstBatch;
+    const moreBtn = document.createElement("button");
+    moreBtn.type = "button";
+    moreBtn.className = "pc-log-show-more";
+    moreBtn.textContent = "Show " + (rows.length - shown) + " more domains";
+    container.appendChild(moreBtn);
+    moreBtn.addEventListener("click", () => {
+      const nextPage = rows.slice(shown, shown + DOMAIN_PAGE_SIZE);
+      const pageFrag = document.createDocumentFragment();
+      for (const row of nextPage) {
+        pageFrag.appendChild(buildDomainRow(row));
+      }
+      tbody.appendChild(pageFrag);
+      shown += nextPage.length;
+      if (shown >= rows.length) {
+        moreBtn.remove();
+      } else {
+        moreBtn.textContent = "Show " + (rows.length - shown) + " more domains";
+      }
+    });
+  }
 }
 
-// --- GPC panel -------------------------------------------
+// --- GPC panel ---
 
 function renderLogGpc() {
   const container = document.getElementById("pc-log-gpc");
@@ -373,6 +439,7 @@ function renderLogGpc() {
   for (const [domain, count, time] of sorted) {
     const tr = document.createElement("tr");
     const tdDomain = document.createElement("td");
+    tdDomain.className = "pc-log-table-domain";
     tdDomain.textContent = domain;
     const tdCount = document.createElement("td");
     tdCount.textContent = count;
@@ -397,7 +464,7 @@ function formatGpcTime(time) {
   return first + " \u002D " + last;
 }
 
-// --- Real-time request log via port -----------------------
+// --- Real-time request log via port ---
 
 function connectLogPort() {
   if (logPort) return;
@@ -419,6 +486,12 @@ function connectLogPort() {
 
   logPort.onDisconnect.addListener(() => {
     logPort = null;
+    // Service worker restarted - try to reconnect after a short delay
+    setTimeout(() => {
+      if (!logPort && activeMode === "log") {
+        initLogTab();
+      }
+    }, 1000);
   });
 }
 
@@ -501,7 +574,7 @@ function appendLogLine(text, type) {
   if (atBottom) pre.scrollTop = pre.scrollHeight;
 }
 
-// --- Whitelist helpers ------------------------------------
+// --- Whitelist helpers ---
 
 // Check if a domain is whitelisted for the current site or globally.
 function isWhitelistedHere(domain) {
@@ -510,7 +583,7 @@ function isWhitelistedHere(domain) {
   return !!(siteMap[currentDomain] || siteMap["*"]);
 }
 
-// --- Whitelist handlers -----------------------------------
+// --- Whitelist handlers ---
 
 // Focus restore helper: after DOM rebuild, find button with matching data-wl-domain.
 function restoreWhitelistFocus(domain) {
@@ -522,7 +595,10 @@ function restoreWhitelistFocus(domain) {
 }
 
 function renderAndRestoreFocus(domain) {
-  renderLogDomains();
+  // Preserve how many domain rows were visible before re-render
+  const tbody = document.querySelector("#pc-log-domains tbody");
+  const visibleRows = tbody ? tbody.children.length : 0;
+  renderLogDomains(visibleRows);
   renderLogWhitelist();
   restoreWhitelistFocus(domain);
 }
@@ -576,6 +652,16 @@ function handleWhitelistToggleScope(domain, site) {
                 if (!lastWhitelist[domain]) lastWhitelist[domain] = {};
                 lastWhitelist[domain][currentDomain] = purpose;
                 renderAndRestoreFocus(domain);
+              } else {
+                // ADD failed after REMOVE succeeded - restore global entry locally
+                // and re-add on background to avoid leaving the domain unwhitelisted.
+                chrome.runtime.sendMessage(
+                  { type: "PROTOCONSENT_WHITELIST_ADD", domain, purpose, site: "*" },
+                  () => { void chrome.runtime.lastError; }
+                );
+                if (!lastWhitelist[domain]) lastWhitelist[domain] = {};
+                lastWhitelist[domain]["*"] = purpose;
+                renderAndRestoreFocus(domain);
               }
             }
           );
@@ -601,7 +687,7 @@ function handleWhitelistToggleScope(domain, site) {
   }
 }
 
-// --- Whitelist panel --------------------------------------
+// --- Whitelist panel ---
 
 function renderLogWhitelist() {
   const container = document.getElementById("pc-log-whitelist");
@@ -639,7 +725,7 @@ function renderLogWhitelist() {
   table.className = "pc-log-table";
 
   const colgroup = document.createElement("colgroup");
-  colgroup.innerHTML = '<col style="width:24px"><col style="width:auto"><col style="width:54px"><col style="width:54px"><col style="width:54px">';
+  colgroup.innerHTML = '<col style="width:34px"><col style="width:auto"><col style="width:54px"><col style="width:54px"><col style="width:54px">';
   table.appendChild(colgroup);
 
   const thead = document.createElement("thead");
@@ -657,7 +743,29 @@ function renderLogWhitelist() {
 
     const tdIcon = document.createElement("td");
     tdIcon.className = "pc-log-domains-icon";
-    if (cfg && cfg.icon) {
+    const purposeStr = String(entry.purpose);
+    if (purposeStr.startsWith("enhanced:")) {
+      const img = document.createElement("img");
+      img.src = "../icons/purposes/enhanced.svg";
+      img.width = 14;
+      img.height = 14;
+      img.alt = "EP";
+      img.title = "Enhanced: " + (purposeStr.split(":")[1] || "");
+      img.onerror = function() { tdIcon.textContent = "EP"; };
+      tdIcon.appendChild(img);
+      const catInfo = getEnhancedCategoryInfo(purposeStr.split(":")[1]);
+      if (catInfo) {
+        const catImg = document.createElement("img");
+        catImg.src = catInfo.icon;
+        catImg.width = 12;
+        catImg.height = 12;
+        catImg.alt = catInfo.short;
+        catImg.title = catInfo.label;
+        catImg.style.marginLeft = "2px";
+        catImg.onerror = function() { this.style.display = "none"; };
+        tdIcon.appendChild(catImg);
+      }
+    } else if (cfg && cfg.icon) {
       const img = document.createElement("img");
       img.src = cfg.icon;
       img.width = 14;
@@ -666,12 +774,12 @@ function renderLogWhitelist() {
       img.title = getPurposeLabel(entry.purpose);
       tdIcon.appendChild(img);
     } else {
-      const purposeStr = String(entry.purpose);
       tdIcon.textContent = cfg?.short || purposeStr.charAt(0).toUpperCase();
       tdIcon.title = getPurposeLabel(purposeStr);
     }
 
     const tdDomain = document.createElement("td");
+    tdDomain.className = "pc-log-table-domain";
     tdDomain.textContent = entry.domain;
     tdDomain.title = hits > 0
       ? entry.domain + " (" + hits + " allowed)"
