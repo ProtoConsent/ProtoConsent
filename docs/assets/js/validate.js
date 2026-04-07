@@ -2,7 +2,7 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// validate.js — .well-known/protoconsent.json validator logic
+// validate.js: .well-known/protoconsent.json validator logic
 
 (function () {
   "use strict";
@@ -170,7 +170,7 @@
       } else if (/^https:\/\//.test(json.rights_url)) {
         checks.push({ level: "pass", msg: "Rights URL: " + json.rights_url });
       } else if (/^http:\/\//.test(json.rights_url)) {
-        checks.push({ level: "warn", msg: "Rights URL uses http:// — HTTPS is recommended." });
+        checks.push({ level: "warn", msg: "Rights URL uses http:// (HTTPS is recommended)." });
       } else {
         checks.push({ level: "warn", msg: "Rights URL should start with https:// or http://." });
       }
@@ -188,7 +188,7 @@
       if (extras.contentType.indexOf("application/json") !== -1) {
         checks.push({ level: "pass", msg: "Content-Type: " + extras.contentType });
       } else {
-        checks.push({ level: "warn", msg: "Content-Type is " + extras.contentType + " — should be application/json." });
+        checks.push({ level: "warn", msg: "Content-Type is " + extras.contentType + " (should be application/json)." });
       }
     }
 
@@ -228,7 +228,7 @@
     // Summary
     var summary = document.createElement("div");
     summary.className = "vld-summary " + (hasError ? "vld-summary--fail" : "vld-summary--pass");
-    summary.textContent = hasError ? "Validation failed — fix the errors above." : "Valid declaration.";
+    summary.textContent = hasError ? "Validation failed. Fix the errors above." : "Valid declaration.";
     resultsDiv.insertBefore(summary, resultsDiv.firstChild);
   }
 

@@ -4,7 +4,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 ## 1. Overview
 
-ProtoConsent includes a curated subset of domains from public blocklists, organized by purpose. These are stored as static DNR rulesets in `extension/rules/block_*.json` — one file per blocking purpose.
+ProtoConsent includes a curated subset of domains from public blocklists, organized by purpose. These are stored as static DNR rulesets in `extension/rules/block_*.json` - one file per blocking purpose.
 
 This is **not** a full ad/tracking blocker. The lists are drawn from public blocklists, curated with cross‑source validation and quality filters, and organized by purpose to provide meaningful default protection.
 
@@ -16,6 +16,7 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
 4. [Curation process](#4-curation-process)
 5. [DNR format](#5-dnr-format)
 6. [Path‑based rules](#6-pathbased-rules)
+7. [Enhanced protection lists (third-party)](#7-enhanced-protection-lists-third-party)
 
 ## 2. Current state
 
@@ -134,4 +135,74 @@ A path rule is added only when:
 
 Per‑site override rules use `requestDomains` to match both domain‑blocked and path‑blocked domains. When building overrides, the background script extracts the unique domains from path rules (e.g. `google.com` from `||google.com/pagead/`) and merges them into the override's `requestDomains`. This ensures that a Permissive site gets path‑based requests unblocked alongside domain‑based ones.
 
-For **block overrides**, path‑extracted domains that overlap with the initiator domains are filtered out. This prevents self‑referential blocking: without the filter, a Strict override on `elpais.com` would block all first‑party subdomains (`static.elpais.com`, `imagenes.elpais.com`, etc.) because DNR's `requestDomains` matching is subdomain‑inclusive. The tradeoff is that first‑party tracking pixels (e.g. `elpais.com/t.gif`) are not blocked by dynamic overrides — they are handled by the static path ruleset when the global profile blocks that category.
+For **block overrides**, path‑extracted domains that overlap with the initiator domains are filtered out. This prevents self‑referential blocking: without the filter, a Strict override on `elpais.com` would block all first‑party subdomains (`static.elpais.com`, `imagenes.elpais.com`, etc.) because DNR's `requestDomains` matching is subdomain‑inclusive. The tradeoff is that first‑party tracking pixels (e.g. `elpais.com/t.gif`) are not blocked by dynamic overrides - they are handled by the static path ruleset when the global profile blocks that category.
+
+## 7. Enhanced protection lists (third-party)
+
+Beyond the core static rulesets shipped with the extension, ProtoConsent supports **enhanced protection** via third-party blocklists converted to DNR-compatible JSON. These lists are optional - the user opts in from the Enhanced tab in the popup.
+
+### Current lists (v0.3)
+
+12 lists organized in two presets.
+
+**Basic preset** (4 lists - enabled by default when user selects Basic):
+
+| List | License | Domains | Path rules | Category |
+| --- | --- | --- | --- | --- |
+| [EasyPrivacy](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~46K | ~4K | `analytics` |
+| [EasyList](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~58K | ~1.6K | `ads` |
+| [AdGuard DNS Filter](https://github.com/AdguardTeam/AdGuardSDNSFilter) | GPL-3.0 | ~165K | - | - |
+| [Steven Black Unified](https://github.com/StevenBlack/hosts) | MIT | ~49K | - | - |
+
+**Full preset** (adds 8 lists):
+
+| List | License | Domains | Path rules | Category |
+| --- | --- | --- | --- | --- |
+| [OISD Small](https://oisd.nl/) | GPL-3.0 | ~56K | - | - |
+| [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~190K | - | - |
+| [HaGeZi TIF](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~966K | - | `advanced_tracking` |
+| [1Hosts Lite](https://github.com/badmojr/1Hosts) | MPL-2.0 | ~195K | - | - |
+| [Blocklist Project - Ads](https://github.com/blocklistproject/Lists) | Unlicense | ~155K | - | `ads` |
+| [Blocklist Project - Tracking](https://github.com/blocklistproject/Lists) | Unlicense | ~15K | - | `analytics` |
+| [Blocklist Project - Crypto](https://github.com/blocklistproject/Lists) | Unlicense | ~24K | - | `advanced_tracking` |
+| [Blocklist Project - Phishing](https://github.com/blocklistproject/Lists) | Unlicense | ~87K | - | `security` |
+
+Domain counts are approximate and change with each upstream update.
+
+Lists with a **category** display the corresponding Consent Commons icon in the UI. The `security` category is ProtoConsent-specific (not part of Consent Commons).
+
+### Removed from earlier candidates
+
+| List | Reason |
+| --- | --- |
+| Peter Lowe's list | License incompatible with GPL-3.0 (McRae GPL, non-commercial). Only 3,519 domains. |
+| OISD Big | ~418K domains but heavy overlap with HaGeZi Pro (OISD aggregates HaGeZi). Redundant. |
+
+### Distribution model
+
+Enhanced lists are **not** shipped inside the extension package. Instead:
+
+1. A converter script (`scripts/convert.js`) in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo fetches upstream lists, parses them (ABP, hosts, and plain domain formats), deduplicates, and outputs DNR-compatible JSON.
+2. The JSON files are hosted on GitHub and served via **jsDelivr CDN** (primary) with **raw.githubusercontent.com** as fallback.
+3. The extension fetches the JSON when the user downloads a list from the Enhanced tab. Lists are stored in `chrome.storage.local` with a split architecture: metadata in `enhancedLists`, heavy data in `enhancedData_{listId}`.
+
+This keeps the extension package small, avoids bundling third-party list content directly, and allows list updates without publishing a new extension version.
+
+### Presets
+
+| Preset | Behavior |
+| --- | --- |
+| Off | No enhanced lists active (core ProtoConsent only) |
+| Basic | Enables the 4 basic lists on download |
+| Full | Enables all 12 lists on download |
+| Custom | User has toggled individual lists manually |
+
+When a user downloads lists with the preset set to Off, the extension auto-switches to Basic.
+
+### Domain deduplication
+
+DNR `requestDomains` matches a domain **and all its subdomains**. The converter removes dominated subdomains so the final JSON contains only the minimal set of root domains needed. This reduces rule size significantly - HaGeZi TIF drops from over 1M raw entries to ~966K after dedup.
+
+### ABP format parsing
+
+EasyList and EasyPrivacy are distributed in Adblock Plus (ABP) filter syntax. The converter extracts both **`||domain^` patterns** (domain-level blocks) and **`||domain/path^` patterns** (path-based URL blocks). Cosmetic filters and exception rules are discarded. Path rules are stored alongside domain rules in the same JSON and create separate dynamic DNR rules with `urlFilter` conditions.

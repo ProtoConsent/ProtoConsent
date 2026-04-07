@@ -321,6 +321,37 @@ body {
   border-color: #f0b1b1;
 }
 
+.ps-enhanced-desc {
+  color: var(--pc-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+}
+
+.ps-enhanced-current-badge,
+.ps-consent-current-badge {
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.ps-enhanced-current-badge {
+  color: #d97706;
+}
+
+.ps-preset-active {
+  border-color: #d97706;
+  background: linear-gradient(180deg, #fffcf0 0%, #ffffff 100%);
+}
+
+.ps-consent-current-badge {
+  color: var(--pc-accent);
+}
+
+.ps-consent-preset-active {
+  border-color: var(--pc-accent);
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+}
+
 .ps-custom-toggles {
   margin-top: 12px;
   border-top: 1px solid var(--pc-line);

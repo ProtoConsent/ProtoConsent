@@ -1,0 +1,110 @@
+{
+  "easyprivacy": {
+    "name": "EasyPrivacy",
+    "description": "Privacy and tracking protection filter list",
+    "source": "https://easylist.to/",
+    "license": "GPL-3.0+ / CC BY-SA 3.0+",
+    "category": "analytics",
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easyprivacy.json"
+  },
+  "easylist": {
+    "name": "EasyList",
+    "description": "Primary advertising filter list",
+    "source": "https://easylist.to/",
+    "license": "GPL-3.0+ / CC BY-SA 3.0+",
+    "category": "ads",
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easylist.json"
+  },
+  "adguard_dns": {
+    "name": "AdGuard DNS Filter",
+    "description": "DNS-optimized filter combining 40+ upstream lists",
+    "source": "https://github.com/AdguardTeam/AdGuardSDNSFilter",
+    "license": "GPL-3.0",
+    "category": null,
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/adguard_dns.json"
+  },
+  "steven_black": {
+    "name": "Steven Black Unified",
+    "description": "Aggregated hosts list from 15+ sources - ads, malware, tracking",
+    "source": "https://github.com/StevenBlack/hosts",
+    "license": "MIT",
+    "category": null,
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/steven_black.json"
+  },
+  "oisd_small": {
+    "name": "OISD Small",
+    "description": "Composite domain blocklist - conservative variant",
+    "source": "https://oisd.nl/",
+    "license": "GPL-3.0",
+    "category": null,
+    "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/oisd_small.json"
+  },
+  "hagezi_pro": {
+    "name": "HaGeZi Pro",
+    "description": "Multi-source DNS blocklist - pro variant",
+    "source": "https://github.com/hagezi/dns-blocklists",
+    "license": "GPL-3.0",
+    "category": null,
+    "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/hagezi_pro.json"
+  },
+  "hagezi_tif": {
+    "name": "HaGeZi TIF",
+    "description": "Threat intelligence feeds - fingerprinting, cryptominers, malware",
+    "source": "https://github.com/hagezi/dns-blocklists",
+    "license": "GPL-3.0",
+    "category": "advanced_tracking",
+    "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/hagezi_tif.json"
+  },
+  "onehosts_lite": {
+    "name": "1Hosts Lite",
+    "description": "Independent curation - ads, trackers, malware",
+    "source": "https://github.com/badmojr/1Hosts",
+    "license": "MPL-2.0",
+    "category": null,
+    "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/onehosts_lite.json"
+  },
+  "blp_ads": {
+    "name": "Blocklist Project - Ads",
+    "description": "Ad servers - categorized blocklist",
+    "source": "https://github.com/blocklistproject/Lists",
+    "license": "Unlicense",
+    "category": "ads",
+    "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_ads.json"
+  },
+  "blp_tracking": {
+    "name": "Blocklist Project - Tracking",
+    "description": "Tracking and analytics servers - categorized blocklist",
+    "source": "https://github.com/blocklistproject/Lists",
+    "license": "Unlicense",
+    "category": "analytics",
+    "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_tracking.json"
+  },
+  "blp_crypto": {
+    "name": "Blocklist Project - Crypto",
+    "description": "Cryptojacking and crypto scams - categorized blocklist",
+    "source": "https://github.com/blocklistproject/Lists",
+    "license": "Unlicense",
+    "category": "advanced_tracking",
+    "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_crypto.json"
+  },
+  "blp_phishing": {
+    "name": "Blocklist Project - Phishing",
+    "description": "Phishing sites - categorized blocklist",
+    "source": "https://github.com/blocklistproject/Lists",
+    "license": "Unlicense",
+    "category": "security",
+    "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_phishing.json"
+  }
+}

@@ -423,6 +423,8 @@ function renderSiteDeclaration(container, declaration) {
   if (sideTab && sidePanel && !sideTab.dataset.bound) {
     sideTab.dataset.bound = "1";
     sideTab.classList.add("is-visible");
+    const layout = document.getElementById("popup-layout");
+    if (layout) layout.classList.add("has-side-tab");
     sideTab.addEventListener("click", toggleSidePanel);
   }
 }

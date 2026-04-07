@@ -108,6 +108,20 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
       lines.push("");
     }
 
+    // Enhanced Protection
+    if (bg && (bg.enhancedCount > 0 || bg.enhancedRules > 0)) {
+      lines.push("— enhanced protection —");
+      lines.push("  lists active: " + (bg.enhancedCount || 0) +
+        "  DNR rules: " + (bg.enhancedRules || 0));
+      if (bg.enhancedListIds && bg.enhancedListIds.length) {
+        lines.push("  lists: " + bg.enhancedListIds.join(", "));
+      }
+      lines.push("");
+    } else {
+      lines.push("— enhanced protection: off —");
+      lines.push("");
+    }
+
     // Tab match info (from Chrome's getMatchedRules — persisted counts, always accurate)
     lines.push("— tab matches (getMatchedRules) —");
     lines.push("  blocked: " + blocked + "  gpc: " + gpc + " (" + (gpcDomains?.length || 0) + " domains)");

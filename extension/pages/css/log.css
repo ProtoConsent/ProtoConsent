@@ -164,6 +164,26 @@
   font-style: italic;
 }
 
+.pc-log-show-more {
+  display: block;
+  width: 100%;
+  margin: 6px 0 2px;
+  padding: 5px 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pc-accent);
+  background: var(--pc-surface);
+  border: 1px solid var(--pc-line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pc-log-show-more:hover {
+  background: var(--pc-accent-soft);
+  border-color: var(--pc-accent);
+}
+
 /* Domains table */
 .pc-log-purpose-label {
   font-weight: 600;
@@ -211,6 +231,7 @@
 .pc-log-domains-icon {
   text-align: center;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .pc-log-domains-icon img {
@@ -234,6 +255,14 @@
 .pc-log-domains-action {
   text-align: center;
   vertical-align: middle;
+}
+
+/* Truncate long domain names in fixed-layout tables */
+.pc-log-table .pc-log-table-domain {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
 }
 
 .pc-log-allow-btn {

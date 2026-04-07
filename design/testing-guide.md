@@ -1,12 +1,10 @@
-# ProtoConsent – How to test the extension
+# ProtoConsent: How to test the extension
 
 This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../LICENSE-CC-BY-SA) file for details.
 
-This document explains how to try the current version of ProtoConsent in a browser using an unpacked extension, and how to observe its effects on real websites.
-
 ## Contents
 
-- [ProtoConsent – How to test the extension](#protoconsent--how-to-test-the-extension)
+- [ProtoConsent: How to test the extension](#protoconsent-how-to-test-the-extension)
   - [Contents](#contents)
   - [1. Requirements](#1-requirements)
   - [2. Installing the Extension (Developer Mode)](#2-installing-the-extension-developer-mode)
@@ -48,6 +46,11 @@ This document explains how to try the current version of ProtoConsent in a brows
     - [12.2 Removing a whitelisted domain](#122-removing-a-whitelisted-domain)
     - [12.3 Per‑site vs global scope](#123-persite-vs-global-scope)
     - [12.4 Verifying whitelist rules from the service worker console](#124-verifying-whitelist-rules-from-the-service-worker-console)
+  - [13. Testing Enhanced Protection](#13-testing-enhanced-protection)
+    - [13.1 Activating a preset](#131-activating-a-preset)
+    - [13.2 Downloading and toggling lists](#132-downloading-and-toggling-lists)
+    - [13.3 Verifying enhanced blocks in the Log tab](#133-verifying-enhanced-blocks-in-the-log-tab)
+    - [13.4 Checking enhanced rules from the service worker console](#134-checking-enhanced-rules-from-the-service-worker-console)
 
 ## 1. Requirements
 
@@ -64,7 +67,7 @@ This document explains how to try the current version of ProtoConsent in a brows
   cd ProtoConsent
   ```
 
-  In this folder you should see the `extension/` directory (containing `manifest.json`, `background.js`, `pages/` with the popup, onboarding and settings UI, `config/`, `rules/` and `icons/`) and the `sdk/` directory.
+  In this folder you should see the `extension/` directory, which contains the extension files (`manifest.json`, `background.js`, etc.), and the `sdk/` directory, which contains the SDK.
 
 2.2. **Load the extension in your browser:**
 
@@ -75,7 +78,7 @@ This document explains how to try the current version of ProtoConsent in a brows
 
 ## 3. Basic Test: Per‑Site Profile
 
-This first test checks that site rules are stored locally and correctly associated with each domain.
+Verify that site rules are stored per domain and correctly associated with each site.
 
 1. Visit any news or blog site of your choice.
 2. Open the ProtoConsent popup from the browser toolbar.
@@ -94,7 +97,7 @@ Expanded view with purpose toggles visible:
 
 ## 4. Purpose Toggles and Visible Effects
 
-This test shows how changing purposes in ProtoConsent has direct, observable effects on network traffic.
+Changing purposes in ProtoConsent has direct, observable effects on network traffic.
 
 1. On a site that uses web analytics, open the ProtoConsent popup.
 2. Choose a profile (for example “Balanced”).
@@ -104,11 +107,11 @@ This test shows how changing purposes in ProtoConsent has direct, observable eff
 6. Switch to a more permissive profile or enable **Analytics** for this site in the popup.
 7. Reload again and confirm that analytics requests are now visible in the network log.
 
-The goal is not to exhaustively test every tracker, but to see the cause‑and‑effect relationship between purpose toggles and network traffic.
+The point is to see the cause and effect: toggle a purpose, watch requests appear or disappear.
 
 ## 5. Example: Blocking Ads on elpais.com (DoubleClick)
 
-This example uses the Spanish news site <https://elpais.com/> to show how the **Ads / Marketing** purpose affects third‑party ad requests.
+This example uses the Spanish news site <https://elpais.com/> to demonstrate how the **Ads / Marketing** purpose affects third‑party ad requests.
 
 ### 5.1 Baseline: Ads Allowed
 
@@ -133,11 +136,11 @@ Example screenshot with ads blocked:
 
 ![Ads / Marketing blocked on elpais.com](assets/screenshots/test-elpais-blocked.png)
 
-Basic blocking of tracking resources for the **Ads** purpose on a news site: notice missing ad slots in the page header and `ERR_BLOCKED_BY_CLIENT` entries in the Network panel.
+Blocking of tracking resources for the **Ads** purpose on a news site. Notice the missing ad slots in the page header and the `ERR_BLOCKED_BY_CLIENT` entries in the Network panel.
 
 ## 6. Trying different sites, profiles and purposes
 
-To get a broader feeling for the ProtoConsent extension, you can combine site profiles with purpose-level tests.
+To explore the ProtoConsent extension, you can combine site profiles with purpose-level tests.
 
 - Repeat the tests above on several sites (for example, other news sites, blogs, or services that embed third‑party widgets).
 - Try different profiles (“Strict”, “Balanced”, “Permissive”) to see how they translate into purpose states for each site.
@@ -147,17 +150,17 @@ Below are example scenarios for each purpose.
 
 ### 6.1 Functional (service)
 
-**Goal:** Understand the role of the Functional purpose.
+Functional is a reference-only purpose in this version.
 
-- Functional represents everything strictly necessary to provide the service (login, navigation, basic UX, billing, support).
-- In this early version, Functional does not generate any blocking rules, even if you turn it off, to avoid breaking sites by accident.
-- You can still use it as a reference to distinguish “core service” from optional analytics, ads or third‑party integrations.
+- It represents everything strictly necessary to provide the service (login, navigation, basic UX, billing, support).
+- In this early version, Functional does not generate any blocking rules, even if you turn it off, to avoid breaking sites.
+- It serves to distinguish “core service” from optional analytics, ads or third‑party integrations.
 
 ### 6.2 Analytics
 
-**Goal:** See how Analytics controls measurement and usage tracking.
+**Analytics controls measurement and usage tracking.**
 
-- Reference domains (examples — full list in `extension/rules/block_*.json`): `google-analytics.com`, `scorecardresearch.com`, `chartbeat.com`, `fullstory.com`.
+- Reference domains (examples - full list in `extension/rules/block_*.json`): `google-analytics.com`, `scorecardresearch.com`, `chartbeat.com`, `fullstory.com`.
 
 - Steps:
   1. Visit a site that uses Google Analytics or Segment.
@@ -168,9 +171,9 @@ Below are example scenarios for each purpose.
 
 ### 6.3 Ads / Marketing
 
-**Goal:** Observe the impact on advertising traffic.
+**Ads / Marketing controls advertising traffic.**
 
-- Reference domains (examples — full list in `extension/rules/block_*.json`): `doubleclick.net`, `googlesyndication.com`, `adservice.google.com`, `criteo.com`, `taboola.com`.
+- Reference domains (examples - full list in `extension/rules/block_*.json`): `doubleclick.net`, `googlesyndication.com`, `adservice.google.com`, `criteo.com`, `taboola.com`.
 
 - Steps:
   1. Use a site with visible ads (for example, a major news site).
@@ -180,21 +183,21 @@ Below are example scenarios for each purpose.
 
 ### 6.4 Personalization / Profiling
 
-**Goal:** Separate basic ads from more advanced personalization or retargeting.
+**Personalization separates basic ads from advanced profiling and retargeting.**
 
-- Reference domains (examples — full list in `extension/rules/block_*.json`): `bluekai.com`, `crwdcntrl.net`, `acxiom.com`, `barilliance.com`, `audigent.com`.
+- Reference domains (examples - full list in `extension/rules/block_*.json`): `bluekai.com`, `crwdcntrl.net`, `acxiom.com`, `barilliance.com`, `audigent.com`.
 
 - Steps:
   1. On a site with banners and personalised or retargeted ads, keep **Ads / Marketing** allowed but set **Personalization / Profiling** to *Blocked*.
   2. Filter in **Network** by `bluekai`, `crwdcntrl`, `audigent`.
   3. Reload and compare the results with the case where Personalization is also allowed.
-  4. This will not be perfect on every site, but it shows that ProtoConsent treats personalization as a separate purpose from “basic ads”.
+  4. Results vary by site, but ProtoConsent treats personalization as a separate purpose from “basic ads”.
 
 ### 6.5 Third-party sharing
 
-**Goal:** Highlight third‑party data sharing and integrations.
+**Third-party sharing covers external data sharing and integrations.**
 
-- Reference domains (examples — full list in `extension/rules/block_*.json`): `connect.facebook.net`, `addthis.com`, `addtoany.com`, `intercom.io`, `disqus.com`.
+- Reference domains (examples - full list in `extension/rules/block_*.json`): `connect.facebook.net`, `addthis.com`, `addtoany.com`, `intercom.io`, `disqus.com`.
 
 - Steps:
   1. Choose a site that embeds social widgets, Hotjar or Microsoft/Bing tracking.
@@ -205,9 +208,9 @@ Below are example scenarios for each purpose.
 
 ### 6.6 Advanced tracking / fingerprinting
 
-**Goal:** Target more advanced monitoring or experimentation tools.
+**Advanced tracking targets monitoring, experimentation and fingerprinting tools.**
 
-- Reference domains (examples — full list in `extension/rules/block_*.json`): `js-agent.newrelic.com`, `cdn.optimizely.com`, `fpnpmcdn.net`, `datadome.co`, `arkoselabs.com`.
+- Reference domains (examples - full list in `extension/rules/block_*.json`): `js-agent.newrelic.com`, `cdn.optimizely.com`, `fpnpmcdn.net`, `datadome.co`, `arkoselabs.com`.
 
 - Steps:
   1. Visit a site that uses New Relic, Heap, Optimizely or similar tooling.
@@ -215,11 +218,11 @@ Below are example scenarios for each purpose.
   3. Filter in **Network** by `newrelic`, `nr-data`, `heapanalytics` or `optimizely`.
   4. Reload and check whether those requests are blocked; then switch Advanced tracking back to *Allowed* and confirm that they return to 200 responses.
 
-These scenarios are not meant to be exhaustive, but to show that ProtoConsent already offers a consistent, browser‑level way to express and enforce purpose‑based preferences across real websites.
+These scenarios are not meant to be exhaustive.
 
 ## 7. Testing the SDK query flow (content script bridge)
 
-This test verifies that a web page can query the user's consent preferences through the ProtoConsent SDK protocol. The extension injects a content script on every page that bridges SDK queries to the extension's storage.
+The SDK lets web pages query consent preferences through a content script bridge. The extension injects a content script on every page that bridges SDK queries to the extension's storage.
 
 ### 7.1 Setup
 
@@ -299,6 +302,12 @@ ProtoConsent conditionally sends a `Sec-GPC: 1` HTTP request header when privacy
 3. Click the first request (the HTML document).
 4. In **Request Headers**, look for `Sec-GPC: 1`. It should be present because Balanced denies ads, third_parties and advanced_tracking.
 
+GPC signal detected on a site with privacy purposes denied:
+
+![GPC signal detected on ProtoConsent](assets/screenshots/popup-log-gpc.png)
+![GPC signal detected on https://globalprivacycontrol.org](assets/screenshots/gpc-demo-detected.png)
+
+
 ### 8.2 GPC inactive (all privacy purposes allowed)
 
 1. In the ProtoConsent popup, set the site to a custom profile with all purposes allowed.
@@ -325,12 +334,12 @@ With Balanced as the default and one site set to custom (all allowed), the expec
 
 - `Block: 0 | Allow: 3 | GPC: 2`
 - The 3 allow rules are per-site overrides for the categories that Balanced blocks globally (ads, third_parties, advanced_tracking), allowing them on the custom site.
-- `set GLOBAL` — the global GPC rule (privacy purposes denied by Balanced)
-- `remove ["example.com"]` — the per-site override that suppresses GPC for the permissive site
+- `set GLOBAL` - the global GPC rule (privacy purposes denied by Balanced)
+- `remove ["example.com"]` - the per-site override that suppresses GPC for the permissive site
 
 ## 9. Enabling the debug panel
 
-The popup includes a hidden debug panel that shows internal state (dynamic rules, ruleset toggles, GPC mappings). It is off by default and controlled by a flag in local storage — no code changes needed.
+The popup includes a hidden debug panel that shows internal state (dynamic rules, ruleset toggles, GPC mappings). It is off by default and controlled by a flag in local storage - no code changes needed.
 
 ### 9.1 Activate debug mode
 
@@ -369,6 +378,10 @@ ProtoConsent reads a `.well-known/protoconsent.json` file from any website to di
 4. Click the **Site** tab (side panel toggle) in the popup header.
 5. The side panel should show the site's declaration with [Consent Commons](https://consentcommons.com/) icons, including purposes, legal bases, providers, sharing scope, and data handling details.
 
+Site declaration displayed with Consent Commons icons on demo.protoconsent.org:
+
+![Site declaration side panel](assets/screenshots/well-known-demo-detected.png)
+
 ### 10.2 What to check
 
 - Each declared purpose shows its legal basis, provider, and sharing scope (if declared).
@@ -382,9 +395,9 @@ Any site can publish a `.well-known/protoconsent.json` file. See the [site decla
 
 ## 11. Switching to DNR debug mode
 
-By default, the extension uses `webRequest` events to track blocked requests and GPC signals. This is the same code path in both unpacked (developer) and store builds, which ensures you test what you ship.
+By default, the extension uses `webRequest` events to track blocked requests and GPC signals. This is the same code path in both unpacked (developer) and store builds.
 
-For rule-level debugging — for example, when developing or troubleshooting blocklist rules — you can switch to `onRuleMatchedDebug`, a Chrome API that reports the exact rule ID and ruleset for every matched request. This API is only available in unpacked extensions.
+For rule-level debugging - for example, when developing or troubleshooting blocklist rules - you can switch to `onRuleMatchedDebug`, a Chrome API that reports the exact rule ID and ruleset for every matched request. This API is only available in unpacked extensions.
 
 ### 11.1 When to use it
 
@@ -406,7 +419,7 @@ For normal testing and day-to-day use, leave `USE_DNR_DEBUG` off.
 3. Reload the extension from `chrome://extensions/`.
 4. The debug panel (Log → Debug tab) will show `data source: onRuleMatchedDebug` to confirm the switch.
 
-> **Note:** This only works in unpacked extensions. In store builds, `onRuleMatchedDebug` does not exist and the flag has no effect — the extension continues using `webRequest` automatically.
+> **Note:** This only works in unpacked extensions. In store builds, `onRuleMatchedDebug` does not exist and the flag has no effect - the extension continues using `webRequest` automatically.
 
 ### 11.3 What changes
 
@@ -418,7 +431,7 @@ For normal testing and day-to-day use, leave `USE_DNR_DEBUG` off.
 | Other extensions' blocks | Filtered by our blocklists (may miss edge cases) | Only our rules, guaranteed |
 | Works in store builds | Yes | No |
 
-The popup, log tab, badge counter, and debug panel all work in both modes — only the data source changes.
+The popup, log tab, badge counter, and debug panel all work in both modes - only the data source changes.
 
 ### 11.4 Deactivating DNR debug mode
 
@@ -427,7 +440,7 @@ The popup, log tab, badge counter, and debug panel all work in both modes — on
 
 ## 12. Testing the domain whitelist
 
-The whitelist lets you allow specific blocked domains directly from the Log tab, so you can recover from false positives without changing your profile or purpose settings. Each whitelist entry can be scoped to a single site or applied globally.
+The whitelist lets you allow specific blocked domains directly from the Log tab, so you can fix false positives without changing your profile or purpose settings. Each whitelist entry can be scoped to a single site or applied globally.
 
 ### 12.1 Allowing a blocked domain
 
@@ -437,6 +450,10 @@ The whitelist lets you allow specific blocked domains directly from the Log tab,
 4. Click **Allow**. The button changes to **Allowed** (green).
 5. Reload the page. The domain should no longer appear in the blocked count, and the corresponding requests should load normally.
 6. The **Whitelist** tab becomes visible in the Log view, listing the newly allowed domain.
+
+Log tab showing a whitelisted domain with scope toggle:
+
+![Whitelist tab in Log view](assets/screenshots/popup-log-whitelist.png)
 
 ### 12.2 Removing a whitelisted domain
 
@@ -450,7 +467,7 @@ The whitelist lets you allow specific blocked domains directly from the Log tab,
 1. Allow a domain that appears on multiple sites (for example, `www.googletagmanager.com`).
 2. By default, the entry is scoped to the current site. In the **Whitelist** tab, the Scope column shows **Site** and displays the hostname.
 3. Click the scope toggle button (**→ All**) to switch the entry to **Global**. The scope changes to **Global**.
-4. Navigate to a different site where the same domain is blocked. Reload — the domain should now be allowed there too.
+4. Navigate to a different site where the same domain is blocked. Reload - the domain should now be allowed there too.
 5. To narrow the scope back, click **→ Site** in the Whitelist tab. The entry reverts to site-only, effective only on the current site.
 
 ### 12.4 Verifying whitelist rules from the service worker console
@@ -468,4 +485,53 @@ chrome.declarativeNetRequest.getDynamicRules().then(r => {
 - Whitelisted domains appear as priority 3 `allow` rules.
 - Adding a domain creates or updates the rule; removing all whitelisted domains removes the rule entirely.
 - You can also check the raw storage with: `chrome.storage.local.get("whitelist", r => console.log(r))`.
+
+## 13. Testing Enhanced Protection
+
+Enhanced Protection adds optional third‑party blocklists that are fetched on demand. These lists are enforced via dynamic DNR rules, and the Enhanced tab in the popup manages presets and individual lists.
+
+### 13.1 Activating a preset
+
+1. Open the ProtoConsent popup and click the **Enhanced** tab in the mode rail.
+2. The preset bar shows four options: **Off**, **Basic**, **Full**, and **Custom** (disabled until you toggle individual lists).
+3. Select **Basic**. The extension will prompt you to download the four basic lists (EasyPrivacy, EasyList, AdGuard DNS, Steven Black).
+4. Wait for all downloads to complete - each card shows a progress indicator, then switches to an enabled state with a domain count.
+5. Select **Full** to enable all 12 lists. Lists not yet downloaded will start downloading automatically.
+
+Enhanced Protection tab with the Basic preset active:
+
+![Enhanced Protection tab](assets/screenshots/popup-enhanced-basic.png)
+
+### 13.2 Downloading and toggling lists
+
+1. With the **Basic** preset active, find a Full‑only list (for example, HaGeZi Pro) and click its **Download** button.
+2. Once downloaded, the list appears with a toggle switch. Toggle it on - the preset switches to **Custom** automatically.
+3. Toggle it off again. The preset remains **Custom** because the state no longer matches Basic or Full exactly.
+4. To remove a downloaded list entirely, click its **Remove** (×) button. The list reverts to the not‑downloaded state.
+
+### 13.3 Verifying enhanced blocks in the Log tab
+
+1. With Enhanced lists enabled, visit a site with significant third‑party traffic (for example, a news site).
+2. Open the ProtoConsent popup → **Log** tab → **Domains** panel.
+3. Enhanced blocks appear with a shield icon (🛡) alongside the domain name, distinct from core purpose icons.
+4. Lists with a category mapping (for example, EasyPrivacy → analytics, Blocklist Project Phishing → security) also show the corresponding category icon next to the shield.
+5. The blocked count in the Consent tab header includes an enhanced count indicator (shield + number) when enhanced blocks are present.
+
+### 13.4 Checking enhanced rules from the service worker console
+
+Open the service worker console for the extension and run:
+
+```js
+chrome.declarativeNetRequest.getDynamicRules().then(r => {
+  const enhanced = r.filter(x => x.action.type === 'block' && x.priority === 2 && !x.condition.initiatorDomains);
+  console.log('Enhanced block rules:', enhanced.length);
+  enhanced.slice(0, 5).forEach(x => console.log(' ', x.id, x.condition.requestDomains?.length || 0, 'domains'));
+})
+```
+
+You can also check Enhanced state in storage:
+
+```js
+chrome.storage.local.get(["enhancedLists", "enhancedPreset"], r => console.log(r))
+```
 

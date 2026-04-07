@@ -6,7 +6,7 @@
 // DEBUG_RULES loaded from config.js via <script> in popup.html
 // .well-known logic in well-known.js, debug panel in debug.js
 
-// Estimated time saved per blocked request (ms) — conservative approximation
+// Estimated time saved per blocked request (ms) - conservative approximation
 // Accounts for DNS + connection + download of typical third-party tracking scripts
 const ESTIMATED_MS_PER_BLOCKED_REQUEST = 50;
 
@@ -15,6 +15,7 @@ let gpcPurposeKeys = [];
 
 let purposesConfig = {};
 let presetsConfig = {};
+let enhancedCatalogConfig = {};
 let purposeDomainCounts = {};
 let purposePathCounts = {};
 let currentDomain = null;
@@ -34,7 +35,11 @@ let requiredPurposeKeys = new Set();
 let activeMode = "consent";
 
 function getActivePurposes() {
-  return PURPOSES_TO_SHOW.filter(p => lastPurposeStats[p] || lastBlockedDomains[p]);
+  const core = PURPOSES_TO_SHOW.filter(p => lastPurposeStats[p] || lastBlockedDomains[p]);
+  // Include Enhanced Protection list keys (enhanced:listId)
+  const enhanced = Object.keys(lastBlockedDomains || {}).filter(k => k.startsWith("enhanced:"));
+  const enhancedStats = Object.keys(lastPurposeStats || {}).filter(k => k.startsWith("enhanced:") && !enhanced.includes(k));
+  return [...core, ...enhanced, ...enhancedStats];
 }
 
 async function initPopup() {
@@ -86,15 +91,12 @@ function initModeRail() {
 
   if (modeRail) modeRail.hidden = false;
 
-  // Hide Enhanced tab until is implemented
-  const enhancedTab = modeRail?.querySelector('[data-mode="enhanced"]');
-  if (enhancedTab) enhancedTab.hidden = true;
-
   modeTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       const mode = tab.dataset.mode || "consent";
       setActiveMode(mode);
       if (mode === "log" && typeof initLogTab === "function") initLogTab();
+      if (mode === "enhanced" && typeof initEnhancedTab === "function") initEnhancedTab();
     });
   });
   setActiveMode(activeMode);
@@ -125,7 +127,7 @@ function setActiveMode(mode) {
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
-  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, gpcDomains: [], domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {} };
+  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHitDomains: {} };
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
       return EMPTY_BLOCKED_RESULT;
@@ -243,42 +245,79 @@ async function displayBlockedCount() {
     // Supplement with blockedDomains (from onRuleMatchedDebug) to cover dynamic rule matches.
     lastPurposeStats = Object.assign({}, domainHitCount);
 
-    // Supplement with purpose counts from blockedDomains (covers dynamic rule matches)
+    // Merge with blockedDomains counts (event listener covers dynamic + static matches).
+    // Use the higher value: getMatchedRules is authoritative for statics,
+    // but misses purpose attribution for dynamic rules; blockedDomains has both.
     if (blockedDomains) {
       for (const [purpose, domains] of Object.entries(blockedDomains)) {
-        if (!lastPurposeStats[purpose]) {
-          const total = Object.values(domains).reduce((sum, c) => sum + c, 0);
-          if (total > 0) lastPurposeStats[purpose] = total;
+        const total = Object.values(domains).reduce((sum, c) => sum + c, 0);
+        if (total > 0) {
+          lastPurposeStats[purpose] = Math.max(lastPurposeStats[purpose] || 0, total);
         }
       }
     }
 
-    // Unified counter line: "X blocked · ~Ys faster · Z GPC to domains"
+    // Unified counter line: "X blocked [shield N] · ~Ys faster · GPC to Z domains"
     if (countEl) {
-      const parts = [];
+      countEl.textContent = "";
+      const fragments = [];
+
       if (blocked > 0) {
-        parts.push(blocked + " blocked");
+        // Count enhanced blocks from lastPurposeStats (enhanced:* keys)
+        let enhancedCount = 0;
+        for (const [key, val] of Object.entries(lastPurposeStats)) {
+          if (key.startsWith("enhanced:")) enhancedCount += val;
+        }
+        const blockedSpan = document.createElement("span");
+        blockedSpan.appendChild(document.createTextNode(blocked + " blocked"));
+        if (enhancedCount > 0) {
+          const epSpan = document.createElement("span");
+          epSpan.className = "pc-counter-enhanced";
+          epSpan.title = enhancedCount + " blocked by Enhanced Protection";
+          blockedSpan.appendChild(document.createTextNode(" "));
+          epSpan.appendChild(document.createTextNode("("));
+          const epIcon = document.createElement("img");
+          epIcon.src = "../icons/purposes/enhanced.svg";
+          epIcon.width = 12;
+          epIcon.height = 12;
+          epIcon.alt = "Enhanced";
+          epIcon.className = "pc-counter-enhanced-icon";
+          epSpan.appendChild(epIcon);
+          epSpan.appendChild(document.createTextNode(enhancedCount + ")"));
+          blockedSpan.appendChild(epSpan);
+        }
+        fragments.push(blockedSpan);
         const estimatedMs = blocked * ESTIMATED_MS_PER_BLOCKED_REQUEST;
         if (estimatedMs >= 100) {
-          parts.push("~" + formatEstimatedTime(estimatedMs) + " faster");
+          fragments.push(document.createTextNode("~" + formatEstimatedTime(estimatedMs) + " faster"));
         }
       }
       if (gpc > 0) {
         const domainCount = gpcDomains.length;
         if (domainCount > 0) {
-          parts.push("GPC to " + pluralize(domainCount, "domain"));
+          fragments.push(document.createTextNode("GPC to " + pluralize(domainCount, "domain")));
         } else {
-          parts.push("GPC to " + pluralize(gpc, "request"));
+          fragments.push(document.createTextNode("GPC to " + pluralize(gpc, "request")));
         }
       }
 
-      countEl.textContent = parts.length > 0
-        ? parts.join(" · ")
-        : "Nothing blocked";
+      if (fragments.length > 0) {
+        for (let i = 0; i < fragments.length; i++) {
+          if (i > 0) countEl.appendChild(document.createTextNode(" · "));
+          countEl.appendChild(fragments[i]);
+        }
+      } else {
+        countEl.textContent = "Nothing blocked";
+      }
 
       if (blocked > 0) {
         countEl.classList.add("has-blocked", "clickable");
         countEl.title = "Click to see blocked domains in Log tab";
+        if (statRowEl) statRowEl.classList.add("clickable");
+      } else if (gpc > 0) {
+        countEl.classList.add("clickable");
+        countEl.classList.remove("has-blocked");
+        countEl.title = "Click to see GPC signals in Log tab";
         if (statRowEl) statRowEl.classList.add("clickable");
       } else {
         countEl.classList.remove("has-blocked", "clickable");
@@ -374,14 +413,14 @@ function displayProtectionScope() {
   let domainCount = 0;
   let pathCount = 0;
   for (const purposeKey of PURPOSES_TO_SHOW) {
-    if (currentPurposesState[purposeKey]) continue; // allowed, not blocking
+    if (currentPurposesState[purposeKey] !== false) continue; // allowed or undefined, not blocking
     if (purposeDomainCounts[purposeKey]) domainCount += purposeDomainCounts[purposeKey];
     if (purposePathCounts[purposeKey]) pathCount += purposePathCounts[purposeKey];
   }
 
   const total = domainCount + pathCount;
   if (total > 0) {
-    scopeTextEl.textContent = "Protected: " + total + " tracking rules";
+    scopeTextEl.textContent = "Protected \u00b7 " + total.toLocaleString() + " tracking rules";
     scopeTextEl.title = "";
     scopeEl.style.display = "flex";
   } else {
@@ -396,11 +435,55 @@ function displayProtectionScope() {
     }
     scopeEl.style.display = "flex";
   }
+
+  // Enhanced Protection summary line
+  displayEnhancedScope();
 }
 
-// Navigate to the Log tab (replaces the old expandable detail)
+function displayEnhancedScope() {
+  const el = document.getElementById("pc-enhanced-scope");
+  if (!el) return;
+
+  // epLists is a global from enhanced.js - populated after initEnhancedTab.
+  // On first popup open the tab hasn't been visited yet, so fetch from background.
+  if (typeof epLists !== "undefined" && Object.keys(epLists).length > 0) {
+    const { enabledCount, totalDomains } = getEnhancedStats();
+    renderEnhancedScopeLine(el, enabledCount, totalDomains);
+  } else {
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
+      if (chrome.runtime.lastError || !resp) return;
+      const lists = resp.lists || {};
+      const enabledLists = Object.values(lists).filter(l => l.enabled);
+      renderEnhancedScopeLine(el, enabledLists.length,
+        enabledLists.reduce((sum, l) => sum + (l.domainCount || 0), 0));
+    });
+  }
+}
+
+function renderEnhancedScopeLine(el, enabledCount, totalDomains) {
+  if (enabledCount === 0) {
+    el.style.display = "none";
+    el.textContent = "";
+    return;
+  }
+  el.textContent = "Enhanced \u00b7 " + enabledCount +
+    (enabledCount === 1 ? " list" : " lists") +
+    " \u00b7 " + totalDomains.toLocaleString() + " tracking rules";
+  el.style.display = "";
+}
+
+// Navigate to the Log tab
 function navigateToLog(innerTab) {
-  const tab = (typeof innerTab === "string") ? innerTab : "domains";
+  let tab;
+  if (typeof innerTab === "string") {
+    tab = innerTab;
+  } else if (lastBlocked > 0) {
+    tab = "domains";
+  } else if (lastGpcSignalsSent > 0) {
+    tab = "gpc";
+  } else {
+    tab = "domains";
+  }
   if (typeof setActiveMode === "function") setActiveMode("log");
   if (typeof initLogTab === "function") initLogTab();
   if (typeof setActiveLogTab === "function") setActiveLogTab(tab);
@@ -472,10 +555,12 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadConfigs() {
   const purposesUrl = chrome.runtime.getURL("config/purposes.json");
   const presetsUrl = chrome.runtime.getURL("config/presets.json");
+  const enhancedUrl = chrome.runtime.getURL("config/enhanced-lists.json");
 
-  const [purposesRes, presetsRes] = await Promise.all([
+  const [purposesRes, presetsRes, enhancedRes] = await Promise.all([
     fetch(purposesUrl),
-    fetch(presetsUrl)
+    fetch(presetsUrl),
+    fetch(enhancedUrl)
   ]);
 
   if (!purposesRes.ok) throw new Error("Failed to load purposes.json: HTTP " + purposesRes.status);
@@ -483,6 +568,7 @@ async function loadConfigs() {
 
   purposesConfig = await purposesRes.json();
   presetsConfig = await presetsRes.json();
+  enhancedCatalogConfig = enhancedRes.ok ? await enhancedRes.json() : {};
 
   // Derive display order from config, sorted by the order field
   PURPOSES_TO_SHOW = Object.keys(purposesConfig)
@@ -923,7 +1009,7 @@ function notifyBackgroundRulesUpdated() {
   if (!chrome.runtime || !chrome.runtime.sendMessage) return;
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_RULES_UPDATED" }, () => {
     void chrome.runtime.lastError; // Suppress "no listener" warning
-    // After rule rebuild, matched rule IDs are stale — prompt reload
+    // After rule rebuild, matched rule IDs are stale - prompt reload
     const countEl = document.getElementById("pc-blocked-count");
     if (countEl) {
       countEl.textContent = "Reload page to update stats";
