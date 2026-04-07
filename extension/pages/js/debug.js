@@ -10,6 +10,18 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
   const content = document.getElementById("pc-log-debug");
   if (!content) return;
 
+  // Ensure CNAME map is loaded before rendering
+  if (!cnameMap) {
+    loadCnameData(() => {
+      renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains }, content);
+    });
+    return;
+  }
+  renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains }, content);
+}
+
+function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains }, content) {
+
   // Fetch background rebuild snapshot
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_DEBUG" }, (bg) => {
     const lines = [];
@@ -164,6 +176,35 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
           lines.push("  [" + purpose + "] " + domain + " \u00d7" + count);
         }
       }
+      lines.push("");
+    }
+
+    // CNAME cloaking cross-reference
+    if (cnameMap && cnameTrackers) {
+      const allDomains = new Set();
+      // Collect all domains seen (blocked + GPC)
+      for (const domains of Object.values(blockedDomains)) {
+        for (const d of Object.keys(domains)) allDomains.add(d);
+      }
+      if (gpcDomains) {
+        for (const d of gpcDomains) allDomains.add(d);
+      }
+      const cnameMatches = [];
+      for (const d of allDomains) {
+        const tracker = lookupCname(d);
+        if (tracker) {
+          cnameMatches.push("  " + d + " \u2192 " + tracker);
+        }
+      }
+      lines.push("— CNAME cloaking (" + Object.keys(cnameMap).length.toLocaleString() + " entries) —");
+      if (cnameMatches.length) {
+        lines.push("  matches: " + cnameMatches.length);
+        for (const m of cnameMatches) lines.push(m);
+      } else {
+        lines.push("  no matches in current tab domains");
+      }
+    } else {
+      lines.push("— CNAME cloaking: not loaded —");
     }
 
     content.textContent = lines.join("\n");

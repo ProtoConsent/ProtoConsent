@@ -234,6 +234,11 @@
   white-space: nowrap;
 }
 
+.pc-log-domains-icon img,
+.pc-log-domains-icon span {
+  cursor: help;
+}
+
 .pc-log-domains-icon img {
   vertical-align: middle;
 }
@@ -263,6 +268,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 0;
+}
+
+.pc-log-cname-icon {
+  color: var(--pc-warn, #d97706);
+  margin-left: 3px;
+  font-size: 12px;
 }
 
 .pc-log-allow-btn {

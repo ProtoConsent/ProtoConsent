@@ -292,7 +292,7 @@ async function displayBlockedCount() {
           blockedSpan.appendChild(document.createTextNode(" "));
           epSpan.appendChild(document.createTextNode("("));
           const epIcon = document.createElement("img");
-          epIcon.src = "../icons/purposes/enhanced.svg";
+          epIcon.src = ENHANCED_ICON;
           epIcon.width = 12;
           epIcon.height = 12;
           epIcon.alt = "Enhanced";
@@ -462,28 +462,55 @@ function displayEnhancedScope() {
   // epLists is a global from enhanced.js - populated after initEnhancedTab.
   // On first popup open the tab hasn't been visited yet, so fetch from background.
   if (typeof epLists !== "undefined" && Object.keys(epLists).length > 0) {
-    const { enabledCount, totalDomains } = getEnhancedStats();
-    renderEnhancedScopeLine(el, enabledCount, totalDomains);
+    const stats = getEnhancedStats();
+    const infoDomains = Object.values(epLists)
+      .filter(l => l.enabled && l.type === "informational")
+      .reduce((sum, l) => sum + (l.domainCount || 0), 0);
+    renderEnhancedScopeLine(el, stats.blockingCount, stats.totalDomains, stats.infoCount, infoDomains);
   } else {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
       if (chrome.runtime.lastError || !resp) return;
       const lists = resp.lists || {};
       const enabledLists = Object.values(lists).filter(l => l.enabled);
-      renderEnhancedScopeLine(el, enabledLists.length,
-        enabledLists.reduce((sum, l) => sum + (l.domainCount || 0), 0));
+      const blockingLists = enabledLists.filter(l => l.type !== "informational");
+      const infoLists = enabledLists.filter(l => l.type === "informational");
+      renderEnhancedScopeLine(el, blockingLists.length,
+        blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
+        infoLists.length,
+        infoLists.reduce((sum, l) => sum + (l.domainCount || 0), 0));
     });
   }
 }
 
-function renderEnhancedScopeLine(el, enabledCount, totalDomains) {
-  if (enabledCount === 0) {
+function renderEnhancedScopeLine(el, blockingCount, totalDomains, infoCount, infoDomains) {
+  const totalLists = blockingCount + (infoCount || 0);
+  if (totalLists === 0) {
     el.style.display = "none";
     el.textContent = "";
     return;
   }
-  el.textContent = "Enhanced \u00b7 " + enabledCount +
-    (enabledCount === 1 ? " list" : " lists") +
+  el.textContent = "";
+  const icon = document.createElement("img");
+  icon.src = ENHANCED_ICON;
+  icon.width = 12;
+  icon.height = 12;
+  icon.alt = "Enhanced";
+  icon.style.verticalAlign = "middle";
+  icon.style.marginRight = "4px";
+  el.appendChild(icon);
+  let text = totalLists + (totalLists === 1 ? " list" : " lists") +
     " \u00b7 " + compactNumber(totalDomains) + " rules";
+  if (infoCount > 0 && infoDomains > 0) {
+    text += " + " + compactNumber(infoDomains);
+  }
+  el.appendChild(document.createTextNode(text));
+  if (infoCount > 0 && infoDomains > 0) {
+    const infoSpan = document.createElement("span");
+    infoSpan.textContent = " \u2139";
+    infoSpan.setAttribute("aria-label", "informational entries");
+    infoSpan.title = "Informational entries (not blocking)";
+    el.appendChild(infoSpan);
+  }
   el.style.display = "";
 }
 

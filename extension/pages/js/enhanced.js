@@ -14,9 +14,13 @@ let _epFocusListId = null; // list to refocus after re-render
 // --- Shared stats helper ---
 function getEnhancedStats() {
   const enabledLists = Object.values(epLists).filter(l => l.enabled);
+  const blockingLists = enabledLists.filter(l => l.type !== "informational");
+  const infoLists = enabledLists.filter(l => l.type === "informational");
   return {
     enabledCount: enabledLists.length,
-    totalDomains: enabledLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
+    blockingCount: blockingLists.length,
+    infoCount: infoLists.length,
+    totalDomains: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
     downloadedCount: Object.keys(epLists).length,
     catalogCount: Object.keys(epCatalog).length,
     notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id]),
@@ -42,7 +46,7 @@ function ensurePresetForDownload(callback) {
 
 const EP_PRESETS = [
   { id: "off", label: "Off", description: "Only ProtoConsent core lists" },
-  { id: "basic", label: "Basic", description: "Conservative third-party lists" },
+  { id: "basic", label: "Balanced", description: "Conservative third-party lists" },
   { id: "full", label: "Full", description: "All available third-party lists" },
 ];
 
@@ -252,7 +256,7 @@ function renderEnhancedLists() {
     header.className = "ep-list-header";
 
     const icon = document.createElement("img");
-    icon.src = "../icons/purposes/enhanced.svg";
+    icon.src = ENHANCED_ICON;
     icon.width = 16;
     icon.height = 16;
     icon.alt = "";
@@ -264,8 +268,14 @@ function renderEnhancedLists() {
 
     const nameEl = document.createElement("span");
     nameEl.className = "ep-list-name";
-    nameEl.textContent = listDef.name;
     nameEl.title = listDef.name;
+    const nameTxt = document.createTextNode(listDef.name);
+    const chevron = document.createElement("span");
+    chevron.className = "ep-list-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.textContent = " ▾";
+    nameEl.appendChild(nameTxt);
+    nameEl.appendChild(chevron);
     header.appendChild(nameEl);
 
     // Category pill (CC icon + label) for lists with a mapped purpose
@@ -284,6 +294,12 @@ function renderEnhancedLists() {
       const catLabel = document.createElement("span");
       catLabel.textContent = catInfo.label;
       pill.appendChild(catLabel);
+      header.appendChild(pill);
+    } else if (listDef.type === "informational") {
+      const pill = document.createElement("span");
+      pill.className = "ep-category-pill ep-info-pill";
+      pill.title = "Informational only, does not block requests";
+      pill.textContent = "\u2139 Info";
       header.appendChild(pill);
     }
 
@@ -323,6 +339,24 @@ function renderEnhancedLists() {
 
     card.appendChild(header);
 
+    // Expand/collapse: click on header toggles info + meta visibility
+    header.setAttribute("tabindex", "0");
+    header.setAttribute("role", "button");
+    header.setAttribute("aria-expanded", "false");
+    header.addEventListener("click", (e) => {
+      // Don't toggle when clicking on interactive elements (toggle, buttons)
+      if (e.target.closest("input, button")) return;
+      const expanded = card.classList.toggle("is-expanded");
+      header.setAttribute("aria-expanded", expanded ? "true" : "false");
+    });
+    header.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        const expanded = card.classList.toggle("is-expanded");
+        header.setAttribute("aria-expanded", expanded ? "true" : "false");
+      }
+    });
+
     // Info row: description + stats
     const info = document.createElement("div");
     info.className = "ep-list-info";
@@ -336,8 +370,12 @@ function renderEnhancedLists() {
       const stats = document.createElement("span");
       stats.className = "ep-list-stats";
       const parts = [];
-      if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " tracking rules");
-      if (listData.pathRuleCount) parts.push(listData.pathRuleCount.toLocaleString() + " path rules");
+      if (listData.type === "informational") {
+        if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " entries");
+      } else {
+        if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " tracking rules");
+        if (listData.pathRuleCount) parts.push(listData.pathRuleCount.toLocaleString() + " path rules");
+      }
       if (listData.version) parts.push("v" + listData.version);
       stats.textContent = parts.join(" · ");
       info.appendChild(stats);
@@ -542,11 +580,22 @@ function updateEnhancedStatus() {
   const statusEl = document.getElementById("ep-status");
   if (!statusEl) return;
 
-  const { enabledCount, totalDomains } = getEnhancedStats();
+  const { enabledCount, blockingCount, infoCount, totalDomains } = getEnhancedStats();
+  const infoDomains = Object.values(epLists)
+    .filter(l => l.enabled && l.type === "informational")
+    .reduce((sum, l) => sum + (l.domainCount || 0), 0);
 
   if (enabledCount > 0) {
-    statusEl.textContent = enabledCount + " " + (enabledCount === 1 ? "list" : "lists") +
-      " active \u00b7 " + totalDomains.toLocaleString() + " tracking rules";
+    const parts = [];
+    if (blockingCount > 0) {
+      parts.push(blockingCount + " " + (blockingCount === 1 ? "blocklist" : "blocklists") +
+        " \u00b7 " + totalDomains.toLocaleString() + " rules");
+    }
+    if (infoCount > 0) {
+      parts.push(infoCount + " info " + (infoCount === 1 ? "list" : "lists") +
+        " \u00b7 " + infoDomains.toLocaleString() + " entries");
+    }
+    statusEl.textContent = parts.join(" \u00b7 ");
     statusEl.className = "ep-status ep-status-active";
   } else {
     statusEl.textContent = "No enhanced lists active - using ProtoConsent core lists only";

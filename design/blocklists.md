@@ -1,4 +1,4 @@
-# ProtoConsent – Blocklists management
+# ProtoConsent - Blocklists management
 
 This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../LICENSE-CC-BY-SA) file for details.
 
@@ -6,7 +6,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 ProtoConsent includes a curated subset of domains from public blocklists, organized by purpose. These are stored as static DNR rulesets in `extension/rules/block_*.json` - one file per blocking purpose.
 
-This is **not** a full ad/tracking blocker. The lists are drawn from public blocklists, curated with cross‑source validation and quality filters, and organized by purpose to provide meaningful default protection.
+This is **not** a full ad/tracking blocker. The lists are drawn from public blocklists, curated with cross-source validation and quality filters, and organized by purpose to provide meaningful default protection.
 
 ## Contents
 
@@ -15,8 +15,9 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
 3. [Sources](#3-sources)
 4. [Curation process](#4-curation-process)
 5. [DNR format](#5-dnr-format)
-6. [Path‑based rules](#6-pathbased-rules)
+6. [Path-based rules](#6-pathbased-rules)
 7. [Enhanced protection lists (third-party)](#7-enhanced-protection-lists-third-party)
+8. [CNAME cloaking detection (informational)](#8-cname-cloaking-detection-informational)
 
 ## 2. Current state
 
@@ -92,11 +93,11 @@ Each `block_*.json` contains a single declarative net request rule:
 - All rulesets are `enabled: false` in the manifest; the background script enables them based on user preferences.
 - `main_frame` is excluded from `resourceTypes`, so users can still navigate to any domain directly.
 
-## 6. Path‑based rules
+## 6. Path-based rules
 
-Some high‑value domains cannot be blocked entirely because they serve both legitimate content and tracking endpoints. For example, `google.com` hosts search results, authentication flows, and advertising scripts on the same domain. Blocking `google.com` via `requestDomains` would break core functionality.
+Some high-value domains cannot be blocked entirely because they serve both legitimate content and tracking endpoints. For example, `google.com` hosts search results, authentication flows, and advertising scripts on the same domain. Blocking `google.com` via `requestDomains` would break core functionality.
 
-For these domains, ProtoConsent uses **path‑based rules** with `urlFilter` patterns that target specific tracking endpoints:
+For these domains, ProtoConsent uses **path-based rules** with `urlFilter` patterns that target specific tracking endpoints:
 
 ```json
 {
@@ -128,14 +129,14 @@ Path rules are stored in `block_*_paths.json` files (one per category) alongside
 A path rule is added only when:
 
 1. The domain hosts both tracking and legitimate content (cannot be fully blocked).
-2. The tracking endpoint has a stable, well‑known URL pattern.
+2. The tracking endpoint has a stable, well-known URL pattern.
 3. The domain is **not** already in the corresponding domain blocklist (no redundancy).
 
-### Interaction with per‑site overrides
+### Interaction with per-site overrides
 
-Per‑site override rules use `requestDomains` to match both domain‑blocked and path‑blocked domains. When building overrides, the background script extracts the unique domains from path rules (e.g. `google.com` from `||google.com/pagead/`) and merges them into the override's `requestDomains`. This ensures that a Permissive site gets path‑based requests unblocked alongside domain‑based ones.
+Per-site override rules use `requestDomains` to match both domain-blocked and path-blocked domains. When building overrides, the background script extracts the unique domains from path rules (e.g. `google.com` from `||google.com/pagead/`) and merges them into the override's `requestDomains`. This ensures that a Permissive site gets path-based requests unblocked alongside domain-based ones.
 
-For **block overrides**, path‑extracted domains that overlap with the initiator domains are filtered out. This prevents self‑referential blocking: without the filter, a Strict override on `elpais.com` would block all first‑party subdomains (`static.elpais.com`, `imagenes.elpais.com`, etc.) because DNR's `requestDomains` matching is subdomain‑inclusive. The tradeoff is that first‑party tracking pixels (e.g. `elpais.com/t.gif`) are not blocked by dynamic overrides - they are handled by the static path ruleset when the global profile blocks that category.
+For **block overrides**, path-extracted domains that overlap with the initiator domains are filtered out. This prevents self-referential blocking: without the filter, a Strict override on `elpais.com` would block all first-party subdomains (`static.elpais.com`, `imagenes.elpais.com`, etc.) because DNR's `requestDomains` matching is subdomain-inclusive. The tradeoff is that first-party tracking pixels (e.g. `elpais.com/t.gif`) are not blocked by dynamic overrides - they are handled by the static path ruleset when the global profile blocks that category.
 
 ## 7. Enhanced protection lists (third-party)
 
@@ -145,7 +146,7 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 
 12 lists organized in two presets.
 
-**Basic preset** (4 lists - enabled by default when user selects Basic):
+**Balanced preset** (4 lists - enabled by default when user selects Balanced):
 
 | List | License | Domains | Path rules | Category |
 | --- | --- | --- | --- | --- |
@@ -193,11 +194,11 @@ This keeps the extension package small, avoids bundling third-party list content
 | Preset | Behavior |
 | --- | --- |
 | Off | No enhanced lists active (core ProtoConsent only) |
-| Basic | Enables the 4 basic lists on download |
+| Balanced | Enables the 4 Balanced lists on download |
 | Full | Enables all 12 lists on download |
 | Custom | User has toggled individual lists manually |
 
-When a user downloads lists with the preset set to Off, the extension auto-switches to Basic.
+When a user downloads lists with the preset set to Off, the extension auto-switches to Balanced.
 
 ### Domain deduplication
 
@@ -206,3 +207,43 @@ DNR `requestDomains` matches a domain **and all its subdomains**. The converter 
 ### ABP format parsing
 
 EasyList and EasyPrivacy are distributed in Adblock Plus (ABP) filter syntax. The converter extracts both **`||domain^` patterns** (domain-level blocks) and **`||domain/path^` patterns** (path-based URL blocks). Cosmetic filters and exception rules are discarded. Path rules are stored alongside domain rules in the same JSON and create separate dynamic DNR rules with `urlFilter` conditions.
+
+## 8. CNAME cloaking detection (informational)
+
+CNAME cloaking is a tracking technique where trackers disguise themselves as first-party subdomains via DNS CNAME records. For example, `metrics.example.com` might CNAME to `tracker.adjust.com`. Because the browser sees the request as first-party, traditional domain blocklists cannot catch it.
+
+Chromium extensions have no DNS API, so runtime CNAME resolution is not possible. ProtoConsent uses a static lookup map compiled from [AdGuard CNAME Trackers](https://github.com/AdguardTeam/cname-trackers) (MIT license) to detect known CNAME-cloaked domains.
+
+### How it works
+
+- The list contains ~229K disguised domains mapped to ~244 tracker destinations across 5 categories: trackers, ads, clickthroughs, mail_trackers, and microsites.
+- This is an **informational** list (`type: "informational"` in `enhanced-lists.json`). It does not generate DNR blocking rules.
+- When enabled, the Log tab shows a `⇉` icon next to domains that appear in the CNAME map, with a tooltip showing the tracker destination.
+- The icon appears in both the blocked domains table and the streaming request log.
+- A `www.` prefix fallback ensures matches even when the listed domain omits or includes the prefix.
+
+### Always active with Enhanced
+
+CNAME detection is part of the Balanced preset and activates automatically when Enhanced Protection is enabled. CName trackers lists can be enabled/disabled independently.
+
+### Data format
+
+The lookup map uses an indexed format to reduce file size (from ~10.7 MB to ~7.9 MB):
+
+```json
+{
+  "version": "2026-04-06",
+  "trackers": ["adjust.com", "adobe.com", "..."],
+  "map": { "disguised.example.com": 0, "...": 1 }
+}
+```
+
+The `trackers` array stores destination names once. The `map` values are numeric indices into `trackers`.
+
+### Source
+
+| List | License | Disguised domains | Tracker destinations |
+| --- | --- | --- | --- |
+| [AdGuard CNAME Trackers](https://github.com/AdguardTeam/cname-trackers) | MIT | ~229K | ~244 |
+
+The converter script (`convert-cname.js`) in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo fetches, merges, and outputs the indexed JSON.

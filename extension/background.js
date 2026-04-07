@@ -538,7 +538,7 @@ async function _rebuildAllDynamicRulesImpl() {
 
     // Client Hints stripping toggle: default to true if not set
     const chStrippingEnabled = await new Promise(resolve => {
-      chrome.storage.local.get(["chStrippingEnabled"], r => resolve(r.chStrippingEnabled !== false));
+      getChStrippingEnabled(resolve);
     });
 
     // Collect existing dynamic rule IDs for the atomic swap at the end
@@ -739,6 +739,7 @@ async function _rebuildAllDynamicRulesImpl() {
 
     for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
       if (!listMeta.enabled) continue;
+      if (listMeta.type === "informational") continue; // CNAME etc. — no DNR rules
       const listData = enhancedData[listId];
       if (!listData) continue;
 
@@ -898,15 +899,7 @@ async function _rebuildAllDynamicRulesImpl() {
     //     Low-entropy hints (Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform)
     //     are kept - they have minimal fingerprinting value and are needed for
     //     basic content negotiation.
-    const HIGH_ENTROPY_CH = [
-      "sec-ch-ua-full-version-list",
-      "sec-ch-ua-platform-version",
-      "sec-ch-ua-arch",
-      "sec-ch-ua-bitness",
-      "sec-ch-ua-model",
-      "sec-ch-ua-wow64",
-      "sec-ch-ua-form-factors",
-    ];
+    //     HIGH_ENTROPY_CH is defined in config.js.
     const chHeaders = HIGH_ENTROPY_CH.map(h => ({ header: h, operation: "remove" }));
 
     const globalDeniesAT = chStrippingEnabled && !globalPurposes.advanced_tracking;
@@ -1453,6 +1446,60 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       }))
         .then(data => {
           clearTimeout(timeoutId);
+          // Informational lists (e.g. CNAME trackers) store a lookup map, not DNR rules
+          if (listDef.type === "informational") {
+            if (!data.map || typeof data.map !== "object" || !Array.isArray(data.trackers)) {
+              throw new Error("Invalid informational list format: missing map or trackers");
+            }
+            const domainCount = data.domain_count || Object.keys(data.map).length;
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, domainCount: existing.domainCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeInformational(lists, shouldEnable);
+                  });
+                }
+                return storeInformational(lists, shouldEnable);
+                function storeInformational(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    domainCount,
+                    pathRuleCount: 0,
+                    type: "informational",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { map: data.map, trackers: data.trackers },
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      sendResponse({ ok: true, domainCount });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
           // Validate format
           if (!data.rules || !Array.isArray(data.rules)) {
             throw new Error("Invalid list format: missing rules array");
