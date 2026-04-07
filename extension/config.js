@@ -26,6 +26,12 @@ function pluralize(n, singular) {
   return n + " " + singular + (n !== 1 ? "s" : "");
 }
 
+function compactNumber(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+
 function getPurposeLabel(key, style, config) {
   const cfg = (config || (typeof purposesConfig !== "undefined" ? purposesConfig : {}))[key];
   if (!cfg) return key;

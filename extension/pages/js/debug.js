@@ -122,6 +122,16 @@ function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHit
       lines.push("");
     }
 
+    // Client Hints stripping
+    if (bg && bg.chStripping) {
+      const toggle = bg.chEnabled ? "on" : "off";
+      lines.push("— client hints stripping: " + bg.chStripping + " (toggle: " + toggle + ") —");
+      lines.push("  DNR rules: " + (bg.chRules || 0));
+      if (bg.chExcluded > 0) lines.push("  excluded sites: " + bg.chExcluded);
+      if (bg.chAddSites > 0) lines.push("  per-site add: " + bg.chAddSites);
+      lines.push("");
+    }
+
     // Tab match info (from Chrome's getMatchedRules — persisted counts, always accurate)
     lines.push("— tab matches (getMatchedRules) —");
     lines.push("  blocked: " + blocked + "  gpc: " + gpc + " (" + (gpcDomains?.length || 0) + " domains)");

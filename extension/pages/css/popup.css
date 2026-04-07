@@ -433,6 +433,25 @@ body {
   background-color: #f87171;
 }
 
+/* CH (Client Hints stripping) */
+.pc-ch-dot {
+  background-color: #9ca3af;
+}
+
+.pc-ch-indicator.is-active {
+  color: #5b21b6;
+  border-color: #c4b5fd;
+  background-color: #f5f3ff;
+}
+
+.pc-ch-indicator.is-active .pc-ch-dot {
+  background-color: #7c3aed;
+}
+
+.pc-ch-indicator.is-inactive .pc-ch-dot {
+  background-color: #a78bfa;
+}
+
 .pc-reload-btn {
   width: 30px;
   height: 26px;
