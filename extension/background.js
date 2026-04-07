@@ -48,6 +48,9 @@ let dynamicBlockRuleMap = {};
 // Set of dynamic rule IDs that inject Sec-GPC: 1 (rebuilt on each rule update).
 let dynamicGpcSetIds = new Set();
 
+// Set of dynamic rule IDs that strip high-entropy Client Hints (rebuilt on each rule update).
+let dynamicChRuleIds = new Set();
+
 // Maps dynamic whitelist allow rule IDs to their requestDomains array,
 // so getMatchedRules in the popup can count whitelist hits per domain.
 let dynamicWhitelistMap = {};
@@ -533,6 +536,11 @@ async function _rebuildAllDynamicRulesImpl() {
       chrome.storage.local.get(["gpcEnabled"], r => resolve(r.gpcEnabled !== false));
     });
 
+    // Client Hints stripping toggle: default to true if not set
+    const chStrippingEnabled = await new Promise(resolve => {
+      chrome.storage.local.get(["chStrippingEnabled"], r => resolve(r.chStrippingEnabled !== false));
+    });
+
     // Collect existing dynamic rule IDs for the atomic swap at the end
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
     const existingIds = existingRules.map((r) => r.id);
@@ -881,6 +889,74 @@ async function _rebuildAllDynamicRulesImpl() {
     gpcAddDomains = new Set(gpcAddSites);
     gpcRemoveDomains = new Set(gpcRemoveSites);
 
+    // 6b. Client Hints stripping - remove high-entropy Sec-CH-UA-* headers
+    //     when advanced_tracking purpose is denied.
+    //     These headers expose OS version, CPU architecture, device model and
+    //     full browser version - enough (~33 bits) to uniquely fingerprint a
+    //     user. Firefox and Safari do not send Client Hints at all, so removing
+    //     them causes no site breakage.
+    //     Low-entropy hints (Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform)
+    //     are kept - they have minimal fingerprinting value and are needed for
+    //     basic content negotiation.
+    const HIGH_ENTROPY_CH = [
+      "sec-ch-ua-full-version-list",
+      "sec-ch-ua-platform-version",
+      "sec-ch-ua-arch",
+      "sec-ch-ua-bitness",
+      "sec-ch-ua-model",
+      "sec-ch-ua-wow64",
+      "sec-ch-ua-form-factors",
+    ];
+    const chHeaders = HIGH_ENTROPY_CH.map(h => ({ header: h, operation: "remove" }));
+
+    const globalDeniesAT = chStrippingEnabled && !globalPurposes.advanced_tracking;
+
+    // Collect per-site exceptions before emitting the global rule
+    const chAddSites = [];    // deny AT per-site when global allows
+    const chRemoveSites = []; // allow AT per-site when global denies
+
+    for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
+      const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
+      const siteDeniesAT = chStrippingEnabled && !sitePurposes.advanced_tracking;
+      if (siteDeniesAT === globalDeniesAT) continue;
+      if (siteDeniesAT) chAddSites.push(domain);
+      else chRemoveSites.push(domain);
+    }
+
+    // Global CH stripping rule (priority 1).  Cannot "un-remove" a native
+    // header, so sites that allow AT are excluded via excludedRequestDomains
+    // instead of a separate override rule.
+    const newChRuleIds = new Set();
+    if (globalDeniesAT) {
+      const chGlobalId = nextRuleId++;
+      newChRuleIds.add(chGlobalId);
+      const chGlobalRule = {
+        id: chGlobalId,
+        priority: 1,
+        action: { type: "modifyHeaders", requestHeaders: chHeaders },
+        condition: { resourceTypes: GPC_RESOURCE_TYPES },
+      };
+      if (chRemoveSites.length > 0) {
+        chGlobalRule.condition.excludedRequestDomains = chRemoveSites;
+      }
+      newRules.push(chGlobalRule);
+    }
+
+    // Per-site CH stripping: sites that deny AT when the global profile allows it
+    if (chAddSites.length > 0) {
+      const chPerSiteId = nextRuleId++;
+      newChRuleIds.add(chPerSiteId);
+      newRules.push({
+        id: chPerSiteId,
+        priority: 2,
+        action: { type: "modifyHeaders", requestHeaders: chHeaders },
+        condition: {
+          requestDomains: chAddSites,
+          resourceTypes: GPC_RESOURCE_TYPES,
+        },
+      });
+    }
+
     if (DEBUG_RULES) {
       const overrideCount = newRules.filter(r => r.condition.initiatorDomains).length;
       const gpcGlobal = newRules.filter(r =>
@@ -925,6 +1001,11 @@ async function _rebuildAllDynamicRulesImpl() {
         enhancedListIds: Object.entries(enhancedListsMeta)
           .filter(([, l]) => l.enabled).map(([id]) => id),
         enhancedRules: Object.keys(newEnhancedMap).length,
+        chStripping: globalDeniesAT ? "global" : (chAddSites.length > 0 ? "per-site" : "off"),
+        chEnabled: chStrippingEnabled,
+        chRules: newChRuleIds.size,
+        chExcluded: chRemoveSites.length,
+        chAddSites: chAddSites.length,
         ts: Date.now(),
       };
     }
@@ -941,6 +1022,7 @@ async function _rebuildAllDynamicRulesImpl() {
       });
       dynamicBlockRuleMap = newDynamicBlockMap;
       dynamicGpcSetIds = newGpcSetIds;
+      dynamicChRuleIds = newChRuleIds;
       dynamicWhitelistMap = newWhitelistMap;
       dynamicEnhancedMap = newEnhancedMap;
     } catch (e) {
@@ -1107,22 +1189,30 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   // Popup requests last rebuild debug snapshot
   if (message.type === "PROTOCONSENT_GET_DEBUG") {
-    const debugData = Object.assign({}, lastRebuildDebug, {
-      navigatingTabs: tabNavigating.size,
-      logPorts: logPorts.size,
-    });
-    // Session key count (async; chrome.storage.session may not exist in all browsers)
-    if (chrome.storage.session && chrome.storage.session.get) {
-      chrome.storage.session.get(null).then((s) => {
-        debugData.sessionKeys = Object.keys(s).length;
-        sendResponse(debugData);
-      }).catch(() => {
+    // If the SW restarted and lastRebuildDebug is stale (no enableIds),
+    // trigger a rebuild first so the snapshot reflects actual state.
+    const respond = () => {
+      const debugData = Object.assign({}, lastRebuildDebug, {
+        navigatingTabs: tabNavigating.size,
+        logPorts: logPorts.size,
+      });
+      if (chrome.storage.session && chrome.storage.session.get) {
+        chrome.storage.session.get(null).then((s) => {
+          debugData.sessionKeys = Object.keys(s).length;
+          sendResponse(debugData);
+        }).catch(() => {
+          debugData.sessionKeys = -1;
+          sendResponse(debugData);
+        });
+      } else {
         debugData.sessionKeys = -1;
         sendResponse(debugData);
-      });
+      }
+    };
+    if (!lastRebuildDebug.enableIds) {
+      rebuildAllDynamicRules().then(respond).catch(respond);
     } else {
-      debugData.sessionKeys = -1;
-      sendResponse(debugData);
+      respond();
     }
     return true; // async response
   }

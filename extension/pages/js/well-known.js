@@ -93,7 +93,7 @@ function setWellKnownIndicator(state, titleText) {
 
   if (state === "active") {
     indicatorEl.classList.add("is-active");
-    labelEl.textContent = "WK ok";
+    labelEl.textContent = "WK";
     indicatorEl.title = titleText || "Valid ProtoConsent .well-known declaration detected";
     indicatorEl.style.cursor = "pointer";
     if (!indicatorEl._wkClickBound) {
@@ -113,13 +113,13 @@ function setWellKnownIndicator(state, titleText) {
 
   if (state === "inactive") {
     indicatorEl.classList.add("is-inactive");
-    labelEl.textContent = "WK off";
+    labelEl.textContent = "WK";
     indicatorEl.title = titleText || "No valid ProtoConsent .well-known declaration for this site";
     return;
   }
 
   indicatorEl.classList.add("is-disabled");
-  labelEl.textContent = "WK n/a";
+  labelEl.textContent = "WK";
   indicatorEl.title = titleText || "ProtoConsent .well-known status unavailable";
 }
 

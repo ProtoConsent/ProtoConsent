@@ -30,6 +30,7 @@ For each site, ProtoConsent stores a local rule that combines a profile with exp
 
 - A compact popup UI lets users see the active profile and purposes for the current site at a glance, and change them with a few clicks instead of reconfiguring each consent banner from scratch.
 - A real‑time counter shows how many tracking requests have been blocked and how many outgoing requests carry the GPC privacy signal, giving users immediate, visible feedback on enforcement activity.
+- When advanced tracking is denied, high‑entropy Client Hints headers (Sec‑CH‑UA‑*) are stripped to reduce fingerprinting surface, with a global toggle in Purpose Settings.
 - A badge on the extension icon provides a per‑tab at‑a‑glance count.
 - A dedicated Log tab provides three views: a real‑time request log showing blocked and GPC events as they happen, a Domains panel listing every blocked domain grouped by purpose with Consent Commons icons, and a GPC panel tracking which domains received the Sec‑GPC header with request counts and timestamps.
 - All counters and log panels work in both developer and production (store) builds.
@@ -84,8 +85,8 @@ ProtoConsent is designed to implement browser‑side, purpose‑based privacy co
 - User‑side expression and enforcement of consent preferences, organised by purpose
 - Purpose‑based abstractions that are accessible to non‑experts and aligned with major privacy framework categories
 - Voluntary, informational declarations by websites (`.well-known/protoconsent.json`)
-- Observable, auditable feedback on network‑level effects (blocked requests, GPC signals, logs)
-- Compliance signalling: purpose alignment, legal basis transparency, conditional GPC emission
+- Observable, auditable feedback on network‑level effects (blocked requests, GPC signals, Client Hints stripping, logs)
+- Compliance signalling: purpose alignment, legal basis transparency, conditional GPC emission, anti‑fingerprinting (Client Hints)
 - Optional enhanced protection via curated third‑party blocklists
 
 ### Out of scope
