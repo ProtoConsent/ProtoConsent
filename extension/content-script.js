@@ -2,7 +2,7 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// content-script.js — Bridge between the page-side SDK and the extension.
+// content-script.js - Bridge between the page-side SDK and the extension.
 // Listens for PROTOCONSENT_QUERY messages from the SDK (via window.postMessage),
 // forwards them to the background service worker, and relays the response back.
 
@@ -33,7 +33,21 @@
     if (event.source !== window) return;
 
     const msg = event.data;
-    if (!msg || msg.type !== 'PROTOCONSENT_QUERY') return;
+    if (!msg) return;
+
+    // TCF detection relay - forward to background
+    if (msg.type === 'PROTOCONSENT_TCF_DETECTED') {
+      chrome.runtime.sendMessage({
+        type: 'PROTOCONSENT_TCF_DETECTED',
+        cmpId: msg.cmpId,
+        cmpVersion: msg.cmpVersion,
+        tcfPolicyVersion: msg.tcfPolicyVersion,
+        purposeConsents: msg.purposeConsents,
+      }, () => { void chrome.runtime.lastError; });
+      return;
+    }
+
+    if (msg.type !== 'PROTOCONSENT_QUERY') return;
 
     // Validate message structure
     if (typeof msg.id !== 'string' || !msg.id) return;

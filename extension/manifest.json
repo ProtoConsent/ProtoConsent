@@ -52,6 +52,12 @@
       "js": ["content-script.js"],
       "run_at": "document_start",
       "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["tcf-detect.js"],
+      "run_at": "document_idle",
+      "world": "MAIN"
     }
   ],
 

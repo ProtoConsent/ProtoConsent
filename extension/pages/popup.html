@@ -20,6 +20,7 @@
     <!-- Side panel: site declaration (hidden until data loads) -->
     <aside id="pc-side-panel" class="pc-side-panel" aria-label="Site declaration" aria-hidden="true">
       <div id="pc-site-declaration" class="pc-site-declaration"></div>
+      <div id="pc-tcf-declaration" class="pc-tcf-declaration"></div>
     </aside>
 
     <!-- Tab to toggle side panel (hidden until data loads) -->
@@ -86,10 +87,6 @@
               <span id="pc-enhanced-scope" class="pc-enhanced-scope" aria-live="polite"></span>
             </div>
             <div class="pc-scope-indicators">
-              <div id="pc-wk-indicator" class="pc-wk-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title=".well-known status unavailable">
-                <span class="pc-wk-dot pc-pill-dot" aria-hidden="true"></span>
-                <span id="pc-wk-label">WK</span>
-              </div>
               <div id="pc-gpc-indicator" class="pc-gpc-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="GPC unavailable on this page">
                 <span class="pc-gpc-dot pc-pill-dot" aria-hidden="true"></span>
                 <span id="pc-gpc-label">GPC</span>
@@ -97,6 +94,14 @@
               <div id="pc-ch-indicator" class="pc-ch-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="Client Hints stripping unavailable">
                 <span class="pc-ch-dot pc-pill-dot" aria-hidden="true"></span>
                 <span id="pc-ch-label">CH</span>
+              </div>
+              <div id="pc-wk-indicator" class="pc-wk-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title=".well-known status unavailable">
+                <span class="pc-wk-dot pc-pill-dot" aria-hidden="true"></span>
+                <span id="pc-wk-label">WK</span>
+              </div>
+              <div id="pc-tcf-indicator" class="pc-tcf-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="TCF CMP not detected">
+                <span class="pc-tcf-dot pc-pill-dot" aria-hidden="true"></span>
+                <span id="pc-tcf-label">TCF</span>
               </div>
             </div>
           </div>
