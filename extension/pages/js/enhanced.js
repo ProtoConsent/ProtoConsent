@@ -164,71 +164,21 @@ function setEnhancedPreset(preset) {
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_SET_PRESET", preset }, (resp) => {
     if (chrome.runtime.lastError || !resp?.ok) return;
     epPreset = preset;
-    refreshEnhancedState();
-    // Restore focus to the active preset button
-    const active = document.querySelector('#ep-preset-buttons [aria-checked="true"]');
-    if (active) active.focus();
-    // If switching to basic or full, auto-download missing lists for that preset
+    // If switching to basic or full, auto-download missing lists
     if (preset === "basic" || preset === "full") {
       const missing = Object.keys(epCatalog).filter(id => {
         if (epLists[id]) return false;
         if (preset === "basic") return epCatalog[id].preset === "basic";
-        return true; // full: all lists
+        return true;
       });
-      if (missing.length > 0) downloadPresetLists(missing);
+      if (missing.length > 0) {
+        const dlBtn = document.querySelector(".ep-preset-action-download");
+        downloadAllEnhancedLists(dlBtn, missing);
+        return;
+      }
     }
+    refreshEnhancedState();
   });
-}
-
-// --- Download lists triggered by preset selection ---
-
-function downloadPresetLists(listIds) {
-  const total = listIds.length;
-  // Disable preset buttons during download
-  const presetBtns = document.querySelectorAll(".ep-preset-btn");
-  for (const b of presetBtns) b.disabled = true;
-  // Mark each card's Download button as pending
-  for (const listId of listIds) {
-    const cardBtn = document.querySelector('.ep-list-download-btn[data-list-id="' + listId + '"]');
-    if (cardBtn) {
-      cardBtn.disabled = true;
-      cardBtn.textContent = "Pending…";
-      cardBtn.classList.add("is-pending");
-    }
-  }
-  let completed = 0;
-  let failed = 0;
-  for (const listId of listIds) {
-    const cardBtn = document.querySelector('.ep-list-download-btn[data-list-id="' + listId + '"]');
-    chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
-      if (chrome.runtime.lastError) resp = null;
-      completed++;
-      if (!resp?.ok) {
-        failed++;
-        if (cardBtn) {
-          cardBtn.textContent = "Failed";
-          cardBtn.classList.remove("is-pending");
-          cardBtn.classList.add("is-failed");
-        }
-      } else if (cardBtn) {
-        cardBtn.textContent = "Done";
-        cardBtn.classList.remove("is-pending");
-      }
-      if (completed >= total) {
-        // Re-enable preset buttons
-        const btns = document.querySelectorAll(".ep-preset-btn");
-        for (const b of btns) b.disabled = false;
-        const statusEl = document.getElementById("ep-status");
-        if (statusEl) {
-          statusEl.textContent = failed > 0
-            ? "Downloaded " + (total - failed) + " of " + total + " lists, " + failed + " failed"
-            : "All " + total + " lists downloaded";
-          statusEl.className = "ep-status" + (failed > 0 ? " ep-status-warn" : " ep-status-active");
-        }
-        setTimeout(() => refreshEnhancedState(), 500);
-      }
-    });
-  }
 }
 
 // --- List cards ---
@@ -460,8 +410,8 @@ function removeEnhancedList(listId) {
   });
 }
 
-function downloadAllEnhancedLists(btnEl) {
-  const notDownloaded = Object.keys(epCatalog).filter(id => !epLists[id]);
+function downloadAllEnhancedLists(btnEl, filterIds) {
+  const notDownloaded = filterIds || Object.keys(epCatalog).filter(id => !epLists[id]);
   if (notDownloaded.length === 0) return;
 
   const startDownloads = () => {
@@ -511,7 +461,6 @@ function downloadAllEnhancedLists(btnEl) {
               ? failed + " failed"
               : "Done";
           }
-          // Announce completion via aria-live region
           const statusEl = document.getElementById("ep-status");
           if (statusEl) {
             statusEl.textContent = failed > 0
@@ -519,6 +468,9 @@ function downloadAllEnhancedLists(btnEl) {
               : "All " + total + " lists downloaded";
             statusEl.className = "ep-status" + (failed > 0 ? " ep-status-warn" : " ep-status-active");
           }
+          // Re-enable preset buttons
+          const btns = document.querySelectorAll(".ep-preset-btn");
+          for (const b of btns) b.disabled = false;
           setTimeout(() => refreshEnhancedState(), 500);
         }
       });
