@@ -370,6 +370,7 @@ function renderPresets(presets, purposes) {
 		gpcToggleLabel.setAttribute('for', 'gpc-toggle');
 		gpcToggleLabel.textContent = 'Enabled';
 
+		gpcToggle.setAttribute('aria-label', 'GPC (Global Privacy Control)');
 		gpcRow.appendChild(gpcLeft);
 		gpcRow.appendChild(gpcToggleLabel);
 		gpcRow.appendChild(gpcToggle);
@@ -429,6 +430,7 @@ function renderPresets(presets, purposes) {
 		chToggleLabel.setAttribute('for', 'ch-toggle');
 		chToggleLabel.textContent = 'Enabled';
 
+		chToggle.setAttribute('aria-label', 'Client Hints Stripping');
 		chRow.appendChild(chLeft);
 		chRow.appendChild(chToggleLabel);
 		chRow.appendChild(chToggle);
@@ -436,23 +438,19 @@ function renderPresets(presets, purposes) {
 
 		const chPills = document.createElement('div');
 		chPills.className = 'ps-preset-purposes';
-		const chHeaders = [
-			'Full-Version-List', 'Platform-Version', 'Arch',
-			'Bitness', 'Model', 'WoW64', 'Form-Factors'
-		];
-		for (const h of chHeaders) {
+		for (const label of HIGH_ENTROPY_CH_LABELS) {
 			const pill = document.createElement('span');
 			pill.className = 'ps-preset-pill gpc';
-			pill.textContent = 'Sec-CH-UA-' + h;
+			pill.textContent = label;
 			chPills.appendChild(pill);
 		}
 		chCard.appendChild(chPills);
 		container.appendChild(chCard);
 
 		// Load stored CH toggle state
-		chrome.storage.local.get(['chStrippingEnabled'], (r) => {
-			chToggle.checked = r.chStrippingEnabled !== false;
-			chToggleLabel.textContent = chToggle.checked ? 'Enabled' : 'Disabled';
+		getChStrippingEnabled((enabled) => {
+			chToggle.checked = enabled;
+			chToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
 		});
 
 		chToggle.addEventListener('change', () => {
@@ -482,7 +480,7 @@ function renderEnhancedPresets() {
 	]).then(([catalog, currentPreset, enhancedLists]) => {
 		const presets = [
 			{ id: 'off', label: 'Off', desc: 'Only ProtoConsent core lists (default)' },
-			{ id: 'basic', label: 'Basic', desc: 'Conservative third-party lists' },
+			{ id: 'basic', label: 'Balanced', desc: 'Conservative third-party lists' },
 			{ id: 'full', label: 'Full', desc: 'All available third-party lists' },
 		];
 

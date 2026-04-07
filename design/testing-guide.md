@@ -30,7 +30,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [8.2 GPC inactive (all privacy purposes allowed)](#82-gpc-inactive-all-privacy-purposes-allowed)
     - [8.3 GPC globally disabled](#83-gpc-globally-disabled)
     - [8.4 Verifying rules from the service worker console](#84-verifying-rules-from-the-service-worker-console)
-    - [8.5 Client Hints stripping](#85-client-hints-stripping-high-entropy-sec-ch-ua--headers)
+    - [8.5 Client Hints stripping (high-entropy Sec-CH-UA-\* headers)](#85-client-hints-stripping-high-entropy-sec-ch-ua--headers)
   - [9. Enabling the debug panel](#9-enabling-the-debug-panel)
     - [9.1 Activate debug mode](#91-activate-debug-mode)
     - [9.2 Deactivate debug mode](#92-deactivate-debug-mode)
@@ -53,6 +53,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [13.2 Downloading and toggling lists](#132-downloading-and-toggling-lists)
     - [13.3 Verifying enhanced blocks in the Log tab](#133-verifying-enhanced-blocks-in-the-log-tab)
     - [13.4 Checking enhanced rules from the service worker console](#134-checking-enhanced-rules-from-the-service-worker-console)
+    - [13.5 CNAME cloaking detection (informational)](#135-cname-cloaking-detection-informational)
 
 ## 1. Requirements
 
@@ -366,6 +367,13 @@ To verify the headers return when `advanced_tracking` is allowed:
 
 Note: Firefox and Safari do not send Client Hints at all, so this feature is Chromium-specific. The stripping rules are no-ops on those browsers.
 
+To test the global CH toggle:
+
+1. Open Purpose Settings and uncheck the **Client Hints stripping** toggle.
+2. Reload a site with Balanced profile. High-entropy headers should now appear in Request Headers (if the server requests them via `Accept-CH`).
+3. The CH pill should show "CH off" with grey dot and tooltip "Client Hints stripping disabled in Purpose Settings".
+4. Re-enable the toggle, reload, and verify headers are stripped again.
+
 ## 9. Enabling the debug panel
 
 The popup includes a hidden debug panel that shows internal state (dynamic rules, ruleset toggles, GPC mappings). It is off by default and controlled by a flag in local storage - no code changes needed.
@@ -522,20 +530,20 @@ Enhanced Protection adds optional third‑party blocklists that are fetched on d
 ### 13.1 Activating a preset
 
 1. Open the ProtoConsent popup and click the **Enhanced** tab in the mode rail.
-2. The preset bar shows four options: **Off**, **Basic**, **Full**, and **Custom** (disabled until you toggle individual lists).
-3. Select **Basic**. The extension will prompt you to download the four basic lists (EasyPrivacy, EasyList, AdGuard DNS, Steven Black).
+2. The preset bar shows four options: **Off**, **Balanced**, **Full**, and **Custom** (disabled until you toggle individual lists).
+3. Select **Balanced**. The extension will prompt you to download the four Balanced lists (EasyPrivacy, EasyList, AdGuard DNS, Steven Black).
 4. Wait for all downloads to complete - each card shows a progress indicator, then switches to an enabled state with a domain count.
 5. Select **Full** to enable all 12 lists. Lists not yet downloaded will start downloading automatically.
 
-Enhanced Protection tab with the Basic preset active:
+Enhanced Protection tab with the Balanced preset active:
 
 ![Enhanced Protection tab](assets/screenshots/popup-enhanced-basic.png)
 
 ### 13.2 Downloading and toggling lists
 
-1. With the **Basic** preset active, find a Full‑only list (for example, HaGeZi Pro) and click its **Download** button.
+1. With the **Balanced** preset active, find a Full-only list (for example, HaGeZi Pro) and click its **Download** button.
 2. Once downloaded, the list appears with a toggle switch. Toggle it on - the preset switches to **Custom** automatically.
-3. Toggle it off again. The preset remains **Custom** because the state no longer matches Basic or Full exactly.
+3. Toggle it off again. The preset remains **Custom** because the state no longer matches Balanced or Full exactly.
 4. To remove a downloaded list entirely, click its **Remove** (×) button. The list reverts to the not‑downloaded state.
 
 ### 13.3 Verifying enhanced blocks in the Log tab
@@ -563,4 +571,26 @@ You can also check Enhanced state in storage:
 ```js
 chrome.storage.local.get(["enhancedLists", "enhancedPreset"], r => console.log(r))
 ```
+
+### 13.5 CNAME cloaking detection (informational)
+
+The AdGuard CNAME Trackers list is an informational list that identifies domains using CNAME cloaking to disguise trackers as first-party subdomains. It does **not** block requests - it only annotates them with a `⇉` icon in the Log tab.
+
+1. Enable the **Balanced** preset (or any preset that includes CNAME Trackers).
+2. Verify the list appears in the Enhanced tab with an **ℹ Info** pill and an entry count (currently ~229K entries).
+3. Visit a site that uses CNAME-cloaked trackers (for example, Samsung domains like `nmetrics.samsung.com` or `smetrics.samsung.com` are known CNAME cloaks).
+4. Open the ProtoConsent popup → **Log** tab → **Domains** panel.
+5. Domains that match the CNAME list show a `⇉` icon before the domain name, with a tooltip identifying the tracker destination (for example, "CNAME cloaking: Adobe").
+6. The same icon appears in the **Requests** streaming view for matching domains.
+
+To verify the CNAME data is loaded in storage:
+
+```js
+chrome.storage.local.get("enhancedData_cname_trackers", r => {
+  const d = r.enhancedData_cname_trackers;
+  console.log('Trackers:', d?.trackers?.length, '| Domains:', Object.keys(d?.map || {}).length);
+})
+```
+
+Note: CNAME cloaking is always active when the CNAME Trackers list is enabled - there is no separate toggle. The list uses a `type: "informational"` designation, meaning it contributes to the "info" count in the Enhanced status bar but does not generate any DNR blocking rules.
 

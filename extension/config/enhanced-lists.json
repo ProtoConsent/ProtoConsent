@@ -106,5 +106,15 @@
     "category": "security",
     "preset": "full",
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_phishing.json"
+  },
+  "cname_trackers": {
+    "name": "AdGuard CNAME Trackers",
+    "description": "CNAME-cloaked tracker detection (\u21C9 in Log), informational only",
+    "source": "https://github.com/AdguardTeam/cname-trackers",
+    "license": "MIT",
+    "category": null,
+    "type": "informational",
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/cname_trackers.json"
   }
 }
