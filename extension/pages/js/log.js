@@ -23,8 +23,10 @@ function refreshLogView() {
 
 // --- One-time setup + refresh ---
 function initLogTab() {
-  // Load CNAME map if not already loaded
-  if (!cnameMap) loadCnameData();
+  // Load CNAME map if not already loaded; re-render domains once loaded
+  if (!cnameMap) loadCnameData((loaded) => {
+    if (loaded) renderLogDomains();
+  });
   // Show debug inner tab only when DEBUG_RULES is on
   const debugTab = document.querySelector('[data-log-tab="debug"]');
   if (debugTab) debugTab.hidden = !DEBUG_RULES;
