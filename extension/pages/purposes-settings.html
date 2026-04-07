@@ -68,6 +68,17 @@
 			</div>
 			<div id="purpose-list"></div>
 		</section>
+		<section id="data-section" class="ps-section">
+			<h2>Data</h2>
+			<p class="ps-enhanced-desc">Export or import your full configuration (profile, purposes, per-site rules, toggles, enhanced preset).</p>
+			<div class="ps-data-actions">
+				<button id="export-btn" class="ps-data-btn" type="button">Export JSON</button>
+				<button id="import-btn" class="ps-data-btn" type="button">Import JSON</button>
+				<input type="file" id="import-file" accept=".json" class="ps-hidden" aria-label="Import configuration file">
+			</div>
+			<div id="data-status" class="ps-data-status ps-hidden" role="status"></div>
+		</section>
+
 		</main>
 		<footer class="ps-footer">
 			<span id="viewer-version">ProtoConsent</span>
