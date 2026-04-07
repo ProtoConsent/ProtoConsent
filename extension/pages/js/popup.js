@@ -68,9 +68,11 @@ async function refreshPopupState() {
   initStateForDomain();
   updateGpcIndicator();
   updateChIndicator();
+  updateTcfIndicator();
   renderPurposesList();
   await displayBlockedCount();
   await loadSiteDeclaration();
+  loadTcfInfo();
 }
 
 // Auto-retry initPopup when the active tab finishes loading.
@@ -346,6 +348,7 @@ async function displayBlockedCount() {
     displayProtectionScope();
     updateGpcIndicator(gpc);
     updateChIndicator();
+  updateTcfIndicator();
     // Debug panel (visible only when debug flag is set in storage)
     if (DEBUG_RULES) {
       renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains });
@@ -709,6 +712,7 @@ function initProfileSelect() {
     displayProtectionScope();
     updateGpcIndicator();
     updateChIndicator();
+  updateTcfIndicator();
   });
 }
 
@@ -935,6 +939,7 @@ function createPurposeItemElement(purposeKey, cfg) {
     displayProtectionScope();
     updateGpcIndicator();
     updateChIndicator();
+  updateTcfIndicator();
   });
 
   // Initial visual state
@@ -1148,6 +1153,7 @@ function updateHeaderControls() {
   }
   updateGpcIndicator();
   updateChIndicator();
+  updateTcfIndicator();
 }
 
 // Client Hints stripping indicator - reflects whether high-entropy
@@ -1184,6 +1190,65 @@ function updateChIndicator() {
   } else {
     indicatorEl.title = "Client Hints: not stripped\nAdvanced tracking allowed for this site";
   }
+}
+
+function updateTcfIndicator() {
+  const indicatorEl = document.getElementById("pc-tcf-indicator");
+  const labelEl = document.getElementById("pc-tcf-label");
+  if (!indicatorEl || !labelEl) return;
+
+  labelEl.textContent = "TCF";
+
+  if (!currentDomain) {
+    indicatorEl.classList.remove("is-active", "is-inactive");
+    indicatorEl.classList.add("is-disabled");
+    indicatorEl.title = "No cookie consent banner detected";
+    return;
+  }
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs || !tabs[0]) return;
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_TCF", tabId: tabs[0].id }, (resp) => {
+      if (chrome.runtime.lastError || !resp || !resp.tcf) {
+        indicatorEl.classList.remove("is-active", "is-inactive");
+        indicatorEl.classList.add("is-disabled");
+        indicatorEl.title = "No cookie consent banner detected";
+        return;
+      }
+      const tcf = resp.tcf;
+      indicatorEl.classList.remove("is-disabled", "is-inactive");
+      indicatorEl.classList.add("is-active");
+      // Only make clickable if the side panel has TCF content rendered
+      const tcfContainer = document.getElementById("pc-tcf-declaration");
+      const hasContent = tcfContainer && tcfContainer.children.length > 0;
+      if (hasContent) {
+        indicatorEl.style.cursor = "pointer";
+        if (!indicatorEl._tcfClickBound) {
+          indicatorEl.setAttribute("role", "button");
+          indicatorEl.setAttribute("tabindex", "0");
+          indicatorEl.addEventListener("click", toggleSidePanel);
+          indicatorEl.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              toggleSidePanel();
+            }
+          });
+          indicatorEl._tcfClickBound = true;
+        }
+      }
+      let tip = "Cookie banner detected";
+      if (tcf.purposeConsents) {
+        const total = Object.keys(tcf.purposeConsents).length;
+        if (total > 0) {
+          const accepted = Object.entries(tcf.purposeConsents).filter(([, v]) => v).length;
+          tip += " \u00b7 " + accepted + "/" + total + " purposes accepted";
+        } else {
+          tip += " \u00b7 Banner not accepted or rejected";
+        }
+      }
+      indicatorEl.title = tip;
+    });
+  });
 }
 
 function waitForTabReload(tabId, timeoutMs = 12000) {

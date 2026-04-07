@@ -42,6 +42,9 @@ let blocklistsConfig = null;
 // Persisted to chrome.storage.session to survive SW idle/restart.
 const tabBlockedDomains = new Map();
 
+// Per-tab TCF CMP detection data (populated by tcf-detect.js via content-script relay)
+const tabTcfData = new Map();
+
 // Maps dynamic block rule IDs to their purpose (rebuilt on each rule update).
 let dynamicBlockRuleMap = {};
 
@@ -117,7 +120,7 @@ function persistTabDataToSession() {
 async function restoreTabDataFromSession() {
   if (!chrome.storage.session) return;
   try {
-    const result = await chrome.storage.session.get(['_tabBlocked', '_tabGpc']);
+    const result = await chrome.storage.session.get(null);
     if (result._tabBlocked) {
       for (const [tabId, data] of Object.entries(result._tabBlocked)) {
         tabBlockedDomains.set(Number(tabId), data);
@@ -126,6 +129,28 @@ async function restoreTabDataFromSession() {
     if (result._tabGpc) {
       for (const [tabId, domains] of Object.entries(result._tabGpc)) {
         tabGpcDomains.set(Number(tabId), domains);
+      }
+    }
+    // Restore per-tab TCF detection data (keys: "tcf_<tabId>")
+    // and prune orphan keys for tabs that no longer exist.
+    const tcfKeys = Object.keys(result).filter(k => k.startsWith("tcf_"));
+    if (tcfKeys.length > 0) {
+      const existingTabs = new Set();
+      try {
+        const tabs = await chrome.tabs.query({});
+        for (const t of tabs) existingTabs.add(t.id);
+      } catch (_) {}
+      const orphanKeys = [];
+      for (const key of tcfKeys) {
+        const tabId = Number(key.slice(4));
+        if (tabId > 0 && existingTabs.has(tabId) && result[key]?.detected) {
+          tabTcfData.set(tabId, result[key]);
+        } else {
+          orphanKeys.push(key);
+        }
+      }
+      if (orphanKeys.length > 0) {
+        chrome.storage.session.remove(orphanKeys).catch(() => {});
       }
     }
   } catch (_) { /* session storage may be empty on first run */ }
@@ -739,7 +764,7 @@ async function _rebuildAllDynamicRulesImpl() {
 
     for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
       if (!listMeta.enabled) continue;
-      if (listMeta.type === "informational") continue; // CNAME etc. — no DNR rules
+      if (listMeta.type === "informational") continue; // CNAME etc. - no DNR rules
       const listData = enhancedData[listId];
       if (!listData) continue;
 
@@ -1178,6 +1203,50 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       .then((data) => sendResponse({ data }))
       .catch(() => sendResponse({ data: null }));
     return true; // keep message channel open for async response
+  }
+
+  // TCF detection from tcf-detect.js (via content-script.js relay)
+  if (message.type === "PROTOCONSENT_TCF_DETECTED") {
+    const tabId = _sender && _sender.tab ? _sender.tab.id : null;
+    if (tabId) {
+      // Validate and sanitize TCF data before storing
+      const rawCmpId = message.cmpId;
+      const rawCmpVer = message.cmpVersion;
+      const rawPolicyVer = message.tcfPolicyVersion;
+      const rawConsents = message.purposeConsents;
+
+      const cmpId = (typeof rawCmpId === "number" && rawCmpId > 0 && rawCmpId < 10000) ? rawCmpId : null;
+      const cmpVersion = (typeof rawCmpVer === "number" && rawCmpVer > 0 && rawCmpVer < 100) ? rawCmpVer : null;
+      const tcfPolicyVersion = (typeof rawPolicyVer === "number" && rawPolicyVer > 0 && rawPolicyVer < 100) ? rawPolicyVer : null;
+
+      let purposeConsents = null;
+      if (rawConsents && typeof rawConsents === "object" && !Array.isArray(rawConsents)) {
+        purposeConsents = {};
+        const entries = Object.entries(rawConsents);
+        // TCF v2 has max 11 purposes; cap at 20 to be safe
+        const maxEntries = Math.min(entries.length, 20);
+        for (let i = 0; i < maxEntries; i++) {
+          const [key, val] = entries[i];
+          if (/^\d{1,2}$/.test(key) && typeof val === "boolean") {
+            purposeConsents[key] = val;
+          }
+        }
+      }
+
+      const tcfInfo = { detected: true, cmpId, cmpVersion, tcfPolicyVersion, purposeConsents };
+      tabTcfData.set(tabId, tcfInfo);
+      if (chrome.storage.session) {
+        chrome.storage.session.set({ ["tcf_" + tabId]: tcfInfo }).catch(() => {});
+      }
+    }
+    return;
+  }
+
+  // Popup requests TCF data for a tab
+  if (message.type === "PROTOCONSENT_GET_TCF") {
+    const info = tabTcfData.get(message.tabId) || null;
+    sendResponse({ tcf: info });
+    return;
   }
 
   // Popup requests last rebuild debug snapshot
@@ -1820,22 +1889,40 @@ if (!useDnrDebug) {
 // Guard against multiple "loading" events per navigation cycle (e.g. redirects,
 // paywall logic on sites like wsj.com) which would wipe already-captured domains.
 const tabNavigating = new Set();
+// Track last URL per tab to detect SPA navigation (pushState/replaceState)
+const tabLastUrl = new Map();
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading") {
     if (!tabNavigating.has(tabId)) {
       tabNavigating.add(tabId);
       tabBlockedDomains.delete(tabId);
       tabGpcDomains.delete(tabId);
+      tabTcfData.delete(tabId);
+      if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
       scheduleSessionPersist();
       chrome.action.setBadgeText({ tabId, text: "" });
     }
   } else if (changeInfo.status === "complete") {
     tabNavigating.delete(tabId);
   }
+  // SPA navigation: URL changed without "loading" status (pushState/replaceState).
+  // Clear stale TCF data since the content script won't re-execute.
+  if (changeInfo.url && !tabNavigating.has(tabId)) {
+    const prev = tabLastUrl.get(tabId);
+    if (prev && prev !== changeInfo.url) {
+      tabTcfData.delete(tabId);
+      if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
+    }
+    tabLastUrl.set(tabId, changeInfo.url);
+  }
 });
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabBlockedDomains.delete(tabId);
   tabGpcDomains.delete(tabId);
+  tabTcfData.delete(tabId);
+  tabLastUrl.delete(tabId);
+  if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
   scheduleSessionPersist();
 });
 

@@ -31,6 +31,7 @@ For each site, ProtoConsent stores a local rule that combines a profile with exp
 - A compact popup UI lets users see the active profile and purposes for the current site at a glance, and change them with a few clicks instead of reconfiguring each consent banner from scratch.
 - A real‑time counter shows how many tracking requests have been blocked and how many outgoing requests carry the GPC privacy signal, giving users immediate, visible feedback on enforcement activity.
 - When advanced tracking is denied, high‑entropy Client Hints headers (Sec‑CH‑UA‑*) are stripped to reduce fingerprinting surface, with a global toggle in Purpose Settings.
+- When an IAB TCF consent management platform (CMP) is detected on the page, a pill indicator appears in the popup with the CMP's consent state, so users can compare what the site's banner is doing with what ProtoConsent enforces at the network level.
 - A badge on the extension icon provides a per‑tab at‑a‑glance count.
 - A dedicated Log tab provides three views: a real‑time request log showing blocked and GPC events as they happen, a Domains panel listing every blocked domain grouped by purpose with Consent Commons icons, and a GPC panel tracking which domains received the Sec‑GPC header with request counts and timestamps.
 - All counters and log panels work in both developer and production (store) builds.
@@ -72,7 +73,7 @@ The user opens a website and, if needed, adjusts the profile or individual purpo
 | v0.2.0 | 40 000+ curated tracker domains + 1 200+ path rules ([blocklists.md](blocklists.md)), onboarding welcome page, purpose settings page, full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | v0.2.1 | Log monitoring tab (real-time request log, blocked domains by purpose, GPC tracking), session persistence, webRequest visibility for production builds |
 | v0.2.2 | Domain whitelist (per-site + global scope, priority-3 DNR allow rules, budget guard) |
-| v0.3.0 | Enhanced Protection: 12 optional third-party blocklists with presets (Off/Basic/Full/Custom), on-demand CDN fetch, Enhanced tab UI, category icons, enhanced scope in consent view, purposes-settings enhanced presets |
+| v0.3.0 | Enhanced Protection: 13 optional third-party blocklists with presets (Off/Basic/Full/Custom), on-demand CDN fetch, Enhanced tab UI, enhanced scope in consent view, purposes-settings enhanced presets, Client Hints stripping, CNAME cloaking detection, Cookie banner detection |
 | **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | **Documentation** | [Protocol spec](protocol-draft.md), [.well-known spec](well-known-spec.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [blocklist methodology](blocklists.md) |
 

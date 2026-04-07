@@ -144,6 +144,37 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // TCF CMP detection
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs && tabs[0]) {
+        chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_TCF", tabId: tabs[0].id }, (resp) => {
+          if (chrome.runtime.lastError) { void chrome.runtime.lastError; }
+          if (resp && resp.tcf) {
+            const tcf = resp.tcf;
+            // Insert TCF section before tab matches
+            const tcfLines = [];
+            tcfLines.push("— TCF CMP detection —");
+            tcfLines.push("  cmpId: " + (tcf.cmpId || "unknown"));
+            tcfLines.push("  cmpVersion: " + (tcf.cmpVersion || "unknown"));
+            tcfLines.push("  tcfPolicyVersion: " + (tcf.tcfPolicyVersion || "unknown"));
+            if (tcf.purposeConsents) {
+              const entries = Object.entries(tcf.purposeConsents);
+              if (entries.length > 0) {
+                tcfLines.push("  purposeConsents: " + entries.map(([id, v]) => id + ":" + (v ? "Y" : "N")).join(" "));
+              } else {
+                tcfLines.push("  purposeConsents: (empty, banner not responded)");
+              }
+            } else {
+              tcfLines.push("  purposeConsents: null");
+            }
+            tcfLines.push("");
+            // Append to existing content
+            content.textContent += "\n\n" + tcfLines.join("\n");
+          }
+        });
+      }
+    });
+
     // Tab match info (from Chrome's getMatchedRules — persisted counts, always accurate)
     lines.push("— tab matches (getMatchedRules) —");
     lines.push("  blocked: " + blocked + "  gpc: " + gpc + " (" + (gpcDomains?.length || 0) + " domains)");
@@ -204,7 +235,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
         lines.push("  no matches in current tab domains");
       }
     } else {
-      lines.push("— CNAME cloaking: not loaded —");
+      lines.push("— CNAME cloaking: not loaded" + (cnameLoadDiag ? " (" + cnameLoadDiag + ")" : "") + " —");
     }
 
     content.textContent = lines.join("\n");
