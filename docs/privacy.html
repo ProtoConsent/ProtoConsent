@@ -88,6 +88,7 @@
               <li>Stores your purpose preferences and domain whitelist per site in local storage</li>
               <li>Creates declarative network rules to block requests matching denied purposes and to allow whitelisted domains</li>
               <li>Sends a <code>Sec-GPC: 1</code> header to sites where privacy-relevant purposes are denied</li>
+              <li>Removes high-entropy Client Hints headers (<code>Sec-CH-UA-*</code>) when advanced tracking is denied, reducing browser fingerprinting surface. No data is sent; headers are removed before the request leaves your browser.</li>
               <li>Fetches <code>.well-known/protoconsent.json</code> from sites when you open the side panel in the popup, to display their declared data practices (cached locally, never forwarded)</li>
               <li>Queries matched blocking rules to display request counts in the popup</li>
               <li>Downloads optional third-party blocklist data from public CDN sources (jsDelivr, GitHub) when you activate Enhanced Protection lists. Only the list file is fetched - no personal data, cookies, or identifiers are sent. Downloaded lists are stored locally in your browser.</li>

@@ -400,6 +400,66 @@ function renderPresets(presets, purposes) {
 			gpcToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
 			chrome.storage.local.set({ gpcEnabled: enabled }, notifyBackground);
 		});
+
+		// Client Hints stripping toggle row
+		const chCard = document.createElement('div');
+		chCard.className = 'ps-preset-card';
+
+		const chRow = document.createElement('div');
+		chRow.className = 'ps-gpc-toggle-row';
+
+		const chLeft = document.createElement('div');
+		const chName = document.createElement('span');
+		chName.className = 'ps-gpc-info-name';
+		chName.textContent = 'Client Hints Stripping';
+		const chDesc = document.createElement('div');
+		chDesc.className = 'ps-gpc-info-desc';
+		chDesc.textContent = 'Removes high-entropy fingerprinting headers when advanced tracking is denied';
+		chLeft.appendChild(chName);
+		chLeft.appendChild(chDesc);
+
+		const chToggle = document.createElement('input');
+		chToggle.type = 'checkbox';
+		chToggle.id = 'ch-toggle';
+		chToggle.className = 'ps-gpc-toggle';
+		chToggle.checked = true;
+
+		const chToggleLabel = document.createElement('label');
+		chToggleLabel.className = 'ps-gpc-toggle-label';
+		chToggleLabel.setAttribute('for', 'ch-toggle');
+		chToggleLabel.textContent = 'Enabled';
+
+		chRow.appendChild(chLeft);
+		chRow.appendChild(chToggleLabel);
+		chRow.appendChild(chToggle);
+		chCard.appendChild(chRow);
+
+		const chPills = document.createElement('div');
+		chPills.className = 'ps-preset-purposes';
+		const chHeaders = [
+			'Full-Version-List', 'Platform-Version', 'Arch',
+			'Bitness', 'Model', 'WoW64', 'Form-Factors'
+		];
+		for (const h of chHeaders) {
+			const pill = document.createElement('span');
+			pill.className = 'ps-preset-pill gpc';
+			pill.textContent = 'Sec-CH-UA-' + h;
+			chPills.appendChild(pill);
+		}
+		chCard.appendChild(chPills);
+		container.appendChild(chCard);
+
+		// Load stored CH toggle state
+		chrome.storage.local.get(['chStrippingEnabled'], (r) => {
+			chToggle.checked = r.chStrippingEnabled !== false;
+			chToggleLabel.textContent = chToggle.checked ? 'Enabled' : 'Disabled';
+		});
+
+		chToggle.addEventListener('change', () => {
+			const enabled = chToggle.checked;
+			chToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+			chrome.storage.local.set({ chStrippingEnabled: enabled }, notifyBackground);
+		});
 	});
 }
 

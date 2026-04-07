@@ -30,6 +30,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [8.2 GPC inactive (all privacy purposes allowed)](#82-gpc-inactive-all-privacy-purposes-allowed)
     - [8.3 GPC globally disabled](#83-gpc-globally-disabled)
     - [8.4 Verifying rules from the service worker console](#84-verifying-rules-from-the-service-worker-console)
+    - [8.5 Client Hints stripping](#85-client-hints-stripping-high-entropy-sec-ch-ua--headers)
   - [9. Enabling the debug panel](#9-enabling-the-debug-panel)
     - [9.1 Activate debug mode](#91-activate-debug-mode)
     - [9.2 Deactivate debug mode](#92-deactivate-debug-mode)
@@ -345,6 +346,25 @@ With Balanced as the default and one site set to custom (all allowed), the expec
 - The 3 allow rules are per-site overrides for the categories that Balanced blocks globally (ads, third_parties, advanced_tracking), allowing them on the custom site.
 - `set GLOBAL` - the global GPC rule (privacy purposes denied by Balanced)
 - `remove ["example.com"]` - the per-site override that suppresses GPC for the permissive site
+
+### 8.5 Client Hints stripping (high-entropy Sec-CH-UA-* headers)
+
+When `advanced_tracking` is denied, the extension removes seven high-entropy Client Hints headers that enable device fingerprinting: `Sec-CH-UA-Full-Version-List`, `Sec-CH-UA-Platform-Version`, `Sec-CH-UA-Arch`, `Sec-CH-UA-Bitness`, `Sec-CH-UA-Model`, `Sec-CH-UA-WoW64`, `Sec-CH-UA-Form-Factors`. Low-entropy hints (`Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`) are kept.
+
+1. Open a site with Balanced profile (denies `advanced_tracking` by default).
+2. Open DevTools -> **Network**, reload the page.
+3. Click the first request (HTML document) and check **Request Headers**.
+4. The high-entropy `Sec-CH-UA-*` headers listed above should **not** appear, even if the server sent an `Accept-CH` response header requesting them.
+5. Low-entropy hints (`Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`) should still be present.
+6. In the popup, the CH pill should show "CH strip" (purple) with tooltip "High-entropy Client Hints are being stripped (anti-fingerprinting)".
+
+To verify the headers return when `advanced_tracking` is allowed:
+
+1. Set the site to a custom profile with all purposes allowed (including `advanced_tracking`).
+2. Reload and check **Request Headers**. High-entropy `Sec-CH-UA-*` headers should appear normally if the server requests them.
+3. The CH pill should show "CH off" with grey dot.
+
+Note: Firefox and Safari do not send Client Hints at all, so this feature is Chromium-specific. The stripping rules are no-ops on those browsers.
 
 ## 9. Enabling the debug panel
 

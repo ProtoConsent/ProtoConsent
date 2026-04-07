@@ -27,6 +27,7 @@ let currentProfile = "balanced";
 let currentPurposesState = {};
 let allRules = {};
 let lastGpcSignalsSent = 0;
+let lastChStripped = 0;
 let lastGpcDomains = [];
 let lastGpcDomainCounts = {};
 let lastWhitelist = {};
@@ -34,6 +35,7 @@ let lastWhitelistHitDomains = {};
 let requiredPurposeKeys = new Set();
 let activeMode = "consent";
 let gpcGlobalEnabled = true;
+let chStrippingEnabled = true;
 
 function getActivePurposes() {
   const core = PURPOSES_TO_SHOW.filter(p => lastPurposeStats[p] || lastBlockedDomains[p]);
@@ -65,6 +67,7 @@ async function refreshPopupState() {
   await loadRulesFromStorageSafe();
   initStateForDomain();
   updateGpcIndicator();
+  updateChIndicator();
   renderPurposesList();
   await displayBlockedCount();
   await loadSiteDeclaration();
@@ -128,7 +131,7 @@ function setActiveMode(mode) {
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
-  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHitDomains: {} };
+  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHitDomains: {} };
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
       return EMPTY_BLOCKED_RESULT;
@@ -167,6 +170,7 @@ async function getBlockedRulesCount() {
     // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)
     const dynamicBlockIds = new Set();
     const dynamicGpcIds = new Set();
+    const dynamicChIds = new Set();
     const dynamicWhitelistDomains = {}; // ruleId → requestDomains[]
     for (const rule of dynamicRules) {
       if (rule.action.type === "block") {
@@ -175,7 +179,11 @@ async function getBlockedRulesCount() {
         const isGpcSet = rule.action.requestHeaders?.some(
           h => h.header === "Sec-GPC" && h.operation === "set"
         );
+        const isChStrip = rule.action.requestHeaders?.some(
+          h => h.header.startsWith("sec-ch-ua-") && h.operation === "remove"
+        );
         if (isGpcSet) dynamicGpcIds.add(rule.id);
+        if (isChStrip) dynamicChIds.add(rule.id);
       } else if (rule.action.type === "allow") {
         dynamicWhitelistDomains[rule.id] = rule.condition?.requestDomains || [];
       }
@@ -183,6 +191,7 @@ async function getBlockedRulesCount() {
 
     let blocked = 0;
     let gpc = 0;
+    let ch = 0;
     let whitelistHits = 0;
     const whitelistHitDomains = {}; // domain → count
     const domainHitCount = {};
@@ -206,6 +215,10 @@ async function getBlockedRulesCount() {
       else if (rulesetId === "_dynamic" && dynamicGpcIds.has(info.rule.ruleId)) {
         gpc++;
       }
+      // Client Hints stripping (dynamic)
+      else if (rulesetId === "_dynamic" && dynamicChIds.has(info.rule.ruleId)) {
+        ch++;
+      }
       // Whitelist allow rule (dynamic)
       else if (rulesetId === "_dynamic" && dynamicWhitelistDomains[info.rule.ruleId]) {
         whitelistHits++;
@@ -215,7 +228,7 @@ async function getBlockedRulesCount() {
       }
     }
 
-    return { blocked, gpc, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains };
+    return { blocked, gpc, ch, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
     return EMPTY_BLOCKED_RESULT;
@@ -234,10 +247,11 @@ async function displayBlockedCount() {
   const statRowEl = document.querySelector(".pc-header-stat");
 
   try {
-    const { blocked, gpc, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains } = await getBlockedRulesCount();
+    const { blocked, gpc, ch, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains } = await getBlockedRulesCount();
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
     lastGpcSignalsSent = gpc;
+    lastChStripped = ch;
     lastGpcDomains = gpcDomains;
     lastGpcDomainCounts = gpcDomainCounts;
     lastWhitelistHitDomains = whitelistHitDomains || {};
@@ -331,7 +345,7 @@ async function displayBlockedCount() {
     displayPerPurposeStats();
     displayProtectionScope();
     updateGpcIndicator(gpc);
-
+    updateChIndicator();
     // Debug panel (visible only when debug flag is set in storage)
     if (DEBUG_RULES) {
       renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains });
@@ -421,7 +435,7 @@ function displayProtectionScope() {
 
   const total = domainCount + pathCount;
   if (total > 0) {
-    scopeTextEl.textContent = "Protected \u00b7 " + total.toLocaleString() + " tracking rules";
+    scopeTextEl.textContent = "Core \u00b7 " + compactNumber(total) + " rules";
     scopeTextEl.title = "";
     scopeEl.style.display = "flex";
   } else {
@@ -469,7 +483,7 @@ function renderEnhancedScopeLine(el, enabledCount, totalDomains) {
   }
   el.textContent = "Enhanced \u00b7 " + enabledCount +
     (enabledCount === 1 ? " list" : " lists") +
-    " \u00b7 " + totalDomains.toLocaleString() + " tracking rules";
+    " \u00b7 " + compactNumber(totalDomains) + " rules";
   el.style.display = "";
 }
 
@@ -589,11 +603,12 @@ async function loadDefaultProfile() {
   if (!chrome.storage || !chrome.storage.local) return;
 
   return new Promise((resolve) => {
-    chrome.storage.local.get(["defaultProfile", "defaultPurposes", "gpcEnabled"], (result) => {
+    chrome.storage.local.get(["defaultProfile", "defaultPurposes", "gpcEnabled", "chStrippingEnabled"], (result) => {
       defaultProfile = result.defaultProfile || "balanced";
       defaultPurposes = result.defaultPurposes || null;
       currentProfile = defaultProfile;
       gpcGlobalEnabled = result.gpcEnabled !== false;
+      chStrippingEnabled = result.chStrippingEnabled !== false;
       resolve();
     });
   });
@@ -666,6 +681,7 @@ function initProfileSelect() {
     saveCurrentDomainRulesSafe();
     displayProtectionScope();
     updateGpcIndicator();
+    updateChIndicator();
   });
 }
 
@@ -891,6 +907,7 @@ function createPurposeItemElement(purposeKey, cfg) {
     saveCurrentDomainRulesSafe();
     displayProtectionScope();
     updateGpcIndicator();
+    updateChIndicator();
   });
 
   // Initial visual state
@@ -1042,16 +1059,17 @@ function expectedGpcEnabled() {
   return gpcPurposeKeys.some((key) => currentPurposesState[key] === false);
 }
 
-// Color/label reflect the expected state; the observed count is exposed only in the tooltip.
+// Color/dot reflect the expected state; the tooltip provides full details.
 function updateGpcIndicator(observedGpc = lastGpcSignalsSent) {
   const indicatorEl = document.getElementById("pc-gpc-indicator");
   const labelEl = document.getElementById("pc-gpc-label");
   if (!indicatorEl || !labelEl) return;
 
+  labelEl.textContent = "GPC";
+
   if (!currentDomain) {
     indicatorEl.classList.remove("is-active", "is-inactive");
     indicatorEl.classList.add("is-disabled");
-    labelEl.textContent = "GPC n/a";
     indicatorEl.title = "GPC unavailable on this page";
     return;
   }
@@ -1059,7 +1077,6 @@ function updateGpcIndicator(observedGpc = lastGpcSignalsSent) {
   if (!gpcGlobalEnabled) {
     indicatorEl.classList.remove("is-active", "is-inactive");
     indicatorEl.classList.add("is-disabled");
-    labelEl.textContent = "GPC off";
     indicatorEl.title = "GPC globally disabled in Purpose Settings";
     return;
   }
@@ -1068,17 +1085,16 @@ function updateGpcIndicator(observedGpc = lastGpcSignalsSent) {
   indicatorEl.classList.remove("is-disabled");
   indicatorEl.classList.toggle("is-active", expectedOn);
   indicatorEl.classList.toggle("is-inactive", !expectedOn);
-  labelEl.textContent = expectedOn ? "GPC on" : "GPC off";
-  const expectedText = expectedOn ? "Expected: GPC on" : "Expected: GPC off";
+  const expectedText = expectedOn ? "GPC: active" : "GPC: inactive";
   const domains = lastGpcDomains;
   let observedText;
   if (observedGpc > 0 && domains.length > 0) {
-    observedText = "Observed: GPC sent to " + pluralize(domains.length, "domain")
+    observedText = "Sent to " + pluralize(domains.length, "domain")
       + " (" + pluralize(observedGpc, "request") + ")";
   } else if (observedGpc > 0) {
-    observedText = "Observed: " + pluralize(observedGpc, "GPC signal") + " sent";
+    observedText = pluralize(observedGpc, "signal") + " sent";
   } else {
-    observedText = "Observed: no GPC signals sent yet on this tab";
+    observedText = "No signals sent yet on this tab";
   }
   indicatorEl.title = expectedText + "\n" + observedText;
   indicatorEl.style.cursor = "pointer";
@@ -1104,6 +1120,43 @@ function updateHeaderControls() {
     if (!enabled) reloadBtn.classList.remove("is-recommended");
   }
   updateGpcIndicator();
+  updateChIndicator();
+}
+
+// Client Hints stripping indicator - reflects whether high-entropy
+// Sec-CH-UA-* headers are being removed for this site.
+function updateChIndicator() {
+  const indicatorEl = document.getElementById("pc-ch-indicator");
+  const labelEl = document.getElementById("pc-ch-label");
+  if (!indicatorEl || !labelEl) return;
+
+  labelEl.textContent = "CH";
+
+  if (!currentDomain) {
+    indicatorEl.classList.remove("is-active", "is-inactive");
+    indicatorEl.classList.add("is-disabled");
+    indicatorEl.title = "Client Hints stripping unavailable on this page";
+    return;
+  }
+
+  if (!chStrippingEnabled) {
+    indicatorEl.classList.remove("is-active", "is-inactive");
+    indicatorEl.classList.add("is-disabled");
+    indicatorEl.title = "Client Hints stripping globally disabled in Purpose Settings";
+    return;
+  }
+
+  const deniesAT = currentPurposesState.advanced_tracking === false;
+  indicatorEl.classList.remove("is-disabled");
+  indicatorEl.classList.toggle("is-active", deniesAT);
+  indicatorEl.classList.toggle("is-inactive", !deniesAT);
+  if (deniesAT) {
+    const countStr = lastChStripped > 0 ? " (" + lastChStripped + " requests)" : "";
+    indicatorEl.title = "Client Hints: stripping active" + countStr +
+      "\nHigh-entropy fingerprinting headers removed";
+  } else {
+    indicatorEl.title = "Client Hints: not stripped\nAdvanced tracking allowed for this site";
+  }
 }
 
 function waitForTabReload(tabId, timeoutMs = 12000) {

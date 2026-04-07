@@ -60,6 +60,8 @@ Dynamic rules (5,000 rule pool)
 │ Whitelist allow:    1+ rules    (priority 3) │
 │ GPC global: 1 rule              (priority 1) │
 │ GPC per-site: max 2 rules       (priority 2) │
+│ CH strip global: 1 rule         (priority 1) │
+│ CH strip per-site: max 1 rule   (priority 2) │
 └──────────────────────────────────────────────┘
 ```
 
@@ -71,9 +73,11 @@ Dynamic rules (5,000 rule pool)
 
 *Whitelist allow rules* let users unblock specific domains that were caught by the static rulesets. These rules use priority 3, so they always win over both static blocks (priority 1) and per‑site overrides (priority 2). Each entry can be scoped per site (using `initiatorDomains`) or global (no initiator filter). Global entries are batched into a single rule; per‑site entries are grouped by site, one rule per unique site. Domain validation prevents invalid hostnames from entering storage or DNR rules, and storage writes are serialized to avoid concurrent conflicts.
 
-When privacy‑relevant purposes (marked with `triggers_gpc` in `config/purposes.json`) are denied, the extension also injects a conditional `Sec-GPC: 1` header via `modifyHeaders` rules and sets `navigator.globalPrivacyControl` via a MAIN‑world content script, signalling the user's opt‑out to the receiving server. Per‑site overrides ensure that GPC is only sent where the user's preferences call for it. Users can also disable GPC entirely via a global toggle in Purpose Settings (`gpcEnabled` in storage, default `true`); when off, no GPC headers or content scripts are generated regardless of purpose state.
+*Global Privacy Control (GPC)* is managed by ProtoConsent. When privacy‑relevant purposes (marked with `triggers_gpc` in `config/purposes.json`) are denied, the extension injects a conditional `Sec-GPC: 1` header via `modifyHeaders` rules and sets `navigator.globalPrivacyControl` via a MAIN‑world content script, signalling the user's opt‑out to the receiving server. Per‑site overrides ensure that GPC is only sent where the user's preferences call for it. Users can also disable GPC entirely via a global toggle in Purpose Settings (`gpcEnabled` in storage, default `true`); when off, no GPC headers or content scripts are generated regardless of purpose state.
 
 Per‑site GPC overrides use `requestDomains` (the destination URL), not `initiatorDomains` (the page making the request). This means that trusting a site, for example allowing all purposes on elpais.com, removes the GPC signal from requests *to* elpais.com, but third‑party requests *from* elpais.com to domains like google‑analytics.com still carry the global GPC signal. The same applies to cross‑origin iframes: an iframe from youtube.com embedded on a trusted elpais.com page still receives GPC from the global rule.
+
+*Client Hint headers* are handled automatically when the `advanced_tracking` purpose is denied. In that case, the extension strips high‑entropy Client Hints headers (`Sec-CH-UA-Full-Version-List`, `Sec-CH-UA-Platform-Version`, `Sec-CH-UA-Arch`, `Sec-CH-UA-Bitness`, `Sec-CH-UA-Model`, `Sec-CH-UA-WoW64`, `Sec-CH-UA-Form-Factors`) via `modifyHeaders` remove rules. These headers expose enough device information (~33 bits of entropy) to uniquely fingerprint a user. Low‑entropy hints (`Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`) are kept intact as they are needed for basic content negotiation and have minimal fingerprinting value. Firefox and Safari do not send Client Hints at all, so removing them causes no site breakage. Like GPC, Client Hints stripping has a global toggle in Purpose Settings (`chStrippingEnabled` in storage, default `true`); when off, no stripping rules are generated regardless of purpose state. Per‑site exceptions use `excludedRequestDomains` on the global rule rather than a separate override, because a native browser header cannot be "un-removed" by a higher‑priority rule.
 
 **Content script bridge** – A content script (`content-script.js`) declared in the manifest runs in the ISOLATED world on every page. It acts as a message bridge between the page‑level SDK and the extension’s background: it listens for `PROTOCONSENT_QUERY` messages from the page, forwards them to the background via `chrome.runtime.sendMessage`, and relays the response back. It does not access or modify page content.
 
@@ -130,7 +134,7 @@ Enforcement is based on built‑in browser APIs (declarativeNetRequest), so Prot
 | `tabs` | Read the active tab's URL so the popup can identify which domain the user is managing and apply per‑site rules. |
 | `storage` | Persist user rules, profiles, and preferences locally in the browser's extension storage. No remote storage is used. |
 | `scripting` | Register the GPC content script (`gpc-signal.js`) into the MAIN world at runtime via `chrome.scripting.registerContentScripts`, so that `navigator.globalPrivacyControl` is set only on pages where the user's preferences require it. |
-| `declarativeNetRequest` | Create and manage dynamic blocking rules that enforce the user's purpose choices by blocking third‑party requests associated with denied purposes. Also used for conditional `Sec-GPC: 1` header injection via `modifyHeaders` rules. |
+| `declarativeNetRequest` | Create and manage dynamic blocking rules that enforce the user's purpose choices by blocking third‑party requests associated with denied purposes. Also used for conditional `Sec-GPC: 1` header injection and high‑entropy Client Hints stripping via `modifyHeaders` rules. |
 | `declarativeNetRequestFeedback` | Query which DNR rules matched on the current tab (`getMatchedRules`) so the popup can display how many requests were blocked and how many received the GPC signal. |
 | `webRequest` | Observe network events (`onErrorOccurred`, `onSendHeaders`) to attribute blocked requests to purposes and detect GPC header presence. This is the default data source in all builds; an optional DNR debug mode can be activated for rule‑level diagnostics during development (see `USE_DNR_DEBUG` in `config.js`). |
 | `unlimitedStorage` | Store downloaded Enhanced Protection blocklist data locally. Enhanced lists can be large (hundreds of thousands of domains), so the default 10 MB quota may not suffice. |
@@ -165,7 +169,7 @@ The `initiatorDomains` condition matches the **origin that initiated the request
 | Static rulesets (max declared) | 100 | 10 (5 domain + 5 path) |
 | Static rulesets (max enabled) | 50 | Up to 10 |
 | Static rules (total) | 30,000 | ~41,435 (40,233 domains + 1,202 path rules) |
-| Dynamic + session rules | 5,000 | ~13 base (10 overrides + 3 GPC) + enhanced list rules + whitelist rules |
+| Dynamic + session rules | 5,000 | ~15 base (10 overrides + 3 GPC + 2 CH strip) + enhanced list rules + whitelist rules |
 | `getMatchedRules` calls | 20 per 10 min | 1 per popup open |
 
 By moving global blocking to static rulesets, the full dynamic budget is available for per‑site overrides, Enhanced Protection lists, and whitelist entries. The base cost is ~13 dynamic rules regardless of how many custom sites exist, plus one rule per enabled enhanced list (and optional path rules), plus one whitelist rule per unique site scope.

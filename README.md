@@ -26,7 +26,8 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 - **Network‑level enforcement** of purpose‑based decisions via curated blocklists organised by purpose, with visible results (blocked counts, domain detail). See [blocklists.md](design/blocklists.md).
 - **Optional enhanced protection** with 12 curated third‑party blocklists (EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project). Three presets (Off, Basic, Full) or individual list selection.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.
-- **Visibility:** real‑time log monitoring, blocked domains grouped by purpose with [Consent Commons](https://consentcommons.com/) icons, GPC signal tracking, and domain whitelist management.
+- **Client Hints stripping:** removes high‑entropy fingerprinting headers (Sec‑CH‑UA‑*) when advanced tracking is denied; toggleable in Purpose Settings.
+- **Visibility:** real‑time log monitoring, blocked domains grouped by purpose with [Consent Commons](https://consentcommons.com/) icons, GPC signal tracking, Client Hints status, and domain whitelist management.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` to declare their data practices. No SDK or code changes required.
 - **JavaScript SDK** (MIT licensed) for web pages to query user preferences. TypeScript declarations included.
 

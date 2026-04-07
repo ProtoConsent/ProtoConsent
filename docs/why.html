@@ -95,6 +95,7 @@
               <li><strong>Network-level enforcement</strong>: the browser blocks requests associated with disabled purposes before they leave your device.</li>
               <li><strong>Conditional GPC signal</strong>: sends <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec-GPC</a> only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.</li>
               <li><strong>Optional site cooperation</strong>: websites can declare practices via <code>.well-known/protoconsent.json</code> or adapt behaviour via the SDK. Neither is required.</li>
+              <li><strong>Client Hints stripping</strong>: removes high-entropy fingerprinting headers (Sec-CH-UA-*) when advanced tracking is denied.</li>
             </ul>
             <p>
               Enforcement uses standard browser extension capabilities and runs entirely locally. No on-page scripts, no backend.
