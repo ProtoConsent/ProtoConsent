@@ -342,24 +342,38 @@ function renderPresets(presets, purposes) {
 		customCard.appendChild(customPills);
 		container.appendChild(customCard);
 
-		// GPC signal info row - read-only, shows which purposes trigger Sec-GPC
+		// GPC signal toggle row
 		const gpcCard = document.createElement('div');
 		gpcCard.className = 'ps-preset-card';
 
-		const gpcInfo = document.createElement('div');
-		gpcInfo.className = 'ps-gpc-info-row';
+		const gpcRow = document.createElement('div');
+		gpcRow.className = 'ps-gpc-toggle-row';
 
+		const gpcLeft = document.createElement('div');
 		const gpcName = document.createElement('span');
 		gpcName.className = 'ps-gpc-info-name';
 		gpcName.textContent = 'GPC (Global Privacy Control)';
-		gpcInfo.appendChild(gpcName);
-
-		const gpcDesc = document.createElement('span');
+		const gpcDesc = document.createElement('div');
 		gpcDesc.className = 'ps-gpc-info-desc';
-		gpcDesc.textContent = '\u002D privacy signal sent to websites when any of these purposes are denied';
-		gpcInfo.appendChild(gpcDesc);
+		gpcDesc.textContent = 'Privacy signal sent to websites when any of these purposes are denied';
+		gpcLeft.appendChild(gpcName);
+		gpcLeft.appendChild(gpcDesc);
 
-		gpcCard.appendChild(gpcInfo);
+		const gpcToggle = document.createElement('input');
+		gpcToggle.type = 'checkbox';
+		gpcToggle.id = 'gpc-toggle';
+		gpcToggle.className = 'ps-gpc-toggle';
+		gpcToggle.checked = true;
+
+		const gpcToggleLabel = document.createElement('label');
+		gpcToggleLabel.className = 'ps-gpc-toggle-label';
+		gpcToggleLabel.setAttribute('for', 'gpc-toggle');
+		gpcToggleLabel.textContent = 'Enabled';
+
+		gpcRow.appendChild(gpcLeft);
+		gpcRow.appendChild(gpcToggleLabel);
+		gpcRow.appendChild(gpcToggle);
+		gpcCard.appendChild(gpcRow);
 
 		const gpcPills = document.createElement('div');
 		gpcPills.className = 'ps-preset-purposes';
@@ -374,6 +388,18 @@ function renderPresets(presets, purposes) {
 		}
 		gpcCard.appendChild(gpcPills);
 		container.appendChild(gpcCard);
+
+		// Load stored GPC toggle state
+		chrome.storage.local.get(['gpcEnabled'], (r) => {
+			gpcToggle.checked = r.gpcEnabled !== false;
+			gpcToggleLabel.textContent = gpcToggle.checked ? 'Enabled' : 'Disabled';
+		});
+
+		gpcToggle.addEventListener('change', () => {
+			const enabled = gpcToggle.checked;
+			gpcToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+			chrome.storage.local.set({ gpcEnabled: enabled }, notifyBackground);
+		});
 	});
 }
 
