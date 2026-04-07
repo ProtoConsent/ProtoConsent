@@ -10,20 +10,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Welcome to ProtoConsent</title>
   <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="onboarding.css">
+  <link rel="stylesheet" href="css/onboarding.css">
   <link rel="icon" type="image/png" sizes="32x32" href="../icons/protoconsent_icon_32.png">
 </head>
 <body>
   <div class="ob-root">
 
-    <!-- Setup screen -->
+    <!-- Step 1: Profile selection -->
     <div id="ob-setup" class="ob-screen">
+      <div class="ob-dots" aria-hidden="true">
+        <span class="ob-dot is-active"></span>
+        <span class="ob-dot"></span>
+        <span class="ob-dot"></span>
+      </div>
       <header class="ob-header">
         <img src="../icons/protoconsent_icon_128.png" alt="ProtoConsent" class="ob-logo" width="64" height="64">
         <h1 class="ob-title">Welcome to ProtoConsent</h1>
         <p class="ob-intro">
           ProtoConsent puts you in control of how websites use your data.
-          Choose a default privacy profile below &mdash; you can always
+          Choose a default privacy profile below. You can always
           change it or customize individual sites from the toolbar icon.
         </p>
       </header>
@@ -34,11 +39,73 @@
 
       <div class="ob-action">
         <button id="ob-save" class="ob-save-btn" type="button">Get Started</button>
+        <button id="ob-skip" class="ob-skip-link" type="button">Skip (use Balanced)</button>
       </div>
     </div>
 
-    <!-- Confirmation screen -->
-    <div id="ob-done" class="ob-screen ob-hidden">
+    <!-- Step 2: Feature overview -->
+    <div id="ob-features" class="ob-screen ob-hidden">
+      <div class="ob-dots" aria-hidden="true">
+        <span class="ob-dot"></span>
+        <span class="ob-dot is-active"></span>
+        <span class="ob-dot"></span>
+      </div>
+      <header class="ob-header">
+        <h1 class="ob-title">What ProtoConsent does for you</h1>
+      </header>
+
+      <div class="ob-features">
+        <div class="ob-feature-card">
+          <div class="ob-feature-icon ob-feature-icon-consent" aria-hidden="true">
+            <img src="../icons/purposes/functional.svg" alt="" width="18" height="18">
+          </div>
+          <div class="ob-feature-text">
+            <div class="ob-feature-title">Consent Control</div>
+            <div class="ob-feature-desc">Your profile blocks tracking, ads, and more for every site you visit.</div>
+          </div>
+        </div>
+        <div class="ob-feature-card">
+          <div class="ob-feature-icon ob-feature-icon-enhanced" aria-hidden="true">
+            <img src="../icons/purposes/enhanced.svg" alt="" width="18" height="18">
+          </div>
+          <div class="ob-feature-text">
+            <div class="ob-feature-title">Enhanced Protection</div>
+            <div class="ob-feature-desc">Optional third-party blocklists add up to 1.8M extra tracking rules.</div>
+          </div>
+        </div>
+        <div class="ob-feature-card">
+          <div class="ob-feature-icon ob-feature-icon-gpc" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="2"/><path d="M9 5v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="ob-feature-text">
+            <div class="ob-feature-title">GPC Signal</div>
+            <div class="ob-feature-desc">A Global Privacy Control signal is sent to websites automatically when tracking is blocked.</div>
+          </div>
+        </div>
+        <div class="ob-feature-card">
+          <div class="ob-feature-icon ob-feature-icon-log" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M6 7h6M6 10h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="ob-feature-text">
+            <div class="ob-feature-title">Log &amp; Whitelist</div>
+            <div class="ob-feature-desc">Monitor blocked requests and allow specific domains if needed.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ob-action">
+        <button id="ob-done" class="ob-save-btn" type="button">Done</button>
+        <button id="ob-back" class="ob-skip-link" type="button">Back</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirmation -->
+    <div id="ob-done-screen" class="ob-screen ob-hidden">
+      <div class="ob-dots" aria-hidden="true">
+        <span class="ob-dot"></span>
+        <span class="ob-dot"></span>
+        <span class="ob-dot is-active"></span>
+      </div>
       <img src="../icons/protoconsent_icon_128.png" alt="" class="ob-logo" width="64" height="64">
       <h1 class="ob-title">You're all set!</h1>
       <p class="ob-intro">
@@ -53,12 +120,12 @@
         </a>
         <div class="ob-next-step ob-next-step-static">
           <span class="ob-next-step-index">2</span>
-          <span class="ob-next-step-label">Pin the extension</span>
+          <span class="ob-next-step-label">Try Enhanced Protection<br><small>Click the extension icon, then the ENHANCED tab</small></span>
         </div>
-        <a href="https://protoconsent.org" class="ob-next-step" target="_blank" rel="noopener noreferrer">
+        <div class="ob-next-step ob-next-step-static">
           <span class="ob-next-step-index">3</span>
-          <span class="ob-next-step-label">Visit protoconsent.org</span>
-        </a>
+          <span class="ob-next-step-label">Pin ProtoConsent to your toolbar</span>
+        </div>
       </div>
     </div>
 
@@ -68,6 +135,6 @@
     </footer>
   </div>
 
-  <script src="onboarding.js"></script>
+  <script src="js/onboarding.js"></script>
 </body>
 </html>

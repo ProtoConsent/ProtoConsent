@@ -195,15 +195,124 @@ body {
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.14);
 }
 
+/* Skip / Back link */
+.ob-skip-link {
+  display: block;
+  margin: 10px auto 0;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pc-text-soft);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.ob-skip-link:hover {
+  color: var(--pc-accent);
+  text-decoration: underline;
+}
+
+/* Step dots */
+.ob-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ob-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pc-line-strong);
+}
+
+.ob-dot.is-active {
+  background: var(--pc-accent);
+}
+
+/* Feature overview cards */
+.ob-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.ob-feature-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--pc-line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.ob-feature-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ob-feature-icon-consent {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.ob-feature-icon-enhanced {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.ob-feature-icon-gpc {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ob-feature-icon-log {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.ob-feature-text {
+  min-width: 0;
+}
+
+.ob-feature-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pc-text);
+  margin-bottom: 2px;
+}
+
+.ob-feature-desc {
+  font-size: 12px;
+  color: var(--pc-text-muted);
+  line-height: 1.4;
+}
+
 /* Confirmation screen */
-#ob-done {
+#ob-done-screen {
   text-align: center;
   padding-top: 40px;
 }
 
-#ob-done .ob-intro {
+#ob-done-screen .ob-intro {
   max-width: 400px;
   margin: 0 auto;
+}
+
+#ob-done-screen .ob-next-step small {
+  font-weight: 400;
+  color: var(--pc-text-muted);
 }
 
 .ob-sub {
