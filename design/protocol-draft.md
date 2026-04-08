@@ -12,6 +12,8 @@ The protocol is entirely local: communication happens between a page-side SDK an
 - **Communication model**: SDK ↔ extension messaging via a content script bridge (§3–4).
 - **Site declaration**: a static `.well-known/protoconsent.json` file for voluntary purpose disclosure (§5).
 
+A separate inter-extension protocol allows other browser extensions to query the user's consent state; see [`inter-extension-protocol.md`](inter-extension-protocol.md).
+
 **Status:** draft.
 
 ## Contents

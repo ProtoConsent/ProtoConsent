@@ -1258,18 +1258,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         navigatingTabs: tabNavigating.size,
         logPorts: logPorts.size,
       });
-      if (chrome.storage.session && chrome.storage.session.get) {
-        chrome.storage.session.get(null).then((s) => {
-          debugData.sessionKeys = Object.keys(s).length;
-          sendResponse(debugData);
-        }).catch(() => {
-          debugData.sessionKeys = -1;
-          sendResponse(debugData);
-        });
-      } else {
-        debugData.sessionKeys = -1;
+      // Gather async debug data: session storage + inter-extension API state
+      const p1 = (chrome.storage.session && chrome.storage.session.get)
+        ? chrome.storage.session.get(null).then(s => Object.keys(s).length).catch(() => -1)
+        : Promise.resolve(-1);
+      const p2 = new Promise(r => chrome.storage.local.get(
+        ["interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending"],
+        r
+      ));
+      Promise.all([p1, p2]).then(([sessionKeys, ext]) => {
+        debugData.sessionKeys = sessionKeys;
+        debugData.interExtEnabled = ext.interExtEnabled === true;
+        debugData.interExtAllowlist = ext.interExtAllowlist || [];
+        debugData.interExtDenylist = ext.interExtDenylist || [];
+        debugData.interExtPending = ext.interExtPending || [];
         sendResponse(debugData);
-      }
+      });
     };
     if (!lastRebuildDebug.enableIds) {
       rebuildAllDynamicRules().then(respond).catch(respond);
@@ -1696,6 +1700,143 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     });
     return true; // async response
   }
+});
+
+// --- Inter-extension provider API ---
+// Allows other privacy extensions to query ProtoConsent's consent state.
+// Read-only: consumers can query purposes for a domain, never modify preferences.
+// See design/inter-extension-spec.md for the full specification.
+
+const _extRateLimit = new Map(); // senderId -> { count, windowStart }
+const EXT_RATE_LIMIT = 10;      // max requests per minute per extension
+const EXT_RATE_WINDOW = 60000;  // 1 minute window
+const EXT_PENDING_CAP = 10;     // max pending authorization requests stored
+const EXT_UNKNOWN_LIMIT = 3;    // max new unknown-ID requests per minute (global)
+
+// Global cooldown for unknown extension IDs (anti-flood).
+let _unknownIds = new Set();   // unique unknown IDs seen in current window
+let _unknownWindowStart = 0;
+
+// Clean stale rate limit entries every 5 minutes
+setInterval(() => {
+  const cutoff = Date.now() - EXT_RATE_WINDOW;
+  for (const [id, entry] of _extRateLimit) {
+    if (entry.windowStart < cutoff) _extRateLimit.delete(id);
+  }
+}, 300000);
+
+function checkExtRateLimit(senderId) {
+  const now = Date.now();
+  let entry = _extRateLimit.get(senderId);
+  if (!entry || now - entry.windowStart > EXT_RATE_WINDOW) {
+    entry = { count: 0, windowStart: now };
+    _extRateLimit.set(senderId, entry);
+  }
+  entry.count++;
+  return entry.count <= EXT_RATE_LIMIT;
+}
+
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+  // Validate envelope
+  if (!message || typeof message !== "object" || typeof message.type !== "string"
+      || message.type.length > 64 || !message.type.startsWith("protoconsent:")) {
+    return; // silently ignore non-protocol messages
+  }
+
+  // Check opt-in toggle (default: disabled), allowlist, and denylist (TOFU)
+  chrome.storage.local.get(["interExtEnabled", "interExtAllowlist", "interExtDenylist"], (r) => {
+    if (r.interExtEnabled !== true) {
+      sendResponse({ type: "protoconsent:error", error: "disabled", message: "Inter-extension API is disabled by user" });
+      return;
+    }
+
+    const senderId = sender.id;
+    if (!senderId) return; // anomalous — onMessageExternal should always provide sender.id
+
+    // Denylist: silently drop messages from denied extensions (no response).
+    const denylist = r.interExtDenylist || [];
+    if (denylist.includes(senderId)) return;
+
+    const allowlist = r.interExtAllowlist || []; // array of allowed extension IDs
+
+    // TOFU allowlist: unknown extensions get need_authorization error
+    // and are recorded as pending for the user to approve via settings.
+    if (!allowlist.includes(senderId)) {
+      // Global cooldown for unknown IDs: max EXT_UNKNOWN_LIMIT new unique IDs per minute.
+      // Prevents flooding the pending queue with thousands of fake extension IDs.
+      // Only counts each unique senderId once per window (not repeat requests from same ID).
+      const now = Date.now();
+      if (now - _unknownWindowStart > EXT_RATE_WINDOW) {
+        _unknownIds = new Set();
+        _unknownWindowStart = now;
+      }
+      const isNewId = !_unknownIds.has(senderId);
+      if (isNewId) _unknownIds.add(senderId);
+      if (isNewId && _unknownIds.size > EXT_UNKNOWN_LIMIT) return; // silent drop — flood protection
+
+      // Record pending request so the UI can show an authorization prompt.
+      // Store: { id, firstSeen }. Cap at EXT_PENDING_CAP (discard oldest).
+      chrome.storage.local.get(["interExtPending"], (p) => {
+        const pending = p.interExtPending || [];
+        if (!pending.some(e => e.id === senderId) && pending.length < EXT_PENDING_CAP) {
+          pending.push({ id: senderId, firstSeen: Date.now() });
+          chrome.storage.local.set({ interExtPending: pending });
+        }
+      });
+      sendResponse({ type: "protoconsent:error", error: "need_authorization",
+        message: "Extension not authorized. The user must approve this extension in ProtoConsent settings." });
+      return;
+    }
+
+    // Rate limiting
+    if (!checkExtRateLimit(senderId)) {
+      sendResponse({ type: "protoconsent:error", error: "rate_limited", message: "Too many requests" });
+      return;
+    }
+
+    // Capabilities discovery
+    if (message.type === "protoconsent:capabilities") {
+      const manifest = chrome.runtime.getManifest();
+      sendResponse({
+        type: "protoconsent:capabilities_response",
+        name: "ProtoConsent",
+        version: manifest.version,
+        protocol_version: INTEREXT_PROTOCOL_VERSION,
+        supported_types: ["protoconsent:query", "protoconsent:capabilities"],
+        purposes: ["functional", "analytics", "ads", "personalization", "third_parties", "advanced_tracking"]
+      });
+      return;
+    }
+
+    // Consent query
+    if (message.type === "protoconsent:query") {
+      const domain = message.domain;
+      if (!domain || typeof domain !== "string" || domain.length > 253 || !isValidHostname(domain)) {
+        sendResponse({ type: "protoconsent:error", error: "invalid_domain", message: "A valid hostname is required" });
+        return;
+      }
+
+      Promise.all([
+        handleBridgeQuery({ domain, action: "getAll" }),
+        handleBridgeQuery({ domain, action: "getProfile" })
+      ]).then(([purposes, profile]) => {
+        sendResponse({
+          type: "protoconsent:response",
+          domain,
+          purposes: purposes || {},
+          profile: profile || "balanced",
+          version: chrome.runtime.getManifest().version
+        });
+      }).catch(() => {
+        sendResponse({ type: "protoconsent:error", error: "internal", message: "Failed to resolve purposes" });
+      });
+      return;
+    }
+
+    // Unknown protocol message
+    sendResponse({ type: "protoconsent:error", error: "unknown_type", message: "Unsupported message type" });
+  });
+  return true; // async — storage read before any response
 });
 
 // Track blocked domains per tab for the popup detail view.

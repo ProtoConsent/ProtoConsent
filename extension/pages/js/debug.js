@@ -144,6 +144,21 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // Inter-extension API
+    if (bg && typeof bg.interExtEnabled !== "undefined") {
+      const status = bg.interExtEnabled ? "on" : "off";
+      lines.push("— inter-extension API: " + status + " —");
+      if (bg.interExtEnabled) {
+        lines.push("  allowlist: " + (bg.interExtAllowlist.length || 0) +
+          (bg.interExtAllowlist.length ? " [" + bg.interExtAllowlist.join(", ") + "]" : ""));
+        lines.push("  pending:   " + (bg.interExtPending.length || 0) +
+          (bg.interExtPending.length ? " [" + bg.interExtPending.map(e => e.id).join(", ") + "]" : ""));
+        lines.push("  denylist:  " + (bg.interExtDenylist.length || 0) +
+          (bg.interExtDenylist.length ? " [" + bg.interExtDenylist.join(", ") + "]" : ""));
+      }
+      lines.push("");
+    }
+
     // TCF CMP detection
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs && tabs[0]) {
