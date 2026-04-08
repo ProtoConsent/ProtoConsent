@@ -61,18 +61,15 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 </table>
 <table>
 <tr>
-<td width="100"></td>
-<td align="center"><img src="design/assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel" width="600"></td><td width="100"></td>
-</table>
+<td align="center"><img src="design/assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel" height="520"></td></table>
 
 ### Domain whitelist management
 
 The Domains tab includes Allow/Allowed buttons for quick whitelist control. The Whitelist tab lists all whitelisted domains with scope (Site or Global) and toggle buttons.
 
 <table>
-<tr><td width="200"></td>
-<td align="center"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Whitelist tab with scope management" width="400"></td><td width="200"></td>
-</tr>
+<tr>
+<td align="center"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Whitelist tab with scope management" height="520"></td>
 </table>
 
 ## For websites
