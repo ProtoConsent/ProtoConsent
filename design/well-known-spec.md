@@ -20,11 +20,10 @@ The format follows the pattern of other `.well-known` resources ([RFC 8615](http
 
 1. [Overview](#1-overview)
 2. [Schema](#2-schema)
-3. [Examples](#3-examples)
-4. [Extension behaviour](#4-extension-behaviour)
-5. [Hosting notes](#5-hosting-notes)
-6. [Relationship to other specifications](#6-relationship-to-other-specifications)
-7. [Online validator](#7-online-validator)
+3. [Examples (non-normative)](#3-examples-non-normative)
+4. [Extension behaviour (non-normative)](#4-extension-behaviour-non-normative)
+5. [Relationship to other specifications](#5-relationship-to-other-specifications)
+6. [Implementation notes (non-normative)](#6-implementation-notes-non-normative)
 
 ## 2. Schema
 
@@ -70,7 +69,7 @@ Valid values for the `legal_basis` field, aligned with GDPR Article 6(1):
 | `public_interest` | Art. 6(1)(e): Public interest or official authority |
 | `legitimate_interest` | Art. 6(1)(f): Legitimate interests |
 
-## 3. Examples
+## 3. Examples (non-normative)
 
 ### 3.1 Minimal (blog with analytics)
 
@@ -127,65 +126,30 @@ Only `functional` and `analytics` are declared. The remaining four purposes are 
 }
 ```
 
-### 3.4 Live example
+## 4. Extension behaviour (non-normative)
 
-A complete declaration covering all six purposes, multiple legal bases, sharing scopes, data handling, and a rights URL is published at [demo.protoconsent.org](https://demo.protoconsent.org). Install the extension and open the side panel to see it rendered with Consent Commons icons.
+For details on how the ProtoConsent extension fetches, validates, caches, and displays `.well-known/protoconsent.json` files, see [architecture.md §11](architecture.md#11-site-declaration-behaviour).
 
-## 4. Extension behaviour
-
-### 4.1 Fetching
-
-When the user opens the side panel in the popup, the popup sends a `PROTOCONSENT_FETCH_WELL_KNOWN` message to the background script with the current site's protocol and host. The background script fetches `<protocol>://<host>/.well-known/protoconsent.json` directly from its service worker context (using the extension's `host_permissions`). Results are cached locally with a 24‑hour TTL per domain.
-
-- If the file is not found (404), unreachable, or invalid JSON, no site declaration is shown. The negative result is cached for 6 hours to avoid repeated fetch attempts. No error is surfaced to the user.
-- The extension does **not** fetch the file on every navigation: only when the user opens the side panel and the cache is expired.
-- Works on both HTTP and HTTPS sites, including local development servers with non‑default ports.
-
-### 4.2 Validation
-
-The extension performs minimal validation:
-
-1. `purposes` must be an object with at least one key matching a known purpose.
-2. Each purpose entry must have a `used` boolean.
-3. Unknown purpose keys are ignored (forward compatibility).
-4. Unknown top-level fields are ignored (forward compatibility).
-5. The `protoconsent` version field is accepted but not enforced (forward compatibility).
-
-Invalid files are silently discarded.
-
-### 4.3 Display
-
-When a valid declaration exists, the popup shows a "Site declaration" side panel:
-
-- Each declared purpose: label + used/not used + legal basis, provider, and sharing scope (if present), illustrated with [Consent Commons](https://consentcommons.com/) icons.
-- Data handling details (storage region, international transfers) shown with corresponding Consent Commons icons when declared.
-- Purposes not declared by the site are shown as "—" (not declared) in a muted style.
-- If `rights_url` is present and uses `https://` or `http://`, a "Your rights" link is displayed.
-- The section is purely informational. The user's toggles remain the sole control for enforcement.
-
-### 4.4 No enforcement change
-
-The `.well-known` file **never** modifies user preferences, DNR rules, or GPC headers. It is read-only information displayed alongside the user's own choices.
-
-## 5. Hosting notes
-
-### 5.1 Static sites / GitHub Pages
-
-GitHub Pages uses Jekyll by default, which ignores directories starting with `.`. To serve the `.well-known` directory, add a `.nojekyll` file to the publication root (e.g. `docs/.nojekyll`). This disables Jekyll processing entirely.
-
-Then place the file at `docs/.well-known/protoconsent.json` (or root, depending on publishing source). See the [protoconsent.org source](https://github.com/ProtoConsent/ProtoConsent/tree/main/docs) and [demo.protoconsent.org source](https://github.com/ProtoConsent/demo) for working examples.
-
-### 5.2 Content-Type
-
-The file should be served with `Content-Type: application/json`. Most web servers handle `.json` files correctly by default.
-
-## 6. Relationship to other specifications
+## 5. Relationship to other specifications
 
 - **`security.txt` (RFC 9116):** similar pattern: a `.well-known` file for machine-readable site metadata. ProtoConsent follows the same convention.
 - **Consent Commons:** the purpose categories and legal basis values align with the [Consent Commons](https://consentcommons.com/) taxonomy. See `icons-and-layers.md` for the visual mapping.
 - **ProtoConsent SDK:** the SDK enables dynamic interaction (page queries extension). The `.well-known` file enables static declaration (extension reads site). Both are complementary: a site can use one, both, or neither.
 - **GPC (`Sec-GPC`):** GPC signals user preference (browser → site). `.well-known/protoconsent.json` signals site practices (site → browser). They are complementary directions.
 
-## 7. Online validator
+## 6. Implementation notes (non-normative)
 
-An online validator is available at [protoconsent.org/validate.html](https://protoconsent.org/validate.html) to check whether a `.well-known/protoconsent.json` file is valid and reachable. It supports checking a live domain, pasting JSON, or loading a file from disk.
+### 6.1 Static sites / GitHub Pages
+
+GitHub Pages uses Jekyll by default, which ignores directories whose names start with a dot, such as `.well-known`. To serve the `.well-known` directory, add a `.nojekyll` file to the publication root (e.g. `docs/.nojekyll`). This disables Jekyll processing entirely.
+
+Then place the file at `docs/.well-known/protoconsent.json` (or root, depending on publishing source). See the [protoconsent.org source](https://github.com/ProtoConsent/ProtoConsent/tree/main/docs) and [demo.protoconsent.org source](https://github.com/ProtoConsent/demo) for working examples.
+
+### 6.2 Content-Type
+
+The file should be served with `Content-Type: application/json`. Most web servers handle `.json` files correctly by default.
+
+### 6.3 Validation tooling
+
+As a non-normative convenience, an online validator is available at [protoconsent.org/validate.html](https://protoconsent.org/validate.html) to check whether a `.well-known/protoconsent.json` file is valid and reachable.
+

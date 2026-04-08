@@ -32,6 +32,7 @@ The extension provides a popup interface to manage profiles and purposes per sit
   - [9. Extensibility](#9-extensibility)
   - [10. Global Privacy Control (GPC)](#10-global-privacy-control-gpc)
     - [Relation to the GPC specification](#relation-to-the-gpc-specification)
+  - [11. Site declaration behaviour](#11-site-declaration-behaviour)
 
 ## 2. Components
 
@@ -249,3 +250,41 @@ Users can disable GPC entirely via a global toggle in Purpose Settings (`gpcEnab
 The [GPC specification](https://privacycg.github.io/gpc-spec/) defines GPC as a binary signal: the user either expresses a preference to opt out of sale/sharing, or does not. ProtoConsent respects this: it sends `Sec-GPC: 1` or nothing.
 
 The difference is in *when* the signal is sent. Most implementations treat GPC as a global preference (always on or always off). ProtoConsent derives the signal from the user's purpose‑level decisions, making it conditional per site. This is compatible with the spec - the spec does not require the signal to be global - but it extends the practical semantics: the GPC signal reflects a structured privacy position, not a blanket opt‑out.
+
+## 11. Site declaration behaviour
+
+This section describes how the extension handles `.well-known/protoconsent.json` files. For the file format specification, see [well-known-spec.md](well-known-spec.md).
+
+### 11.1 Fetching
+
+When the user opens the side panel in the popup, the popup sends a `PROTOCONSENT_FETCH_WELL_KNOWN` message to the background script with the current site's protocol and host. The background script fetches `<protocol>://<host>/.well-known/protoconsent.json` directly from its service worker context (using the extension's `host_permissions`). Results are cached locally with a 24‑hour TTL per domain.
+
+- If the file is not found (404), unreachable, or invalid JSON, no site declaration is shown. The negative result is cached for 6 hours to avoid repeated fetch attempts. No error is surfaced to the user.
+- The extension does **not** fetch the file on every navigation: only when the user opens the side panel and the cache is expired.
+- Works on both HTTP and HTTPS sites, including local development servers with non‑default ports.
+
+### 11.2 Validation
+
+The extension performs minimal validation:
+
+1. `purposes` must be an object with at least one key matching a known purpose.
+2. Each purpose entry must have a `used` boolean.
+3. Unknown purpose keys are ignored (forward compatibility).
+4. Unknown top-level fields are ignored (forward compatibility).
+5. The `protoconsent` version field is accepted but not enforced (forward compatibility).
+
+Invalid files are silently discarded.
+
+### 11.3 Display
+
+When a valid declaration exists, the popup shows a "Site declaration" side panel:
+
+- Each declared purpose: label + used/not used + legal basis, provider, and sharing scope (if present), illustrated with [Consent Commons](https://consentcommons.com/) icons.
+- Data handling details (storage region, international transfers) shown with corresponding Consent Commons icons when declared.
+- Purposes not declared by the site are shown as "—" (not declared) in a muted style.
+- If `rights_url` is present and uses `https://` or `http://`, a "Your rights" link is displayed.
+- The section is purely informational. The user's toggles remain the sole control for enforcement.
+
+### 11.4 No enforcement change
+
+The `.well-known` file **never** modifies user preferences, DNR rules, or GPC headers. It is read-only information displayed alongside the user's own choices.
