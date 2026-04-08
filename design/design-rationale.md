@@ -55,7 +55,7 @@ ProtoConsent uses curated blocklists to enforce user choices, but blocking is no
 
 The current core set contains ~40,000 curated tracker domains and ~1,200 path‑based rules from public blocklists, organised by purpose. The architecture can scale significantly beyond this (Chrome's DNR API supports hundreds of thousands of rules), but the current size reflects a deliberate choice focused on **accuracy, explainability, and low false‑positive rates**. Cross‑source validation, an explicit safelist, and path‑based precision (blocking `google.com/pagead/` instead of all of `google.com`) prioritise correctness over exhaustiveness.
 
-Optional Enhanced Protection (12 third‑party lists, ~2M+ total domains) extends coverage for users who want it, without changing the core model.
+Optional Enhanced Protection (curated third‑party lists with millions of additional domains) extends coverage for users who want it, without changing the core model.
 
 ## 6. Observability as a first‑class requirement
 
@@ -92,7 +92,7 @@ ProtoConsent provides the technical mechanisms; whether a site's declared legal 
 
 ProtoConsent has clear boundaries:
 
-- **Not a web standard**: the protocol is a draft, not a W3C or IETF specification. Adoption is voluntary.
+- **Not yet a web standard**: the protocol is a working draft; formal standardisation is a long‑term goal pending real‑world adoption.
 - **Not a CMP**: it does not manage consent on behalf of sites, negotiate with vendors, or provide compliance certification.
 - **Not a full ad blocker**: its core goal is purpose‑based consent enforcement, not exhaustive tracking coverage. Enhanced lists extend coverage optionally.
 - **Not control over all data processing**: browser‑level enforcement cannot prevent server‑side processing, first‑party abuse, or offline correlation. ProtoConsent makes *network‑level* effects visible and controllable.
