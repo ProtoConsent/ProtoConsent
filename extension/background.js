@@ -114,7 +114,7 @@ function persistTabDataToSession() {
   for (const [tabId, domains] of tabGpcDomains) {
     gpc[tabId] = domains;
   }
-  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc });
+  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc, _extEventLog: _extEventLog });
 }
 
 async function restoreTabDataFromSession() {
@@ -130,6 +130,11 @@ async function restoreTabDataFromSession() {
       for (const [tabId, domains] of Object.entries(result._tabGpc)) {
         tabGpcDomains.set(Number(tabId), domains);
       }
+    }
+    // Restore inter-extension event log
+    if (Array.isArray(result._extEventLog)) {
+      _extEventLog.length = 0;
+      for (const evt of result._extEventLog) _extEventLog.push(evt);
     }
     // Restore per-tab TCF detection data (keys: "tcf_<tabId>")
     // and prune orphan keys for tabs that no longer exist.
@@ -1717,6 +1722,20 @@ const EXT_UNKNOWN_LIMIT = 3;    // max new unknown-ID requests per minute (globa
 let _unknownIds = new Set();   // unique unknown IDs seen in current window
 let _unknownWindowStart = 0;
 
+// Recent inter-extension events for log replay (capped buffer).
+const _extEventLog = [];
+const EXT_EVENT_LOG_CAP = 50;
+
+function pushExtEvent(evt) {
+  evt.ts = Date.now();
+  _extEventLog.push(evt);
+  if (_extEventLog.length > EXT_EVENT_LOG_CAP) _extEventLog.shift();
+  for (const port of logPorts) {
+    try { port.postMessage(Object.assign({ type: "ext" }, evt)); } catch (_) {}
+  }
+  scheduleSessionPersist();
+}
+
 // Clean stale rate limit entries every 5 minutes
 setInterval(() => {
   const cutoff = Date.now() - EXT_RATE_WINDOW;
@@ -1747,6 +1766,8 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
   chrome.storage.local.get(["interExtEnabled", "interExtAllowlist", "interExtDenylist"], (r) => {
     if (r.interExtEnabled !== true) {
       sendResponse({ type: "protoconsent:error", error: "disabled", message: "Inter-extension API is disabled by user" });
+      const sid = sender.id || "?";
+      pushExtEvent({ sender: sid, action: message.type, result: "disabled" });
       return;
     }
 
@@ -1755,7 +1776,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
     // Denylist: silently drop messages from denied extensions (no response).
     const denylist = r.interExtDenylist || [];
-    if (denylist.includes(senderId)) return;
+    if (denylist.includes(senderId)) return; // no log — silent by design
 
     const allowlist = r.interExtAllowlist || []; // array of allowed extension IDs
 
@@ -1785,12 +1806,14 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
       });
       sendResponse({ type: "protoconsent:error", error: "need_authorization",
         message: "Extension not authorized. The user must approve this extension in ProtoConsent settings." });
+      pushExtEvent({ sender: senderId, action: message.type, result: "need_authorization" });
       return;
     }
 
     // Rate limiting
     if (!checkExtRateLimit(senderId)) {
       sendResponse({ type: "protoconsent:error", error: "rate_limited", message: "Too many requests" });
+      pushExtEvent({ sender: senderId, action: message.type, result: "rate_limited" });
       return;
     }
 
@@ -1805,6 +1828,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
         supported_types: ["protoconsent:query", "protoconsent:capabilities"],
         purposes: ["functional", "analytics", "ads", "personalization", "third_parties", "advanced_tracking"]
       });
+      pushExtEvent({ sender: senderId, action: "capabilities", result: "ok" });
       return;
     }
 
@@ -1813,6 +1837,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
       const domain = message.domain;
       if (!domain || typeof domain !== "string" || domain.length > 253 || !isValidHostname(domain)) {
         sendResponse({ type: "protoconsent:error", error: "invalid_domain", message: "A valid hostname is required" });
+        pushExtEvent({ sender: senderId, action: "query", domain: String(message.domain || ""), result: "invalid_domain" });
         return;
       }
 
@@ -1827,14 +1852,17 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
           profile: profile || "balanced",
           version: chrome.runtime.getManifest().version
         });
+        pushExtEvent({ sender: senderId, action: "query", domain, result: "ok", profile: profile || "balanced" });
       }).catch(() => {
         sendResponse({ type: "protoconsent:error", error: "internal", message: "Failed to resolve purposes" });
+        pushExtEvent({ sender: senderId, action: "query", domain, result: "internal" });
       });
       return;
     }
 
     // Unknown protocol message
     sendResponse({ type: "protoconsent:error", error: "unknown_type", message: "Unsupported message type" });
+    pushExtEvent({ sender: senderId, action: message.type, result: "unknown_type" });
   });
   return true; // async — storage read before any response
 });
@@ -1847,6 +1875,10 @@ const logPorts = new Set();
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "log") return;
   logPorts.add(port);
+  // Replay buffered inter-extension events to new port
+  for (const evt of _extEventLog) {
+    try { port.postMessage(Object.assign({ type: "ext" }, evt)); } catch (_) {}
+  }
   port.onDisconnect.addListener(() => logPorts.delete(port));
 });
 

@@ -124,6 +124,8 @@ If ProtoConsent is not installed, `chrome.runtime.sendMessage` sets `chrome.runt
 - **Bounded response**: the response contains only the fixed six-purpose schema, a profile name, and a version string. No user-controlled data beyond the echoed domain.
 - **No intrusive prompts**: authorization requests are queued silently and reviewed at the user's discretion via the settings UI. This eliminates clickjacking vectors from automated popup windows.
 
+The user manages the allowlist, denylist, and pending queue from the Purpose Settings page, which provides a master switch and per-extension Allow / Block / Revoke / Unblock controls. All inter-extension events (successes, errors, rate limits) are also visible in the Log tab's Requests stream, colour-coded and timestamped, so the user can observe API activity after the fact. Silent drops (denylist, global cooldown) are not logged. See [architecture.md §12.4–12.5](../architecture.md#124-management-ui) for implementation details.
+
 ## 6. Cross-Browser Compatibility
 
 | Browser | `onMessageExternal` | `externally_connectable` | Notes |

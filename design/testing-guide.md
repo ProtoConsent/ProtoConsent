@@ -54,6 +54,15 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [13.3 Verifying enhanced blocks in the Log tab](#133-verifying-enhanced-blocks-in-the-log-tab)
     - [13.4 Checking enhanced rules from the service worker console](#134-checking-enhanced-rules-from-the-service-worker-console)
     - [13.5 CNAME cloaking detection (informational)](#135-cname-cloaking-detection-informational)
+  - [14. Testing the inter-extension API](#14-testing-the-inter-extension-api)
+    - [14.1 Enabling the API](#141-enabling-the-api)
+    - [14.2 Sending a test query](#142-sending-a-test-query)
+    - [14.3 Authorizing a consumer extension](#143-authorizing-a-consumer-extension)
+    - [14.4 Blocking and unblocking](#144-blocking-and-unblocking)
+    - [14.5 Rate limiting](#145-rate-limiting)
+    - [14.6 Observability in the Log tab](#146-observability-in-the-log-tab)
+    - [14.7 Disabling the API](#147-disabling-the-api)
+    - [14.8 Verifying inter-extension state from the service worker console](#148-verifying-inter-extension-state-from-the-service-worker-console)
 
 ## 1. Requirements
 
@@ -593,4 +602,70 @@ chrome.storage.local.get("enhancedData_cname_trackers", r => {
 ```
 
 Note: CNAME cloaking is always active when the CNAME Trackers list is enabled - there is no separate toggle. The list uses a `type: "informational"` designation, meaning it contributes to the "info" count in the Enhanced status bar but does not generate any DNR blocking rules.
+
+## 14. Testing the inter-extension API
+
+The inter-extension API allows other browser extensions to query ProtoConsent's consent state for any domain. It is disabled by default and gated by a per-extension TOFU (Trust on First Use) allowlist.
+
+### 14.1 Enabling the API
+
+1. Open ProtoConsent's Purpose Settings (right-click extension icon → Options, or click **Purpose Settings** in the popup).
+2. Scroll to **Inter-extension API** and turn on the **Master switch**.
+3. Three accordions appear: Pending requests, Authorized extensions, and Blocked extensions (all initially empty).
+
+Purpose Settings showing the inter-extension API section with one authorized extension:
+
+![Inter-extension API settings](assets/screenshots/inter-extension-api-settings.png)
+
+### 14.2 Sending a test query
+
+To generate inter-extension traffic you need a second extension. A minimal test consumer is included in the internal workspace (`tests/test-consumer-extension/`). Load it unpacked:
+
+1. Open `chrome://extensions/` and load `tests/test-consumer-extension/` as an unpacked extension.
+2. Copy ProtoConsent's extension ID from `chrome://extensions/` and paste it in the test consumer's popup as the target ID.
+3. Click **Capabilities**. The first response will be `need_authorization` because the test extension is not yet approved.
+
+### 14.3 Authorizing a consumer extension
+
+1. Open ProtoConsent's Purpose Settings. The **Pending requests** accordion should be open with the test extension's ID and a badge showing "1".
+2. Click **Allow**. The ID moves to **Authorized extensions**.
+3. Return to the test consumer and click **Capabilities** again — you should receive a `protoconsent:capabilities_response` with the list of supported purposes.
+4. Click **Query** with a domain (e.g. `example.com`) — you should receive the resolved purposes and profile.
+
+### 14.4 Blocking and unblocking
+
+1. In Purpose Settings, click **Block** on the authorized extension. The ID moves to **Blocked extensions**.
+2. From the test consumer, send any query — no response is received (silent drop by design).
+3. Click **Unblock** in Purpose Settings. The ID is removed from the blocked list.
+4. Send a query again — you will get `need_authorization` (TOFU cycle restarts).
+
+### 14.5 Rate limiting
+
+1. Authorize the test extension (§14.3).
+2. Click **Burst** (sends 15 rapid queries). The first 10 succeed; the remaining 5 return `rate_limited`.
+3. Wait one minute and try again — the rate limit window resets.
+
+### 14.6 Observability in the Log tab
+
+After sending queries from the test consumer, open ProtoConsent's popup and switch to the **Log** tab → **Requests** panel. Inter-extension events appear as blue lines with timestamps, truncated sender ID, action, and result:
+
+![Log Requests showing blocked, GPC and inter-extension events](assets/screenshots/popup-log-requests.png)
+
+Events are buffered (up to 50) and survive service worker restarts, so they appear even if the popup was closed when the queries arrived. Silent drops (blocked extensions, global cooldown) are intentionally not logged.
+
+### 14.7 Disabling the API
+
+1. Turn off the **Master switch** in Purpose Settings.
+2. From the test consumer, send any query — you receive a `disabled` error (not a silent drop), so developers can diagnose.
+3. Turn the switch back on — the allowlist, denylist, and pending queue are preserved.
+
+### 14.8 Verifying inter-extension state from the service worker console
+
+Open the service worker console for the extension and run:
+
+```js
+chrome.storage.local.get(["interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending"], r => console.log(r))
+```
+
+The debug panel (Log → Debug tab) also shows the API state: enabled/disabled, allowlist count and IDs, pending count, and denylist count.
 

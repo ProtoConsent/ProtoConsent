@@ -34,6 +34,8 @@ The extension provides a popup interface to manage profiles and purposes per sit
     - [Relation to the GPC specification](#relation-to-the-gpc-specification)
   - [11. Site declaration behaviour](#11-site-declaration-behaviour)
   - [12. Inter-extension provider API](#12-inter-extension-provider-api)
+    - [12.4 Management UI](#124-management-ui)
+    - [12.5 Observability](#125-observability)
 
 ## 2. Components
 
@@ -89,7 +91,7 @@ Per‑site GPC overrides use `requestDomains` (the destination URL), not `initia
 
 **protoconsent.js SDK** – A small, optional JavaScript library for web pages to read the user’s ProtoConsent preferences (e.g. whether analytics is allowed) via the content script bridge. The extension works without it; the SDK is for sites that want to adapt their behaviour to the user’s choices. TypeScript type declarations are also provided (`sdk/protoconsent.d.ts`).
 
-**Inter-extension provider** – The background script also acts as a consent provider for other browser extensions. Extensions like Consent‑O‑Matic or uBlock Origin can query ProtoConsent’s resolved purpose state for any domain via `chrome.runtime.sendMessage`. The API is disabled by default and gated by a per-extension allowlist (Trust on First Use): the user must enable the feature and individually approve each consumer extension. Consumers can query but never modify preferences. See §12 for details.
+**Inter-extension provider** – The background script also acts as a consent provider for other browser extensions. Extensions like Consent‑O‑Matic or uBlock Origin can query ProtoConsent’s resolved purpose state for any domain via `chrome.runtime.sendMessage`. The API is disabled by default and gated by a per-extension allowlist (Trust on First Use): the user must enable the feature and individually approve each consumer extension. Consumers can query but never modify preferences. The Purpose Settings page provides the management UI (master switch, pending/allow/deny lists), and all API events appear in the Log tab’s Requests stream for observability. See §12 for details.
 
 **Onboarding and purpose settings pages** – Two additional extension pages complement the popup. The onboarding page (`pages/onboarding.html`) opens on first install and guides new users through selecting a default privacy profile. The purpose settings page (`pages/purposes-settings.html`) lets users customise the global default profile by toggling individual purposes, and shows the active Enhanced Protection preset alongside the consent presets. Accessible from the popup or `chrome://extensions`.
 
@@ -315,7 +317,26 @@ Query responses reuse the same `handleBridgeQuery` function that serves the page
 - Requests are rate-limited to 10 per minute per sender extension, keyed by the browser-verified `sender.id`.
 - One domain per query. There is no bulk endpoint to retrieve all stored rules.
 
-### 12.4 Supported message types
+### 12.4 Management UI
+
+The Purpose Settings page (`pages/purposes-settings.html`) provides a dedicated "Inter-extension API" section with:
+
+- **Master switch**: enables or disables the API. When disabled, the section collapses to the toggle alone.
+- **Pending requests**: an auto-expanding accordion showing extension IDs that have contacted ProtoConsent but have not yet been approved. Each entry has Allow and Block buttons. The badge shows the pending count.
+- **Authorized extensions**: accordion listing approved IDs with Revoke and Block buttons.
+- **Blocked extensions**: accordion listing denied IDs with an Unblock button.
+
+Extension IDs are displayed as links to the Chrome Web Store for verification. A note warns users that IDs not found on the store indicate unpublished (locally loaded) extensions.
+
+All lists update in real time via `chrome.storage.onChanged`, so changes from the background (e.g. a new pending entry from an incoming query) appear without page reload. The inter-extension storage keys (`interExtEnabled`, `interExtAllowlist`, `interExtDenylist`, `interExtPending`) are included in the export/import configuration.
+
+### 12.5 Observability
+
+Inter-extension events appear in the Log tab's Requests stream alongside blocked request and GPC entries. Each event shows a truncated sender ID, the action (`capabilities`, `query`), the queried domain (if applicable), and the result (`✓` for success, `✗` followed by the error code for failures). Events are colour-coded blue to distinguish them from block (amber) and GPC (green) entries.
+
+Events are buffered in memory (up to 50 entries) and persisted to `chrome.storage.session`, so they survive service worker restarts and appear when the user opens the Log tab after the queries have already occurred. Silent drops (denylist, global cooldown) are not logged, consistent with the security model's silent-drop design.
+
+### 12.6 Supported message types
 
 | Type | Direction | Description |
 |------|-----------|-------------|
