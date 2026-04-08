@@ -4,13 +4,15 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 ## 1. Overview
 
-ProtoConsent is a browser-side, purpose-based consent system. There is no central server: all user preferences are stored locally in the browser extension and enforced via `declarativeNetRequest`.
+This document describes the ProtoConsent purpose-signalling protocol: the mechanism by which web pages can query the user's consent preferences from the ProtoConsent browser extension, and by which websites can declare their data-processing practices.
 
-This document describes the protocol by which web pages can query the user's consent preferences from the ProtoConsent browser extension through an optional JavaScript SDK. The protocol is entirely local: communication happens between a page-side SDK and the extension via browser messaging primitives.
+The protocol is entirely local: communication happens between a page-side SDK and the extension via browser messaging primitives. There is no central server. It defines three layers:
 
-**Scope:** data model, communication model, and SDK API surface.
+- **Data model**: six purpose categories with profiles and per-domain overrides (§2).
+- **Communication model**: SDK ↔ extension messaging via a content script bridge (§3–4).
+- **Site declaration**: a static `.well-known/protoconsent.json` file for voluntary purpose disclosure (§5).
 
-**Status:** draft. The communication mechanism is implemented via a content script bridge; this document defines the architecture.
+**Status:** draft.
 
 ## Contents
 
@@ -32,14 +34,7 @@ This document describes the protocol by which web pages can query the user's con
     - [Three-state model](#three-state-model)
     - [Complementary to the SDK](#complementary-to-the-sdk)
     - [Additional fields](#additional-fields)
-  - [6. Global Privacy Control (GPC) integration](#6-global-privacy-control-gpc-integration)
-    - [6.1 Which purposes trigger GPC](#61-which-purposes-trigger-gpc)
-    - [6.2 Mechanism](#62-mechanism)
-    - [6.3 Per-site overrides](#63-per-site-overrides)
-    - [6.4 Relation to the GPC specification](#64-relation-to-the-gpc-specification)
-  - [7. JSON Schema Formalization (Planned)](#7-json-schema-formalization-planned)
-  - [8. Implementation Status](#8-implementation-status)
-  - [9. Design Principles](#9-design-principles)
+  - [6. Design Principles](#6-design-principles)
 
 ## 2. Data Model
 
@@ -56,8 +51,6 @@ ProtoConsent defines six purpose categories, each mapped to the [Consent Commons
 | `third_parties` | Third-party sharing | 3P | `third_party_access`, `third_party_sharing_advertising` |
 | `advanced_tracking` | Advanced tracking / fingerprinting | T | `profiling_analytics`, `other_data` |
 
-Canonical source: `extension/config/purposes.json`
-
 ### 2.2 Profiles (presets)
 
 Three predefined profiles set default purpose states:
@@ -67,8 +60,6 @@ Three predefined profiles set default purpose states:
 | **strict** | allowed | denied | denied | denied | denied | denied |
 | **balanced** | allowed | allowed | denied | allowed | denied | denied |
 | **permissive** | allowed | allowed | allowed | allowed | allowed | denied |
-
-Canonical source: `extension/config/presets.json`
 
 ### 2.3 Per-domain rules
 
@@ -159,8 +150,6 @@ The SDK exposes a minimal read-only API for web pages:
 | `ProtoConsent.version` | property | `string`: SDK version |
 | `ProtoConsent.purposes` | property | `string[]`: the valid purpose keys |
 
-Reference implementation: `sdk/protoconsent.js` (MIT licensed)
-
 ### Quick example
 
 ```html
@@ -190,8 +179,6 @@ Every method returns a `Promise` that resolves to `null` when the extension is n
 
 Websites can optionally declare their data-processing purposes by serving a static JSON file at `/.well-known/protoconsent.json`. This is a **voluntary, informational declaration**: it does not change how the extension enforces user preferences.
 
-The extension reads the file when the user opens the side panel in the popup, caches it locally (24‑hour TTL on success, 6‑hour TTL on failure), and displays the site's claims alongside the user's own choices.
-
 ### Minimal example
 
 ```json
@@ -220,90 +207,10 @@ Beyond the minimal `used` and `legal_basis` fields, each purpose entry can inclu
 
 Full specification: [`design/well-known-spec.md`](well-known-spec.md)
 
-## 6. Global Privacy Control (GPC) integration
-
-ProtoConsent sends the [Global Privacy Control](https://globalprivacycontrol.org/) signal conditionally, based on the user's resolved purpose state for each site. GPC is not a global toggle: it is derived from purpose decisions.
-
-### 6.1 Which purposes trigger GPC
-
-Each purpose in `config/purposes.json` has a `triggers_gpc` boolean field. When a purpose with `triggers_gpc: true` is denied for a given site, the extension activates GPC for that site.
-
-Current mapping:
-
-| Purpose | `triggers_gpc` | Rationale |
-| --- | --- | --- |
-| `functional` | `false` | Core site functionality; denying it does not imply a privacy opt-out. |
-| `analytics` | `false` | Site-internal measurement; typically first-party and not covered by GPC's opt-out scope. |
-| `ads` | `true` | Advertising and remarketing involve cross-site data sharing that GPC was designed to signal against. |
-| `personalization` | `false` | User-facing content adaptation; does not inherently involve cross-site tracking. |
-| `third_parties` | `true` | Data sharing with third parties is a core opt-out scenario for GPC. |
-| `advanced_tracking` | `true` | Cross-site fingerprinting and device tracking; GPC directly applies. |
-
-The rule: if **any** purpose with `triggers_gpc: true` is denied for a site, GPC is active for that site. If all such purposes are allowed (or the profile allows them), GPC is not sent.
-
-### 6.2 Mechanism
-
-When GPC is active for a site, two signals are sent:
-
-1. **`Sec-GPC: 1` HTTP header**: injected via `declarativeNetRequest` `modifyHeaders` rules on outgoing requests to the site's domain.
-2. **`navigator.globalPrivacyControl = true`**: set via a MAIN-world content script (`gpc-signal.js`), registered at runtime through `chrome.scripting.registerContentScripts`.
-
-When GPC is not active, neither signal is sent. There is no `Sec-GPC: 0`: absence of the header means no preference expressed.
-
-### 6.3 Per-site overrides
-
-GPC follows the same per-site override model as blocking (§2.3). A site assigned the Permissive profile with all purposes allowed will not receive GPC, even if the global default profile would trigger it. Conversely, a site with a Strict profile will receive GPC even if the global default is Permissive.
-
-The extension maintains up to three dynamic DNR rules for GPC:
-
-- **Global GPC rule** (priority 1): sends `Sec-GPC: 1` to all sites when the default profile triggers it.
-- **Per-site add rule** (priority 2): adds GPC for specific sites whose custom profile triggers it, when the global rule does not apply.
-- **Per-site remove rule** (priority 2): suppresses GPC for specific sites whose custom profile allows all GPC-triggering purposes, overriding the global rule.
-
-### 6.4 Relation to the GPC specification
-
-The [GPC specification](https://privacycg.github.io/gpc-spec/) defines GPC as a binary signal: the user either expresses a preference to opt out of sale/sharing, or does not. ProtoConsent respects this: it sends `Sec-GPC: 1` or nothing.
-
-The difference is in **when** the signal is sent. Most implementations treat GPC as a global preference (always on or always off). ProtoConsent derives the signal from the user's purpose-level decisions, making it conditional per site. This is compatible with the spec, the spec does not require the signal to be global, but it extends the practical semantics: the GPC signal reflects a structured privacy position, not a blanket opt-out.
-
-Canonical source: `extension/config/purposes.json` (field `triggers_gpc`)
-
-## 7. JSON Schema Formalization (Planned)
-
-Formal JSON Schemas are planned for the configuration files:
-
-- `purposes.schema.json`: validates the purposes definition structure
-- `presets.schema.json`: validates the profiles/presets structure
-- `rules.schema.json`: validates the per-domain rules object
-- `message.schema.json`: validates the SDK ↔ extension message format
-
-Status: planned for a future version. This is not a blocker for current functionality.
-
-## 8. Protocol Implementation Status
-
-| Component | Status |
-| --- | --- |
-| Purposes data model (`purposes.json`) | Implemented (v0.1.0) |
-| Presets data model (`presets.json`) | Implemented (v0.1.0) |
-| SDK skeleton (API surface defined) | Implemented (v0.1.0) |
-| SDK messaging (actual communication) | Implemented (v0.1.0) |
-| Content script bridge | Implemented (v0.1.0) |
-| TypeScript type declarations | Implemented (v0.1.0) |
-| Conditional GPC header (Sec-GPC) | Implemented (v0.1.1): per-site, driven by `triggers_gpc` in purposes.json; also sets `navigator.globalPrivacyControl` via MAIN-world content script |
-| Site declaration (`.well-known`) | Implemented (v0.1.1): fetch with 24h/6h cache, popup side panel with Consent Commons icons |
-| JSON Schemas | Planned (protocol formalization) |
-| Demo sites using SDK | [protoconsent.org](https://protoconsent.org/) live test (v0.1.0), [demo.protoconsent.org](https://demo.protoconsent.org) full-featured demo (v0.2.0); additional demos planned |
-
-For extension-level implementation status (UI, enforcement, blocklists), see [product-overview.md](product-overview.md).
-
-## 9. Design Principles
+## 6. Design Principles
 
 - **No central server:** all data stays local to the browser.
 - **Privacy by default:** the SDK reveals only purpose-level allow/deny per domain, never user identity or cross-site state.
 - **Minimal signalling:** the smallest possible API surface that is useful.
 - **Consent Commons alignment:** purpose definitions map to established [Consent Commons](https://consentcommons.com/) keys.
 - **Optional adoption:** the extension works without any site integration; the SDK is an optional enhancement for cooperating websites.
-
----
-
-This draft is a starting point for the ProtoConsent purpose-signalling protocol. Feedback and contributions are welcome via the project's [GitHub repository](https://github.com/ProtoConsent/ProtoConsent).
