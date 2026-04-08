@@ -499,6 +499,170 @@ body {
   color: var(--pc-danger);
 }
 
+/* --- Inter-extension API --- */
+
+.ps-ext-accordion {
+  border: 1px solid var(--pc-line);
+  border-radius: 10px;
+  margin-top: 10px;
+  background: var(--pc-surface);
+}
+
+.ps-ext-accordion-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pc-text);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.ps-ext-accordion-header::-webkit-details-marker {
+  display: none;
+}
+
+.ps-ext-accordion-header::before {
+  content: "\25B6";
+  font-size: 9px;
+  color: var(--pc-text-soft);
+  transition: transform 0.15s;
+}
+
+details[open] > .ps-ext-accordion-header::before {
+  transform: rotate(90deg);
+}
+
+.ps-ext-accordion-body {
+  padding: 0 14px 10px;
+}
+
+.ps-ext-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--pc-surface-soft);
+  border: 1px solid var(--pc-line);
+  color: var(--pc-text-muted);
+}
+
+.ps-ext-badge-warn {
+  background: #fef3c7;
+  border-color: #f6c957;
+  color: #92400e;
+}
+
+.ps-ext-badge-deny {
+  background: #fee2e2;
+  border-color: #f0b1b1;
+  color: var(--pc-danger);
+}
+
+.ps-ext-empty {
+  color: var(--pc-text-soft);
+  font-size: 11px;
+  font-style: italic;
+  margin: 0;
+}
+
+.ps-ext-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--pc-line);
+}
+
+.ps-ext-row:last-of-type {
+  border-bottom: none;
+}
+
+.ps-ext-row:hover {
+  background: rgba(30, 58, 138, 0.03);
+}
+
+.ps-ext-id {
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  font-size: 11px;
+  color: var(--pc-text);
+  word-break: break-all;
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-ext-id a {
+  color: var(--pc-accent);
+  text-decoration: none;
+}
+
+.ps-ext-id a:hover {
+  text-decoration: underline;
+}
+
+.ps-ext-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ps-ext-btn {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--pc-line-strong);
+  background: var(--pc-surface);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ps-ext-btn:hover {
+  background: var(--pc-surface-soft);
+}
+
+.ps-ext-btn-allow {
+  color: var(--pc-success);
+  border-color: #b7dec0;
+}
+
+.ps-ext-btn-allow:hover {
+  background: #eef9f1;
+}
+
+.ps-ext-btn-deny {
+  color: var(--pc-danger);
+  border-color: #f0b1b1;
+}
+
+.ps-ext-btn-deny:hover {
+  background: #fff4f4;
+}
+
+.ps-ext-btn-revoke {
+  color: var(--pc-text-muted);
+}
+
+.ps-ext-note {
+  text-align: left;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.ps-ext-note a {
+  color: var(--pc-accent);
+  text-decoration: none;
+}
+
+.ps-ext-note a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 700px) {
   .ps-root {
     padding: 16px 12px 14px;

@@ -13,6 +13,9 @@ let DEBUG_RULES = false;
 // In store builds onRuleMatchedDebug does not exist, so this flag has no effect.
 const USE_DNR_DEBUG = false;
 
+// Inter-extension protocol version (independent of extension version).
+const INTEREXT_PROTOCOL_VERSION = "0.1";
+
 async function loadDebugFlag() {
   try {
     const { debug } = await chrome.storage.local.get("debug");

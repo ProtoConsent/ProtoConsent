@@ -14,7 +14,7 @@ ProtoConsent fills this missing layer: purpose‑based control at the browser le
 
 ProtoConsent is a purpose‑based privacy control that lives in the browser and works consistently across websites. Instead of deciding vendor by vendor in each cookie banner, the user defines high‑level profiles (for example, “Strict”, “Balanced”, “Permissive”) and purpose toggles (functional, analytics, ads/advertising, personalization, third‑party services, advanced tracking) directly in ProtoConsent’s interface.
 
-For each site, ProtoConsent stores a local rule that combines a profile with explicit overrides for specific purposes, and then blocks matching requests using the browser’s built‑in APIs. The extension includes an open, documented [purpose‑signalling protocol](protocol-draft.md) and a small [JavaScript SDK](../sdk/protoconsent.js) (MIT licensed), so that websites and CMPs can read the user’s browser‑level preferences and adapt, without requiring another banner. Websites can also publish a [`.well-known/protoconsent.json`](well-known-spec.md) file to declare their data practices without any code changes.
+For each site, ProtoConsent stores a local rule that combines a profile with explicit overrides for specific purposes, and then blocks matching requests using the browser’s built‑in APIs. The extension includes an open, documented [purpose‑signalling protocol](spec/signalling-protocol.md) and a small [JavaScript SDK](../sdk/protoconsent.js) (MIT licensed), so that websites and CMPs can read the user’s browser‑level preferences and adapt, without requiring another banner. Websites can also publish a [`.well-known/protoconsent.json`](spec/protoconsent-well-known.md) file to declare their data practices without any code changes.
 
 ## 3. Key features
 
@@ -42,9 +42,9 @@ For each site, ProtoConsent stores a local rule that combines a profile with exp
 
 **Enhanced protection:** Users can optionally activate curated third‑party blocklists for broader coverage beyond the core static rulesets. 13 lists from trusted open‑source projects (EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project) are available, organized in three presets (Off, Balanced, Full) or with individual list control. Lists are fetched on demand from public CDN sources and stored locally. The Enhanced tab in the popup provides preset selection, per‑list download/toggle/remove controls, and status indicators. Enhanced blocks appear in the Log tab with a shield icon alongside category icons where applicable.
 
-**Site declarations:** Websites can publish a [`.well-known/protoconsent.json`](well-known-spec.md) file to declare their data practices. The extension reads this file and displays the site's declared purposes, legal bases, providers, and data handling details in a side panel, using [Consent Commons](https://consentcommons.com/) icons. No SDK or code changes required - just a static JSON file, like `robots.txt` or `security.txt`.
+**Site declarations:** Websites can publish a [`.well-known/protoconsent.json`](spec/protoconsent-well-known.md) file to declare their data practices. The extension reads this file and displays the site's declared purposes, legal bases, providers, and data handling details in a side panel, using [Consent Commons](https://consentcommons.com/) icons. No SDK or code changes required - just a static JSON file, like `robots.txt` or `security.txt`.
 
-**Purpose‑signalling protocol and SDK:** An open [protocol](protocol-draft.md) and a lightweight [JavaScript SDK](../sdk/protoconsent.js) (MIT licensed) allow websites to query the user's consent preferences directly from the page. The SDK returns simple boolean values per purpose - no identity, no cross‑site tracking. Blocking works regardless of whether sites integrate the SDK.
+**Purpose‑signalling protocol and SDK:** An open [protocol](spec/signalling-protocol.md) and a lightweight [JavaScript SDK](../sdk/protoconsent.js) (MIT licensed) allow websites to query the user's consent preferences directly from the page. The SDK returns simple boolean values per purpose - no identity, no cross‑site tracking. Blocking works regardless of whether sites integrate the SDK.
 
 **Onboarding:** A welcome page guides first‑time users through choosing a default privacy profile, so the extension works out of the box without requiring manual configuration.
 
@@ -69,13 +69,13 @@ The user opens a website and, if needed, adjusts the profile or individual purpo
 | Version | Features |
 |---------|----------|
 | v0.1.0 | Purpose/preset data models, per-domain rules in storage, DNR enforcement (global + per-site), popup UI (profiles, toggles), [JavaScript SDK](../sdk/protoconsent.js) + [TypeScript declarations](../sdk/protoconsent.d.ts), content script bridge |
-| v0.1.1 | Static rulesets + path-based blocking, blocked request counter (per-tab, per-purpose, domain detail), conditional [GPC signal](https://globalprivacycontrol.org/) (Sec-GPC + navigator.globalPrivacyControl), [.well-known side panel](well-known-spec.md) with [Consent Commons](https://consentcommons.com/) icons, debug panel |
+| v0.1.1 | Static rulesets + path-based blocking, blocked request counter (per-tab, per-purpose, domain detail), conditional [GPC signal](https://globalprivacycontrol.org/) (Sec-GPC + navigator.globalPrivacyControl), [.well-known side panel](spec/protoconsent-well-known.md) with [Consent Commons](https://consentcommons.com/) icons, debug panel |
 | v0.2.0 | 40 000+ curated tracker domains + 1 200+ path rules ([blocklists.md](blocklists.md)), onboarding welcome page, purpose settings page, full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | v0.2.1 | Log monitoring tab (real-time request log, blocked domains by purpose, GPC tracking), session persistence, webRequest visibility for production builds |
 | v0.2.2 | Domain whitelist (per-site + global scope, priority-3 DNR allow rules, budget guard) |
 | v0.3.0 | Enhanced Protection: 13 optional third-party blocklists with presets (Off/Balanced/Full/Custom), on-demand CDN fetch, Enhanced tab UI, enhanced scope in consent view, purposes-settings enhanced presets, Client Hints stripping, CNAME cloaking detection, Cookie banner detection |
 | **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
-| **Documentation** | [Protocol spec](protocol-draft.md), [.well-known spec](well-known-spec.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [blocklist methodology](blocklists.md) |
+| **Documentation** | [Protocol spec](spec/signalling-protocol.md), [.well-known spec](spec/protoconsent-well-known.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [blocklist methodology](blocklists.md) |
 
 ## 6. Scope and non‑goals
 

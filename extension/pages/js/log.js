@@ -506,6 +506,17 @@ function connectLogPort() {
       appendLogLine("[" + msg.purpose + "] " + msg.url, "block");
     } else if (msg.type === "gpc") {
       appendLogLine("[gpc] " + msg.domain, "gpc");
+    } else if (msg.type === "ext") {
+      const sid = msg.sender.length > 16 ? msg.sender.slice(0, 8) + "\u2026" + msg.sender.slice(-6) : msg.sender;
+      const action = (msg.action || "").replace("protoconsent:", "");
+      let detail = action;
+      if (msg.domain) detail += " " + msg.domain;
+      if (msg.result === "ok") {
+        detail += msg.profile ? " \u2713 " + msg.profile : " \u2713";
+      } else {
+        detail += " \u2717 " + msg.result;
+      }
+      appendLogLine("[ext] " + sid + " \u2192 " + detail, "ext", msg.ts);
     }
   });
 
@@ -563,7 +574,7 @@ function replayHistoricalLog() {
 const LOG_MAX_LINES = 500;
 const LOG_NODES_PER_LINE = 3; // tsSpan + lineSpan + "\n" textNode
 
-function appendLogLine(text, type) {
+function appendLogLine(text, type, ts) {
   const pre = document.getElementById("pc-log-requests");
   if (!pre) return;
 
@@ -577,10 +588,11 @@ function appendLogLine(text, type) {
   const line = document.createElement("span");
   if (type === "block") line.className = "pc-log-line-block";
   else if (type === "gpc") line.className = "pc-log-line-gpc";
+  else if (type === "ext") line.className = "pc-log-line-ext";
 
   const tsSpan = document.createElement("span");
   tsSpan.className = "pc-log-line-ts";
-  tsSpan.textContent = formatHHMMSS(Date.now()) + " ";
+  tsSpan.textContent = formatHHMMSS(ts || Date.now()) + " ";
 
   // Only auto-scroll if user is already near the bottom
   const atBottom = (pre.scrollHeight - pre.scrollTop - pre.clientHeight) < 40;
