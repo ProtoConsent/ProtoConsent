@@ -40,7 +40,7 @@ For each site, ProtoConsent stores a local rule that combines a profile with exp
 
 **Domain whitelist:** Users can allow specific blocked domains directly from the Domains panel in the Log tab. Each whitelist entry can be scoped per site (only takes effect on the current website) or globally (all sites), with a one‑click scope toggle. The Whitelist tab provides a central view of all allowed domains with active‑domain highlighting when a whitelisted domain loads on the current page.
 
-**Enhanced protection:** Users can optionally activate curated third‑party blocklists for broader coverage beyond the core static rulesets. 13 lists from trusted open‑source projects (EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project) are available, organized in three presets (Off, Basic, Full) or with individual list control. Lists are fetched on demand from public CDN sources and stored locally. The Enhanced tab in the popup provides preset selection, per‑list download/toggle/remove controls, and status indicators. Enhanced blocks appear in the Log tab with a shield icon alongside category icons where applicable.
+**Enhanced protection:** Users can optionally activate curated third‑party blocklists for broader coverage beyond the core static rulesets. 13 lists from trusted open‑source projects (EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project) are available, organized in three presets (Off, Balanced, Full) or with individual list control. Lists are fetched on demand from public CDN sources and stored locally. The Enhanced tab in the popup provides preset selection, per‑list download/toggle/remove controls, and status indicators. Enhanced blocks appear in the Log tab with a shield icon alongside category icons where applicable.
 
 **Site declarations:** Websites can publish a [`.well-known/protoconsent.json`](well-known-spec.md) file to declare their data practices. The extension reads this file and displays the site's declared purposes, legal bases, providers, and data handling details in a side panel, using [Consent Commons](https://consentcommons.com/) icons. No SDK or code changes required - just a static JSON file, like `robots.txt` or `security.txt`.
 
@@ -60,7 +60,7 @@ The user opens a website and, if needed, adjusts the profile or individual purpo
 
 **Current focus:** Import/export of user configuration, `.well-known` declaration generator, core blocklist refresh, and ecosystem outreach (pilot sites publishing declarations).
 
-**Planned:** Firefox support, internationalisation, protocol formalisation. Timing depends on external factors.
+**Planned:** Firefox support, internationalisation, protocol formalisation (the protocol is currently a working draft; formal standardisation is a long-term goal pending real-world adoption).
 
 **Long‑term:** Strengthen ProtoConsent’s security posture (risk assessment, hardening, security processes) and work with regulators, browser vendors, and civil‑society organisations so that purpose‑based controls can become part of mainstream web practice.
 
@@ -73,7 +73,7 @@ The user opens a website and, if needed, adjusts the profile or individual purpo
 | v0.2.0 | 40 000+ curated tracker domains + 1 200+ path rules ([blocklists.md](blocklists.md)), onboarding welcome page, purpose settings page, full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | v0.2.1 | Log monitoring tab (real-time request log, blocked domains by purpose, GPC tracking), session persistence, webRequest visibility for production builds |
 | v0.2.2 | Domain whitelist (per-site + global scope, priority-3 DNR allow rules, budget guard) |
-| v0.3.0 | Enhanced Protection: 13 optional third-party blocklists with presets (Off/Basic/Full/Custom), on-demand CDN fetch, Enhanced tab UI, enhanced scope in consent view, purposes-settings enhanced presets, Client Hints stripping, CNAME cloaking detection, Cookie banner detection |
+| v0.3.0 | Enhanced Protection: 13 optional third-party blocklists with presets (Off/Balanced/Full/Custom), on-demand CDN fetch, Enhanced tab UI, enhanced scope in consent view, purposes-settings enhanced presets, Client Hints stripping, CNAME cloaking detection, Cookie banner detection |
 | **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | **Documentation** | [Protocol spec](protocol-draft.md), [.well-known spec](well-known-spec.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [blocklist methodology](blocklists.md) |
 
@@ -96,7 +96,7 @@ ProtoConsent is designed to implement browser‑side, purpose‑based privacy co
 - Acting as a consent management platform (CMP): ProtoConsent does not manage consent on behalf of sites or negotiate with vendors.
 - Replacing site‑side consent mechanisms: the extension complements existing consent tools, it does not replace them.
 - Guaranteeing control over all forms of data processing: browser‑level enforcement cannot prevent server‑side processing, first‑party abuse, or offline correlation.
-- Establishing a web standard or normative specification: the protocol is a working draft; adoption is voluntary.
+
 
 ### Research focus
 
