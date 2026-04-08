@@ -303,3 +303,69 @@
   text-align: center;
   padding: 16px 0;
 }
+
+.ep-update-badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--pc-accent-subtle, #e8f0fe);
+  color: var(--pc-accent, #1a73e8);
+  margin-left: 6px;
+  font-weight: 500;
+}
+
+/* Sync consent pill */
+.ep-preset-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.ep-sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--pc-line);
+  background-color: var(--pc-surface);
+  color: var(--pc-text-muted);
+  cursor: pointer;
+}
+
+.ep-sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: #9ca3af;
+}
+
+.ep-sync-pill.is-active {
+  color: #166534;
+  border-color: #bbf7d0;
+  background-color: #f0fdf4;
+}
+
+.ep-sync-pill.is-active .ep-sync-dot {
+  background-color: #22c55e;
+}
+
+.ep-sync-pill.is-disabled {
+  color: #6b7280;
+  border-color: #e5e7eb;
+  background-color: #f3f4f6;
+}
+
+.ep-sync-pill:hover {
+  border-color: var(--pc-line-strong);
+}
+
+.ep-sync-pill:focus-visible {
+  outline: 2px solid var(--pc-accent);
+  outline-offset: 2px;
+}

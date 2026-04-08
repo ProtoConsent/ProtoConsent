@@ -50,6 +50,9 @@ body {
   border-radius: 18px;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   box-shadow: 0 20px 42px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06);
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
 }
 
 .ob-hidden {
@@ -172,7 +175,8 @@ body {
 /* Save button */
 .ob-action {
   text-align: center;
-  margin-top: 6px;
+  margin-top: auto;
+  padding-top: 6px;
 }
 
 .ob-save-btn {
@@ -234,7 +238,8 @@ body {
 }
 
 /* Feature overview cards */
-.ob-features {
+.ob-features,
+.ob-dynamic-details {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -282,6 +287,21 @@ body {
   color: #7c3aed;
 }
 
+.ob-feature-icon-site {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.ob-feature-icon-ch {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.ob-feature-icon-wk {
+  background: #d1fae5;
+  color: #047857;
+}
+
 .ob-feature-text {
   min-width: 0;
 }
@@ -303,6 +323,7 @@ body {
 #ob-done-screen {
   text-align: center;
   padding-top: 40px;
+  align-items: center;
 }
 
 #ob-done-screen .ob-intro {

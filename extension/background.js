@@ -486,19 +486,111 @@ function withEnhancedStorageLock(fn) {
   return enhancedStorageChain;
 }
 
-// Cached enhanced lists catalog (loaded from config/enhanced-lists.json)
+// Enhanced lists catalog - merged from local fallback + remote lists.json
 let enhancedListsCatalog = null;
+let _catalogPromise = null;
+let _catalogLastFetched = 0;
+let _catalogSource = "none"; // "local" | "merged" | "none"
+let _catalogError = null;
+let _catalogLocalCount = 0;
+let _catalogRemoteCount = 0;
+let _catalogLastRemoteFetch = 0;
+const CATALOG_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const CATALOG_REMOTE_URL = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists.json";
+const CATALOG_REMOTE_FALLBACK = "https://raw.githubusercontent.com/ProtoConsent/data/main/lists.json";
+const SUPPORTED_MANIFEST_VERSION = 1;
 
-function loadEnhancedListsCatalog() {
-  if (enhancedListsCatalog) return Promise.resolve(enhancedListsCatalog);
-  return fetch(chrome.runtime.getURL("config/enhanced-lists.json"))
+function loadEnhancedListsCatalog(options) {
+  const forceRefresh = options && options.forceRefresh;
+
+  if (enhancedListsCatalog && !forceRefresh &&
+      (Date.now() - _catalogLastFetched < CATALOG_TTL)) {
+    return Promise.resolve(enhancedListsCatalog);
+  }
+
+  // Deduplicate concurrent calls: return in-flight promise if one exists
+  if (_catalogPromise && !forceRefresh) return _catalogPromise;
+
+  // Load local fallback (always available, even offline)
+  const localPromise = fetch(chrome.runtime.getURL("config/enhanced-lists.json"))
     .then(r => r.json())
-    .then(data => { enhancedListsCatalog = data; return data; })
-    .catch(e => {
-      console.warn("ProtoConsent: failed to load enhanced-lists.json:", e.message);
-      enhancedListsCatalog = {};
-      return {};
-    });
+    .catch(() => ({}));
+
+  // Remote fetch gated by user consent (dynamicListsConsent)
+  const consentPromise = new Promise(r =>
+    chrome.storage.local.get("dynamicListsConsent", d => r(d.dynamicListsConsent === true))
+  );
+
+  const remotePromise = consentPromise.then(consented => {
+    if (!consented) return null;
+
+    // Fetch remote lists.json (10s timeout, CDN with fallback)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const fetchOpts = { credentials: "omit", signal: controller.signal };
+
+    return fetch(CATALOG_REMOTE_URL, fetchOpts)
+      .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .catch(err => {
+        if (err.name === "AbortError") throw err;
+        return fetch(CATALOG_REMOTE_FALLBACK, fetchOpts)
+          .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+      })
+      .then(manifest => {
+        clearTimeout(timeoutId);
+        if (!manifest || typeof manifest.manifest_version !== "number") return null;
+        if (manifest.manifest_version > SUPPORTED_MANIFEST_VERSION) {
+          console.warn("ProtoConsent: remote manifest_version " +
+            manifest.manifest_version + " > supported " +
+            SUPPORTED_MANIFEST_VERSION + ", using local catalog");
+          return null;
+        }
+        return manifest.lists || null;
+      })
+      .catch(err => {
+        clearTimeout(timeoutId);
+        _catalogError = err.message || "unknown";
+        if (DEBUG_RULES) console.warn("ProtoConsent: remote catalog fetch failed:", err.message);
+        return null;
+      });
+  });
+
+  _catalogPromise = Promise.all([localPromise, remotePromise]).then(([local, remote]) => {
+    _catalogLastFetched = Date.now();
+    _catalogPromise = null;
+    _catalogLocalCount = Object.keys(local).length;
+    _catalogRemoteCount = remote ? Object.keys(remote).length : 0;
+
+    if (!remote) {
+      _catalogSource = "local";
+      _catalogError = _catalogError || null;
+      enhancedListsCatalog = local;
+      return enhancedListsCatalog;
+    }
+
+    // Merge: local-first, remote-overlay (null-prototype to avoid __proto__ pollution)
+    _catalogSource = "merged";
+    _catalogError = null;
+    _catalogLastRemoteFetch = Date.now();
+    const merged = Object.create(null);
+    for (const id of Object.keys(local)) {
+      merged[id] = local[id];
+    }
+    for (const id of Object.keys(remote)) {
+      if (merged[id]) {
+        const entry = Object.create(null);
+        Object.assign(entry, merged[id], remote[id]);
+        merged[id] = entry;
+      } else {
+        merged[id] = remote[id];
+      }
+    }
+
+    enhancedListsCatalog = merged;
+    return enhancedListsCatalog;
+  });
+
+  return _catalogPromise;
 }
 
 // Serialized whitelist write queue to prevent concurrent read-modify-write conflicts.
@@ -1262,8 +1354,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       const debugData = Object.assign({}, lastRebuildDebug, {
         navigatingTabs: tabNavigating.size,
         logPorts: logPorts.size,
+        catalogSource: _catalogSource,
+        catalogLastFetched: _catalogLastFetched,
+        catalogError: _catalogError,
+        catalogLocalCount: _catalogLocalCount,
+        catalogRemoteCount: _catalogRemoteCount,
+        catalogLastRemoteFetch: _catalogLastRemoteFetch,
       });
-      // Gather async debug data: session storage + inter-extension API state
+      // Gather async debug data: session storage + inter-extension API state + dynamic lists consent
       const p1 = (chrome.storage.session && chrome.storage.session.get)
         ? chrome.storage.session.get(null).then(s => Object.keys(s).length).catch(() => -1)
         : Promise.resolve(-1);
@@ -1271,12 +1369,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         ["interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending"],
         r
       ));
-      Promise.all([p1, p2]).then(([sessionKeys, ext]) => {
+      const p3 = new Promise(r => chrome.storage.local.get(
+        "dynamicListsConsent", d => r(d.dynamicListsConsent === true)
+      ));
+      Promise.all([p1, p2, p3]).then(([sessionKeys, ext, dynamicConsent]) => {
         debugData.sessionKeys = sessionKeys;
         debugData.interExtEnabled = ext.interExtEnabled === true;
         debugData.interExtAllowlist = ext.interExtAllowlist || [];
         debugData.interExtDenylist = ext.interExtDenylist || [];
         debugData.interExtPending = ext.interExtPending || [];
+        debugData.dynamicListsConsent = dynamicConsent;
         sendResponse(debugData);
       });
     };
@@ -1411,12 +1513,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   // Enhanced Protection: get current state (catalog + enabled lists + preset)
   if (message.type === "PROTOCONSENT_ENHANCED_GET_STATE") {
+    const forceRefresh = message.forceRefresh === true;
     Promise.all([
-      loadEnhancedListsCatalog(),
+      loadEnhancedListsCatalog(forceRefresh ? { forceRefresh: true } : undefined),
       getEnhancedListsFromStorage(),
       getEnhancedPresetFromStorage(),
-    ]).then(([catalog, lists, preset]) => {
-      sendResponse({ catalog, lists, preset });
+      new Promise(r => chrome.storage.local.get("dynamicListsConsent", d => r(d.dynamicListsConsent === true))),
+    ]).then(([catalog, lists, preset, dynamicConsent]) => {
+      sendResponse({ catalog, lists, preset, dynamicConsent });
     });
     return true; // async response
   }
@@ -1772,11 +1876,11 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
     }
 
     const senderId = sender.id;
-    if (!senderId) return; // anomalous — onMessageExternal should always provide sender.id
+    if (!senderId) return; // anomalous - onMessageExternal should always provide sender.id
 
     // Denylist: silently drop messages from denied extensions (no response).
     const denylist = r.interExtDenylist || [];
-    if (denylist.includes(senderId)) return; // no log — silent by design
+    if (denylist.includes(senderId)) return; // no log - silent by design
 
     const allowlist = r.interExtAllowlist || []; // array of allowed extension IDs
 
@@ -1793,7 +1897,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
       }
       const isNewId = !_unknownIds.has(senderId);
       if (isNewId) _unknownIds.add(senderId);
-      if (isNewId && _unknownIds.size > EXT_UNKNOWN_LIMIT) return; // silent drop — flood protection
+      if (isNewId && _unknownIds.size > EXT_UNKNOWN_LIMIT) return; // silent drop - flood protection
 
       // Record pending request so the UI can show an authorization prompt.
       // Store: { id, firstSeen }. Cap at EXT_PENDING_CAP (discard oldest).
@@ -1864,7 +1968,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
     sendResponse({ type: "protoconsent:error", error: "unknown_type", message: "Unsupported message type" });
     pushExtEvent({ sender: senderId, action: message.type, result: "unknown_type" });
   });
-  return true; // async — storage read before any response
+  return true; // async - storage read before any response
 });
 
 // Track blocked domains per tab for the popup detail view.

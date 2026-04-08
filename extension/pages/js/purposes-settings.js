@@ -19,6 +19,7 @@ async function init() {
 		renderPurposes(purposes);
 		renderPresets(presets, purposes);
 		renderEnhancedPresets();
+		renderDynamicListsToggle();
 		initInterExt();
 
 		const versionEl = document.getElementById('viewer-version');
@@ -665,6 +666,32 @@ function validateImport(data) {
 	}
 
 	return { clean, errors };
+}
+
+function renderDynamicListsToggle() {
+	const section = document.getElementById('dynamic-lists-section');
+	const toggle = document.getElementById('ps-dynamic-toggle');
+	const label = document.getElementById('ps-dynamic-label');
+	if (!section || !toggle || !label) return;
+
+	chrome.storage.local.get('dynamicListsConsent', (data) => {
+		const enabled = data.dynamicListsConsent === true;
+		toggle.checked = enabled;
+		label.textContent = enabled ? 'Enabled' : 'Disabled';
+		section.classList.remove('ps-hidden');
+	});
+
+	toggle.addEventListener('change', () => {
+		const enabled = toggle.checked;
+		label.textContent = enabled ? 'Enabled' : 'Disabled';
+		setDynamicListsConsent(enabled, () => {
+			// Invalidate catalog cache so next Enhanced tab load picks up new consent
+			chrome.runtime.sendMessage(
+				{ type: "PROTOCONSENT_ENHANCED_GET_STATE", forceRefresh: true },
+				() => { void chrome.runtime.lastError; }
+			);
+		});
+	});
 }
 
 function initDataSection() {

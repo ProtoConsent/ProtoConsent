@@ -134,6 +134,25 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // Dynamic lists catalog
+    if (bg) {
+      const consent = bg.dynamicListsConsent ? "on" : "off";
+      lines.push("-- dynamic lists: consent " + consent + " --");
+      lines.push("  source: " + (bg.catalogSource || "none"));
+      if (bg.catalogLastFetched) {
+        lines.push("  last load: " + new Date(bg.catalogLastFetched).toISOString());
+      } else {
+        lines.push("  last load: never");
+      }
+      if (bg.catalogLastRemoteFetch) {
+        lines.push("  last remote fetch: " + new Date(bg.catalogLastRemoteFetch).toISOString());
+      }
+      if (bg.catalogError) lines.push("  error: " + bg.catalogError);
+      lines.push("  catalog entries: local " + (bg.catalogLocalCount || 0) +
+        ", remote " + (bg.catalogRemoteCount || 0));
+      lines.push("");
+    }
+
     // Client Hints stripping
     if (bg && bg.chStripping) {
       const toggle = bg.chEnabled ? "on" : "off";
