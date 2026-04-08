@@ -1705,7 +1705,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 // --- Inter-extension provider API ---
 // Allows other privacy extensions to query ProtoConsent's consent state.
 // Read-only: consumers can query purposes for a domain, never modify preferences.
-// See design/inter-extension-spec.md for the full specification.
+// See design/spec/inter-extension-protocol.md for the full specification.
 
 const _extRateLimit = new Map(); // senderId -> { count, windowStart }
 const EXT_RATE_LIMIT = 10;      // max requests per minute per extension

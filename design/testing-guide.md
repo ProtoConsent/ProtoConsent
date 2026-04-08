@@ -428,7 +428,7 @@ Site declaration displayed with Consent Commons icons on demo.protoconsent.org:
 
 ### 10.3 Publishing your own declaration
 
-Any site can publish a `.well-known/protoconsent.json` file. See the [site declaration spec](well-known-spec.md) for the full format and the [demo site source](https://github.com/ProtoConsent/demo) for a complete example. You can also use the [online validator](https://protoconsent.org/validate.html) to check your file before deploying it.
+Any site can publish a `.well-known/protoconsent.json` file. See the [site declaration spec](spec/protoconsent-well-known.md) for the full format and the [demo site source](https://github.com/ProtoConsent/demo) for a complete example. You can also use the [online validator](https://protoconsent.org/validate.html) to check your file before deploying it.
 
 ## 11. Switching to DNR debug mode
 

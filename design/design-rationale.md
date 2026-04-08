@@ -8,8 +8,8 @@ This document explains *why* ProtoConsent is designed the way it is: the premise
 
 - **[product-overview.md](product-overview.md)**: what ProtoConsent is and what it does
 - **[architecture.md](architecture.md)**: how it works technically
-- **[protocol-draft.md](protocol-draft.md)**: the SDK and purpose‑signalling protocol
-- **[well-known-spec.md](well-known-spec.md)**: site declaration format
+- **[signalling-protocol.md](spec/signalling-protocol.md)**: the SDK and purpose‑signalling protocol
+- **[protoconsent-well-known.md](spec/protoconsent-well-known.md)**: site declaration format
 - **[blocklists.md](blocklists.md)**: enforcement methodology and list curation
 
 ## 1. The problem ProtoConsent addresses
@@ -114,8 +114,8 @@ ProtoConsent has clear boundaries:
 |----------|----------|
 | What is ProtoConsent and what does it do? | [product-overview.md](product-overview.md) |
 | How is it implemented? | [architecture.md](architecture.md) |
-| What is the SDK API surface? | [protocol-draft.md](protocol-draft.md) |
-| How do site declarations work? | [well-known-spec.md](well-known-spec.md) |
+| What is the SDK API surface? | [signalling-protocol.md](spec/signalling-protocol.md) |
+| How do site declarations work? | [protoconsent-well-known.md](spec/protoconsent-well-known.md) |
 | How are blocklists curated and applied? | [blocklists.md](blocklists.md) |
 | How to test the extension? | [testing-guide.md](testing-guide.md) |
 | What visual language does it use? | [icons-and-layers.md](icons-and-layers.md) |

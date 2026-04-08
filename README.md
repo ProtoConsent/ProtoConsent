@@ -76,8 +76,8 @@ The Domains tab includes Allow/Allowed buttons for quick whitelist control. The 
 
 ProtoConsent offers two ways for websites to participate, both optional:
 
-- **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, sharing scope). No SDK, no code changes, just a JSON file. See the [spec](design/well-known-spec.md), the [demo site source](https://github.com/ProtoConsent/demo) for a complete example, and the [online validator](https://protoconsent.org/validate.html) to check your file.
-- **Integrate the SDK:** import `sdk/protoconsent.js` (MIT) and call `get('analytics')` to read the user's preferences. Returns `true`, `false`, or `null` (extension not installed). See the [quick example](design/protocol-draft.md#quick-example) and [SDK source](sdk/protoconsent.js).
+- **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, sharing scope). No SDK, no code changes, just a JSON file. See the [spec](design/spec/protoconsent-well-known.md), the [demo site source](https://github.com/ProtoConsent/demo) for a complete example, and the [online validator](https://protoconsent.org/validate.html) to check your file.
+- **Integrate the SDK:** import `sdk/protoconsent.js` (MIT) and call `get('analytics')` to read the user's preferences. Returns `true`, `false`, or `null` (extension not installed). See the [quick example](design/spec/signalling-protocol.md#quick-example) and [SDK source](sdk/protoconsent.js).
 
 For a visual walkthrough of both paths, see [protoconsent.org/developers](https://protoconsent.org/developers.html).
 
@@ -94,8 +94,8 @@ See [architecture.md](design/architecture.md) for the full technical description
 - [Product overview](design/product-overview.md) – problem, solution, features, scope, and roadmap
 
 **Specifications**
-- [Purpose‑signalling protocol](design/protocol-draft.md) – data model, communication mechanism, SDK API
-- [Site declaration spec](design/well-known-spec.md) – `.well-known/protoconsent.json` format
+- [Purpose‑signalling protocol](design/spec/signalling-protocol.md) – data model, communication mechanism, SDK API
+- [Site declaration spec](design/spec/protoconsent-well-known.md) – `.well-known/protoconsent.json` format
 - [Blocklists methodology](design/blocklists.md) – sources, curation, DNR format, enhanced lists
 
 **Implementation**

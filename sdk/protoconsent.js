@@ -27,7 +27,7 @@
 // Every method returns a Promise. If the extension is not installed,
 // all calls resolve to null — no errors, no side effects.
 //
-// See design/protocol-draft.md for the protocol specification.
+// See design/spec/signalling-protocol.md for the protocol specification.
 
 const VERSION = '0.1.0';
 

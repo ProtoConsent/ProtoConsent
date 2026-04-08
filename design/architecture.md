@@ -256,7 +256,7 @@ The difference is in *when* the signal is sent. Most implementations treat GPC a
 
 ## 11. Site declaration behaviour
 
-This section describes how the extension handles `.well-known/protoconsent.json` files. For the file format specification, see [well-known-spec.md](well-known-spec.md).
+This section describes how the extension handles `.well-known/protoconsent.json` files. For the file format specification, see [protoconsent-well-known.md](spec/protoconsent-well-known.md).
 
 ### 11.1 Fetching
 
@@ -323,5 +323,5 @@ Query responses reuse the same `handleBridgeQuery` function that serves the page
 | `protoconsent:query` | consumer → provider | Returns resolved purpose booleans and profile for a domain. |
 | `protoconsent:error` | provider → consumer | Returned for disabled API, unauthorized, invalid, or rate-limited queries. Codes: `disabled`, `need_authorization`, `invalid_domain`, `rate_limited`, `unknown_type`, `internal`. |
 
-For message format details, see [inter-extension-protocol.md](inter-extension-protocol.md).
+For message format details, see [inter-extension-protocol.md](spec/inter-extension-protocol.md).
 

@@ -1,12 +1,12 @@
 # ProtoConsent Inter-Extension Protocol (Draft)
 
-This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../LICENSE-CC-BY-SA) file for details.
+This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../../LICENSE-CC-BY-SA) file for details.
 
 ## 1. Overview
 
 This document specifies the inter-extension communication protocol for ProtoConsent. It defines how other browser extensions can query the user's consent state via `chrome.runtime.sendMessage`. ProtoConsent acts as a read-only **consent provider**; consumer extensions can read preferences but never modify them.
 
-The protocol reuses the same data model and purpose definitions described in [protocol-draft.md §2](protocol-draft.md#2-data-model).
+The protocol reuses the same data model and purpose definitions described in [data-model.md](data-model.md).
 
 **Status:** draft.
 
