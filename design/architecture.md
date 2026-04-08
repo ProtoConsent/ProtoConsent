@@ -30,6 +30,8 @@ The extension provides a popup interface to manage profiles and purposes per sit
     - [`main_frame` exclusion](#main_frame-exclusion)
     - [Path‑domain filtering in block overrides](#pathdomain-filtering-in-block-overrides)
   - [9. Extensibility](#9-extensibility)
+  - [10. Global Privacy Control (GPC)](#10-global-privacy-control-gpc)
+    - [Relation to the GPC specification](#relation-to-the-gpc-specification)
 
 ## 2. Components
 
@@ -209,3 +211,41 @@ New purposes can be added as fields in the site rule without breaking existing p
 Firefox support is planned as the next browser target. The extension architecture (popup, background, local storage, enforcement) maps directly to Firefox's WebExtensions API, with adaptations mainly in `declarativeNetRequest` availability and manifest format. The same popup UI, data model, and SDK work across browsers.
 
 The optional SDK and purpose‑signalling protocol are documented layers on top of the extension, not hard dependencies. Websites can adopt them at their own pace while the extension continues to work on its own. This lets others adopt parts of ProtoConsent independently.
+
+## 10. Global Privacy Control (GPC)
+
+ProtoConsent sends the [GPC signal](https://globalprivacycontrol.org/) conditionally, based on the user's resolved purpose state for each site. GPC is not a global toggle: it is derived from purpose‑level decisions.
+
+Each purpose in `config/purposes.json` has a `triggers_gpc` boolean field. When any purpose with `triggers_gpc: true` is denied for a given site, the extension activates GPC for that site:
+
+| Purpose | `triggers_gpc` | Rationale |
+| --- | --- | --- |
+| `functional` | `false` | Core site functionality; denying it does not imply a privacy opt‑out. |
+| `analytics` | `false` | Site‑internal measurement; typically first‑party and not covered by GPC's opt‑out scope. |
+| `ads` | `true` | Advertising and remarketing involve cross‑site data sharing that GPC was designed to signal against. |
+| `personalization` | `false` | User‑facing content adaptation; does not inherently involve cross‑site tracking. |
+| `third_parties` | `true` | Data sharing with third parties is a core opt‑out scenario for GPC. |
+| `advanced_tracking` | `true` | Cross‑site fingerprinting and device tracking; GPC directly applies. |
+
+When GPC is active for a site, two signals are sent:
+
+1. **`Sec-GPC: 1` HTTP header** - injected via `declarativeNetRequest` `modifyHeaders` rules on outgoing requests to the site's domain.
+2. **`navigator.globalPrivacyControl = true`** - set via a MAIN‑world content script (`gpc-signal.js`), registered at runtime through `chrome.scripting.registerContentScripts`.
+
+When GPC is not active, neither signal is sent. There is no `Sec-GPC: 0`: absence of the header means no preference expressed.
+
+The extension maintains up to three dynamic DNR rules for GPC:
+
+- **Global GPC rule** (priority 1): sends `Sec-GPC: 1` to all sites when the default profile triggers it.
+- **Per‑site add rule** (priority 2): adds GPC for specific sites whose custom profile triggers it, when the global rule does not apply.
+- **Per‑site remove rule** (priority 2): suppresses GPC for specific sites whose custom profile allows all GPC‑triggering purposes, overriding the global rule.
+
+Per‑site GPC overrides use `requestDomains` (the destination URL), not `initiatorDomains` (the page making the request). This means that trusting a site - for example allowing all purposes on elpais.com - removes the GPC signal from requests *to* elpais.com, but third‑party requests *from* elpais.com to domains like google‑analytics.com still carry the global GPC signal. The same applies to cross‑origin iframes: an iframe from youtube.com embedded on a trusted elpais.com page still receives GPC from the global rule.
+
+Users can disable GPC entirely via a global toggle in Purpose Settings (`gpcEnabled` in storage, default `true`); when off, no GPC headers or content scripts are generated regardless of purpose state.
+
+### Relation to the GPC specification
+
+The [GPC specification](https://privacycg.github.io/gpc-spec/) defines GPC as a binary signal: the user either expresses a preference to opt out of sale/sharing, or does not. ProtoConsent respects this: it sends `Sec-GPC: 1` or nothing.
+
+The difference is in *when* the signal is sent. Most implementations treat GPC as a global preference (always on or always off). ProtoConsent derives the signal from the user's purpose‑level decisions, making it conditional per site. This is compatible with the spec - the spec does not require the signal to be global - but it extends the practical semantics: the GPC signal reflects a structured privacy position, not a blanket opt‑out.
