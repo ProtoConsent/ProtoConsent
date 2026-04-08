@@ -1,6 +1,6 @@
 # ProtoConsent – `.well-known/protoconsent.json` specification
 
-This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../LICENSE-CC-BY-SA) file for details.
+This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../../LICENSE-CC-BY-SA) file for details.
 
 ## 1. Overview
 
@@ -128,7 +128,7 @@ Only `functional` and `analytics` are declared. The remaining four purposes are 
 
 ## 4. Extension behaviour (non-normative)
 
-For details on how the ProtoConsent extension fetches, validates, caches, and displays `.well-known/protoconsent.json` files, see [architecture.md §11](architecture.md#11-site-declaration-behaviour).
+For details on how the ProtoConsent extension fetches, validates, caches, and displays `.well-known/protoconsent.json` files, see [architecture.md §11](../architecture.md#11-site-declaration-behaviour).
 
 ## 5. Relationship to other specifications
 

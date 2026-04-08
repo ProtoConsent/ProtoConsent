@@ -198,7 +198,7 @@ async function loadSiteDeclaration() {
 }
 
 // Minimal validation of a ProtoConsent .well-known/protoconsent.json file.
-// See design/well-known-spec.md §4.2 for the rules.
+// See design/spec/protoconsent-well-known.md §4.2 for the rules.
 function validateSiteDeclaration(json) {
   if (!json || typeof json !== "object") return false;
   if (!json.purposes || typeof json.purposes !== "object") return false;

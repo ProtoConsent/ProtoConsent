@@ -33,6 +33,9 @@ The extension provides a popup interface to manage profiles and purposes per sit
   - [10. Global Privacy Control (GPC)](#10-global-privacy-control-gpc)
     - [Relation to the GPC specification](#relation-to-the-gpc-specification)
   - [11. Site declaration behaviour](#11-site-declaration-behaviour)
+  - [12. Inter-extension provider API](#12-inter-extension-provider-api)
+    - [12.4 Management UI](#124-management-ui)
+    - [12.5 Observability](#125-observability)
 
 ## 2. Components
 
@@ -87,6 +90,8 @@ Per‑site GPC overrides use `requestDomains` (the destination URL), not `initia
 **TCF detection script** – A MAIN‑world content script (`tcf-detect.js`) that probes for the IAB TCF `__tcfapi` function on the page. When a consent management platform (CMP) is found, the script calls `getTCData` to retrieve the CMP’s identity and purpose consent state, then sends a `PROTOCONSENT_TCF_DETECTED` message via `window.postMessage` (using `window.location.origin` as the target origin). The content script bridge picks it up and forwards it to the background, which validates and stores the data per tab in memory and `chrome.storage.session`. The popup displays the CMP info in a pill indicator and expandable side panel, so users can compare the site banner’s consent state with ProtoConsent’s enforcement. Probing retries at 200, 600, 1500, 3000 and 5000 ms to handle asynchronously loaded CMPs.
 
 **protoconsent.js SDK** – A small, optional JavaScript library for web pages to read the user’s ProtoConsent preferences (e.g. whether analytics is allowed) via the content script bridge. The extension works without it; the SDK is for sites that want to adapt their behaviour to the user’s choices. TypeScript type declarations are also provided (`sdk/protoconsent.d.ts`).
+
+**Inter-extension provider** – The background script also acts as a consent provider for other browser extensions. Extensions like Consent‑O‑Matic or uBlock Origin can query ProtoConsent’s resolved purpose state for any domain via `chrome.runtime.sendMessage`. The API is disabled by default and gated by a per-extension allowlist (Trust on First Use): the user must enable the feature and individually approve each consumer extension. Consumers can query but never modify preferences. The Purpose Settings page provides the management UI (master switch, pending/allow/deny lists), and all API events appear in the Log tab’s Requests stream for observability. See §12 for details.
 
 **Onboarding and purpose settings pages** – Two additional extension pages complement the popup. The onboarding page (`pages/onboarding.html`) opens on first install and guides new users through selecting a default privacy profile. The purpose settings page (`pages/purposes-settings.html`) lets users customise the global default profile by toggling individual purposes, and shows the active Enhanced Protection preset alongside the consent presets. Accessible from the popup or `chrome://extensions`.
 
@@ -253,7 +258,7 @@ The difference is in *when* the signal is sent. Most implementations treat GPC a
 
 ## 11. Site declaration behaviour
 
-This section describes how the extension handles `.well-known/protoconsent.json` files. For the file format specification, see [well-known-spec.md](well-known-spec.md).
+This section describes how the extension handles `.well-known/protoconsent.json` files. For the file format specification, see [protoconsent-well-known.md](spec/protoconsent-well-known.md).
 
 ### 11.1 Fetching
 
@@ -288,3 +293,56 @@ When a valid declaration exists, the popup shows a "Site declaration" side panel
 ### 11.4 No enforcement change
 
 The `.well-known` file **never** modifies user preferences, DNR rules, or GPC headers. It is read-only information displayed alongside the user's own choices.
+
+## 12. Inter-extension provider API
+
+The background script exposes a read-only API that allows other browser extensions to query the user's resolved consent state for any domain. This enables inter-extension collaboration: a banner-handling extension can read ProtoConsent's purposes to fill consent dialogs coherently, or a content blocker can check whether the user has explicitly allowed a domain.
+
+### 12.1 Mechanism
+
+Communication uses `chrome.runtime.onMessageExternal`. The consumer extension calls `chrome.runtime.sendMessage(PROTOCONSENT_ID, message)` and receives a response via the callback or returned Promise. No `externally_connectable` manifest key is declared: the default behaviour (all extensions can send) applies on Chrome, and Firefox ignores the key entirely, so both browsers behave identically.
+
+### 12.2 Resolution logic
+
+Query responses reuse the same `handleBridgeQuery` function that serves the page-side SDK. Given a domain, it reads the user's stored rules, resolves purpose inheritance from the active profile, and returns the final boolean state for all six purposes. The consumer sees the same resolved values that the SDK and popup see.
+
+### 12.3 Security
+
+- The API is disabled by default (`interExtEnabled` in storage). The user must explicitly opt in. When disabled, a `disabled` error is returned (not a silent drop) so developers can diagnose. Toggling the switch preserves all lists.
+- Each consumer extension must be individually approved via a TOFU (Trust on First Use) allowlist. Unknown extensions receive a `need_authorization` error and are recorded as pending for the user to review in settings. Approved IDs are stored in `interExtAllowlist`.
+- Extensions explicitly denied by the user are moved to `interExtDenylist`. Their messages are silently dropped with no response, giving attackers no signal.
+- The pending authorization queue is capped at 10 entries. When full, new entries are silently rejected (not queued) to prevent eviction of legitimate requests. A global cooldown allows at most 3 new unknown extension IDs per minute; beyond that, messages are silently dropped to prevent flooding.
+- All queries are read-only. There is no code path from external messages to storage writes or rule rebuilds.
+- Messages are validated: the `type` field must start with `protoconsent:`, the `domain` field must pass `isValidHostname()`.
+- Requests are rate-limited to 10 per minute per sender extension, keyed by the browser-verified `sender.id`.
+- One domain per query. There is no bulk endpoint to retrieve all stored rules.
+
+### 12.4 Management UI
+
+The Purpose Settings page (`pages/purposes-settings.html`) provides a dedicated "Inter-extension API" section with:
+
+- **Master switch**: enables or disables the API. When disabled, the section collapses to the toggle alone.
+- **Pending requests**: an auto-expanding accordion showing extension IDs that have contacted ProtoConsent but have not yet been approved. Each entry has Allow and Block buttons. The badge shows the pending count.
+- **Authorized extensions**: accordion listing approved IDs with Revoke and Block buttons.
+- **Blocked extensions**: accordion listing denied IDs with an Unblock button.
+
+Extension IDs are displayed as links to the Chrome Web Store for verification. A note warns users that IDs not found on the store indicate unpublished (locally loaded) extensions.
+
+All lists update in real time via `chrome.storage.onChanged`, so changes from the background (e.g. a new pending entry from an incoming query) appear without page reload. The inter-extension storage keys (`interExtEnabled`, `interExtAllowlist`, `interExtDenylist`, `interExtPending`) are included in the export/import configuration.
+
+### 12.5 Observability
+
+Inter-extension events appear in the Log tab's Requests stream alongside blocked request and GPC entries. Each event shows a truncated sender ID, the action (`capabilities`, `query`), the queried domain (if applicable), and the result (`✓` for success, `✗` followed by the error code for failures). Events are colour-coded blue to distinguish them from block (amber) and GPC (green) entries.
+
+Events are buffered in memory (up to 50 entries) and persisted to `chrome.storage.session`, so they survive service worker restarts and appear when the user opens the Log tab after the queries have already occurred. Silent drops (denylist, global cooldown) are not logged, consistent with the security model's silent-drop design.
+
+### 12.6 Supported message types
+
+| Type | Direction | Description |
+|------|-----------|-------------|
+| `protoconsent:capabilities` | consumer → provider | Discovery: returns supported types, purpose keys, and protocol version. |
+| `protoconsent:query` | consumer → provider | Returns resolved purpose booleans and profile for a domain. |
+| `protoconsent:error` | provider → consumer | Returned for disabled API, unauthorized, invalid, or rate-limited queries. Codes: `disabled`, `need_authorization`, `invalid_domain`, `rate_limited`, `unknown_type`, `internal`. |
+
+For message format details, see [inter-extension-protocol.md](spec/inter-extension-protocol.md).
+

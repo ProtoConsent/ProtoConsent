@@ -19,6 +19,7 @@ async function init() {
 		renderPurposes(purposes);
 		renderPresets(presets, purposes);
 		renderEnhancedPresets();
+		initInterExt();
 
 		const versionEl = document.getElementById('viewer-version');
 		if (versionEl) {
@@ -575,7 +576,8 @@ document.addEventListener('DOMContentLoaded', init);
 
 const EXPORT_KEYS = [
 	"defaultProfile", "defaultPurposes", "rules", "whitelist",
-	"gpcEnabled", "chStrippingEnabled", "enhancedPreset", "enhancedLists"
+	"gpcEnabled", "chStrippingEnabled", "enhancedPreset", "enhancedLists",
+	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending"
 ];
 
 const VALID_PROFILES = ["strict", "balanced", "permissive", "custom"];
@@ -639,6 +641,27 @@ function validateImport(data) {
 		if (typeof el === "object" && el !== null && !Array.isArray(el)) {
 			clean.enhancedLists = sanitizeObjectKeys(el);
 		} else errors.push("enhancedLists: must be an object");
+	}
+
+	if ("interExtEnabled" in data) {
+		if (typeof data.interExtEnabled === "boolean") clean.interExtEnabled = data.interExtEnabled;
+		else errors.push("interExtEnabled: must be boolean");
+	}
+	if ("interExtAllowlist" in data) {
+		if (Array.isArray(data.interExtAllowlist) && data.interExtAllowlist.every(v => typeof v === "string")) {
+			clean.interExtAllowlist = data.interExtAllowlist;
+		} else errors.push("interExtAllowlist: must be string[]");
+	}
+	if ("interExtDenylist" in data) {
+		if (Array.isArray(data.interExtDenylist) && data.interExtDenylist.every(v => typeof v === "string")) {
+			clean.interExtDenylist = data.interExtDenylist;
+		} else errors.push("interExtDenylist: must be string[]");
+	}
+	if ("interExtPending" in data) {
+		if (Array.isArray(data.interExtPending) && data.interExtPending.every(v =>
+			typeof v === "object" && v !== null && typeof v.id === "string")) {
+			clean.interExtPending = data.interExtPending;
+		} else errors.push("interExtPending: must be {id:string}[]");
 	}
 
 	return { clean, errors };
@@ -735,3 +758,220 @@ function initDataSection() {
 }
 
 document.addEventListener('DOMContentLoaded', initDataSection);
+
+// --- Inter-extension API UI ---
+
+const INTER_EXT_KEYS = ["interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending"];
+const CWS_BASE = "https://chromewebstore.google.com/detail/";
+
+function initInterExt() {
+	const section = document.getElementById('inter-ext-section');
+	const toggle = document.getElementById('inter-ext-toggle');
+	const toggleLabel = document.getElementById('inter-ext-toggle-label');
+	const container = document.getElementById('inter-ext-container');
+	if (!section || !toggle || !container) return;
+
+	function renderLists(data) {
+		const enabled = data.interExtEnabled === true;
+		toggle.checked = enabled;
+		toggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+
+		if (enabled) {
+			container.classList.remove('ps-hidden');
+		} else {
+			container.classList.add('ps-hidden');
+		}
+
+		renderPendingList(data.interExtPending || []);
+		renderAllowList(data.interExtAllowlist || []);
+		renderDenyList(data.interExtDenylist || []);
+	}
+
+	function load() {
+		chrome.storage.local.get(INTER_EXT_KEYS, renderLists);
+	}
+
+	toggle.addEventListener('change', () => {
+		const enabled = toggle.checked;
+		toggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+		chrome.storage.local.set({ interExtEnabled: enabled });
+		if (enabled) {
+			container.classList.remove('ps-hidden');
+		} else {
+			container.classList.add('ps-hidden');
+		}
+	});
+
+	// Listen for storage changes to update UI live
+	chrome.storage.onChanged.addListener((changes, area) => {
+		if (area !== 'local') return;
+		if (INTER_EXT_KEYS.some(k => k in changes)) load();
+	});
+
+	section.classList.remove('ps-hidden');
+	load();
+}
+
+function makeExtIdEl(id) {
+	const span = document.createElement('span');
+	span.className = 'ps-ext-id';
+	const link = document.createElement('a');
+	link.href = CWS_BASE + id;
+	link.target = '_blank';
+	link.rel = 'noopener noreferrer';
+	link.title = 'Look up on Chrome Web Store';
+	link.textContent = id;
+	span.appendChild(link);
+	return span;
+}
+
+function makeBtn(text, cls, handler) {
+	const btn = document.createElement('button');
+	btn.className = 'ps-ext-btn ' + cls;
+	btn.type = 'button';
+	btn.textContent = text;
+	btn.addEventListener('click', () => {
+		btn.disabled = true;
+		handler();
+	});
+	return btn;
+}
+
+function moveExtension(fromKey, toKey, id, entry) {
+	chrome.storage.local.get([fromKey, toKey], (r) => {
+		let fromList = r[fromKey] || [];
+		let toList = r[toKey] || [];
+
+		// Remove from source
+		if (fromKey === 'interExtPending') {
+			fromList = fromList.filter(e => e.id !== id);
+		} else {
+			fromList = fromList.filter(e => e !== id);
+		}
+
+		// Add to destination (avoid duplicates)
+		if (toKey === 'interExtPending') {
+			if (!toList.some(e => e.id === id)) toList.push(entry || { id: id, firstSeen: Date.now() });
+		} else {
+			if (!toList.includes(id)) toList.push(id);
+		}
+
+		chrome.storage.local.set({ [fromKey]: fromList, [toKey]: toList });
+	});
+}
+
+function removeFromList(key, id) {
+	chrome.storage.local.get([key], (r) => {
+		let list = r[key] || [];
+		if (key === 'interExtPending') {
+			list = list.filter(e => e.id !== id);
+		} else {
+			list = list.filter(e => e !== id);
+		}
+		chrome.storage.local.set({ [key]: list });
+	});
+}
+
+function renderPendingList(pending) {
+	const listEl = document.getElementById('inter-ext-pending-list');
+	const countEl = document.getElementById('inter-ext-pending-count');
+	const detailsEl = document.getElementById('inter-ext-pending');
+	if (!listEl) return;
+
+	listEl.replaceChildren();
+	if (countEl) countEl.textContent = pending.length;
+
+	if (pending.length === 0) {
+		const empty = document.createElement('p');
+		empty.className = 'ps-ext-empty';
+		empty.textContent = 'No pending requests.';
+		listEl.appendChild(empty);
+		if (detailsEl) detailsEl.removeAttribute('open');
+		return;
+	}
+
+	// Auto-open when there are pending requests
+	if (detailsEl) detailsEl.setAttribute('open', '');
+
+	for (const entry of pending) {
+		const row = document.createElement('div');
+		row.className = 'ps-ext-row';
+		row.appendChild(makeExtIdEl(entry.id));
+
+		const actions = document.createElement('div');
+		actions.className = 'ps-ext-actions';
+		actions.appendChild(makeBtn('Allow', 'ps-ext-btn-allow', () => {
+			moveExtension('interExtPending', 'interExtAllowlist', entry.id);
+		}));
+		actions.appendChild(makeBtn('Block', 'ps-ext-btn-deny', () => {
+			moveExtension('interExtPending', 'interExtDenylist', entry.id);
+		}));
+		row.appendChild(actions);
+		listEl.appendChild(row);
+	}
+}
+
+function renderAllowList(allowlist) {
+	const listEl = document.getElementById('inter-ext-allow-list');
+	const countEl = document.getElementById('inter-ext-allow-count');
+	if (!listEl) return;
+
+	listEl.replaceChildren();
+	if (countEl) countEl.textContent = allowlist.length;
+
+	if (allowlist.length === 0) {
+		const empty = document.createElement('p');
+		empty.className = 'ps-ext-empty';
+		empty.textContent = 'No authorized extensions.';
+		listEl.appendChild(empty);
+		return;
+	}
+
+	for (const id of allowlist) {
+		const row = document.createElement('div');
+		row.className = 'ps-ext-row';
+		row.appendChild(makeExtIdEl(id));
+
+		const actions = document.createElement('div');
+		actions.className = 'ps-ext-actions';
+		actions.appendChild(makeBtn('Revoke', 'ps-ext-btn-revoke', () => {
+			removeFromList('interExtAllowlist', id);
+		}));
+		actions.appendChild(makeBtn('Block', 'ps-ext-btn-deny', () => {
+			moveExtension('interExtAllowlist', 'interExtDenylist', id);
+		}));
+		row.appendChild(actions);
+		listEl.appendChild(row);
+	}
+}
+
+function renderDenyList(denylist) {
+	const listEl = document.getElementById('inter-ext-deny-list');
+	const countEl = document.getElementById('inter-ext-deny-count');
+	if (!listEl) return;
+
+	listEl.replaceChildren();
+	if (countEl) countEl.textContent = denylist.length;
+
+	if (denylist.length === 0) {
+		const empty = document.createElement('p');
+		empty.className = 'ps-ext-empty';
+		empty.textContent = 'No blocked extensions.';
+		listEl.appendChild(empty);
+		return;
+	}
+
+	for (const id of denylist) {
+		const row = document.createElement('div');
+		row.className = 'ps-ext-row';
+		row.appendChild(makeExtIdEl(id));
+
+		const actions = document.createElement('div');
+		actions.className = 'ps-ext-actions';
+		actions.appendChild(makeBtn('Unblock', 'ps-ext-btn-revoke', () => {
+			removeFromList('interExtDenylist', id);
+		}));
+		row.appendChild(actions);
+		listEl.appendChild(row);
+	}
+}

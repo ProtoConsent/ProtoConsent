@@ -68,6 +68,52 @@
 			</div>
 			<div id="purpose-list"></div>
 		</section>
+		<section id="inter-ext-section" class="ps-section ps-hidden">
+			<div class="ps-section-head">
+				<h2>Inter-extension API</h2>
+			</div>
+			<div class="ps-gpc-toggle-row">
+				<div>
+					<span class="ps-gpc-info-name">Master switch</span>
+					<div class="ps-gpc-info-desc">Allow other extensions to query your consent preferences. Each extension must be individually approved.</div>
+				</div>
+				<label class="ps-gpc-toggle-label" for="inter-ext-toggle" id="inter-ext-toggle-label">Disabled</label>
+				<input type="checkbox" id="inter-ext-toggle" class="ps-gpc-toggle" aria-label="Inter-extension API">
+			</div>
+
+			<div id="inter-ext-container" class="ps-hidden">
+				<!-- Pending -->
+				<details id="inter-ext-pending" class="ps-ext-accordion">
+					<summary class="ps-ext-accordion-header">
+						Pending requests <span id="inter-ext-pending-count" class="ps-ext-badge ps-ext-badge-warn" aria-label="pending count">0</span>
+					</summary>
+					<div id="inter-ext-pending-list" class="ps-ext-accordion-body">
+						<p class="ps-ext-empty">No pending requests.</p>
+					</div>
+				</details>
+
+				<!-- Authorized -->
+				<details id="inter-ext-allow" class="ps-ext-accordion">
+					<summary class="ps-ext-accordion-header">Authorized extensions <span id="inter-ext-allow-count" class="ps-ext-badge" aria-label="authorized count">0</span></summary>
+					<div id="inter-ext-allow-list" class="ps-ext-accordion-body">
+						<p class="ps-ext-empty">No authorized extensions.</p>
+					</div>
+				</details>
+
+				<!-- Blocked -->
+				<details id="inter-ext-deny" class="ps-ext-accordion">
+					<summary class="ps-ext-accordion-header">
+						Blocked extensions <span id="inter-ext-deny-count" class="ps-ext-badge ps-ext-badge-deny" aria-label="blocked count">0</span>
+					</summary>
+					<div id="inter-ext-deny-list" class="ps-ext-accordion-body">
+						<p class="ps-ext-empty">No blocked extensions.</p>
+					</div>
+				</details>
+
+				<p class="ps-section-note ps-ext-note">Extension IDs can be verified on the <a href="https://chromewebstore.google.com/" target="_blank" rel="noopener noreferrer">Chrome Web Store</a>. If an ID is not found on the store, the extension is unpublished — only authorize it if you installed it yourself. Rate-limited: new extensions may take up to a minute to appear.</p>
+			</div>
+		</section>
+
 		<section id="data-section" class="ps-section">
 			<h2>Data</h2>
 			<p class="ps-enhanced-desc">Export or import your full configuration (profile, purposes, per-site rules, toggles, enhanced preset).</p>
