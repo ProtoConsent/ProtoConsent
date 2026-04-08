@@ -52,7 +52,7 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 <table>
 <tr>
 <td align="center" width="50%"><img src="design/assets/screenshots/popup-profile.png" alt="ProtoConsent popup" height="520"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-enhanced-basic.png" alt="Enhanced Protection tab" height="520"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-enhanced-balanced.png" alt="Enhanced Protection tab" height="520"></td>
 </tr>
 <tr>
 <td align="center"><img src="design/assets/screenshots/popup-log-domains.png" alt="Log tab with blocked domains" height="520"></td>
