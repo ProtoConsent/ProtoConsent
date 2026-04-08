@@ -355,6 +355,18 @@ footer {
   text-align: center;
 }
 
+.screenshot-pair {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.screenshot-pair img {
+  max-height: 420px;
+  width: auto;
+}
+
 .screenshot img {
   max-width: 100%;
   height: auto;
