@@ -10,6 +10,8 @@ let epCatalog = {};
 let epLists = {};
 let epPreset = "off";
 let epDynamicConsent = false;
+let epConsentEnhancedLink = false;
+let epConsentLinkedIds = new Set();
 let _epFocusListId = null; // list to refocus after re-render
 
 // --- Shared stats helper ---
@@ -71,6 +73,8 @@ function refreshEnhancedState() {
     epLists = resp.lists || {};
     epPreset = resp.preset || "off";
     epDynamicConsent = resp.dynamicConsent === true;
+    epConsentEnhancedLink = resp.consentEnhancedLink === true;
+    epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
     renderEnhancedPresets();
     renderEnhancedLists();
     updateEnhancedStatus();
@@ -176,6 +180,8 @@ function renderPresetAction() {
           epLists = resp.lists || {};
           epPreset = resp.preset || "off";
           epDynamicConsent = resp.dynamicConsent === true;
+          epConsentEnhancedLink = resp.consentEnhancedLink === true;
+          epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
           renderEnhancedPresets();
           renderEnhancedLists();
           updateEnhancedStatus();
@@ -268,7 +274,8 @@ function renderEnhancedLists() {
     const card = document.createElement("div");
     card.className = "ep-list-card";
     card.dataset.listId = listId;
-    if (listData?.enabled) card.classList.add("is-enabled");
+    const isConsentLinked = epConsentLinkedIds.has(listId);
+    if (listData?.enabled || isConsentLinked) card.classList.add("is-enabled");
 
     // Header row: icon + name + actions
     const header = document.createElement("div");
@@ -344,6 +351,15 @@ function renderEnhancedLists() {
         toggleEnhancedList(listId, toggle.checked);
       });
       header.appendChild(toggle);
+
+      // Consent-linked indicator
+      if (isConsentLinked && !listData.enabled) {
+        const celPill = document.createElement("span");
+        celPill.className = "ep-info-pill ep-category-pill";
+        celPill.textContent = "Consent-linked";
+        celPill.title = "Active via consent link (denied purpose matches this list category)";
+        header.appendChild(celPill);
+      }
     } else {
       const dlBtn = document.createElement("button");
       dlBtn.type = "button";

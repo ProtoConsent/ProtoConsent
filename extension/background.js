@@ -663,6 +663,11 @@ async function _rebuildAllDynamicRulesImpl() {
       getChStrippingEnabled(resolve);
     });
 
+    // Consent-Enhanced link: denied purposes auto-activate Enhanced lists
+    const consentEnhancedLink = await new Promise(resolve => {
+      chrome.storage.local.get(["consentEnhancedLink"], r => resolve(r.consentEnhancedLink === true));
+    });
+
     // Collect existing dynamic rule IDs for the atomic swap at the end
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
     const existingIds = existingRules.map((r) => r.id);
@@ -857,10 +862,46 @@ async function _rebuildAllDynamicRulesImpl() {
     //    Each enabled list produces one domain rule and optional path rules.
     //    Domain/path data is stored in separate enhancedData_* keys for performance.
     //    Sites with all purposes allowed (permissive) are excluded.
+    //    Consent-Enhanced link: denied purposes auto-activate matching lists.
+    const consentLinkedListIds = new Set();
+    if (consentEnhancedLink) {
+      const celCatalog = await loadEnhancedListsCatalog();
+      if (celCatalog) {
+        const deniedCategories = new Set();
+        for (const [purpose, allowed] of Object.entries(globalPurposes)) {
+          if (!allowed) deniedCategories.add(purpose);
+        }
+        for (const [listId, listDef] of Object.entries(celCatalog)) {
+          if (listDef.category && deniedCategories.has(listDef.category)
+              && enhancedListsMeta[listId]) {
+            consentLinkedListIds.add(listId);
+          }
+        }
+      }
+    }
+
+    // Fetch data for consent-linked lists that are disabled (not loaded by default)
+    if (consentLinkedListIds.size > 0) {
+      const missingIds = [...consentLinkedListIds].filter(id => !enhancedData[id]);
+      if (missingIds.length > 0) {
+        const keys = missingIds.map(id => "enhancedData_" + id);
+        const extraData = await new Promise(resolve => {
+          chrome.storage.local.get(keys, result => {
+            const out = {};
+            for (const id of missingIds) {
+              if (result["enhancedData_" + id]) out[id] = result["enhancedData_" + id];
+            }
+            resolve(out);
+          });
+        });
+        Object.assign(enhancedData, extraData);
+      }
+    }
+
     const enhancedExclude = permissiveSites.length > 0 ? permissiveSites : undefined;
 
     for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
-      if (!listMeta.enabled) continue;
+      if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
       if (listMeta.type === "informational") continue; // CNAME etc. - no DNR rules
       const listData = enhancedData[listId];
       if (!listData) continue;
@@ -1121,6 +1162,8 @@ async function _rebuildAllDynamicRulesImpl() {
         chRules: newChRuleIds.size,
         chExcluded: chRemoveSites.length,
         chAddSites: chAddSites.length,
+        consentEnhancedLink: consentEnhancedLink,
+        consentLinkedListIds: [...consentLinkedListIds],
         ts: Date.now(),
       };
     }
@@ -1370,15 +1413,19 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         r
       ));
       const p3 = new Promise(r => chrome.storage.local.get(
-        "dynamicListsConsent", d => r(d.dynamicListsConsent === true)
+        ["dynamicListsConsent", "consentEnhancedLink"], d => r({
+          dynamicConsent: d.dynamicListsConsent === true,
+          consentEnhancedLink: d.consentEnhancedLink === true,
+        })
       ));
-      Promise.all([p1, p2, p3]).then(([sessionKeys, ext, dynamicConsent]) => {
+      Promise.all([p1, p2, p3]).then(([sessionKeys, ext, p3Result]) => {
         debugData.sessionKeys = sessionKeys;
         debugData.interExtEnabled = ext.interExtEnabled === true;
         debugData.interExtAllowlist = ext.interExtAllowlist || [];
         debugData.interExtDenylist = ext.interExtDenylist || [];
         debugData.interExtPending = ext.interExtPending || [];
-        debugData.dynamicListsConsent = dynamicConsent;
+        debugData.dynamicListsConsent = p3Result.dynamicConsent;
+        debugData.consentEnhancedLink = p3Result.consentEnhancedLink;
         sendResponse(debugData);
       });
     };
@@ -1519,8 +1566,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       getEnhancedListsFromStorage(),
       getEnhancedPresetFromStorage(),
       new Promise(r => chrome.storage.local.get("dynamicListsConsent", d => r(d.dynamicListsConsent === true))),
-    ]).then(([catalog, lists, preset, dynamicConsent]) => {
-      sendResponse({ catalog, lists, preset, dynamicConsent });
+      new Promise(r => chrome.storage.local.get("consentEnhancedLink", d => r(d.consentEnhancedLink === true))),
+    ]).then(([catalog, lists, preset, dynamicConsent, consentEnhancedLink]) => {
+      const consentLinkedListIds = lastRebuildDebug.consentLinkedListIds || [];
+      sendResponse({ catalog, lists, preset, dynamicConsent, consentEnhancedLink, consentLinkedListIds });
     });
     return true; // async response
   }

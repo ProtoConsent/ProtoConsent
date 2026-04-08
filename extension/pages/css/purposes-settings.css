@@ -318,6 +318,21 @@ body {
   cursor: pointer;
 }
 
+.ps-dynamic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ps-dynamic-grid > .ps-gpc-toggle-row {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid var(--pc-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+  margin-bottom: 0;
+}
+
 .ps-default-profile-row {
   display: flex;
   align-items: center;
@@ -686,6 +701,10 @@ details[open] > .ps-ext-accordion-header::before {
   #preset-list,
   #purpose-list,
   #enhanced-preset-list {
+    grid-template-columns: 1fr;
+  }
+
+  .ps-dynamic-grid {
     grid-template-columns: 1fr;
   }
 

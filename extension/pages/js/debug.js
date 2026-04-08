@@ -153,6 +153,18 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // Consent-Enhanced link
+    if (bg) {
+      const cel = bg.consentEnhancedLink ? "on" : "off";
+      lines.push("-- consent-enhanced link: " + cel + " --");
+      if (bg.consentLinkedListIds && bg.consentLinkedListIds.length) {
+        lines.push("  linked lists: " + bg.consentLinkedListIds.join(", "));
+      } else {
+        lines.push("  linked lists: none");
+      }
+      lines.push("");
+    }
+
     // Client Hints stripping
     if (bg && bg.chStripping) {
       const toggle = bg.chEnabled ? "on" : "off";

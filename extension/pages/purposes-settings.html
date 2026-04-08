@@ -62,14 +62,24 @@
 		</section>
 
 		<section id="dynamic-lists-section" class="ps-section ps-hidden">
-			<h2>Enhanced Lists Sync</h2>
-			<div class="ps-gpc-toggle-row">
-				<div>
-					<span class="ps-gpc-info-name">Enhanced list updates</span>
-					<div class="ps-gpc-info-desc">Check for enhanced list updates from the ProtoConsent/data repository on GitHub. No data is sent.</div>
+			<h2>Enhanced Lists</h2>
+			<div class="ps-dynamic-grid">
+				<div class="ps-gpc-toggle-row">
+					<div>
+						<span class="ps-gpc-info-name">Sync</span>
+						<div class="ps-gpc-info-desc">Check for enhanced list updates from the ProtoConsent/data repository on GitHub. No data is sent.</div>
+					</div>
+					<label class="ps-gpc-toggle-label" for="ps-dynamic-toggle" id="ps-dynamic-label">Disabled</label>
+					<input type="checkbox" id="ps-dynamic-toggle" class="ps-gpc-toggle" aria-label="Enhanced list sync">
 				</div>
-				<label class="ps-gpc-toggle-label" for="ps-dynamic-toggle" id="ps-dynamic-label">Disabled</label>
-				<input type="checkbox" id="ps-dynamic-toggle" class="ps-gpc-toggle" aria-label="Enhanced list sync">
+				<div class="ps-gpc-toggle-row">
+					<div>
+						<span class="ps-gpc-info-name">Consent link</span>
+						<div class="ps-gpc-info-desc">Automatically enable Enhanced lists that match purposes you deny. Takes priority over the Enhanced "Off" preset.</div>
+					</div>
+					<label class="ps-gpc-toggle-label" for="ps-cel-toggle" id="ps-cel-label">Disabled</label>
+					<input type="checkbox" id="ps-cel-toggle" class="ps-gpc-toggle" aria-label="Consent-Enhanced link">
+				</div>
 			</div>
 		</section>
 

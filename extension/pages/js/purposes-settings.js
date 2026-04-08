@@ -578,7 +578,8 @@ document.addEventListener('DOMContentLoaded', init);
 const EXPORT_KEYS = [
 	"defaultProfile", "defaultPurposes", "rules", "whitelist",
 	"gpcEnabled", "chStrippingEnabled", "enhancedPreset", "enhancedLists",
-	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending"
+	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending",
+	"dynamicListsConsent", "consentEnhancedLink"
 ];
 
 const VALID_PROFILES = ["strict", "balanced", "permissive", "custom"];
@@ -664,6 +665,14 @@ function validateImport(data) {
 			clean.interExtPending = data.interExtPending;
 		} else errors.push("interExtPending: must be {id:string}[]");
 	}
+	if ("dynamicListsConsent" in data) {
+		if (typeof data.dynamicListsConsent === "boolean") clean.dynamicListsConsent = data.dynamicListsConsent;
+		else errors.push("dynamicListsConsent: must be boolean");
+	}
+	if ("consentEnhancedLink" in data) {
+		if (typeof data.consentEnhancedLink === "boolean") clean.consentEnhancedLink = data.consentEnhancedLink;
+		else errors.push("consentEnhancedLink: must be boolean");
+	}
 
 	return { clean, errors };
 }
@@ -672,12 +681,21 @@ function renderDynamicListsToggle() {
 	const section = document.getElementById('dynamic-lists-section');
 	const toggle = document.getElementById('ps-dynamic-toggle');
 	const label = document.getElementById('ps-dynamic-label');
+	const celToggle = document.getElementById('ps-cel-toggle');
+	const celLabel = document.getElementById('ps-cel-label');
 	if (!section || !toggle || !label) return;
 
-	chrome.storage.local.get('dynamicListsConsent', (data) => {
-		const enabled = data.dynamicListsConsent === true;
-		toggle.checked = enabled;
-		label.textContent = enabled ? 'Enabled' : 'Disabled';
+	chrome.storage.local.get(['dynamicListsConsent', 'consentEnhancedLink'], (data) => {
+		const syncEnabled = data.dynamicListsConsent === true;
+		toggle.checked = syncEnabled;
+		label.textContent = syncEnabled ? 'Enabled' : 'Disabled';
+
+		if (celToggle && celLabel) {
+			const celEnabled = data.consentEnhancedLink === true;
+			celToggle.checked = celEnabled;
+			celLabel.textContent = celEnabled ? 'Enabled' : 'Disabled';
+		}
+
 		section.classList.remove('ps-hidden');
 	});
 
@@ -692,6 +710,16 @@ function renderDynamicListsToggle() {
 			);
 		});
 	});
+
+	if (celToggle && celLabel) {
+		celToggle.addEventListener('change', () => {
+			const enabled = celToggle.checked;
+			celLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+			setConsentEnhancedLink(enabled, () => {
+				notifyBackground();
+			});
+		});
+	}
 }
 
 function initDataSection() {

@@ -148,16 +148,21 @@ function wireEvents() {
     goToScreen('ob-setup');
   });
 
-  // Dynamic lists: Allow updates - save consent and go to done
-  document.getElementById('ob-allow-dynamic').addEventListener('click', () => {
-    setDynamicListsConsent(true, () => {
-      goToScreen('ob-done-screen');
-    });
-  });
+  // Dynamic lists: Continue - save checked options and go to done
+  document.getElementById('ob-continue-dynamic').addEventListener('click', () => {
+    const syncChecked = document.getElementById('ob-sync-toggle')?.checked;
+    const celChecked = document.getElementById('ob-cel-toggle')?.checked;
 
-  // Dynamic lists: No thanks → go to done without saving consent
-  document.getElementById('ob-skip-dynamic').addEventListener('click', () => {
-    goToScreen('ob-done-screen');
+    const saves = [];
+    if (syncChecked) saves.push(cb => setDynamicListsConsent(true, cb));
+    if (celChecked) saves.push(cb => setConsentEnhancedLink(true, cb));
+
+    // Chain saves sequentially, then navigate
+    const run = (i) => {
+      if (i >= saves.length) { goToScreen('ob-done-screen'); return; }
+      saves[i](() => run(i + 1));
+    };
+    run(0);
   });
 
   // Dynamic lists: Back → return to features
