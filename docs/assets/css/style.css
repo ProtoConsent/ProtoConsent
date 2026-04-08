@@ -357,7 +357,7 @@ footer {
 
 .screenshot-pair {
   display: flex;
-  gap: 12px;
+  gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -365,6 +365,7 @@ footer {
 .screenshot-pair img {
   max-height: 420px;
   width: auto;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 .screenshot img {
