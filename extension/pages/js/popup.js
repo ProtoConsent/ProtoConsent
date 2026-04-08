@@ -498,7 +498,9 @@ function renderEnhancedScopeLine(el, blockingCount, totalDomains, infoCount, inf
   icon.width = 12;
   icon.height = 12;
   icon.alt = "Enhanced";
-  icon.style.verticalAlign = "middle";
+  icon.style.verticalAlign = "text-bottom";
+  icon.style.position = "relative";
+  icon.style.top = "-1px";
   icon.style.marginRight = "4px";
   el.appendChild(icon);
   let text = totalLists + (totalLists === 1 ? " list" : " lists") +
