@@ -44,13 +44,11 @@ body {
 
 /* Screens */
 .ob-screen {
-  flex: 1;
   padding: 22px 22px 18px;
   border: 1px solid #cfd9e3;
   border-radius: 18px;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   box-shadow: 0 20px 42px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06);
-  min-height: 480px;
   display: flex;
   flex-direction: column;
 }
@@ -175,7 +173,6 @@ body {
 /* Save button */
 .ob-action {
   text-align: center;
-  margin-top: auto;
   padding-top: 6px;
 }
 
