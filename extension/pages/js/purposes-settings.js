@@ -344,123 +344,132 @@ function renderPresets(presets, purposes) {
 		customCard.appendChild(customPills);
 		container.appendChild(customCard);
 
-		// GPC signal toggle row
-		const gpcCard = document.createElement('div');
-		gpcCard.className = 'ps-preset-card';
-
-		const gpcRow = document.createElement('div');
-		gpcRow.className = 'ps-gpc-toggle-row';
-
-		const gpcLeft = document.createElement('div');
-		const gpcName = document.createElement('span');
-		gpcName.className = 'ps-gpc-info-name';
-		gpcName.textContent = 'GPC (Global Privacy Control)';
-		const gpcDesc = document.createElement('div');
-		gpcDesc.className = 'ps-gpc-info-desc';
-		gpcDesc.textContent = 'Privacy signal (Sec-GPC) sent to websites when any of these purposes are denied. Legally recognised as an opt-out under California CCPA/CPRA.';
-		gpcLeft.appendChild(gpcName);
-		gpcLeft.appendChild(gpcDesc);
-
-		const gpcToggle = document.createElement('input');
-		gpcToggle.type = 'checkbox';
-		gpcToggle.id = 'gpc-toggle';
-		gpcToggle.className = 'ps-gpc-toggle';
-		gpcToggle.checked = true;
-
-		const gpcToggleLabel = document.createElement('label');
-		gpcToggleLabel.className = 'ps-gpc-toggle-label';
-		gpcToggleLabel.setAttribute('for', 'gpc-toggle');
-		gpcToggleLabel.textContent = 'Enabled';
-
-		gpcToggle.setAttribute('aria-label', 'GPC (Global Privacy Control)');
-		gpcRow.appendChild(gpcLeft);
-		gpcRow.appendChild(gpcToggleLabel);
-		gpcRow.appendChild(gpcToggle);
-		gpcCard.appendChild(gpcRow);
-
-		const gpcPills = document.createElement('div');
-		gpcPills.className = 'ps-preset-purposes';
-		const gpcEntries = Object.values(purposes)
-			.sort((a, b) => (a.order || 0) - (b.order || 0));
-		for (const pDef of gpcEntries) {
-			if (!pDef.triggers_gpc) continue;
-			const pill = document.createElement('span');
-			pill.className = 'ps-preset-pill gpc';
-			pill.textContent = pDef.short + ' \u2717';
-			gpcPills.appendChild(pill);
-		}
-		gpcCard.appendChild(gpcPills);
-		container.appendChild(gpcCard);
-
-		// Load stored GPC toggle state
-		chrome.storage.local.get(['gpcEnabled'], (r) => {
-			gpcToggle.checked = r.gpcEnabled !== false;
-			gpcToggleLabel.textContent = gpcToggle.checked ? 'Enabled' : 'Disabled';
-		});
-
-		gpcToggle.addEventListener('change', () => {
-			const enabled = gpcToggle.checked;
-			gpcToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
-			chrome.storage.local.set({ gpcEnabled: enabled }, notifyBackground);
-		});
-
-		// Client Hints stripping toggle row
-		const chCard = document.createElement('div');
-		chCard.className = 'ps-preset-card';
-
-		const chRow = document.createElement('div');
-		chRow.className = 'ps-gpc-toggle-row';
-
-		const chLeft = document.createElement('div');
-		const chName = document.createElement('span');
-		chName.className = 'ps-gpc-info-name';
-		chName.textContent = 'Client Hints Stripping';
-		const chDesc = document.createElement('div');
-		chDesc.className = 'ps-gpc-info-desc';
-		chDesc.textContent = 'Removes high-entropy fingerprinting headers when advanced tracking is denied';
-		chLeft.appendChild(chName);
-		chLeft.appendChild(chDesc);
-
-		const chToggle = document.createElement('input');
-		chToggle.type = 'checkbox';
-		chToggle.id = 'ch-toggle';
-		chToggle.className = 'ps-gpc-toggle';
-		chToggle.checked = true;
-
-		const chToggleLabel = document.createElement('label');
-		chToggleLabel.className = 'ps-gpc-toggle-label';
-		chToggleLabel.setAttribute('for', 'ch-toggle');
-		chToggleLabel.textContent = 'Enabled';
-
-		chToggle.setAttribute('aria-label', 'Client Hints Stripping');
-		chRow.appendChild(chLeft);
-		chRow.appendChild(chToggleLabel);
-		chRow.appendChild(chToggle);
-		chCard.appendChild(chRow);
-
-		const chPills = document.createElement('div');
-		chPills.className = 'ps-preset-purposes';
-		for (const label of HIGH_ENTROPY_CH_LABELS) {
-			const pill = document.createElement('span');
-			pill.className = 'ps-preset-pill gpc';
-			pill.textContent = label;
-			chPills.appendChild(pill);
-		}
-		chCard.appendChild(chPills);
-		container.appendChild(chCard);
-
-		// Load stored CH toggle state
-		getChStrippingEnabled((enabled) => {
-			chToggle.checked = enabled;
-			chToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
-		});
-
-		chToggle.addEventListener('change', () => {
-			const enabled = chToggle.checked;
-			chToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
-			chrome.storage.local.set({ chStrippingEnabled: enabled }, notifyBackground);
-		});
+		// GPC and CH rendered in Privacy Signals section
+		renderPrivacySignals(purposes);
 	});
+}
+
+function renderPrivacySignals(purposes) {
+	const container = document.getElementById('privacy-signals-list');
+	const section = document.getElementById('privacy-signals-section');
+	if (!container || !section) return;
+
+	// GPC signal toggle
+	const gpcCard = document.createElement('div');
+	gpcCard.className = 'ps-signal-card';
+
+	const gpcRow = document.createElement('div');
+	gpcRow.className = 'ps-gpc-toggle-row';
+
+	const gpcLeft = document.createElement('div');
+	const gpcName = document.createElement('span');
+	gpcName.className = 'ps-gpc-info-name';
+	gpcName.textContent = 'GPC (Global Privacy Control)';
+	const gpcDesc = document.createElement('div');
+	gpcDesc.className = 'ps-gpc-info-desc';
+	gpcDesc.textContent = 'Privacy signal (Sec-GPC) sent to websites when any of these purposes are denied. Legally recognised as an opt-out under California CCPA/CPRA.';
+	gpcLeft.appendChild(gpcName);
+	gpcLeft.appendChild(gpcDesc);
+
+	const gpcToggle = document.createElement('input');
+	gpcToggle.type = 'checkbox';
+	gpcToggle.id = 'gpc-toggle';
+	gpcToggle.className = 'ps-gpc-toggle';
+	gpcToggle.checked = true;
+
+	const gpcToggleLabel = document.createElement('label');
+	gpcToggleLabel.className = 'ps-gpc-toggle-label';
+	gpcToggleLabel.setAttribute('for', 'gpc-toggle');
+	gpcToggleLabel.textContent = 'Enabled';
+
+	gpcToggle.setAttribute('aria-label', 'GPC (Global Privacy Control)');
+	gpcRow.appendChild(gpcLeft);
+	gpcRow.appendChild(gpcToggleLabel);
+	gpcRow.appendChild(gpcToggle);
+	gpcCard.appendChild(gpcRow);
+
+	const gpcPills = document.createElement('div');
+	gpcPills.className = 'ps-preset-purposes';
+	const gpcEntries = Object.values(purposes)
+		.sort((a, b) => (a.order || 0) - (b.order || 0));
+	for (const pDef of gpcEntries) {
+		if (!pDef.triggers_gpc) continue;
+		const pill = document.createElement('span');
+		pill.className = 'ps-preset-pill gpc';
+		pill.textContent = pDef.short + ' \u2717';
+		gpcPills.appendChild(pill);
+	}
+	gpcCard.appendChild(gpcPills);
+	container.appendChild(gpcCard);
+
+	chrome.storage.local.get(['gpcEnabled'], (r) => {
+		gpcToggle.checked = r.gpcEnabled !== false;
+		gpcToggleLabel.textContent = gpcToggle.checked ? 'Enabled' : 'Disabled';
+	});
+
+	gpcToggle.addEventListener('change', () => {
+		const enabled = gpcToggle.checked;
+		gpcToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+		chrome.storage.local.set({ gpcEnabled: enabled }, notifyBackground);
+	});
+
+	// Client Hints stripping toggle
+	const chCard = document.createElement('div');
+	chCard.className = 'ps-signal-card';
+
+	const chRow = document.createElement('div');
+	chRow.className = 'ps-gpc-toggle-row';
+
+	const chLeft = document.createElement('div');
+	const chName = document.createElement('span');
+	chName.className = 'ps-gpc-info-name';
+	chName.textContent = 'Client Hints Stripping';
+	const chDesc = document.createElement('div');
+	chDesc.className = 'ps-gpc-info-desc';
+	chDesc.textContent = 'Removes high-entropy fingerprinting headers when advanced tracking is denied';
+	chLeft.appendChild(chName);
+	chLeft.appendChild(chDesc);
+
+	const chToggle = document.createElement('input');
+	chToggle.type = 'checkbox';
+	chToggle.id = 'ch-toggle';
+	chToggle.className = 'ps-gpc-toggle';
+	chToggle.checked = true;
+
+	const chToggleLabel = document.createElement('label');
+	chToggleLabel.className = 'ps-gpc-toggle-label';
+	chToggleLabel.setAttribute('for', 'ch-toggle');
+	chToggleLabel.textContent = 'Enabled';
+
+	chToggle.setAttribute('aria-label', 'Client Hints Stripping');
+	chRow.appendChild(chLeft);
+	chRow.appendChild(chToggleLabel);
+	chRow.appendChild(chToggle);
+	chCard.appendChild(chRow);
+
+	const chPills = document.createElement('div');
+	chPills.className = 'ps-preset-purposes';
+	for (const label of HIGH_ENTROPY_CH_LABELS) {
+		const pill = document.createElement('span');
+		pill.className = 'ps-preset-pill gpc';
+		pill.textContent = label;
+		chPills.appendChild(pill);
+	}
+	chCard.appendChild(chPills);
+	container.appendChild(chCard);
+
+	getChStrippingEnabled((enabled) => {
+		chToggle.checked = enabled;
+		chToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+	});
+
+	chToggle.addEventListener('change', () => {
+		const enabled = chToggle.checked;
+		chToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+		chrome.storage.local.set({ chStrippingEnabled: enabled }, notifyBackground);
+	});
+
+	section.classList.remove('ps-hidden');
 }
 
 function renderEnhancedPresets() {

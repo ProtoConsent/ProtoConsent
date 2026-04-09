@@ -33,17 +33,46 @@ The extension provides a popup interface to manage profiles and purposes per sit
   - [10. Global Privacy Control (GPC)](#10-global-privacy-control-gpc)
     - [Relation to the GPC specification](#relation-to-the-gpc-specification)
   - [11. Site declaration behaviour](#11-site-declaration-behaviour)
+    - [11.1 Fetching](#111-fetching)
+    - [11.2 Validation](#112-validation)
+    - [11.3 Display](#113-display)
+    - [11.4 No enforcement change](#114-no-enforcement-change)
   - [12. Inter-extension provider API](#12-inter-extension-provider-api)
+    - [12.1 Mechanism](#121-mechanism)
+    - [12.2 Resolution logic](#122-resolution-logic)
+    - [12.3 Security](#123-security)
     - [12.4 Management UI](#124-management-ui)
     - [12.5 Observability](#125-observability)
+    - [12.6 Supported message types](#126-supported-message-types)
 
 ## 2. Components
 
-**Popup UI** – The main user‑facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. Purpose categories are shown with [Consent Commons](https://consentcommons.com/) icons for visual clarity. When a site publishes a `.well-known/protoconsent.json` declaration, the popup displays it in a collapsible side panel with icons for legal basis, sharing and international transfers. A mode rail organises the interface into three views. The Consent view shows purpose toggles and per‑purpose blocked stats. The Enhanced view manages optional third‑party blocklists with preset selection and per‑list controls. The Log view provides real‑time request monitoring, blocked domains grouped by purpose, and GPC signal tracking per domain. The popup does not enforce anything directly; it sends messages to the background component when settings change.
+**Popup UI** – The main user-facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. Purpose categories are shown with [Consent Commons](https://consentcommons.com/) icons. The popup does not enforce anything directly; it sends messages to the background component when settings change.
 
-**Background script (service worker)** – Maintains per‑site rules, computes defaults for new domains, and translates user choices into declarative network rules. Also handles `.well-known/protoconsent.json` fetches on behalf of the popup: when the user opens the side panel, the popup sends a message to the background, which fetches the declaration from the site's origin and returns it for rendering.
+- **Consent view**: purpose toggles and per-purpose blocked stats
+- **Enhanced view**: optional third-party blocklists with preset selection and per-list controls
+- **Log view**: real-time request monitoring, blocked domains grouped by purpose, and GPC signal tracking per domain
+- **Site declaration panel**: when a site publishes a `.well-known/protoconsent.json`, a collapsible side panel shows its declared purposes, legal basis, sharing and international transfers
 
-**Local storage** – All configuration lives in the browser’s extension storage: the mapping from domains to site rules (profile plus purpose overrides), predefined profiles, the domain whitelist, Enhanced Protection state (list metadata in `enhancedLists`, heavy domain/path data in `enhancedData_{listId}` keys, active preset in `enhancedPreset`), compiled cosmetic CSS (`_cosmeticCSS` for generic selectors, `_cosmeticDomains` for per-domain selectors), and opt-in flags for remote sync (`dynamicListsConsent`) and the consent-enhanced link (`consentEnhancedLink`).
+**Background script (service worker)** – Central coordination point. Does not render UI; receives messages from popup and content scripts and translates them into enforcement actions.
+
+- **Rule management**: maintains per-site rules, computes defaults for new domains, rebuilds DNR rules (static rulesets + dynamic overrides) on every settings change
+- **GPC signal**: manages conditional `Sec-GPC: 1` header rules and registers the MAIN-world content script for `navigator.globalPrivacyControl`
+- **Client Hints stripping**: adds/removes `modifyHeaders` rules for high-entropy `Sec-CH-UA-*` headers based on `advanced_tracking` state
+- **Enhanced Protection**: downloads lists on demand, builds dynamic block rules, handles consent-enhanced link overlay, compiles cosmetic CSS and registers the injection content script
+- **Inter-extension API**: responds to `chrome.runtime.onMessageExternal` queries from approved extensions (§12)
+- **Observability**: tracks blocked requests and GPC signals via `webRequest` listeners, maintains per-tab counters, updates badge, pushes real-time events to the Log tab via persistent port
+- **Site declarations**: fetches `.well-known/protoconsent.json` on behalf of the popup and caches results (24h success, 6h failure)
+- **TCF detection**: receives CMP data from the content script bridge, validates and stores it per tab
+- **Onboarding**: opens the welcome page on first install when no default profile exists
+
+**Local storage** – All configuration lives in the browser’s extension storage. No remote server is used.
+
+- **Site rules**: mapping from domains to rules (profile plus purpose overrides) and predefined profiles
+- **Domain whitelist**: per-site and global allow entries
+- **Enhanced Protection**: list metadata in `enhancedLists`, domain/path data in `enhancedData_{listId}` keys, active preset in `enhancedPreset`. 19 lists: 5 ProtoConsent Core (one per blocking purpose, maintained by the project) and 14 third-party from open-source projects. Core lists are bundled for first-install availability and updated weekly via CDN from the [data repository](https://github.com/ProtoConsent/data), where a GitHub Actions workflow refreshes all sources every Tuesday.
+- **Cosmetic filtering**: compiled CSS in `_cosmeticCSS` (generic selectors) and `_cosmeticDomains` (per-domain selectors)
+- **Opt-in flags**: `dynamicListsConsent` (remote sync) and `consentEnhancedLink` (consent-enhanced link)
 
 **Enforcement (declarativeNetRequest + GPC)** – The background component uses a two‑tier rule model to balance scalability with flexibility:
 
@@ -75,7 +104,13 @@ Dynamic rules (5,000 rule pool)
 
 *Path‑based rules* complement domain rules for high‑value domains that cannot be blocked entirely: `google.com`, `facebook.com`, or `linkedin.com`. These rules use `urlFilter` patterns (e.g. `||google.com/pagead/`, `||facebook.com/tr/`) to block specific tracking endpoints while allowing the rest of the domain. See [blocklists.md](blocklists.md) §6 for details.
 
-*Dynamic rules* handle per‑site customisation and Enhanced Protection. When a user configures a site differently from the global profile, the background script creates override rules at priority 2 that take precedence over the static rules at priority 1. Overrides are grouped by (category, action) rather than by site: one "allow ads" rule covers all permissive sites via `initiatorDomains`, keeping the dynamic rule count constant regardless of how many custom sites exist. Enhanced Protection lists also produce dynamic block rules at priority 2 - one domain rule and optional path rules per enabled list. When the consent‑enhanced link is active (`consentEnhancedLink` in storage), lists whose category matches a denied consent purpose are also included in the rebuild, even if the user has not manually enabled them in the Enhanced tab; this is a runtime overlay computed fresh on each rebuild, not a persistent storage change. Sites where all purposes are allowed are excluded from enhanced blocking via `excludedInitiatorDomains`. This design supports hundreds of custom sites and multiple enhanced lists within Chrome's 5,000 dynamic rule limit.
+*Dynamic rules* handle per-site customisation and Enhanced Protection.
+
+- **Per-site overrides**: when a user configures a site differently from the global profile, the background creates override rules at priority 2. Overrides are grouped by (category, action) rather than by site: one "allow ads" rule covers all permissive sites via `initiatorDomains`, keeping the dynamic rule count constant regardless of how many custom sites exist.
+- **Enhanced Protection**: each enabled list produces dynamic block rules at priority 2 - one domain rule and optional path rules. Sites where all purposes are allowed are excluded via `excludedInitiatorDomains`.
+- **Consent-enhanced link**: when active (`consentEnhancedLink` in storage), lists whose category matches a denied consent purpose are included in the rebuild even if the user has not manually enabled them. This is a runtime overlay computed fresh on each rebuild, not a persistent storage change.
+
+This design supports hundreds of custom sites and multiple enhanced lists within Chrome's 5,000 dynamic rule limit.
 
 *Whitelist allow rules* let users unblock specific domains that were caught by the static rulesets. These rules use priority 3, so they always win over both static blocks (priority 1) and per‑site overrides (priority 2). Each entry can be scoped per site (using `initiatorDomains`) or global (no initiator filter). Global entries are batched into a single rule; per‑site entries are grouped by site, one rule per unique site. Domain validation prevents invalid hostnames from entering storage or DNR rules, and storage writes are serialized to avoid concurrent conflicts.
 
@@ -83,11 +118,24 @@ Dynamic rules (5,000 rule pool)
 
 Per‑site GPC overrides use `requestDomains` (the destination URL), not `initiatorDomains` (the page making the request). This means that trusting a site, for example allowing all purposes on elpais.com, removes the GPC signal from requests *to* elpais.com, but third‑party requests *from* elpais.com to domains like google‑analytics.com still carry the global GPC signal. The same applies to cross‑origin iframes: an iframe from youtube.com embedded on a trusted elpais.com page still receives GPC from the global rule.
 
-*Client Hint headers* are handled automatically when the `advanced_tracking` purpose is denied. In that case, the extension strips high‑entropy Client Hints headers (`Sec-CH-UA-Full-Version-List`, `Sec-CH-UA-Platform-Version`, `Sec-CH-UA-Arch`, `Sec-CH-UA-Bitness`, `Sec-CH-UA-Model`, `Sec-CH-UA-WoW64`, `Sec-CH-UA-Form-Factors`) via `modifyHeaders` remove rules. These headers expose enough device information (~33 bits of entropy) to uniquely fingerprint a user. Low‑entropy hints (`Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`) are kept intact as they are needed for basic content negotiation and have minimal fingerprinting value. Firefox and Safari do not send Client Hints at all, so removing them causes no site breakage. Like GPC, Client Hints stripping has a global toggle in Purpose Settings (`chStrippingEnabled` in storage, default `true`); when off, no stripping rules are generated regardless of purpose state. Per‑site exceptions use `excludedRequestDomains` on the global rule rather than a separate override, because a native browser header cannot be "un-removed" by a higher‑priority rule.
+*Client Hint headers* are handled automatically when the `advanced_tracking` purpose is denied. The extension strips seven high-entropy headers via `modifyHeaders` remove rules:
+
+- Stripped: `Sec-CH-UA-Full-Version-List`, `Sec-CH-UA-Platform-Version`, `Sec-CH-UA-Arch`, `Sec-CH-UA-Bitness`, `Sec-CH-UA-Model`, `Sec-CH-UA-WoW64`, `Sec-CH-UA-Form-Factors` (~33 bits of entropy, enough to uniquely fingerprint)
+- Kept: `Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform` (low-entropy, needed for content negotiation)
+- Global toggle in Purpose Settings (`chStrippingEnabled`, default `true`); when off, no stripping rules are generated
+- Per-site exceptions use `excludedRequestDomains` on the global rule rather than a separate override, because a native browser header cannot be "un-removed" by a higher-priority rule
+- Firefox and Safari do not send Client Hints at all, so stripping is Chromium-specific
 
 **Content script bridge** – A content script (`content-script.js`) declared in the manifest runs in the ISOLATED world on every page. It acts as a message bridge between the page‑level SDK and the extension’s background: it listens for `PROTOCONSENT_QUERY` messages from the page, forwards them to the background via `chrome.runtime.sendMessage`, and relays the response back. It also forwards `PROTOCONSENT_TCF_DETECTED` messages from the TCF detection script to the background. It does not access or modify page content.
 
-**TCF detection script** – A MAIN‑world content script (`tcf-detect.js`) that probes for the IAB TCF `__tcfapi` function on the page. When a consent management platform (CMP) is found, the script calls `getTCData` to retrieve the CMP’s identity and purpose consent state, then sends a `PROTOCONSENT_TCF_DETECTED` message via `window.postMessage` (using `window.location.origin` as the target origin). The content script bridge picks it up and forwards it to the background, which validates and stores the data per tab in memory and `chrome.storage.session`. The popup displays the CMP info in a pill indicator and expandable side panel, so users can compare the site banner’s consent state with ProtoConsent’s enforcement. Probing retries at 200, 600, 1500, 3000 and 5000 ms to handle asynchronously loaded CMPs.
+**TCF detection script** – A MAIN-world content script (`tcf-detect.js`) that detects IAB TCF consent management platforms on the page.
+
+- Probes for the `__tcfapi` function, retrying at 200, 600, 1500, 3000 and 5000 ms to handle async-loaded CMPs
+- When found, reads CMP identity and purpose consent state via `getTCData`
+- Sends data to the background via the content script bridge (`PROTOCONSENT_TCF_DETECTED` message)
+- Background validates (numeric ranges, boolean values, entry count limits) and stores per tab in memory and `chrome.storage.session`
+- Popup shows a pill indicator; clicking it reveals CMP provider, purpose consent details, and a note that ProtoConsent enforces independently
+- Data is cleared on navigation (full loads and SPA pushState changes) and on tab close; orphan session keys are pruned during service worker restore
 
 **protoconsent.js SDK** – A small, optional JavaScript library for web pages to read the user’s ProtoConsent preferences (e.g. whether analytics is allowed) via the content script bridge. The extension works without it; the SDK is for sites that want to adapt their behaviour to the user’s choices. TypeScript type declarations are also provided (`sdk/protoconsent.d.ts`).
 
@@ -95,7 +143,13 @@ Per‑site GPC overrides use `requestDomains` (the destination URL), not `initia
 
 **Onboarding and purpose settings pages** – Two additional extension pages complement the popup. The onboarding page (`pages/onboarding.html`) opens on first install and guides new users through four screens: (1) default profile selection, (2) feature overview, (3) Enhanced lists opt-ins (remote sync and consent-enhanced link), and (4) confirmation with next steps. The purpose settings page (`pages/purposes-settings.html`) lets users customise the global default profile by toggling individual purposes, manage Enhanced lists (sync toggle and consent-enhanced link toggle in a two-column grid), and shows the active Enhanced Protection preset alongside the consent presets. Accessible from the popup or `chrome://extensions`.
 
-**Cosmetic filtering** – Enhanced Protection includes a cosmetic filtering list (`easylist_cosmetic`) that hides ad containers and empty banners left after network-level blocking. A converter (`convert-cosmetic.js` in the data repo) extracts `##` element-hiding rules from EasyList into generic and domain-specific CSS selectors. The compiled JSON is bundled in `extension/rules/easylist_cosmetic.json` for first-install availability and also hosted on CDN for updates. At rebuild time, the background script compiles active selectors into CSS strings stored in `chrome.storage.local` (`_cosmeticCSS` for generic, `_cosmeticDomains` for per-domain). A programmatically registered content script (`cosmetic-inject.js`) reads the compiled CSS at `document_start` and injects a `<style>` element. Selectors are validated at three levels: the converter rejects selectors containing `{` or `}` (to prevent CSS injection), the background re-filters at compile time, and the content script re-filters at runtime. Cosmetic filtering is purely visual cleanup - it does not block network requests or affect privacy. It is part of the Balanced preset and can be disabled independently in the Enhanced tab.
+**Cosmetic filtering** – Hides ad containers and empty banners left after network-level blocking. Purely visual cleanup - does not block requests or affect privacy. Part of the Balanced preset, can be disabled independently.
+
+- **Source**: `convert-cosmetic.js` (data repo) extracts `##` element-hiding rules from EasyList into generic and domain-specific CSS selectors
+- **Distribution**: bundled in `extension/rules/easylist_cosmetic.json` for first-install; also hosted on CDN for updates
+- **Rebuild**: background compiles selectors into CSS strings in `chrome.storage.local` (`_cosmeticCSS` generic, `_cosmeticDomains` per-domain)
+- **Injection**: `cosmetic-inject.js` content script reads compiled CSS at `document_start` and injects a `<style>` element
+- **Validation** (3 levels): converter rejects selectors containing `{`/`}`, background re-filters at compile time, content script re-filters at runtime
 
 ![ProtoConsent technical diagram](assets/diagrams/protoconsent-technical-diagram.png)
 
@@ -123,17 +177,42 @@ Three predefined profiles (“Strict”, “Balanced”, “Permissive”) map d
 
 **Page reads preferences via SDK** – On sites that integrate the optional SDK, page code can query the user’s preferences (e.g. `get("analytics")`) and decide whether to load scripts or simplify consent prompts. This complements browser‑level enforcement; it does not replace it. A live test is available on [protoconsent.org](https://protoconsent.org/) and [demo.protoconsent.org](https://demo.protoconsent.org).
 
-**Extension reads site declaration** – When the user opens the side panel in the popup, the popup sends a `PROTOCONSENT_FETCH_WELL_KNOWN` message to the background script, which fetches `<protocol>://<host>/.well-known/protoconsent.json` from the current site’s origin. If a valid declaration is found, the popup renders it in a collapsible side panel with Consent Commons icons for purposes, legal basis, sharing scope, and data handling. The declaration is cached (24 hours on success, 6 hours on failure) to avoid repeated fetches. The fetch uses the page’s actual protocol and host (including port), so it works on both production sites and local development servers.
+**Extension reads site declaration** – When the user opens the side panel, the popup asks the background to fetch `<protocol>://<host>/.well-known/protoconsent.json`.
 
-**Real‑time log monitoring** – When the user switches to the Log tab, the popup opens a persistent `chrome.runtime.connect` port (named `"log"`) to the background script. The background pushes `block` and `gpc` events through this port as they happen, and the popup appends timestamped entries to the Requests panel. Historical data (blocked domains by purpose and GPC signals) is replayed from the background’s in‑memory state when the panel first renders. The Domains panel shows a flat table of blocked domains grouped by purpose with Consent Commons icons, and the GPC panel lists domains that received `Sec‑GPC: 1` with request counts and first/last‑seen timestamps. All panels include a copy‑to‑clipboard button that formats content appropriately (plain text for console panels, tab‑separated text for tables).
+- If valid, the popup renders purposes, legal basis, sharing scope, and data handling with Consent Commons icons
+- Cached per domain: 24h on success, 6h on failure
+- Uses the page’s actual protocol and host (including port), so it works on production sites and local dev servers
 
-The background detects blocked requests via `webRequest.onErrorOccurred` (filtering for `ERR_BLOCKED_BY_CLIENT`) and GPC signals via `webRequest.onSendHeaders` (checking for `Sec-GPC: 1` in final headers). Purpose attribution uses a reverse hostname index (~40K entries) built from the static blocklists, with subdomain walk‑up matching. A GPC configuration snapshot (global active flag, per‑site add/remove sets) filters out native browser GPC to avoid double‑counting. In developer mode (unpacked extension), a more precise API (`onRuleMatchedDebug`) is available that provides exact rule‑to‑request attribution; the extension uses it automatically when present, falling back to the `webRequest` path otherwise. Both paths feed into the same data structures and message format, so the popup and log UI show the same data regardless of build type.
+**Real-time log monitoring** – The popup opens a persistent `chrome.runtime.connect` port to the background, which pushes events as they happen.
 
-The badge counter on the extension icon shows the per‑tab blocked request count, derived from the same data used by the popup and log. Because Chrome‑persisted rule match counts (`getMatchedRules`) and the real‑time listener (in‑memory) may diverge when the service worker sleeps through events, the log UI uses `getMatchedRules` as the authoritative total and transparently notes any gap (e.g. "42 blocked requests across 3 categories (2 not captured)").
+- **Requests panel**: timestamped `block` and `gpc` events streamed in real time; historical data replayed on first render
+- **Domains panel**: blocked domains grouped by purpose with Consent Commons icons
+- **GPC panel**: domains that received `Sec-GPC: 1` with request counts and first/last-seen timestamps
+- **Badge counter**: per-tab blocked count on the extension icon; uses `getMatchedRules` as authoritative total, noting any gap with the real-time listener
 
-**First‑time onboarding** – On first install (when no default profile exists in storage), the background script opens the onboarding page. The four‑screen flow guides the user through: (1) selecting a default profile (Strict, Balanced, or Permissive), (2) a feature overview, (3) opting into Enhanced lists sync and the consent‑enhanced link, and (4) confirmation with next steps. The selected profile is saved as the global default, and opt‑in choices are stored as `dynamicListsConsent` and `consentEnhancedLink` booleans. All sites then inherit the chosen profile until the user creates per‑site overrides.
+Detection sources:
 
-**Cookie banner detection (TCF)** – When a page loads, the MAIN‑world `tcf-detect.js` script probes for the IAB TCF `__tcfapi` function. If found, it reads the CMP's identity and purpose consent state via `getTCData` and posts a message to the content script bridge, which forwards it to the background. The background validates the data (numeric ranges, boolean values, entry count limits) and stores it per tab in `tabTcfData` (in‑memory Map) and `chrome.storage.session` (keyed as `tcf_{tabId}`) for service worker restart resilience. When the popup opens, it queries the background for TCF data: if present, a pill indicator appears next to the site declaration area, and clicking it reveals a side panel showing the CMP provider, purpose consent details, and a note that ProtoConsent enforces preferences independently. TCF data is cleared on navigation (both full page loads and SPA pushState changes detected via `tabs.onUpdated` URL comparison) and on tab close. Orphan session keys are pruned during service worker restore.
+- Blocked requests: `webRequest.onErrorOccurred` filtering for `ERR_BLOCKED_BY_CLIENT`
+- GPC signals: `webRequest.onSendHeaders` checking for `Sec-GPC: 1`
+- Purpose attribution: reverse hostname index (~40K entries) with subdomain walk-up matching
+- Developer mode: `onRuleMatchedDebug` provides exact rule-to-request attribution when available; falls back to `webRequest` automatically
+- Both paths feed into the same data structures, so the UI shows the same data regardless of build type
+
+**First-time onboarding** – On first install (no default profile in storage), the background opens the onboarding page. Four screens:
+
+1. Default profile selection (Strict, Balanced, Permissive)
+2. Feature overview
+3. Enhanced lists opt-ins (remote sync and consent-enhanced link)
+4. Confirmation with next steps
+
+The selected profile becomes the global default; opt-in choices are stored as `dynamicListsConsent` and `consentEnhancedLink` booleans.
+
+**Cookie banner detection (TCF)** – The MAIN-world `tcf-detect.js` script detects IAB TCF consent management platforms.
+
+- Probes `__tcfapi`, reads CMP identity and consent state via `getTCData`
+- Background validates and stores per tab in memory + `chrome.storage.session` (keyed as `tcf_{tabId}`)
+- Popup shows a pill indicator; side panel reveals CMP provider, purpose consents, and a note that ProtoConsent enforces independently
+- Data cleared on navigation (full loads + SPA pushState) and tab close; orphan session keys pruned during service worker restore
 
 ## 5. Security and privacy by design
 
@@ -214,11 +293,13 @@ When building per‑site "block" override rules (for sites more restrictive than
 
 ## 9. Extensibility
 
-New purposes can be added as fields in the site rule without breaking existing preferences. The `.well-known/protoconsent.json` schema is versioned and designed to accommodate new fields while remaining backward‑compatible.
+New purposes can be added as fields in the site rule without breaking existing preferences. The `.well-known/protoconsent.json` schema is versioned and designed to accommodate new fields while remaining backward-compatible.
+
+The inter-extension provider API (§12) is a concrete example: other extensions can query ProtoConsent's consent state without any coupling to its internal data model.
 
 Firefox support is planned as the next browser target. The extension architecture (popup, background, local storage, enforcement) maps directly to Firefox's WebExtensions API, with adaptations mainly in `declarativeNetRequest` availability and manifest format. The same popup UI, data model, and SDK work across browsers.
 
-The optional SDK and purpose‑signalling protocol are documented layers on top of the extension, not hard dependencies. Websites can adopt them at their own pace while the extension continues to work on its own. This lets others adopt parts of ProtoConsent independently.
+The optional SDK and purpose-signalling protocol are documented layers on top of the extension, not hard dependencies. Websites can adopt them at their own pace while the extension continues to work on its own. This lets others adopt parts of ProtoConsent independently.
 
 ## 10. Global Privacy Control (GPC)
 
