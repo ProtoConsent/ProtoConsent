@@ -19,7 +19,7 @@ async function init() {
 		renderPurposes(purposes);
 		renderPresets(presets, purposes);
 		renderEnhancedPresets();
-		renderDynamicListsToggle();
+		renderDynamicListsToggle(purposes);
 		initInterExt();
 
 		const versionEl = document.getElementById('viewer-version');
@@ -526,7 +526,19 @@ function renderEnhancedPresets() {
 			// Show which lists are included in this preset
 			const pills = document.createElement('div');
 			pills.className = 'ps-preset-purposes';
+			let coreRendered = false;
 			for (const [listId, listDef] of Object.entries(catalog)) {
+				if (listId.startsWith('protoconsent_')) {
+					if (coreRendered) continue;
+					coreRendered = true;
+					const included = preset.id === 'full' ||
+						(preset.id === 'basic' && listDef.preset === 'basic');
+					const pill = document.createElement('span');
+					pill.className = 'ps-preset-pill ' + (included ? 'allowed' : 'denied');
+					pill.textContent = 'ProtoConsent Core' + (included ? ' \u2713' : ' \u2717');
+					pills.appendChild(pill);
+					continue;
+				}
 				const included = preset.id === 'full' ||
 					(preset.id === 'basic' && listDef.preset === 'basic');
 				const pill = document.createElement('span');
@@ -566,7 +578,21 @@ function renderEnhancedPresets() {
 		if (hasDownloaded) {
 			const pills = document.createElement('div');
 			pills.className = 'ps-preset-purposes';
+			let coreRendered = false;
 			for (const [listId, listDef] of Object.entries(catalog)) {
+				if (listId.startsWith('protoconsent_')) {
+					if (coreRendered) continue;
+					coreRendered = true;
+					const coreIds = Object.keys(catalog).filter(id => id.startsWith('protoconsent_'));
+					const coreData = coreIds.map(id => enhancedLists[id]).filter(Boolean);
+					if (coreData.length === 0) continue;
+					const allEnabled = coreData.every(d => !!d.enabled) || coreIds.some(id => celIds.has(id));
+					const pill = document.createElement('span');
+					pill.className = 'ps-preset-pill ' + (allEnabled ? 'allowed' : 'denied');
+					pill.textContent = 'ProtoConsent Core' + (allEnabled ? ' \u2713' : ' \u2717');
+					pills.appendChild(pill);
+					continue;
+				}
 				const listData = enhancedLists[listId];
 				if (!listData) continue;
 				const enabled = !!listData.enabled || celIds.has(listId);
@@ -585,9 +611,10 @@ function renderEnhancedPresets() {
 	});
 }
 
-function notifyBackground() {
+function notifyBackground(cb) {
 	chrome.runtime.sendMessage({ type: 'PROTOCONSENT_RULES_UPDATED' }, () => {
-		void chrome.runtime.lastError; // suppress warning if background is inactive
+		void chrome.runtime.lastError;
+		if (cb) cb();
 	});
 }
 
@@ -599,7 +626,8 @@ const EXPORT_KEYS = [
 	"defaultProfile", "defaultPurposes", "rules", "whitelist",
 	"gpcEnabled", "chStrippingEnabled", "enhancedPreset", "enhancedLists",
 	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending",
-	"dynamicListsConsent", "consentEnhancedLink"
+	"dynamicListsConsent", "consentEnhancedLink",
+	"celMode", "celCustomPurposes"
 ];
 
 const VALID_PROFILES = ["strict", "balanced", "permissive", "custom"];
@@ -693,11 +721,27 @@ function validateImport(data) {
 		if (typeof data.consentEnhancedLink === "boolean") clean.consentEnhancedLink = data.consentEnhancedLink;
 		else errors.push("consentEnhancedLink: must be boolean");
 	}
+	if ("celMode" in data) {
+		if (data.celMode === "profile" || data.celMode === "custom") clean.celMode = data.celMode;
+		else errors.push("celMode: must be 'profile' or 'custom'");
+	}
+	if ("celCustomPurposes" in data) {
+		const cp = data.celCustomPurposes;
+		if (typeof cp === "object" && cp !== null && !Array.isArray(cp) &&
+			Object.values(cp).every(v => typeof v === "boolean")) {
+			const validKeys = new Set(["analytics", "ads", "personalization", "third_parties", "advanced_tracking"]);
+			const filtered = {};
+			for (const [k, v] of Object.entries(sanitizeObjectKeys(cp))) {
+				if (validKeys.has(k)) filtered[k] = v;
+			}
+			clean.celCustomPurposes = filtered;
+		} else errors.push("celCustomPurposes: must be {key: boolean}");
+	}
 
 	return { clean, errors };
 }
 
-function renderDynamicListsToggle() {
+function renderDynamicListsToggle(purposes) {
 	const section = document.getElementById('dynamic-lists-section');
 	const toggle = document.getElementById('ps-dynamic-toggle');
 	const label = document.getElementById('ps-dynamic-label');
@@ -705,7 +749,7 @@ function renderDynamicListsToggle() {
 	const celLabel = document.getElementById('ps-cel-label');
 	if (!section || !toggle || !label) return;
 
-	chrome.storage.local.get(['dynamicListsConsent', 'consentEnhancedLink'], (data) => {
+	chrome.storage.local.get(['dynamicListsConsent', 'consentEnhancedLink', 'celMode', 'celCustomPurposes'], (data) => {
 		const syncEnabled = data.dynamicListsConsent === true;
 		toggle.checked = syncEnabled;
 		label.textContent = syncEnabled ? 'Enabled' : 'Disabled';
@@ -715,6 +759,7 @@ function renderDynamicListsToggle() {
 			celToggle.checked = celEnabled;
 			celLabel.textContent = celEnabled ? 'Enabled' : 'Disabled';
 			updateCelNote(celEnabled);
+			renderCelModePanel(celEnabled, data.celMode || 'profile', data.celCustomPurposes || null, purposes);
 		}
 
 		section.classList.remove('ps-hidden');
@@ -737,10 +782,133 @@ function renderDynamicListsToggle() {
 			const enabled = celToggle.checked;
 			celLabel.textContent = enabled ? 'Enabled' : 'Disabled';
 			setConsentEnhancedLink(enabled, () => {
-				notifyBackground();
-				updateCelNote(enabled);
+				notifyBackground(() => {
+					updateCelNote(enabled);
+				});
+				chrome.storage.local.get(['celMode', 'celCustomPurposes'], (d) => {
+					renderCelModePanel(enabled, d.celMode || 'profile', d.celCustomPurposes || null, purposes);
+				});
 			});
 		});
+	}
+}
+
+const CEL_PURPOSE_ORDER = ["analytics", "ads", "personalization", "third_parties", "advanced_tracking"];
+
+function renderCelModePanel(celEnabled, celMode, celCustomPurposes, purposes) {
+	const panel = document.getElementById('ps-cel-mode-panel');
+	if (!panel) return;
+	panel.innerHTML = '';
+
+	if (!celEnabled) {
+		panel.classList.add('ps-hidden');
+		return;
+	}
+	panel.classList.remove('ps-hidden');
+
+	// Mode selector row
+	const modeRow = document.createElement('div');
+	modeRow.className = 'ps-cel-mode-row';
+
+	const modeLabel = document.createElement('span');
+	modeLabel.className = 'ps-cel-mode-label';
+	modeLabel.textContent = 'Mode';
+	modeRow.appendChild(modeLabel);
+
+	const modeGroup = document.createElement('div');
+	modeGroup.className = 'ps-cel-mode-group';
+	modeGroup.setAttribute('role', 'radiogroup');
+	modeGroup.setAttribute('aria-label', 'Consent link mode');
+
+	for (const mode of ['profile', 'custom']) {
+		const btn = document.createElement('button');
+		btn.type = 'button';
+		btn.className = 'ps-cel-mode-btn' + (celMode === mode ? ' is-active' : '');
+		btn.textContent = mode === 'profile' ? 'Profile' : 'Custom';
+		btn.setAttribute('role', 'radio');
+		btn.setAttribute('aria-checked', celMode === mode ? 'true' : 'false');
+		btn.setAttribute('tabindex', celMode === mode ? '0' : '-1');
+		btn.title = mode === 'profile'
+			? 'Use denied purposes from your default profile'
+			: 'Choose which purposes activate enhanced lists';
+		btn.addEventListener('click', () => {
+			if (celMode === mode) return;
+			// When switching to custom for the first time, persist defaults (all denied)
+			const toStore = { celMode: mode };
+			if (mode === 'custom' && !celCustomPurposes) {
+				const defaults = {};
+				for (const k of CEL_PURPOSE_ORDER) defaults[k] = true;
+				celCustomPurposes = defaults;
+				toStore.celCustomPurposes = defaults;
+			}
+			chrome.storage.local.set(toStore, () => {
+				renderCelModePanel(true, mode, celCustomPurposes, purposes);
+				notifyBackground(() => {
+					updateCelNote(true);
+				});
+			});
+		});
+		modeGroup.appendChild(btn);
+	}
+	// Arrow-key navigation for radio group (WAI-ARIA pattern)
+	modeGroup.addEventListener('keydown', (e) => {
+		if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+		const btns = [...modeGroup.querySelectorAll('[role="radio"]')];
+		const idx = btns.indexOf(document.activeElement);
+		if (idx < 0) return;
+		e.preventDefault();
+		const next = e.key === 'ArrowRight' ? (idx + 1) % btns.length : (idx - 1 + btns.length) % btns.length;
+		btns[next].focus();
+		btns[next].click();
+	});
+	modeRow.appendChild(modeGroup);
+	panel.appendChild(modeRow);
+
+	// Purpose toggles (only in custom mode)
+	if (celMode === 'custom') {
+		const purposesBox = document.createElement('div');
+		purposesBox.className = 'ps-cel-purposes';
+
+		const customs = celCustomPurposes || {};
+		for (const key of CEL_PURPOSE_ORDER) {
+			const row = document.createElement('label');
+			row.className = 'ps-cel-purpose-row';
+
+			const cb = document.createElement('input');
+			cb.type = 'checkbox';
+			cb.className = 'ps-cel-purpose-cb';
+			// Default to denied (true) if not yet stored
+			cb.checked = key in customs ? customs[key] : true;
+			cb.dataset.purpose = key;
+			cb.addEventListener('change', () => {
+				const updated = {};
+				for (const c of purposesBox.querySelectorAll('.ps-cel-purpose-cb')) {
+					updated[c.dataset.purpose] = c.checked;
+				}
+				celCustomPurposes = updated;
+				chrome.storage.local.set({ celCustomPurposes: updated }, () => {
+					notifyBackground(() => {
+						updateCelNote(true);
+					});
+				});
+			});
+
+			const lbl = document.createElement('span');
+			lbl.className = 'ps-cel-purpose-text';
+			const pDef = purposes[key];
+			lbl.textContent = pDef ? pDef.short_label : key.replace(/_/g, ' ');
+
+			row.appendChild(cb);
+			row.appendChild(lbl);
+			purposesBox.appendChild(row);
+		}
+
+		const hint = document.createElement('div');
+		hint.className = 'ps-cel-hint';
+		hint.textContent = 'Checked purposes will activate their enhanced lists.';
+		purposesBox.appendChild(hint);
+
+		panel.appendChild(purposesBox);
 	}
 }
 
@@ -756,6 +924,7 @@ function updateCelNote(celEnabled) {
 		if (chrome.runtime.lastError || !resp) return;
 		const lists = resp.lists || {};
 		const catalog = resp.catalog || {};
+		const celMode = resp.celMode || 'profile';
 		const hasDownloadedWithCategory = Object.keys(lists).some(id => {
 			const def = catalog[id];
 			return def && def.category && def.category !== "security";
@@ -782,13 +951,18 @@ function updateCelNote(celEnabled) {
 				}
 				note.appendChild(pillWrap);
 			} else {
-				note.appendChild(document.createTextNode(' No lists match your denied purposes in the '));
-				const link = document.createElement('a');
-				link.href = '#default-profile-section';
-				link.className = 'ps-cel-note-link';
-				link.textContent = 'default profile';
-				note.appendChild(link);
-				note.appendChild(document.createTextNode('.'));
+				note.appendChild(document.createTextNode(' No lists match your denied purposes in '));
+				if (celMode === 'custom') {
+					note.appendChild(document.createTextNode('your custom purpose selection above.'));
+				} else {
+					note.appendChild(document.createTextNode('the '));
+					const link = document.createElement('a');
+					link.href = '#default-profile-section';
+					link.className = 'ps-cel-note-link';
+					link.textContent = 'default profile';
+					note.appendChild(link);
+					note.appendChild(document.createTextNode('.'));
+				}
 			}
 			note.classList.remove('ps-hidden');
 		}
