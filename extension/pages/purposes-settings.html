@@ -51,12 +51,21 @@
 		</section>
 
 		<section id="presets-section" class="ps-section ps-hidden">
-			<h2>Presets</h2>
+			<div class="ps-section-head">
+				<h2>Consent <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
+			</div>
 			<div id="preset-list"></div>
 		</section>
 
+		<section id="privacy-signals-section" class="ps-section ps-hidden">
+			<h2>Privacy Signals</h2>
+			<div id="privacy-signals-list" class="ps-dynamic-grid"></div>
+		</section>
+
 		<section id="enhanced-presets-section" class="ps-section ps-hidden">
-			<h2>Enhanced Protection</h2>
+			<div class="ps-section-head">
+				<h2>Enhanced Protection <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
+			</div>
 			<p class="ps-enhanced-desc">Optional third-party blocklists for additional protection. These are independent of your consent profile.</p>
 			<div id="enhanced-preset-list"></div>
 		</section>
@@ -96,13 +105,15 @@
 			<div class="ps-section-head">
 				<h2>Inter-extension API</h2>
 			</div>
-			<div class="ps-gpc-toggle-row">
-				<div>
-					<span class="ps-gpc-info-name">Master switch</span>
-					<div class="ps-gpc-info-desc">Allow other extensions to query your consent preferences. Each extension must be individually approved.</div>
+			<div class="ps-dynamic-grid">
+				<div class="ps-gpc-toggle-row">
+					<div>
+						<span class="ps-gpc-info-name">Master switch</span>
+						<div class="ps-gpc-info-desc">Allow other extensions to query your consent preferences. Each extension must be individually approved.</div>
+					</div>
+					<label class="ps-gpc-toggle-label" for="inter-ext-toggle" id="inter-ext-toggle-label">Disabled</label>
+					<input type="checkbox" id="inter-ext-toggle" class="ps-gpc-toggle" aria-label="Inter-extension API">
 				</div>
-				<label class="ps-gpc-toggle-label" for="inter-ext-toggle" id="inter-ext-toggle-label">Disabled</label>
-				<input type="checkbox" id="inter-ext-toggle" class="ps-gpc-toggle" aria-label="Inter-extension API">
 			</div>
 
 			<div id="inter-ext-container" class="ps-hidden">
