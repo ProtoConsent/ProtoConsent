@@ -267,6 +267,7 @@ function renderPresetAction() {
   celImg.width = 14;
   celImg.height = 14;
   celImg.className = "ep-cel-pill-icon";
+  celImg.alt = "";
   celImg.setAttribute("aria-hidden", "true");
   celPill.appendChild(celImg);
   celPill.title = epConsentEnhancedLink

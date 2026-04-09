@@ -24,11 +24,12 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 
 - **Per‑site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking).
 - **Network‑level enforcement** of purpose‑based decisions via curated blocklists organised by purpose, with visible results (blocked counts, domain detail). See [blocklists.md](design/blocklists.md).
-- **Optional enhanced protection** with 14 curated third-party enhanced lists (EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project, AdGuard CNAME Trackers) including cosmetic filtering (element-hiding CSS). Three presets (Off, Balanced, Full) or individual list selection. Remote fetch gated behind an explicit consent toggle. Consent-enhanced link optionally auto-activates lists matching denied purposes.
+- **Optional enhanced protection** with 19 curated enhanced lists (5 ProtoConsent Core purpose-based lists plus EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project, AdGuard CNAME Trackers) including cosmetic filtering (element-hiding CSS). Three presets (Off, Balanced, Full) or individual list selection. Remote fetch gated behind an explicit consent toggle. Consent-enhanced link optionally auto-activates lists matching denied purposes.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.
 - **Visibility:** real‑time log monitoring, blocked domains grouped by purpose with [Consent Commons](https://consentcommons.com/) icons, GPC signal tracking, Client Hints status, cookie consent detection, CNAME trackers and domain whitelist management.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` to declare their data practices. No SDK or code changes required.
 - **JavaScript SDK** (MIT licensed) for web pages to query user preferences. TypeScript declarations included.
+- **Inter-extension API:** other browser extensions can query the user's consent state via `chrome.runtime.sendMessage`, with TOFU trust model and rate limiting.
 
 For a detailed feature breakdown, see [product-overview.md](design/product-overview.md).
 
@@ -58,18 +59,20 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 <td align="center"><img src="design/assets/screenshots/popup-log-domains.png" alt="Log tab with blocked domains" height="520"></td>
 <td align="center"><img src="design/assets/screenshots/popup-log-gpc.png" alt="GPC signal tracking" height="520"></td>
 </tr>
+<tr>
+<td align="center"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Domain whitelist management" height="520"></td>
+<td align="center"><img src="design/assets/screenshots/popup-log-requests.png" alt="Request log with inter-extension API and GPC signals" height="520"></td>
+</tr>
 </table>
-<table>
-<tr>
-<td align="center"><img src="design/assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel" height="520"></td></table>
 
-### Domain whitelist management
+### Site declaration
 
-The Domains tab includes Allow/Allowed buttons for quick whitelist control. The Whitelist tab lists all whitelisted domains with scope (Site or Global) and toggle buttons.
+Websites can publish a `.well-known/protoconsent.json` to declare their data practices. The extension displays it in a side panel with [Consent Commons](https://consentcommons.com/) icons alongside the user's own preferences.
 
 <table>
 <tr>
-<td align="center"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Whitelist tab with scope management" height="520"></td>
+<td align="center"><img src="design/assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel" height="520"></td>
+</tr>
 </table>
 
 ## For websites
@@ -105,10 +108,9 @@ See [architecture.md](design/architecture.md) for the full technical description
 
 ## What's next
 
-- Import/export of user configuration
 - `.well-known/protoconsent.json` declaration generator
-- Core blocklist refresh and expansion
-- Ecosystem outreach (pilot sites with `.well-known` declarations)
+- SDK `onchange` API for real-time site adaptation
+- Ecosystem outreach
 
 See [product-overview.md](design/product-overview.md) for the full roadmap.
 

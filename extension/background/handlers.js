@@ -13,9 +13,10 @@
 function resolveEnhancedPreset(lists, catalog) {
   const downloaded = Object.keys(lists);
   if (downloaded.length === 0) return "off";
-  const allDisabled = downloaded.every(id => !lists[id].enabled);
+  const allDisabled = downloaded.every(id => !lists[id]?.enabled);
   if (allDisabled) return "off";
   const catalogIds = Object.keys(catalog);
+  if (catalogIds.length === 0) return "custom";
   const allDownloaded = catalogIds.every(id => !!lists[id]);
   const allEnabled = allDownloaded && catalogIds.every(id => !!lists[id]?.enabled);
   if (allEnabled) return "full";

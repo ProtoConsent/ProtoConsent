@@ -10,14 +10,37 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
 
 ## Contents
 
-1. [Overview](#1-overview)
-2. [Current state](#2-current-state)
-3. [Sources](#3-sources)
-4. [Curation process](#4-curation-process)
-5. [DNR format](#5-dnr-format)
-6. [Path-based rules](#6-pathbased-rules)
-7. [Enhanced protection lists (third-party)](#7-enhanced-protection-lists-third-party)
-8. [CNAME cloaking detection (informational)](#8-cname-cloaking-detection-informational)
+- [ProtoConsent - Blocklists management](#protoconsent---blocklists-management)
+  - [1. Overview](#1-overview)
+  - [Contents](#contents)
+  - [2. Current state](#2-current-state)
+  - [3. Sources](#3-sources)
+  - [4. Curation process](#4-curation-process)
+    - [Inclusion criteria](#inclusion-criteria)
+    - [Quality review](#quality-review)
+    - [Safelist](#safelist)
+  - [5. DNR format](#5-dnr-format)
+  - [6. Path-based rules](#6-path-based-rules)
+    - [Current path rule counts](#current-path-rule-counts)
+    - [Selection criteria for path rules](#selection-criteria-for-path-rules)
+    - [Interaction with per-site overrides](#interaction-with-per-site-overrides)
+  - [7. Enhanced protection lists (third-party)](#7-enhanced-protection-lists-third-party)
+    - [Current lists (v0.3)](#current-lists-v03)
+    - [Removed from earlier candidates](#removed-from-earlier-candidates)
+    - [Distribution model](#distribution-model)
+    - [Presets](#presets)
+    - [Consent-enhanced link](#consent-enhanced-link)
+    - [Domain deduplication](#domain-deduplication)
+    - [ABP format parsing](#abp-format-parsing)
+    - [Cosmetic filtering](#cosmetic-filtering)
+  - [8. ProtoConsent Core lists](#8-protoconsent-core-lists)
+  - [9. Adding a new Enhanced list](#9-adding-a-new-enhanced-list)
+  - [10. Automated refresh](#10-automated-refresh)
+  - [11. CNAME cloaking detection (informational)](#11-cname-cloaking-detection-informational)
+    - [How it works](#how-it-works)
+    - [Always active with Enhanced](#always-active-with-enhanced)
+    - [Data format](#data-format)
+    - [Source](#source)
 
 ## 2. Current state
 
@@ -236,7 +259,48 @@ The cosmetic list is a separate enhanced list (`type: "cosmetic"` in `enhanced-l
 
 Cosmetic filtering is purely visual cleanup - it does not block network requests or affect privacy. It is active by default (Balanced preset) and can be disabled independently in the Enhanced tab.
 
-## 8. CNAME cloaking detection (informational)
+## 8. ProtoConsent Core lists
+
+The extension ships static rulesets (`block_*.json`) for day-1 blocking. The same domains and path rules are also published as 5 Enhanced-format JSON files in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo, one per purpose:
+
+| List ID | Category | Domains | Path rules |
+| --- | --- | --- | --- |
+| `protoconsent_analytics` | `analytics` | ~15,851 | 559 |
+| `protoconsent_ads` | `ads` | ~12,904 | 529 |
+| `protoconsent_personalization` | `personalization` | ~73 | 13 |
+| `protoconsent_third_parties` | `third_parties` | ~171 | 73 |
+| `protoconsent_advanced_tracking` | `advanced_tracking` | ~11,234 | 28 |
+
+Each list has its own `category` so the reverse hostname index maps domains to the correct purpose icon. In the UI, the 5 lists appear as a single grouped card ("ProtoConsent Core") in the Enhanced tab. Download, toggle and remove operate on all 5 as a group.
+
+All 5 are preset `Balanced`. They do not add new blocking beyond what static rulesets already cover - their purpose is to receive weekly updates via CDN independently of extension version releases.
+
+## 9. Adding a new Enhanced list
+
+Adding a third-party list requires entries in 3 files:
+
+1. **`scripts/convert.js`** in the data repo - add the list to the `LISTS` object with `name`, `url`, and `format` (`abp`, `hosts`, or `domains`). This tells the refresh workflow how to fetch and parse the source.
+
+2. **`scripts/generate-manifest.js`** in the data repo - add the list to the `LIST_CATALOG` object with `name`, `description`, `source`, `license`, `category`, and `preset`. This controls the metadata in `lists.json`.
+
+3. **`extension/config/enhanced-lists.json`** in the extension repo - add the same metadata plus `fetch_url`. This is the local catalog fallback used when the remote `lists.json` is unavailable.
+
+After adding the entries, run the workflow manually (`workflow_dispatch`) to generate the JSON and update `lists.json`. The UI renders whatever the catalog contains - no UI code changes needed.
+
+For ProtoConsent Core lists, step 1 does not apply because they are generated from the static rulesets, not from external sources.
+
+## 10. Automated refresh
+
+A GitHub Actions workflow in the data repo refreshes all Enhanced lists weekly:
+
+- **Schedule:** Tuesdays at 04:42 UTC (cron: `42 4 * * 2`)
+- **Manual trigger:** `workflow_dispatch` with optional `list` parameter for single-list refresh
+- **Steps:** `convert.js` (blocklists) → `convert-cname.js` (CNAME trackers) → `convert-cosmetic.js` (cosmetic rules) → `generate-manifest.js` (rebuild `lists.json`) → commit and push if changes detected
+- **Workflow file:** `.github/workflows/refresh-lists.yml`
+
+The extension picks up updated lists on the next sync check (controlled by `dynamicListsConsent`). jsDelivr CDN caching may delay propagation by a few minutes after the commit.
+
+## 11. CNAME cloaking detection (informational)
 
 CNAME cloaking is a tracking technique where trackers disguise themselves as first-party subdomains via DNS CNAME records. For example, `metrics.example.com` might CNAME to `tracker.adjust.com`. Because the browser sees the request as first-party, traditional domain blocklists cannot catch it.
 

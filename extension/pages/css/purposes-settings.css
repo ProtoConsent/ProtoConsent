@@ -152,8 +152,7 @@ body {
 }
 
 .ps-purpose-card,
-.ps-preset-card,
-.ps-default-profile-section {
+.ps-preset-card {
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   border: 1px solid var(--pc-line);
   border-radius: 12px;
@@ -269,9 +268,17 @@ body {
   margin-bottom: 0;
 }
 
-/* GPC and CH toggle cards span full width */
-#preset-list > .ps-preset-card:has(.ps-gpc-toggle-row) {
-  grid-column: 1 / -1;
+
+.ps-signal-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid var(--pc-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.ps-signal-card > .ps-gpc-toggle-row {
+  align-items: start;
 }
 
 #purpose-list {
@@ -490,6 +497,14 @@ body {
   align-items: start;
 }
 
+.ps-default-profile-section {
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 16px rgba(30, 58, 138, 0.08);
+}
+
 .ps-default-profile-row {
   display: flex;
   align-items: center;
@@ -500,7 +515,7 @@ body {
 .ps-default-profile-label {
   font-weight: 700;
   color: var(--pc-text);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .ps-default-profile-desc {
