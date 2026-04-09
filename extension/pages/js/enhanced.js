@@ -385,7 +385,7 @@ function renderEnhancedLists() {
       toggle.className = "ep-list-toggle";
       const isActive = !!listData.enabled || isConsentLinked;
       toggle.checked = isActive;
-      if (isConsentLinked && !listData.enabled) {
+      if (isConsentLinked) {
         toggle.disabled = true;
         toggle.title = listDef.name + " - activated by consent link";
       } else {
