@@ -357,7 +357,7 @@ function renderPresets(presets, purposes) {
 		gpcName.textContent = 'GPC (Global Privacy Control)';
 		const gpcDesc = document.createElement('div');
 		gpcDesc.className = 'ps-gpc-info-desc';
-		gpcDesc.textContent = 'Privacy signal sent to websites when any of these purposes are denied';
+		gpcDesc.textContent = 'Privacy signal (Sec-GPC) sent to websites when any of these purposes are denied. Legally recognised as an opt-out under California CCPA/CPRA.';
 		gpcLeft.appendChild(gpcName);
 		gpcLeft.appendChild(gpcDesc);
 
