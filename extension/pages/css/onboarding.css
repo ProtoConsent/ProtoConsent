@@ -316,6 +316,7 @@ body {
   gap: 12px;
   padding: 12px 14px;
   border: 1px solid var(--pc-line);
+  border-left: 3px solid #93c5fd;
   border-radius: 12px;
   background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
@@ -325,6 +326,7 @@ body {
 
 .ob-opt-card:has(.ob-opt-check:checked) {
   border-color: #9ec5f8;
+  border-left: 3px solid #2563eb;
   background: linear-gradient(180deg, #f3f8ff 0%, #ebf4ff 100%);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 6px 14px rgba(59, 130, 246, 0.10);
 }
@@ -336,12 +338,31 @@ body {
 
 .ob-info-card {
   cursor: default;
+  border-left: 3px solid var(--pc-line);
   background: var(--pc-surface-soft, #f8fafc);
 }
 
 .ob-info-card:hover {
   border-color: var(--pc-line);
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.ob-opt-card:not(.ob-info-card):hover {
+  border-color: #93c5fd;
+}
+
+.ob-opt-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #2563eb;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 .ob-opt-check:focus-visible {
@@ -351,8 +372,8 @@ body {
 .ob-opt-check {
   flex-shrink: 0;
   accent-color: #2563eb;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 .ob-opt-content {
