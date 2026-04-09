@@ -526,7 +526,19 @@ function renderEnhancedPresets() {
 			// Show which lists are included in this preset
 			const pills = document.createElement('div');
 			pills.className = 'ps-preset-purposes';
+			let coreRendered = false;
 			for (const [listId, listDef] of Object.entries(catalog)) {
+				if (listId.startsWith('protoconsent_')) {
+					if (coreRendered) continue;
+					coreRendered = true;
+					const included = preset.id === 'full' ||
+						(preset.id === 'basic' && listDef.preset === 'basic');
+					const pill = document.createElement('span');
+					pill.className = 'ps-preset-pill ' + (included ? 'allowed' : 'denied');
+					pill.textContent = 'ProtoConsent Core' + (included ? ' \u2713' : ' \u2717');
+					pills.appendChild(pill);
+					continue;
+				}
 				const included = preset.id === 'full' ||
 					(preset.id === 'basic' && listDef.preset === 'basic');
 				const pill = document.createElement('span');
@@ -566,7 +578,21 @@ function renderEnhancedPresets() {
 		if (hasDownloaded) {
 			const pills = document.createElement('div');
 			pills.className = 'ps-preset-purposes';
+			let coreRendered = false;
 			for (const [listId, listDef] of Object.entries(catalog)) {
+				if (listId.startsWith('protoconsent_')) {
+					if (coreRendered) continue;
+					coreRendered = true;
+					const coreIds = Object.keys(catalog).filter(id => id.startsWith('protoconsent_'));
+					const coreData = coreIds.map(id => enhancedLists[id]).filter(Boolean);
+					if (coreData.length === 0) continue;
+					const allEnabled = coreData.every(d => !!d.enabled) || coreIds.some(id => celIds.has(id));
+					const pill = document.createElement('span');
+					pill.className = 'ps-preset-pill ' + (allEnabled ? 'allowed' : 'denied');
+					pill.textContent = 'ProtoConsent Core' + (allEnabled ? ' \u2713' : ' \u2717');
+					pills.appendChild(pill);
+					continue;
+				}
 				const listData = enhancedLists[listId];
 				if (!listData) continue;
 				const enabled = !!listData.enabled || celIds.has(listId);

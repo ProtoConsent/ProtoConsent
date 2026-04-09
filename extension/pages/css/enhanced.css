@@ -204,6 +204,13 @@
   padding: 1px 6px;
 }
 
+.ep-core-pill {
+  color: var(--pc-accent, #1d4ed8);
+  border-color: var(--pc-accent, #1d4ed8);
+  background: var(--pc-accent-soft, #dbeafe);
+  padding: 1px 6px;
+}
+
 .ep-cel-icon {
   width: 14px;
   height: 14px;
