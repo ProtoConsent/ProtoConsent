@@ -695,30 +695,54 @@ async function loadRulesFromStorageSafe() {
 
 // Show or hide the "Custom" option in the profile selector
 function setCustomOptionVisible(visible) {
-  const customOption = document.querySelector('#pc-profile-select option[value="custom"]');
-  if (customOption) {
-    customOption.disabled = !visible;
-    customOption.hidden = !visible;
+  const customOption = document.querySelector('.pc-profile-option-custom');
+  if (customOption) customOption.hidden = !visible;
+}
+
+// Update the profile button text and active state in the dropdown
+function syncProfileDropdown(value) {
+  const btnText = document.getElementById("pc-profile-btn-text");
+  if (btnText) {
+    const opt = document.querySelector('.pc-profile-option[data-value="' + value + '"]');
+    btnText.textContent = opt ? opt.textContent : value;
   }
+  document.querySelectorAll('.pc-profile-option').forEach(o => {
+    o.classList.toggle('is-active', o.dataset.value === value);
+  });
 }
 
 // Init profile selector (event handler only; values set by initStateForDomain)
 function initProfileSelect() {
-  const selectEl = document.getElementById("pc-profile-select");
+  const btn = document.getElementById("pc-profile-btn");
+  const menu = document.getElementById("pc-profile-menu");
 
-  selectEl.addEventListener("change", () => {
-    currentProfile = selectEl.value;
-    // When switching to a named preset, hide the custom option
-    if (currentProfile !== "custom") {
-      setCustomOptionVisible(false);
-    }
+  btn.addEventListener("click", () => {
+    if (btn.disabled) return;
+    const isOpen = !menu.hidden;
+    menu.hidden = isOpen;
+  });
+
+  menu.addEventListener("click", (e) => {
+    const opt = e.target.closest('.pc-profile-option');
+    if (!opt || opt.hidden) return;
+    menu.hidden = true;
+    currentProfile = opt.dataset.value;
+    if (currentProfile !== "custom") setCustomOptionVisible(false);
+    syncProfileDropdown(currentProfile);
     applyPresetToCurrentDomain();
     renderPurposesList();
     saveCurrentDomainRulesSafe();
     displayProtectionScope();
     updateGpcIndicator();
     updateChIndicator();
-  updateTcfIndicator();
+    updateTcfIndicator();
+  });
+
+  // Close on outside click
+  document.addEventListener("click", (e) => {
+    if (!btn.contains(e.target) && !menu.contains(e.target)) {
+      menu.hidden = true;
+    }
   });
 }
 
@@ -758,9 +782,8 @@ function initStateForDomain() {
     applyPresetToCurrentDomain();
   }
 
-  // Sync select element with current profile
-  const selectEl = document.getElementById("pc-profile-select");
-  selectEl.value = currentProfile;
+  // Sync dropdown with current profile
+  syncProfileDropdown(currentProfile);
 
   forceRequiredPurposes();
 }
@@ -797,9 +820,8 @@ function detectCustomProfile() {
       });
       if (matches) {
         currentProfile = presetKey;
-        const selectEl = document.getElementById("pc-profile-select");
         setCustomOptionVisible(false);
-        selectEl.value = presetKey;
+        syncProfileDropdown(presetKey);
         return;
       }
     }
@@ -814,9 +836,8 @@ function detectCustomProfile() {
 
   if (!matchesPreset) {
     currentProfile = "custom";
-    const selectEl = document.getElementById("pc-profile-select");
     setCustomOptionVisible(true);
-    selectEl.value = "custom";
+    syncProfileDropdown("custom");
   }
 }
 
@@ -1347,8 +1368,8 @@ function showUnsupportedPage() {
   listEl.appendChild(msgEl);
 
   // Disable profile selector
-  const selectEl = document.getElementById("pc-profile-select");
-  if (selectEl) selectEl.disabled = true;
+  const profileBtn = document.getElementById("pc-profile-btn");
+  if (profileBtn) profileBtn.disabled = true;
 
   // Hide stat bar and detail on unsupported pages
   const countEl = document.getElementById("pc-blocked-count");

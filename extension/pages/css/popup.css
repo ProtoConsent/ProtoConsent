@@ -222,7 +222,7 @@ body {
   align-items: flex-start;
   gap: 8px;
   margin: 0 0 10px 0;
-  padding: 28px 12px 8px 12px;
+  padding: 32px 12px 8px 12px;
   border-radius: 10px;
   background: linear-gradient(180deg, #eef3f8 0%, #f9fbfd 100%);
   border: 1px solid #cfd9e3;
@@ -275,6 +275,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  line-height: 12px;
 }
 
 .pc-site-domain {
@@ -296,7 +297,7 @@ body {
   display: grid;
   grid-template-columns: 96px 30px;
   align-items: end;
-  gap: 6px;
+  gap: 10px;
   margin-top: 0;
 }
 
@@ -314,40 +315,76 @@ body {
   line-height: 12px;
 }
 
-.pc-profile-select {
-  width: 96px;
+.pc-profile-dropdown {
+  position: relative;
+}
+
+.pc-profile-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   height: 26px;
-  font-size: 12px;
-  padding: 2px 8px;
-  border: 1px solid var(--pc-line-strong);
-  border-radius: 8px;
-  background-color: #fbfdff;
-  color: var(--pc-accent);
-  font-weight: 600;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pc-text);
+  background: transparent;
+  border: none;
+  padding: 0;
   cursor: pointer;
-  transition: all 0.15s ease;
-  appearance: none;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8"><path fill="%231e3a8a" d="M1 1l5 5 5-5"/></svg>');
-  background-repeat: no-repeat;
-  background-position: right 6px center;
-  background-size: 10px;
-  padding-right: 20px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  gap: 3px;
 }
 
-.pc-profile-select:hover:not(:disabled) {
-  border-color: #93c5fd;
-  background-color: #f4f9ff;
+.pc-profile-btn:hover {
+  color: var(--pc-accent);
 }
 
-.pc-profile-select:active:not(:disabled) {
-  border-color: #60a5fa;
-  background-color: #eef5ff;
-}
-
-.pc-profile-select:disabled {
+.pc-profile-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.pc-profile-chevron {
+  font-size: 11px;
+  color: #3d5165;
+}
+
+.pc-profile-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 110px;
+  background: #fff;
+  border: 1px solid var(--pc-line-strong);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  padding: 4px 0;
+  z-index: 100;
+}
+
+.pc-profile-option {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pc-text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.pc-profile-option:hover {
+  background: #eef3f8;
+}
+
+.pc-profile-option.is-active {
+  color: var(--pc-accent);
+  background: #edf5ff;
 }
 
 /* Shared pill indicator base */
@@ -549,8 +586,9 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  justify-self: end;
+  align-self: end;
   flex-shrink: 0;
-  align-self: flex-end;
   font-size: 15px;
   line-height: 1;
   color: var(--pc-accent);
