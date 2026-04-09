@@ -54,9 +54,10 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [13.3 Verifying enhanced blocks in the Log tab](#133-verifying-enhanced-blocks-in-the-log-tab)
     - [13.4 Checking enhanced rules from the service worker console](#134-checking-enhanced-rules-from-the-service-worker-console)
     - [13.5 CNAME cloaking detection (informational)](#135-cname-cloaking-detection-informational)
-    - [13.8 Cosmetic filtering (element hiding)](#138-cosmetic-filtering-element-hiding)
-    - [13.6 Enhanced lists consent gate (sync)](#136-enhanced-lists-consent-gate-sync)
-    - [13.7 Consent-enhanced link](#137-consent-enhanced-link)
+    - [13.6 Cosmetic filtering (element hiding)](#136-cosmetic-filtering-element-hiding)
+    - [13.7 Enhanced lists consent gate (sync)](#137-enhanced-lists-consent-gate-sync)
+    - [13.8 Consent-enhanced link](#138-consent-enhanced-link)
+    - [13.9 ProtoConsent Core lists](#139-protoconsent-core-lists)
   - [14. Testing the inter-extension API](#14-testing-the-inter-extension-api)
     - [14.1 Enabling the API](#141-enabling-the-api)
     - [14.2 Sending a test query](#142-sending-a-test-query)
@@ -66,6 +67,10 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [14.6 Observability in the Log tab](#146-observability-in-the-log-tab)
     - [14.7 Disabling the API](#147-disabling-the-api)
     - [14.8 Verifying inter-extension state from the service worker console](#148-verifying-inter-extension-state-from-the-service-worker-console)
+  - [15. Testing import/export configuration](#15-testing-importexport-configuration)
+    - [15.1 Exporting configuration](#151-exporting-configuration)
+    - [15.2 Importing configuration](#152-importing-configuration)
+    - [15.3 Partial imports and validation](#153-partial-imports-and-validation)
 
 ## 1. Requirements
 
@@ -607,7 +612,7 @@ chrome.storage.local.get("enhancedData_cname_trackers", r => {
 
 Note: CNAME cloaking is always active when the CNAME Trackers list is enabled - there is no separate toggle. The list uses a `type: "informational"` designation, meaning it contributes to the "info" count in the Enhanced status bar but does not generate any DNR blocking rules.
 
-### 13.8 Cosmetic filtering (element hiding)
+### 13.6 Cosmetic filtering (element hiding)
 
 The EasyList Cosmetic list hides ad containers and empty banners left after network-level blocking. It uses CSS injection rather than DNR rules, so it appears in the Enhanced tab with a "Cosmetic" pill instead of a domain count.
 
@@ -640,7 +645,7 @@ chrome.storage.local.get("enhancedLists", r => {
 
 Cosmetic filtering is also affected by the consent-enhanced link: since the list has `category: "ads"`, denying the Ads purpose with the consent link enabled auto-activates EasyList Cosmetic alongside the blocking EasyList.
 
-### 13.6 Enhanced lists consent gate (sync)
+### 13.7 Enhanced lists consent gate (sync)
 
 Remote fetching of enhanced lists requires the user's explicit consent, stored as `dynamicListsConsent` in `chrome.storage.local`. This opt-in is offered during onboarding (step 3) and in Purpose Settings.
 
@@ -657,7 +662,7 @@ To verify via the service worker console:
 chrome.storage.local.get("dynamicListsConsent", r => console.log(r))
 ```
 
-### 13.7 Consent-enhanced link
+### 13.8 Consent-enhanced link
 
 The consent-enhanced link automatically activates Enhanced lists whose category matches a denied consent purpose, without the user manually enabling them.
 
@@ -685,6 +690,28 @@ chrome.storage.local.get("consentEnhancedLink", r => console.log(r))
 ```
 
 The debug panel (Log → Debug tab) shows "consent-enhanced link: on/off" and lists the consent-linked list IDs.
+
+### 13.9 ProtoConsent Core lists
+
+ProtoConsent Core is a set of 5 purpose-based Enhanced lists maintained by the project itself. They mirror the static rulesets but can be updated weekly via CDN without a new extension release.
+
+1. On a fresh install, the ProtoConsent Core list is loaded from the bundled snapshot (`extension/rules/protoconsent_core.json`) and enabled by default.
+2. Open the Enhanced tab. The **ProtoConsent Core** card should appear first, showing an enabled state and a domain count (~40K domains + ~1,200 path rules).
+3. With Sync enabled, click **Download** (or wait for auto-refresh). The remote version replaces the bundled snapshot.
+4. Toggle the list off. Reload a page with known ad/analytics domains - only the static rulesets should block (no enhanced shield icons in the Log).
+5. Toggle it back on and reload - enhanced blocks with shield icons should reappear alongside core purpose icons.
+
+To verify the bundled data loaded on install:
+
+```js
+chrome.storage.local.get(["enhancedLists", "enhancedData_protoconsent_core"], r => {
+  const meta = r.enhancedLists?.protoconsent_core;
+  console.log('Core meta:', meta);
+  console.log('Bundled:', meta?.bundled);
+  const data = r.enhancedData_protoconsent_core;
+  console.log('Domains:', data?.domains?.length, '| Path rules:', data?.pathRules?.length);
+})
+```
 
 ## 14. Testing the inter-extension API
 
@@ -752,3 +779,32 @@ chrome.storage.local.get(["interExtEnabled", "interExtAllowlist", "interExtDenyl
 
 The debug panel (Log → Debug tab) also shows the API state: enabled/disabled, allowlist count and IDs, pending count, and denylist count.
 
+## 15. Testing import/export configuration
+
+ProtoConsent allows exporting and importing the full configuration (site rules, whitelist, Enhanced state, purpose settings) as a JSON file from Purpose Settings.
+
+### 15.1 Exporting configuration
+
+1. Configure several sites with different profiles and purpose overrides.
+2. Enable Enhanced Protection with a preset and download some lists.
+3. Add a few whitelist entries (both per-site and global).
+4. Open Purpose Settings → scroll to **Import / Export**.
+5. Click **Export**. A JSON file is downloaded (named `protoconsent-config-YYYY-MM-DD.json`).
+6. Open the file and verify it contains `rules`, `whitelist`, `enhancedLists`, `enhancedPreset`, and settings keys.
+
+### 15.2 Importing configuration
+
+1. Reset the extension (remove and reload unpacked) to start with a clean state.
+2. Open Purpose Settings → **Import / Export**.
+3. Click **Import** and select the JSON file exported in §15.1.
+4. After import, verify:
+   - Site rules are restored (open popup on a previously configured site).
+   - Whitelist entries reappear in the Log → Whitelist tab.
+   - Enhanced preset and list enabled states match the exported configuration.
+   - Purpose Settings toggles (GPC, Client Hints, Sync, Consent link) reflect the imported values.
+
+### 15.3 Partial imports and validation
+
+1. Edit the exported JSON to remove a section (for example, delete the `whitelist` key).
+2. Import the modified file. Only the present keys should be applied - missing sections should remain unchanged.
+3. Try importing an invalid file (for example, a text file or malformed JSON). The import should show an error message without modifying the existing configuration.

@@ -11,6 +11,7 @@ This document explains *why* ProtoConsent is designed the way it is: the premise
 - **[signalling-protocol.md](spec/signalling-protocol.md)**: the SDK and purpose‑signalling protocol
 - **[protoconsent-well-known.md](spec/protoconsent-well-known.md)**: site declaration format
 - **[blocklists.md](blocklists.md)**: enforcement methodology and list curation
+- **[inter-extension-protocol.md](spec/inter-extension-protocol.md)**: inter-extension messaging API
 
 ## 1. The problem ProtoConsent addresses
 
@@ -117,5 +118,6 @@ ProtoConsent has clear boundaries:
 | What is the SDK API surface? | [signalling-protocol.md](spec/signalling-protocol.md) |
 | How do site declarations work? | [protoconsent-well-known.md](spec/protoconsent-well-known.md) |
 | How are blocklists curated and applied? | [blocklists.md](blocklists.md) |
+| How does inter-extension messaging work? | [inter-extension-protocol.md](spec/inter-extension-protocol.md) |
 | How to test the extension? | [testing-guide.md](testing-guide.md) |
 | What visual language does it use? | [icons-and-layers.md](icons-and-layers.md) |

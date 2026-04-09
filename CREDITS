@@ -32,5 +32,14 @@ Modified icons:
 
 Icons not from Consent Commons:
   extension/icons/purposes/advanced_tracking.png
-  extension/icons/purposes/advanced_tracking.svg
     Custom eye icon designed for ProtoConsent (no Consent Commons equivalent).
+
+  extension/icons/purposes/enhanced.png
+  extension/icons/purposes/enhanced.svg
+    Custom orange shield icon designed for ProtoConsent.
+    Used for Enhanced Protection blocks in counter bar, Log and whitelist panels.
+
+  extension/icons/purposes/security.png
+  extension/icons/purposes/security.svg
+    Custom shield with checkmark icon designed for ProtoConsent.
+    Used for security-category lists (e.g. Blocklist Project Phishing).
