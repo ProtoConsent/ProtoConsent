@@ -24,7 +24,7 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 
 - **Per‑site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking).
 - **Network‑level enforcement** of purpose‑based decisions via curated blocklists organised by purpose, with visible results (blocked counts, domain detail). See [blocklists.md](design/blocklists.md).
-- **Optional enhanced protection** with 13 curated third‑party blocklists (EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project). Three presets (Off, Basic, Full) or individual list selection.
+- **Optional enhanced protection** with 13 curated third-party enhanced lists (EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project). Three presets (Off, Balanced, Full) or individual list selection. Remote fetch gated behind an explicit consent toggle. Consent-enhanced link optionally auto-activates lists matching denied purposes.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.
 - **Visibility:** real‑time log monitoring, blocked domains grouped by purpose with [Consent Commons](https://consentcommons.com/) icons, GPC signal tracking, Client Hints status, cookie consent detection, CNAME trackers and domain whitelist management.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` to declare their data practices. No SDK or code changes required.
@@ -41,7 +41,7 @@ ProtoConsent is pending review in extension stores. To try it now:
 3. Click **Load unpacked** and select the `extension/` folder (the one containing `manifest.json`).
 4. Open any site and click the ProtoConsent icon in the toolbar.
 
-On first install, an onboarding page will guide you through selecting a default privacy profile. You can then adjust per‑site settings from the popup at any time.
+On first install, a four-screen onboarding page will guide you through selecting a default privacy profile and opting into Enhanced lists features. You can then adjust per-site settings from the popup at any time.
 
 To see the extension in action without configuring anything, visit [demo.protoconsent.org](https://demo.protoconsent.org). It includes a site declaration, an SDK live test, and a GPC signal check.
 
