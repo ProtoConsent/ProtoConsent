@@ -43,6 +43,9 @@ export const tabBlockedDomains = new Map();
 // Per-tab TCF CMP detection data
 export const tabTcfData = new Map();
 
+// Per-tab cosmetic filtering applied data
+export const tabCosmeticData = new Map();
+
 // Maps dynamic block rule IDs to their purpose (rebuilt on each rule update).
 export let dynamicBlockRuleMap = {};
 export function setDynamicBlockRuleMap(v) { dynamicBlockRuleMap = v; }
@@ -157,6 +160,9 @@ export const tabLastUrl = new Map();
 
 // GPC content script ID
 export const GPC_SCRIPT_ID = "protoconsent-gpc";
+
+// Cosmetic filtering content script ID
+export const COSMETIC_SCRIPT_ID = "protoconsent-cosmetic";
 
 // Log ports for real-time streaming to popup Log tab
 export const logPorts = new Set();

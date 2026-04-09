@@ -7,7 +7,7 @@
 
 import {
   PURPOSES_FOR_ENFORCEMENT,
-  tabBlockedDomains, tabGpcDomains, tabTcfData,
+  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -24,6 +24,7 @@ import {
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
+import { scheduleSessionPersist } from "./session.js";
 
 // Handle a bridge query from the content script.
 export async function handleBridgeQuery(message) {
@@ -132,6 +133,37 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         chrome.storage.session.set({ ["tcf_" + tabId]: tcfInfo }).catch(() => {});
       }
     }
+    return;
+  }
+
+  // Cosmetic filtering applied notification from cosmetic-inject.js
+  if (message.type === "PROTOCONSENT_COSMETIC_APPLIED") {
+    const tabId = _sender && _sender.tab ? _sender.tab.id : null;
+    if (tabId && message.domain) {
+      tabCosmeticData.set(tabId, {
+        domain: message.domain,
+        siteRules: message.siteRules || 0,
+        ts: Date.now(),
+      });
+      scheduleSessionPersist();
+      for (const port of logPorts) {
+        try {
+          port.postMessage({
+            type: "cosmetic",
+            domain: message.domain,
+            siteRules: message.siteRules || 0,
+            tabId,
+          });
+        } catch (_) {}
+      }
+    }
+    return;
+  }
+
+  // Popup requests cosmetic state for a tab
+  if (message.type === "PROTOCONSENT_GET_COSMETIC") {
+    const info = tabCosmeticData.get(message.tabId) || null;
+    sendResponse({ cosmetic: info });
     return;
   }
 
@@ -479,6 +511,67 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                         return;
                       }
                       sendResponse({ ok: true, domainCount });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
+          if (listDef.type === "cosmetic") {
+            if (!Array.isArray(data.generic) || !data.domains || typeof data.domains !== "object") {
+              throw new Error("Invalid cosmetic list format: missing generic or domains");
+            }
+            const genericCount = data.generic_count || data.generic.length;
+            const domainCount = data.domain_count || Object.keys(data.domains).length;
+            let domainRuleCount = data.domain_rule_count || 0;
+            if (!domainRuleCount) {
+              for (const sels of Object.values(data.domains)) domainRuleCount += sels.length;
+            }
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, genericCount: existing.genericCount, domainCount: existing.domainCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeCosmetic(lists, shouldEnable);
+                  });
+                }
+                return storeCosmetic(lists, shouldEnable);
+                function storeCosmetic(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    genericCount,
+                    domainCount,
+                    domainRuleCount,
+                    pathRuleCount: 0,
+                    type: "cosmetic",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { generic: data.generic, domains: data.domains },
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      rebuildAllDynamicRules();
+                      sendResponse({ ok: true, genericCount, domainCount, domainRuleCount });
                       resolve();
                     });
                   });

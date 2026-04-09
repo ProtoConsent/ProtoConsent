@@ -19,7 +19,7 @@ import {
   setLastConsentLinkedListIds, setLastCelPendingDownload,
   _rebuildRunning, setRebuildRunning,
   _rebuildQueued, setRebuildQueued,
-  GPC_SCRIPT_ID,
+  GPC_SCRIPT_ID, COSMETIC_SCRIPT_ID,
 } from "./state.js";
 import {
   getDefaultProfileConfig, resolvePurposes, getAllRulesFromStorage,
@@ -318,6 +318,7 @@ async function _rebuildAllDynamicRulesImpl() {
     for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
       if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
       if (listMeta.type === "informational") continue;
+      if (listMeta.type === "cosmetic") continue;
       const listData = enhancedData[listId];
       if (!listData) continue;
 
@@ -546,6 +547,9 @@ async function _rebuildAllDynamicRulesImpl() {
         consentEnhancedLink: consentEnhancedLink.cel,
         consentLinkedListIds: [...consentLinkedListIds],
         celPendingDownload: celPendingDownload,
+        cosmeticLists: Object.entries(enhancedListsMeta)
+          .filter(([id, m]) => m.type === "cosmetic" && (m.enabled || consentLinkedListIds.has(id)))
+          .map(([id]) => id),
         ts: Date.now(),
       });
     }
@@ -577,6 +581,7 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     await updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled);
+    await updateCosmeticInjection(enhancedListsMeta, enhancedData, permissiveSites, consentLinkedListIds);
 
   } catch (e) {
     console.error("ProtoConsent: failed to rebuild dynamic rules:", e);
@@ -633,5 +638,94 @@ async function updateGPCContentScript(rulesByDomain, presets, defaultConfig, glo
 
   } catch (e) {
     console.error("ProtoConsent: failed to update GPC content script:", e);
+  }
+}
+
+// Register or unregister the cosmetic filtering content script.
+// Compiles generic+domain CSS from active cosmetic lists and stores it
+// in chrome.storage.local for the content script to read at document_start.
+async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissiveSites, consentLinkedListIds) {
+  if (!chrome.scripting?.registerContentScripts) return;
+
+  try {
+    await chrome.scripting.unregisterContentScripts({ ids: [COSMETIC_SCRIPT_ID] }).catch(() => {});
+
+    // Collect all active cosmetic lists
+    const activeCosmeticData = [];
+    for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
+      if (listMeta.type !== "cosmetic") continue;
+      if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
+      const data = enhancedData[listId];
+      if (data) activeCosmeticData.push(data);
+    }
+
+    if (activeCosmeticData.length === 0) {
+      await new Promise(resolve => {
+        chrome.storage.local.remove(["_cosmeticCSS", "_cosmeticDomains"], resolve);
+      });
+      return;
+    }
+
+    // Merge generic selectors and domain selectors from all active lists
+    const genericSet = new Set();
+    const domainMap = {};
+    for (const data of activeCosmeticData) {
+      if (data.generic) for (const sel of data.generic) genericSet.add(sel);
+      if (data.domains) {
+        for (const [domain, sels] of Object.entries(data.domains)) {
+          if (!domainMap[domain]) domainMap[domain] = new Set();
+          for (const sel of sels) domainMap[domain].add(sel);
+        }
+      }
+    }
+
+    // Build CSS string: chunk generic selectors into groups of 500
+    // Filter out selectors containing { or } to prevent CSS injection
+    const allGeneric = [...genericSet].filter(s => !s.includes("{") && !s.includes("}"));
+    const CHUNK = 500;
+    const chunks = [];
+    for (let i = 0; i < allGeneric.length; i += CHUNK) {
+      const slice = allGeneric.slice(i, i + CHUNK);
+      chunks.push(slice.join(",") + "{display:none!important}");
+    }
+    const cosmeticCSS = chunks.join("\n");
+
+    // Serialize domain map (convert Sets to Arrays, filter unsafe selectors)
+    const cosmeticDomains = {};
+    for (const [d, sels] of Object.entries(domainMap)) {
+      const safe = [...sels].filter(s => !s.includes("{") && !s.includes("}"));
+      if (safe.length) cosmeticDomains[d] = safe;
+    }
+
+    // Store compiled CSS + domain map for the content script
+    await new Promise(resolve => {
+      chrome.storage.local.set({ _cosmeticCSS: cosmeticCSS, _cosmeticDomains: cosmeticDomains }, resolve);
+    });
+
+    // Build exclude patterns for permissive sites
+    const excludeMatches = [];
+    if (permissiveSites && permissiveSites.length > 0) {
+      for (const site of permissiveSites) {
+        excludeMatches.push(`*://*.${site}/*`, `*://${site}/*`);
+      }
+    }
+
+    await chrome.scripting.registerContentScripts([{
+      id: COSMETIC_SCRIPT_ID,
+      matches: ["<all_urls>"],
+      excludeMatches: excludeMatches.length > 0 ? excludeMatches : undefined,
+      js: ["cosmetic-inject.js"],
+      runAt: "document_start",
+      allFrames: true,
+    }]);
+
+    if (DEBUG_RULES) {
+      console.log("ProtoConsent: cosmetic injection registered (" +
+        allGeneric.length + " generic, " +
+        Object.keys(cosmeticDomains).length + " domains)");
+    }
+
+  } catch (e) {
+    console.error("ProtoConsent: failed to update cosmetic injection:", e);
   }
 }

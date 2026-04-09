@@ -6,7 +6,7 @@
 // chrome.storage.session (survives SW restarts). Badge text updates.
 
 import {
-  tabBlockedDomains, tabGpcDomains, tabTcfData,
+  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData,
   _extEventLog,
 } from "./state.js";
 
@@ -31,7 +31,11 @@ export function persistTabDataToSession() {
   for (const [tabId, domains] of tabGpcDomains) {
     gpc[tabId] = domains;
   }
-  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc, _extEventLog: _extEventLog });
+  const cosmetic = {};
+  for (const [tabId, data] of tabCosmeticData) {
+    cosmetic[tabId] = data;
+  }
+  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _extEventLog: _extEventLog });
 }
 
 export async function restoreTabDataFromSession() {
@@ -46,6 +50,11 @@ export async function restoreTabDataFromSession() {
     if (result._tabGpc) {
       for (const [tabId, domains] of Object.entries(result._tabGpc)) {
         tabGpcDomains.set(Number(tabId), domains);
+      }
+    }
+    if (result._tabCosmetic) {
+      for (const [tabId, data] of Object.entries(result._tabCosmetic)) {
+        tabCosmeticData.set(Number(tabId), data);
       }
     }
     // Restore inter-extension event log

@@ -470,7 +470,7 @@ function displayEnhancedScope() {
     const infoDomains = Object.entries(epLists)
       .filter(([id, l]) => (l.enabled || celIds.has(id)) && l.type === "informational")
       .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
-    renderEnhancedScopeLine(el, stats.blockingCount, stats.totalDomains, stats.infoCount, infoDomains);
+    renderEnhancedScopeLine(el, stats.blockingCount + stats.cosmeticCount, stats.totalRules, stats.infoCount, infoDomains);
   } else {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
       if (chrome.runtime.lastError || !resp) return;
@@ -479,10 +479,14 @@ function displayEnhancedScope() {
       const activeLists = Object.entries(lists)
         .filter(([id, l]) => l.enabled || celIds.has(id))
         .map(([, l]) => l);
-      const blockingLists = activeLists.filter(l => l.type !== "informational");
+      const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic");
+      const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
       const infoLists = activeLists.filter(l => l.type === "informational");
-      renderEnhancedScopeLine(el, blockingLists.length,
-        blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
+      const blockingRules = blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0);
+      const cosmeticRules = cosmeticLists.reduce((sum, l) =>
+        sum + (l.genericCount || 0) + (l.domainRuleCount || 0), 0);
+      renderEnhancedScopeLine(el, blockingLists.length + cosmeticLists.length,
+        blockingRules + cosmeticRules,
         infoLists.length,
         infoLists.reduce((sum, l) => sum + (l.domainCount || 0), 0));
     });

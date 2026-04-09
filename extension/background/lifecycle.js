@@ -6,7 +6,7 @@
 // handler (rebuild + first-install onboarding redirect).
 
 import {
-  tabBlockedDomains, tabGpcDomains, tabTcfData,
+  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData,
   tabNavigating, tabLastUrl,
 } from "./state.js";
 import { scheduleSessionPersist } from "./session.js";
@@ -20,6 +20,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabBlockedDomains.delete(tabId);
       tabGpcDomains.delete(tabId);
       tabTcfData.delete(tabId);
+      tabCosmeticData.delete(tabId);
       if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
       scheduleSessionPersist();
       chrome.action.setBadgeText({ tabId, text: "" });
@@ -42,6 +43,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   tabBlockedDomains.delete(tabId);
   tabGpcDomains.delete(tabId);
   tabTcfData.delete(tabId);
+  tabCosmeticData.delete(tabId);
   tabLastUrl.delete(tabId);
   if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
   scheduleSessionPersist();
@@ -53,7 +55,10 @@ chrome.runtime.onStartup?.addListener(() => {
 });
 
 // Also rebuild when the extension is installed or updated
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener(async (details) => {
+  // Load bundled cosmetic data if not yet downloaded remotely
+  await initBundledCosmeticData();
+
   rebuildAllDynamicRules();
 
   if (details.reason === 'install') {
@@ -64,3 +69,39 @@ chrome.runtime.onInstalled.addListener((details) => {
     });
   }
 });
+
+// Initialize bundled cosmetic filter data on first install or update.
+// If remote data has already been fetched, this is a no-op.
+async function initBundledCosmeticData() {
+  const result = await new Promise(resolve => {
+    chrome.storage.local.get(["enhancedData_easylist_cosmetic", "enhancedLists"], resolve);
+  });
+  if (chrome.runtime.lastError || result.enhancedData_easylist_cosmetic) return;
+
+  try {
+    const res = await fetch(chrome.runtime.getURL("rules/easylist_cosmetic.json"));
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data.generic) || !data.domains) return;
+    const lists = result.enhancedLists || {};
+    lists.easylist_cosmetic = {
+      enabled: true,
+      version: data.version || "bundled",
+      lastFetched: Date.now(),
+      genericCount: data.generic_count || data.generic.length,
+      domainCount: data.domain_count || Object.keys(data.domains).length,
+      domainRuleCount: data.domain_rule_count || 0,
+      pathRuleCount: 0,
+      type: "cosmetic",
+      bundled: true,
+    };
+    await new Promise(resolve => {
+      chrome.storage.local.set({
+        enhancedLists: lists,
+        enhancedData_easylist_cosmetic: { generic: data.generic, domains: data.domains },
+      }, resolve);
+    });
+  } catch (e) {
+    console.warn("ProtoConsent: failed to load bundled cosmetic data:", e);
+  }
+}

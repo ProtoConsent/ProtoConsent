@@ -252,6 +252,10 @@
   color: #34d399;
 }
 
+.pc-log-line-cosmetic {
+  color: var(--pc-warn, #d97706);
+}
+
 .pc-log-line-ext {
   color: #67b8f0;
 }

@@ -129,6 +129,21 @@ body {
   margin-bottom: 0;
 }
 
+.ps-info-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--pc-accent, #2563eb);
+  border: 1px solid var(--pc-accent, #2563eb);
+  border-radius: 999px;
+  padding: 1px 7px;
+  vertical-align: middle;
+  margin-left: 6px;
+  cursor: help;
+}
+
 .ps-section-note {
   color: var(--pc-text-soft);
   font-size: 11px;

@@ -198,6 +198,12 @@
   padding: 1px 6px;
 }
 
+.ep-cosmetic-pill {
+  color: var(--pc-warn, #d97706);
+  border-color: var(--pc-warn, #d97706);
+  padding: 1px 6px;
+}
+
 .ep-cel-icon {
   width: 14px;
   height: 14px;

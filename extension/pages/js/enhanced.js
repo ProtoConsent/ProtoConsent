@@ -20,8 +20,9 @@ function getEnhancedStats() {
   const activeLists = Object.entries(epLists)
     .filter(([id, l]) => l.enabled || epConsentLinkedIds.has(id))
     .map(([, l]) => l);
-  const blockingLists = activeLists.filter(l => l.type !== "informational");
+  const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic");
   const infoLists = activeLists.filter(l => l.type === "informational");
+  const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
   let updatesAvailable = 0;
   for (const id of Object.keys(epLists)) {
     const catalogDef = epCatalog[id];
@@ -30,11 +31,16 @@ function getEnhancedStats() {
       updatesAvailable++;
     }
   }
+  const cosmeticRules = cosmeticLists.reduce((sum, l) =>
+    sum + (l.genericCount || 0) + (l.domainRuleCount || 0), 0);
   return {
     enabledCount: activeLists.length,
     blockingCount: blockingLists.length,
     infoCount: infoLists.length,
+    cosmeticCount: cosmeticLists.length,
     totalDomains: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
+    cosmeticRules,
+    totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules,
     downloadedCount: Object.keys(epLists).length,
     catalogCount: Object.keys(epCatalog).length,
     notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id]),
@@ -345,7 +351,14 @@ function renderEnhancedLists() {
       celIcon.title = "Consent-linked: activated by denied " + (catInfo ? catInfo.label : "purpose");
       header.appendChild(celIcon);
     }
-    if (catInfo) {
+    if (listDef.type === "cosmetic") {
+      const pill = document.createElement("span");
+      pill.className = "ep-category-pill ep-cosmetic-pill";
+      pill.title = "Cosmetic filtering - hides ad elements on pages";
+      pill.setAttribute("aria-label", "Cosmetic filtering");
+      pill.textContent = "\u25D0 Cosmetic";
+      header.appendChild(pill);
+    } else if (catInfo) {
       const pill = document.createElement("span");
       pill.className = "ep-category-pill";
       pill.title = catInfo.label;
@@ -443,6 +456,9 @@ function renderEnhancedLists() {
       const parts = [];
       if (listData.type === "informational") {
         if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " entries");
+      } else if (listData.type === "cosmetic") {
+        if (listData.genericCount) parts.push(listData.genericCount.toLocaleString() + " generic rules");
+        if (listData.domainRuleCount) parts.push(listData.domainRuleCount.toLocaleString() + " site rules");
       } else {
         if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " tracking rules");
         if (listData.pathRuleCount) parts.push(listData.pathRuleCount.toLocaleString() + " path rules");
@@ -677,16 +693,18 @@ function updateEnhancedStatus() {
   const statusEl = document.getElementById("ep-status");
   if (!statusEl) return;
 
-  const { enabledCount, blockingCount, infoCount, totalDomains, updatesAvailable } = getEnhancedStats();
+  const { enabledCount, blockingCount, infoCount, cosmeticCount, totalDomains, cosmeticRules, updatesAvailable } = getEnhancedStats();
   const infoDomains = Object.entries(epLists)
     .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && l.type === "informational")
     .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
 
   if (enabledCount > 0) {
     const parts = [];
-    if (blockingCount > 0) {
-      parts.push(blockingCount + " " + (blockingCount === 1 ? "blocklist" : "blocklists") +
-        " \u00b7 " + totalDomains.toLocaleString() + " rules");
+    if (blockingCount > 0 || cosmeticCount > 0) {
+      const listCount = blockingCount + cosmeticCount;
+      const ruleCount = totalDomains + cosmeticRules;
+      parts.push(listCount + " " + (listCount === 1 ? "list" : "lists") +
+        " \u00b7 " + ruleCount.toLocaleString() + " rules");
     }
     if (infoCount > 0) {
       parts.push(infoCount + " info " + (infoCount === 1 ? "list" : "lists") +
