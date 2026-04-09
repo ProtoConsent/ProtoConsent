@@ -57,9 +57,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   // Popup notifies that rules were changed by the user
   if (message.type === "PROTOCONSENT_RULES_UPDATED") {
-    rebuildAllDynamicRules();
-    sendResponse({ ok: true });
-    return;
+    rebuildAllDynamicRules().then(() => {
+      sendResponse({ ok: true });
+    }).catch(() => {
+      sendResponse({ ok: false });
+    });
+    return true;
   }
 
   // Popup requests per-tab blocked domain detail + per-purpose counts
@@ -160,9 +163,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         r
       ));
       const p3 = new Promise(r => chrome.storage.local.get(
-        ["dynamicListsConsent", "consentEnhancedLink"], d => r({
+        ["dynamicListsConsent", "consentEnhancedLink", "celMode", "celCustomPurposes"], d => r({
           dynamicConsent: d.dynamicListsConsent === true,
           consentEnhancedLink: d.consentEnhancedLink === true,
+          celMode: d.celMode || "profile",
+          celCustomPurposes: d.celCustomPurposes || null,
         })
       ));
       Promise.all([p1, p2, p3]).then(([sessionKeys, ext, p3Result]) => {
@@ -173,6 +178,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         debugData.interExtPending = ext.interExtPending || [];
         debugData.dynamicListsConsent = p3Result.dynamicConsent;
         debugData.consentEnhancedLink = p3Result.consentEnhancedLink;
+        debugData.celMode = p3Result.celMode;
+        debugData.celCustomPurposes = p3Result.celCustomPurposes;
         debugData.consentLinkedListIds = lastConsentLinkedListIds;
         debugData.celPendingDownload = lastCelPendingDownload;
         sendResponse(debugData);
@@ -308,9 +315,19 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       getEnhancedListsFromStorage(),
       getEnhancedPresetFromStorage(),
       new Promise(r => chrome.storage.local.get("dynamicListsConsent", d => r(d.dynamicListsConsent === true))),
-      new Promise(r => chrome.storage.local.get("consentEnhancedLink", d => r(d.consentEnhancedLink === true))),
-    ]).then(([catalog, lists, preset, dynamicConsent, consentEnhancedLink]) => {
-      sendResponse({ catalog, lists, preset, dynamicConsent, consentEnhancedLink,
+      new Promise(r => chrome.storage.local.get(
+        ["consentEnhancedLink", "celMode", "celCustomPurposes"],
+        d => r({
+          consentEnhancedLink: d.consentEnhancedLink === true,
+          celMode: d.celMode || "profile",
+          celCustomPurposes: d.celCustomPurposes || null,
+        })
+      )),
+    ]).then(([catalog, lists, preset, dynamicConsent, celData]) => {
+      sendResponse({ catalog, lists, preset, dynamicConsent,
+        consentEnhancedLink: celData.consentEnhancedLink,
+        celMode: celData.celMode,
+        celCustomPurposes: celData.celCustomPurposes,
         consentLinkedListIds: lastConsentLinkedListIds,
         celPendingDownload: lastCelPendingDownload });
     });

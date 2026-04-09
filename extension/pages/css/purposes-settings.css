@@ -360,6 +360,86 @@ body {
   cursor: pointer;
 }
 
+/* CEL mode panel (Profile / Custom) */
+.ps-cel-mode-panel {
+  margin-top: 8px;
+}
+
+.ps-cel-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.ps-cel-mode-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pc-text-muted);
+  flex-shrink: 0;
+}
+
+.ps-cel-mode-group {
+  display: flex;
+  gap: 4px;
+}
+
+.ps-cel-mode-btn {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border: 1px solid var(--pc-line-strong);
+  border-radius: 999px;
+  background: var(--pc-surface);
+  color: var(--pc-text-muted);
+  cursor: pointer;
+}
+
+.ps-cel-mode-btn:hover {
+  background: #fef9e7;
+  border-color: #e5a50a;
+}
+
+.ps-cel-mode-btn.is-active {
+  background: linear-gradient(180deg, #fef3c7 0%, #fbbf24 100%);
+  color: #78350f;
+  border-color: #d97706;
+}
+
+.ps-cel-purposes {
+  padding: 6px 0 2px 4px;
+}
+
+.ps-cel-purpose-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--pc-text);
+}
+
+.ps-cel-purpose-cb {
+  accent-color: #d97706;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ps-cel-purpose-text {
+  user-select: none;
+}
+
+.ps-cel-hint {
+  font-size: 11px;
+  color: var(--pc-text-soft);
+  padding: 4px 0 0;
+  font-style: italic;
+}
+
 .ps-gpc-info-desc {
   color: #4b5563;
   font-size: 12px;

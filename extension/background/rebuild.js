@@ -81,9 +81,11 @@ async function _rebuildAllDynamicRulesImpl() {
     });
 
     const consentEnhancedLink = await new Promise(resolve => {
-      chrome.storage.local.get(["consentEnhancedLink", "dynamicListsConsent"], r => resolve({
+      chrome.storage.local.get(["consentEnhancedLink", "dynamicListsConsent", "celMode", "celCustomPurposes"], r => resolve({
         cel: r.consentEnhancedLink === true,
         sync: r.dynamicListsConsent === true,
+        mode: r.celMode || "profile",
+        customPurposes: r.celCustomPurposes || null,
       }));
     });
 
@@ -261,9 +263,23 @@ async function _rebuildAllDynamicRulesImpl() {
     if (consentEnhancedLink.cel) {
       const celCatalog = await loadEnhancedListsCatalog();
       if (celCatalog) {
+        // Custom mode: use user-selected purposes; profile mode: derive from global profile
         const deniedCategories = new Set();
-        for (const [purpose, allowed] of Object.entries(globalPurposes)) {
-          if (!allowed) deniedCategories.add(purpose);
+        if (consentEnhancedLink.mode === "custom") {
+          if (consentEnhancedLink.customPurposes) {
+            for (const [purpose, denied] of Object.entries(consentEnhancedLink.customPurposes)) {
+              if (denied) deniedCategories.add(purpose);
+            }
+          } else {
+            // First time custom with no stored preferences: deny all (match UI defaults)
+            for (const key of ["analytics", "ads", "personalization", "third_parties", "advanced_tracking"]) {
+              deniedCategories.add(key);
+            }
+          }
+        } else {
+          for (const [purpose, allowed] of Object.entries(globalPurposes)) {
+            if (!allowed) deniedCategories.add(purpose);
+          }
         }
         for (const [listId, listDef] of Object.entries(celCatalog)) {
           if (listDef.category && deniedCategories.has(listDef.category)) {
