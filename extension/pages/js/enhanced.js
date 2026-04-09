@@ -20,24 +20,46 @@ function getEnhancedStats() {
   const activeLists = Object.entries(epLists)
     .filter(([id, l]) => l.enabled || epConsentLinkedIds.has(id))
     .map(([, l]) => l);
-  const blockingLists = activeLists.filter(l => l.type !== "informational");
+  const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic");
   const infoLists = activeLists.filter(l => l.type === "informational");
+  const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
   let updatesAvailable = 0;
   for (const id of Object.keys(epLists)) {
+    if (id.startsWith(CORE_PREFIX) && id !== CORE_PREFIX + "analytics") continue;
     const catalogDef = epCatalog[id];
     if (catalogDef && catalogDef.version && epLists[id].version &&
         catalogDef.version > epLists[id].version) {
       updatesAvailable++;
     }
   }
+  const cosmeticRules = cosmeticLists.reduce((sum, l) =>
+    sum + (l.genericCount || 0) + (l.domainRuleCount || 0), 0);
+
+  // Count protoconsent_* group as 1 for display counts
+  const coreActive = activeLists.some((l, i) => {
+    const id = Object.entries(epLists).filter(([, v]) => v === l).map(([k]) => k)[0];
+    return id && id.startsWith(CORE_PREFIX);
+  });
+  const coreActiveIds = Object.keys(epLists).filter(id =>
+    id.startsWith(CORE_PREFIX) && (epLists[id].enabled || epConsentLinkedIds.has(id)));
+  const coreDownloadedIds = Object.keys(epLists).filter(id => id.startsWith(CORE_PREFIX));
+  const coreCatalogIds = Object.keys(epCatalog).filter(id => id.startsWith(CORE_PREFIX));
+  const coreExtraEnabled = Math.max(0, coreActiveIds.length - 1);
+  const coreExtraDownloaded = Math.max(0, coreDownloadedIds.length - 1);
+  const coreExtraCatalog = Math.max(0, coreCatalogIds.length - 1);
+
   return {
-    enabledCount: activeLists.length,
-    blockingCount: blockingLists.length,
+    enabledCount: activeLists.length - coreExtraEnabled,
+    blockingCount: blockingLists.length - coreExtraEnabled,
     infoCount: infoLists.length,
+    cosmeticCount: cosmeticLists.length,
     totalDomains: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
-    downloadedCount: Object.keys(epLists).length,
-    catalogCount: Object.keys(epCatalog).length,
-    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id]),
+    cosmeticRules,
+    totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules,
+    downloadedCount: Object.keys(epLists).length - coreExtraDownloaded,
+    catalogCount: Object.keys(epCatalog).length - coreExtraCatalog,
+    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !id.startsWith(CORE_PREFIX))
+      .concat(coreCatalogIds.length > 0 && !coreDownloadedIds.length ? [coreCatalogIds[0]] : []),
     updatesAvailable,
   };
 }
@@ -284,8 +306,6 @@ function setEnhancedPreset(preset) {
   });
 }
 
-// --- List cards ---
-
 function renderEnhancedLists() {
   const container = document.getElementById("ep-lists");
   if (!container) return;
@@ -297,7 +317,14 @@ function renderEnhancedLists() {
     return;
   }
 
+  // Render grouped ProtoConsent Core card first
+  const coreIds = getCoreIds();
+  if (coreIds.length > 0) {
+    container.appendChild(renderCoreCard(coreIds));
+  }
+
   for (const [listId, listDef] of catalogEntries) {
+    if (listId.startsWith(CORE_PREFIX)) continue;
     const listData = epLists[listId];
     const card = document.createElement("div");
     card.className = "ep-list-card";
@@ -345,7 +372,14 @@ function renderEnhancedLists() {
       celIcon.title = "Consent-linked: activated by denied " + (catInfo ? catInfo.label : "purpose");
       header.appendChild(celIcon);
     }
-    if (catInfo) {
+    if (listDef.type === "cosmetic") {
+      const pill = document.createElement("span");
+      pill.className = "ep-category-pill ep-cosmetic-pill";
+      pill.title = "Cosmetic filtering - hides ad elements on pages";
+      pill.setAttribute("aria-label", "Cosmetic filtering");
+      pill.textContent = "\u25D0 Cosmetic";
+      header.appendChild(pill);
+    } else if (catInfo) {
       const pill = document.createElement("span");
       pill.className = "ep-category-pill";
       pill.title = catInfo.label;
@@ -385,7 +419,7 @@ function renderEnhancedLists() {
       toggle.className = "ep-list-toggle";
       const isActive = !!listData.enabled || isConsentLinked;
       toggle.checked = isActive;
-      if (isConsentLinked && !listData.enabled) {
+      if (isConsentLinked) {
         toggle.disabled = true;
         toggle.title = listDef.name + " - activated by consent link";
       } else {
@@ -443,6 +477,9 @@ function renderEnhancedLists() {
       const parts = [];
       if (listData.type === "informational") {
         if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " entries");
+      } else if (listData.type === "cosmetic") {
+        if (listData.genericCount) parts.push(listData.genericCount.toLocaleString() + " generic rules");
+        if (listData.domainRuleCount) parts.push(listData.domainRuleCount.toLocaleString() + " site rules");
       } else {
         if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " tracking rules");
         if (listData.pathRuleCount) parts.push(listData.pathRuleCount.toLocaleString() + " path rules");
@@ -549,30 +586,47 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
     const total = notDownloaded.length;
     if (btnEl) {
       btnEl.disabled = true;
-      btnEl.textContent = "0/" + total + "…";
+      btnEl.textContent = "0/" + total + "\u2026";
     }
     // Disable preset buttons to prevent re-render mid-download
     const presetBtns = document.querySelectorAll(".ep-preset-btn");
     for (const b of presetBtns) b.disabled = true;
     // Mark each card's Download button as pending
+    // For protoconsent_* sub-lists, target the grouped Core card button
+    const coreBtn = document.querySelector('.ep-list-download-btn[data-list-id="protoconsent_core"]');
+    let corePending = false;
     for (const listId of notDownloaded) {
+      if (listId.startsWith(CORE_PREFIX)) {
+        if (!corePending && coreBtn) {
+          coreBtn.disabled = true;
+          coreBtn.textContent = "Pending\u2026";
+          coreBtn.classList.add("is-pending");
+          corePending = true;
+        }
+        continue;
+      }
       const cardBtn = document.querySelector('.ep-list-download-btn[data-list-id="' + listId + '"]');
       if (cardBtn) {
         cardBtn.disabled = true;
-        cardBtn.textContent = "Pending…";
+        cardBtn.textContent = "Pending\u2026";
         cardBtn.classList.add("is-pending");
       }
     }
     let completed = 0;
     let failed = 0;
+    let coreCompleted = 0;
+    let coreFailed = 0;
+    const coreTotal = notDownloaded.filter(id => id.startsWith(CORE_PREFIX)).length;
     for (const listId of notDownloaded) {
-      // Mark as actively downloading
-      const cardBtn = document.querySelector('.ep-list-download-btn[data-list-id="' + listId + '"]');
+      const cardBtn = listId.startsWith(CORE_PREFIX)
+        ? null
+        : document.querySelector('.ep-list-download-btn[data-list-id="' + listId + '"]');
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
         if (chrome.runtime.lastError) resp = null;
         completed++;
         if (!resp?.ok) {
           failed++;
+          if (listId.startsWith(CORE_PREFIX)) coreFailed++;
           if (cardBtn) {
             cardBtn.textContent = "Failed";
             cardBtn.classList.remove("is-pending");
@@ -581,6 +635,17 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
         } else if (cardBtn) {
           cardBtn.textContent = "Done";
           cardBtn.classList.remove("is-pending");
+        }
+        // Update Core card button progress
+        if (listId.startsWith(CORE_PREFIX)) {
+          coreCompleted++;
+          if (coreBtn && coreCompleted >= coreTotal) {
+            coreBtn.textContent = coreFailed > 0 ? coreFailed + " failed" : "Done";
+            coreBtn.classList.remove("is-pending");
+            if (coreFailed > 0) coreBtn.classList.add("is-failed");
+          } else if (coreBtn) {
+            coreBtn.textContent = coreCompleted + "/" + coreTotal + "\u2026";
+          }
         }
         if (btnEl) {
           btnEl.textContent = completed + "/" + total + "…";
@@ -677,16 +742,18 @@ function updateEnhancedStatus() {
   const statusEl = document.getElementById("ep-status");
   if (!statusEl) return;
 
-  const { enabledCount, blockingCount, infoCount, totalDomains, updatesAvailable } = getEnhancedStats();
+  const { enabledCount, blockingCount, infoCount, cosmeticCount, totalDomains, cosmeticRules, updatesAvailable } = getEnhancedStats();
   const infoDomains = Object.entries(epLists)
     .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && l.type === "informational")
     .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
 
   if (enabledCount > 0) {
     const parts = [];
-    if (blockingCount > 0) {
-      parts.push(blockingCount + " " + (blockingCount === 1 ? "blocklist" : "blocklists") +
-        " \u00b7 " + totalDomains.toLocaleString() + " rules");
+    if (blockingCount > 0 || cosmeticCount > 0) {
+      const listCount = blockingCount + cosmeticCount;
+      const ruleCount = totalDomains + cosmeticRules;
+      parts.push(listCount + " " + (listCount === 1 ? "list" : "lists") +
+        " \u00b7 " + ruleCount.toLocaleString() + " rules");
     }
     if (infoCount > 0) {
       parts.push(infoCount + " info " + (infoCount === 1 ? "list" : "lists") +

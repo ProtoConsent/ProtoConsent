@@ -396,12 +396,14 @@ body {
   color: #6b7280;
   border-color: #e5e7eb;
   background-color: #f3f4f6;
+  cursor: help;
 }
 
 .pc-pill-indicator.is-disabled {
   color: #6b7280;
   border-color: #e5e7eb;
   background-color: #f3f4f6;
+  cursor: help;
 }
 
 .pc-pill-dot {

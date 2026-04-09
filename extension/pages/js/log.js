@@ -506,6 +506,10 @@ function connectLogPort() {
       appendLogLine("[" + msg.purpose + "] " + msg.url, "block");
     } else if (msg.type === "gpc") {
       appendLogLine("[gpc] " + msg.domain, "gpc");
+    } else if (msg.type === "cosmetic") {
+      let detail = "[cosmetic] " + msg.domain;
+      if (msg.siteRules > 0) detail += " +" + msg.siteRules + " site rules";
+      appendLogLine(detail, "cosmetic");
     } else if (msg.type === "ext") {
       const sid = msg.sender.length > 16 ? msg.sender.slice(0, 8) + "\u2026" + msg.sender.slice(-6) : msg.sender;
       const action = (msg.action || "").replace("protoconsent:", "");
@@ -562,6 +566,18 @@ function replayHistoricalLog() {
     hasData = true;
   }
 
+  // Replay cosmetic state for current tab
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs || !tabs[0]) return;
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_COSMETIC", tabId: tabs[0].id }, (resp) => {
+      if (chrome.runtime.lastError || !resp?.cosmetic) return;
+      const c = resp.cosmetic;
+      let detail = "[cosmetic] " + c.domain;
+      if (c.siteRules > 0) detail += " +" + c.siteRules + " site rules";
+      appendLogLine(detail, "cosmetic", c.ts);
+    });
+  });
+
   if (!hasData) {
     const placeholder = document.createElement("span");
     placeholder.className = "pc-log-line-ts";
@@ -588,6 +604,7 @@ function appendLogLine(text, type, ts) {
   const line = document.createElement("span");
   if (type === "block") line.className = "pc-log-line-block";
   else if (type === "gpc") line.className = "pc-log-line-gpc";
+  else if (type === "cosmetic") line.className = "pc-log-line-cosmetic";
   else if (type === "ext") line.className = "pc-log-line-ext";
 
   const tsSpan = document.createElement("span");
