@@ -163,6 +163,8 @@ async function restoreTabDataFromSession() {
 
 // Last rebuild debug snapshot (served to popup on request)
 let lastRebuildDebug = {};
+let lastConsentLinkedListIds = [];
+let lastCelPendingDownload = [];
 
 // Restore persisted tab data from session storage on every SW load.
 // This runs at the top level so it executes each time Chrome spins up the worker.
@@ -665,7 +667,10 @@ async function _rebuildAllDynamicRulesImpl() {
 
     // Consent-Enhanced link: denied purposes auto-activate Enhanced lists
     const consentEnhancedLink = await new Promise(resolve => {
-      chrome.storage.local.get(["consentEnhancedLink"], r => resolve(r.consentEnhancedLink === true));
+      chrome.storage.local.get(["consentEnhancedLink", "dynamicListsConsent"], r => resolve({
+        cel: r.consentEnhancedLink === true,
+        sync: r.dynamicListsConsent === true,
+      }));
     });
 
     // Collect existing dynamic rule IDs for the atomic swap at the end
@@ -864,7 +869,8 @@ async function _rebuildAllDynamicRulesImpl() {
     //    Sites with all purposes allowed (permissive) are excluded.
     //    Consent-Enhanced link: denied purposes auto-activate matching lists.
     const consentLinkedListIds = new Set();
-    if (consentEnhancedLink) {
+    const celPendingDownload = [];
+    if (consentEnhancedLink.cel) {
       const celCatalog = await loadEnhancedListsCatalog();
       if (celCatalog) {
         const deniedCategories = new Set();
@@ -872,9 +878,12 @@ async function _rebuildAllDynamicRulesImpl() {
           if (!allowed) deniedCategories.add(purpose);
         }
         for (const [listId, listDef] of Object.entries(celCatalog)) {
-          if (listDef.category && deniedCategories.has(listDef.category)
-              && enhancedListsMeta[listId]) {
-            consentLinkedListIds.add(listId);
+          if (listDef.category && deniedCategories.has(listDef.category)) {
+            if (enhancedListsMeta[listId]) {
+              consentLinkedListIds.add(listId);
+            } else if (listDef.fetch_url && consentEnhancedLink.sync) {
+              celPendingDownload.push(listId);
+            }
           }
         }
       }
@@ -897,6 +906,9 @@ async function _rebuildAllDynamicRulesImpl() {
         Object.assign(enhancedData, extraData);
       }
     }
+
+    lastConsentLinkedListIds = [...consentLinkedListIds];
+    lastCelPendingDownload = celPendingDownload;
 
     const enhancedExclude = permissiveSites.length > 0 ? permissiveSites : undefined;
 
@@ -1162,8 +1174,9 @@ async function _rebuildAllDynamicRulesImpl() {
         chRules: newChRuleIds.size,
         chExcluded: chRemoveSites.length,
         chAddSites: chAddSites.length,
-        consentEnhancedLink: consentEnhancedLink,
+        consentEnhancedLink: consentEnhancedLink.cel,
         consentLinkedListIds: [...consentLinkedListIds],
+        celPendingDownload: celPendingDownload,
         ts: Date.now(),
       };
     }
@@ -1426,6 +1439,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         debugData.interExtPending = ext.interExtPending || [];
         debugData.dynamicListsConsent = p3Result.dynamicConsent;
         debugData.consentEnhancedLink = p3Result.consentEnhancedLink;
+        debugData.consentLinkedListIds = lastConsentLinkedListIds;
+        debugData.celPendingDownload = lastCelPendingDownload;
         sendResponse(debugData);
       });
     };
@@ -1568,8 +1583,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       new Promise(r => chrome.storage.local.get("dynamicListsConsent", d => r(d.dynamicListsConsent === true))),
       new Promise(r => chrome.storage.local.get("consentEnhancedLink", d => r(d.consentEnhancedLink === true))),
     ]).then(([catalog, lists, preset, dynamicConsent, consentEnhancedLink]) => {
-      const consentLinkedListIds = lastRebuildDebug.consentLinkedListIds || [];
-      sendResponse({ catalog, lists, preset, dynamicConsent, consentEnhancedLink, consentLinkedListIds });
+      const consentLinkedListIds = lastConsentLinkedListIds;
+      const celPendingDownload = lastCelPendingDownload;
+      sendResponse({ catalog, lists, preset, dynamicConsent, consentEnhancedLink, consentLinkedListIds, celPendingDownload });
     });
     return true; // async response
   }

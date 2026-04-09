@@ -162,6 +162,9 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       } else {
         lines.push("  linked lists: none");
       }
+      if (bg.celPendingDownload && bg.celPendingDownload.length) {
+        lines.push("  pending download: " + bg.celPendingDownload.join(", "));
+      }
       lines.push("");
     }
 

@@ -7,6 +7,7 @@
 html, body {
   margin: 0;
   padding: 0;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -215,9 +216,26 @@ body {
 }
 
 .ps-preset-name {
+  display: flex;
+  align-items: center;
+  gap: 3px;
   font-weight: 700;
   color: var(--pc-text);
   margin-bottom: 8px;
+}
+
+.ps-preset-shield {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.ps-preset-custom-icon {
+  display: inline-block;
+  transform: scaleX(-1);
+  font-size: 14px;
+  line-height: 1;
+  margin-right: 2px;
 }
 
 .ps-preset-purposes {
@@ -300,9 +318,52 @@ body {
   color: var(--pc-text);
 }
 
-.ps-gpc-info-desc {
-  color: var(--pc-text-muted);
+.ps-cel-icon {
+  vertical-align: -2px;
+  margin-right: 2px;
+}
+
+.ps-cel-note {
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.5;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--pc-line);
+  border-radius: 8px;
+  background: var(--pc-surface);
+}
+
+.ps-cel-note-label {
+  font-weight: 700;
   font-size: 11px;
+  color: var(--pc-text);
+  margin-right: 6px;
+}
+
+.ps-cel-note-pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  vertical-align: middle;
+}
+
+.ps-cel-active-pill {
+  background: #eef9f1;
+  border-color: #b7dec0;
+  color: #166534;
+}
+
+.ps-cel-note-link {
+  color: var(--pc-accent, #c8850a);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ps-gpc-info-desc {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.5;
   margin-top: 2px;
 }
 
@@ -331,6 +392,7 @@ body {
   padding: 14px 16px;
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
   margin-bottom: 0;
+  align-items: start;
 }
 
 .ps-default-profile-row {
@@ -347,8 +409,9 @@ body {
 }
 
 .ps-default-profile-desc {
-  color: var(--pc-text-muted);
-  font-size: 11px;
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.5;
   margin-top: 2px;
 }
 
@@ -666,6 +729,8 @@ details[open] > .ps-ext-accordion-header::before {
 .ps-ext-note {
   text-align: left;
   margin-top: 10px;
+  color: #4b5563;
+  font-size: 12px;
   line-height: 1.5;
 }
 

@@ -140,7 +140,11 @@ function wireEvents() {
 
   // Done → save selected profile and go to dynamic lists consent
   document.getElementById('ob-done').addEventListener('click', () => {
-    save(() => goToScreen('ob-dynamic'));
+    save(() => {
+      const celProfileEl = document.getElementById('ob-cel-profile-name');
+      if (celProfileEl) celProfileEl.textContent = presets[selectedProfile]?.label || selectedProfile;
+      goToScreen('ob-dynamic');
+    });
   });
 
   // Back → return to profile selection

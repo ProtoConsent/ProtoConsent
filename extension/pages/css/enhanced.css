@@ -12,22 +12,25 @@
   align-items: center;
   gap: 8px;
   padding: 8px 0 6px;
-  flex-wrap: wrap;
 }
 
 .ep-preset-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--pc-text-muted);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 1px;
   flex-shrink: 0;
+  min-width: 14px;
+}
+
+.ep-preset-shield {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
 }
 
 .ep-preset-buttons {
   display: flex;
   gap: 4px;
-  flex-wrap: wrap;
   align-items: center;
 }
 
@@ -54,6 +57,22 @@
   color: #78350f;
   border-color: #d97706;
   box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.2), 0 2px 6px rgba(217, 119, 6, 0.15);
+}
+
+.ep-preset-custom-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 13px;
+  line-height: 1;
+  color: #78350f;
+  background: linear-gradient(180deg, #fef3c7 0%, #fbbf24 100%);
+  border: 1px solid #d97706;
+  border-radius: 50%;
+  transform: scaleX(-1);
+  cursor: default;
 }
 
 /* Contextual action (right side of preset bar) */
@@ -165,12 +184,27 @@
   border-radius: 999px;
   padding: 1px 6px 1px 4px;
   flex-shrink: 0;
+  cursor: help;
+}
+
+.ep-category-pill:hover {
+  border-color: var(--pc-line-strong);
+  background: var(--pc-surface-soft);
 }
 
 .ep-info-pill {
   color: var(--pc-accent, #2563eb);
   border-color: var(--pc-accent, #2563eb);
   padding: 1px 6px;
+}
+
+.ep-cel-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  object-fit: contain;
+  opacity: 0.85;
+  cursor: help;
 }
 
 .ep-list-toggle {

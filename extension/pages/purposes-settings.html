@@ -66,7 +66,7 @@
 			<div class="ps-dynamic-grid">
 				<div class="ps-gpc-toggle-row">
 					<div>
-						<span class="ps-gpc-info-name">Sync</span>
+						<span class="ps-gpc-info-name"><img src="../icons/purposes/enhanced.svg" alt="" width="14" height="14" class="ps-cel-icon"> Sync</span>
 						<div class="ps-gpc-info-desc">Check for enhanced list updates from the ProtoConsent/data repository on GitHub. No data is sent.</div>
 					</div>
 					<label class="ps-gpc-toggle-label" for="ps-dynamic-toggle" id="ps-dynamic-label">Disabled</label>
@@ -74,19 +74,20 @@
 				</div>
 				<div class="ps-gpc-toggle-row">
 					<div>
-						<span class="ps-gpc-info-name">Consent link</span>
-						<div class="ps-gpc-info-desc">Automatically enable Enhanced lists that match purposes you deny. Takes priority over the Enhanced "Off" preset.</div>
+						<span class="ps-gpc-info-name"><img src="../icons/protoconsent_icon_32.png" alt="" width="14" height="14" class="ps-cel-icon"> Consent link</span>
+						<div class="ps-gpc-info-desc">Automatically enable Enhanced lists that match purposes you deny in your <a href="#default-profile-section" class="ps-cel-note-link">default profile</a>. Takes priority over the Enhanced "Off" preset.</div>
 					</div>
 					<label class="ps-gpc-toggle-label" for="ps-cel-toggle" id="ps-cel-label">Disabled</label>
 					<input type="checkbox" id="ps-cel-toggle" class="ps-gpc-toggle" aria-label="Consent-Enhanced link">
 				</div>
 			</div>
+			<div id="ps-cel-note" class="ps-cel-note ps-hidden"></div>
 		</section>
 
 		<section id="purposes-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
 				<h2>Purposes</h2>
-				<span class="ps-section-note">Informational only. Changes happen via profile selection above.</span>
+				<span class="ps-section-note">Informational only. Changes happen via <a href="#default-profile-section" class="ps-cel-note-link">profile selection above</a>.</span>
 			</div>
 			<div id="purpose-list"></div>
 		</section>

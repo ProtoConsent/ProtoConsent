@@ -479,7 +479,14 @@ function renderEnhancedPresets() {
 		new Promise(resolve => {
 			chrome.storage.local.get(['enhancedLists'], r => resolve(r.enhancedLists || {}));
 		}),
-	]).then(([catalog, currentPreset, enhancedLists]) => {
+		new Promise(resolve => {
+			chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
+				if (chrome.runtime.lastError || !resp) resolve([]);
+				else resolve(resp.consentLinkedListIds || []);
+			});
+		}),
+	]).then(([catalog, currentPreset, enhancedLists, consentLinkedListIds]) => {
+		const celIds = new Set(consentLinkedListIds);
 		const presets = [
 			{ id: 'off', label: 'Off', desc: 'Only ProtoConsent core lists (default)' },
 			{ id: 'basic', label: 'Balanced', desc: 'Conservative third-party lists' },
@@ -493,7 +500,16 @@ function renderEnhancedPresets() {
 
 			const name = document.createElement('div');
 			name.className = 'ps-preset-name';
-			name.textContent = preset.label;
+			const shieldCount = preset.id === 'full' ? 3 : preset.id === 'basic' ? 2 : 0;
+			for (let i = 0; i < shieldCount; i++) {
+				const img = document.createElement('img');
+				img.src = ENHANCED_ICON;
+				img.width = 14;
+				img.height = 14;
+				img.className = 'ps-preset-shield';
+				name.appendChild(img);
+			}
+			name.appendChild(document.createTextNode(preset.label));
 			if (currentPreset === preset.id) {
 				const badge = document.createElement('span');
 				badge.className = 'ps-enhanced-current-badge';
@@ -528,7 +544,11 @@ function renderEnhancedPresets() {
 		if (currentPreset === 'custom') customCard.classList.add('ps-preset-active');
 		const customName = document.createElement('div');
 		customName.className = 'ps-preset-name';
-		customName.textContent = 'Custom';
+		const pencil = document.createElement('span');
+		pencil.className = 'ps-preset-custom-icon';
+		pencil.textContent = '\u270E';
+		customName.appendChild(pencil);
+		customName.appendChild(document.createTextNode('Custom'));
 		if (currentPreset === 'custom') {
 			const badge = document.createElement('span');
 			badge.className = 'ps-enhanced-current-badge';
@@ -549,7 +569,7 @@ function renderEnhancedPresets() {
 			for (const [listId, listDef] of Object.entries(catalog)) {
 				const listData = enhancedLists[listId];
 				if (!listData) continue;
-				const enabled = !!listData.enabled;
+				const enabled = !!listData.enabled || celIds.has(listId);
 				const pill = document.createElement('span');
 				pill.className = 'ps-preset-pill ' + (enabled ? 'allowed' : 'denied');
 				pill.textContent = listDef.name + (enabled ? ' \u2713' : ' \u2717');
@@ -694,6 +714,7 @@ function renderDynamicListsToggle() {
 			const celEnabled = data.consentEnhancedLink === true;
 			celToggle.checked = celEnabled;
 			celLabel.textContent = celEnabled ? 'Enabled' : 'Disabled';
+			updateCelNote(celEnabled);
 		}
 
 		section.classList.remove('ps-hidden');
@@ -717,9 +738,61 @@ function renderDynamicListsToggle() {
 			celLabel.textContent = enabled ? 'Enabled' : 'Disabled';
 			setConsentEnhancedLink(enabled, () => {
 				notifyBackground();
+				updateCelNote(enabled);
 			});
 		});
 	}
+}
+
+function updateCelNote(celEnabled) {
+	const note = document.getElementById('ps-cel-note');
+	if (!note) return;
+	if (!celEnabled) {
+		note.classList.add('ps-hidden');
+		note.innerHTML = '';
+		return;
+	}
+	chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
+		if (chrome.runtime.lastError || !resp) return;
+		const lists = resp.lists || {};
+		const catalog = resp.catalog || {};
+		const hasDownloadedWithCategory = Object.keys(lists).some(id => {
+			const def = catalog[id];
+			return def && def.category && def.category !== "security";
+		});
+		note.innerHTML = '';
+		const noteLabel = document.createElement('span');
+		noteLabel.className = 'ps-cel-note-label';
+		noteLabel.textContent = 'Consent Link:';
+		note.appendChild(noteLabel);
+		if (!hasDownloadedWithCategory) {
+			note.appendChild(document.createTextNode(' No enhanced lists with a category are downloaded yet. Download lists from the Enhanced tab in the popup for consent link to take effect.'));
+			note.classList.remove('ps-hidden');
+		} else {
+			const linked = resp.consentLinkedListIds || [];
+			if (linked.length > 0) {
+				note.appendChild(document.createTextNode(' '));
+				const pillWrap = document.createElement('span');
+				pillWrap.className = 'ps-cel-note-pills';
+				for (const id of linked) {
+					const pill = document.createElement('span');
+					pill.className = 'ps-preset-pill ps-cel-active-pill';
+					pill.textContent = catalog[id]?.name || id;
+					pillWrap.appendChild(pill);
+				}
+				note.appendChild(pillWrap);
+			} else {
+				note.appendChild(document.createTextNode(' No lists match your denied purposes in the '));
+				const link = document.createElement('a');
+				link.href = '#default-profile-section';
+				link.className = 'ps-cel-note-link';
+				link.textContent = 'default profile';
+				note.appendChild(link);
+				note.appendChild(document.createTextNode('.'));
+			}
+			note.classList.remove('ps-hidden');
+		}
+	});
 }
 
 function initDataSection() {

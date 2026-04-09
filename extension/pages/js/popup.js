@@ -466,17 +466,21 @@ function displayEnhancedScope() {
   // On first popup open the tab hasn't been visited yet, so fetch from background.
   if (typeof epLists !== "undefined" && Object.keys(epLists).length > 0) {
     const stats = getEnhancedStats();
-    const infoDomains = Object.values(epLists)
-      .filter(l => l.enabled && l.type === "informational")
-      .reduce((sum, l) => sum + (l.domainCount || 0), 0);
+    const celIds = typeof epConsentLinkedIds !== "undefined" ? epConsentLinkedIds : new Set();
+    const infoDomains = Object.entries(epLists)
+      .filter(([id, l]) => (l.enabled || celIds.has(id)) && l.type === "informational")
+      .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
     renderEnhancedScopeLine(el, stats.blockingCount, stats.totalDomains, stats.infoCount, infoDomains);
   } else {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
       if (chrome.runtime.lastError || !resp) return;
       const lists = resp.lists || {};
-      const enabledLists = Object.values(lists).filter(l => l.enabled);
-      const blockingLists = enabledLists.filter(l => l.type !== "informational");
-      const infoLists = enabledLists.filter(l => l.type === "informational");
+      const celIds = new Set(resp.consentLinkedListIds || []);
+      const activeLists = Object.entries(lists)
+        .filter(([id, l]) => l.enabled || celIds.has(id))
+        .map(([, l]) => l);
+      const blockingLists = activeLists.filter(l => l.type !== "informational");
+      const infoLists = activeLists.filter(l => l.type === "informational");
       renderEnhancedScopeLine(el, blockingLists.length,
         blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
         infoLists.length,
