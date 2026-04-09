@@ -54,6 +54,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [13.3 Verifying enhanced blocks in the Log tab](#133-verifying-enhanced-blocks-in-the-log-tab)
     - [13.4 Checking enhanced rules from the service worker console](#134-checking-enhanced-rules-from-the-service-worker-console)
     - [13.5 CNAME cloaking detection (informational)](#135-cname-cloaking-detection-informational)
+    - [13.8 Cosmetic filtering (element hiding)](#138-cosmetic-filtering-element-hiding)
     - [13.6 Enhanced lists consent gate (sync)](#136-enhanced-lists-consent-gate-sync)
     - [13.7 Consent-enhanced link](#137-consent-enhanced-link)
   - [14. Testing the inter-extension API](#14-testing-the-inter-extension-api)
@@ -606,6 +607,39 @@ chrome.storage.local.get("enhancedData_cname_trackers", r => {
 
 Note: CNAME cloaking is always active when the CNAME Trackers list is enabled - there is no separate toggle. The list uses a `type: "informational"` designation, meaning it contributes to the "info" count in the Enhanced status bar but does not generate any DNR blocking rules.
 
+### 13.8 Cosmetic filtering (element hiding)
+
+The EasyList Cosmetic list hides ad containers and empty banners left after network-level blocking. It uses CSS injection rather than DNR rules, so it appears in the Enhanced tab with a "Cosmetic" pill instead of a domain count.
+
+1. On a fresh install, cosmetic filtering is active from the bundled snapshot (no remote fetch needed).
+2. Open the Enhanced tab. The **EasyList Cosmetic** card should show a "Cosmetic" pill and be enabled by default (Balanced preset).
+3. Visit a news site with ads (e.g. a major newspaper). Ad containers should be hidden (no empty gaps where ads were blocked by DNR).
+4. Open the Log > Requests tab. A line similar to this shall appear:
+   `[cosmetic] nytimes.com +11 site rules`
+5. Toggle off EasyList Cosmetic in the Enhanced tab. Reload the news site - empty ad containers or placeholder divs may become visible where ads were blocked.
+6. Toggle it back on and reload - the containers should be hidden again.
+
+To verify cosmetic data in storage:
+
+```js
+chrome.storage.local.get(["_cosmeticCSS", "_cosmeticDomains"], r => {
+  console.log('Generic CSS length:', r._cosmeticCSS?.length || 0);
+  console.log('Domain entries:', Object.keys(r._cosmeticDomains || {}).length);
+})
+```
+
+To verify the bundled fallback loaded on first install:
+
+```js
+chrome.storage.local.get("enhancedLists", r => {
+  const meta = r.enhancedLists?.easylist_cosmetic;
+  console.log('Cosmetic meta:', meta);
+  console.log('Bundled:', meta?.bundled);
+})
+```
+
+Cosmetic filtering is also affected by the consent-enhanced link: since the list has `category: "ads"`, denying the Ads purpose with the consent link enabled auto-activates EasyList Cosmetic alongside the blocking EasyList.
+
 ### 13.6 Enhanced lists consent gate (sync)
 
 Remote fetching of enhanced lists requires the user's explicit consent, stored as `dynamicListsConsent` in `chrome.storage.local`. This opt-in is offered during onboarding (step 3) and in Purpose Settings.
@@ -641,7 +675,7 @@ Category mapping:
 | Denied purpose | Enhanced lists activated |
 |----------------|------------------------|
 | analytics | EasyPrivacy, Blocklist Project Tracking |
-| ads | EasyList, Blocklist Project Ads |
+| ads | EasyList, EasyList Cosmetic, Blocklist Project Ads |
 | advanced_tracking | HaGeZi TIF, Blocklist Project Crypto |
 
 To verify via the service worker console:

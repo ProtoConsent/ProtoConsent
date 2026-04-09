@@ -144,9 +144,9 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 
 ### Current lists (v0.3)
 
-12 lists organized in two presets.
+13 lists organized in two presets.
 
-**Balanced preset** (4 lists - enabled by default when user selects Balanced):
+**Balanced preset** (5 lists - enabled by default when user selects Balanced):
 
 | List | License | Domains | Path rules | Category |
 | --- | --- | --- | --- | --- |
@@ -154,6 +154,7 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 | [EasyList](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~58K | ~1.6K | `ads` |
 | [AdGuard DNS Filter](https://github.com/AdguardTeam/AdGuardSDNSFilter) | GPL-3.0 | ~165K | - | - |
 | [Steven Black Unified](https://github.com/StevenBlack/hosts) | MIT | ~49K | - | - |
+| [EasyList Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | - | - | `ads` |
 
 **Full preset** (adds 8 lists):
 
@@ -170,7 +171,7 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 
 Domain counts are approximate and change with each upstream update.
 
-Lists with a **category** display the corresponding Consent Commons icon in the UI. The `security` category is ProtoConsent-specific (not part of Consent Commons).
+Lists with a **category** display the corresponding Consent Commons icon in the UI. The `security` category is ProtoConsent-specific (not part of Consent Commons). Cosmetic lists display a dedicated pill instead of a category icon.
 
 ### Removed from earlier candidates
 
@@ -187,24 +188,24 @@ Enhanced lists are **not** shipped inside the extension package. Instead:
 2. The JSON files are hosted on GitHub and served via **jsDelivr CDN** (primary) with **raw.githubusercontent.com** as fallback.
 3. The extension fetches the JSON when the user downloads a list from the Enhanced tab. Lists are stored in `chrome.storage.local` with a split architecture: metadata in `enhancedLists`, heavy data in `enhancedData_{listId}`.
 
-Remote fetching is gated behind a consent flag (`dynamicListsConsent` in storage). The user opts in during onboarding or from Purpose Settings. When disabled, the extension only uses bundled list data shipped with the package and does not contact any CDN.
+Remote fetching is gated behind a consent flag (`dynamicListsConsent` in storage). The user opts in during onboarding or from Purpose Settings. When disabled, the extension only uses bundled list data shipped with the package and does not contact any CDN. The cosmetic list (`easylist_cosmetic.json`) is bundled in `extension/rules/` and loaded into storage on first install, ensuring cosmetic filtering works out of the box without remote fetching.
 
-This keeps the extension package small, avoids bundling third-party list content directly, and allows list updates without publishing a new extension version.
+This keeps the extension package small, avoids bundling third-party list content directly (except the cosmetic baseline), and allows list updates without publishing a new extension version.
 
 ### Presets
 
 | Preset | Behavior |
 | --- | --- |
 | Off | No enhanced lists active (core ProtoConsent only) |
-| Balanced | Enables the 4 Balanced lists on download |
-| Full | Enables all 12 lists on download |
+| Balanced | Enables the 5 Balanced lists on download |
+| Full | Enables all 13 lists on download |
 | Custom | User has toggled individual lists manually |
 
 When a user downloads lists with the preset set to Off, the extension auto-switches to Balanced.
 
 ### Consent-enhanced link
 
-When the user enables the consent-enhanced link (`consentEnhancedLink` in storage), denied purposes in the **default profile** automatically activate Enhanced lists whose `category` matches. For example, if the default profile denies Ads, EasyList and Blocklist Project - Ads are activated; denying Analytics activates EasyPrivacy and Blocklist Project - Tracking. Lists with `category: null` or `category: "security"` are never auto-activated.
+When the user enables the consent-enhanced link (`consentEnhancedLink` in storage), denied purposes in the **default profile** automatically activate Enhanced lists whose `category` matches. For example, if the default profile denies Ads, EasyList, EasyList Cosmetic and Blocklist Project - Ads are activated; denying Analytics activates EasyPrivacy and Blocklist Project - Tracking. Lists with `category: null` or `category: "security"` are never auto-activated.
 
 The link uses the default profile only, not per-site overrides. Enhanced lists are global (they block across all sites), so tying them to the user's general privacy posture prevents unexpected cross-site effects. The Settings page links the consent-link description to the default profile selector so the connection is clear.
 
@@ -218,7 +219,22 @@ DNR `requestDomains` matches a domain **and all its subdomains**. The converter 
 
 ### ABP format parsing
 
-EasyList and EasyPrivacy are distributed in Adblock Plus (ABP) filter syntax. The converter extracts both **`||domain^` patterns** (domain-level blocks) and **`||domain/path^` patterns** (path-based URL blocks). Cosmetic filters and exception rules are discarded. Path rules are stored alongside domain rules in the same JSON and create separate dynamic DNR rules with `urlFilter` conditions.
+EasyList and EasyPrivacy are distributed in Adblock Plus (ABP) filter syntax. The converter extracts both **`||domain^` patterns** (domain-level blocks) and **`||domain/path^` patterns** (path-based URL blocks). Exception rules are discarded. Path rules are stored alongside domain rules in the same JSON and create separate dynamic DNR rules with `urlFilter` conditions.
+
+### Cosmetic filtering
+
+EasyList also contains **element-hiding rules** (CSS selectors prefixed with `##`) that hide ad containers and empty banners left after network-level blocking. A dedicated converter (`convert-cosmetic.js`) parses these rules into two categories: generic selectors (apply to all pages) and domain-specific selectors (scoped to particular sites).
+
+The cosmetic list is a separate enhanced list (`type: "cosmetic"` in `enhanced-lists.json`) with its own storage and lifecycle:
+
+1. A converter script (`scripts/convert-cosmetic.js`) in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo fetches EasyList, extracts `##` element-hiding rules, and outputs JSON with `generic` (array) and `domains` (object) fields.
+2. The compiled JSON is bundled in `extension/rules/easylist_cosmetic.json` for first-install availability and also hosted on CDN for updates.
+3. At build time (`rebuild.js`), the background script compiles active cosmetic selectors into a CSS string stored in `chrome.storage.local` (`_cosmeticCSS` for generic, `_cosmeticDomains` for per-domain).
+4. A programmatically registered content script (`cosmetic-inject.js`) reads the compiled CSS at `document_start` and injects a `<style>` element.
+5. Selectors are validated at three levels: the converter rejects selectors containing `{` or `}` (to prevent CSS injection), the background re-filters at compile time, and the content script re-filters at runtime.
+6. Procedural selectors (`:has(`, `:-abp-`, `:contains(` etc.) are discarded by the converter as they cannot be expressed in plain CSS.
+
+Cosmetic filtering is purely visual cleanup - it does not block network requests or affect privacy. It is active by default (Balanced preset) and can be disabled independently in the Enhanced tab.
 
 ## 8. CNAME cloaking detection (informational)
 
