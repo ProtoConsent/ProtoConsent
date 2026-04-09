@@ -91,7 +91,7 @@
               <li>Removes high-entropy Client Hints headers (<code>Sec-CH-UA-*</code>) when advanced tracking is denied, reducing browser fingerprinting surface. No data is sent; headers are removed before the request leaves your browser.</li>
               <li>Fetches <code>.well-known/protoconsent.json</code> from sites when you open the side panel in the popup, to display their declared data practices (cached locally, never forwarded)</li>
               <li>Queries matched blocking rules to display request counts in the popup</li>
-              <li>Downloads optional third-party blocklist data from public CDN sources (jsDelivr, GitHub) when you activate Enhanced Protection lists. Only the list file is fetched - no personal data, cookies, or identifiers are sent. Downloaded lists are stored locally in your browser.</li>
+              <li>Downloads optional third-party enhanced list data from public CDN sources (jsDelivr, GitHub) when you activate Enhanced Protection lists. Remote fetching requires your explicit consent (opt-in during onboarding or in Purpose Settings). Only the list file is fetched - no personal data, cookies, or identifiers are sent. Downloaded lists are stored locally in your browser.</li>
             </ul>
           </section>
 
@@ -131,7 +131,7 @@
                 </tr>
                 <tr>
                   <td><code>unlimitedStorage</code></td>
-                  <td>Store downloaded enhanced blocklist data locally (lists can be large)</td>
+                  <td>Store downloaded enhanced list data locally (lists can be large)</td>
                 </tr>
                 <tr>
                   <td><code>host_permissions (&lt;all_urls&gt;)</code></td>

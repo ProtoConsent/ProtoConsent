@@ -54,6 +54,8 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [13.3 Verifying enhanced blocks in the Log tab](#133-verifying-enhanced-blocks-in-the-log-tab)
     - [13.4 Checking enhanced rules from the service worker console](#134-checking-enhanced-rules-from-the-service-worker-console)
     - [13.5 CNAME cloaking detection (informational)](#135-cname-cloaking-detection-informational)
+    - [13.6 Enhanced lists consent gate (sync)](#136-enhanced-lists-consent-gate-sync)
+    - [13.7 Consent-enhanced link](#137-consent-enhanced-link)
   - [14. Testing the inter-extension API](#14-testing-the-inter-extension-api)
     - [14.1 Enabling the API](#141-enabling-the-api)
     - [14.2 Sending a test query](#142-sending-a-test-query)
@@ -589,8 +591,9 @@ The AdGuard CNAME Trackers list is an informational list that identifies domains
 2. Verify the list appears in the Enhanced tab with an **ℹ Info** pill and an entry count (currently ~229K entries).
 3. Visit a site that uses CNAME-cloaked trackers (for example, Samsung domains like `nmetrics.samsung.com` or `smetrics.samsung.com` are known CNAME cloaks).
 4. Open the ProtoConsent popup → **Log** tab → **Domains** panel.
-5. Domains that match the CNAME list show a `⇉` icon before the domain name, with a tooltip identifying the tracker destination (for example, "CNAME cloaking: Adobe").
-6. The same icon appears in the **Requests** streaming view for matching domains.
+5. Domains that match the CNAME list show a `⇉` icon before the domain name, with a tooltip showing the cloaked domain and the tracker destination (for example, `nmetrics.samsung.com → adjust.com`).
+
+![CNAME cloaking indicators in the Log tab](assets/screenshots/popup-log-cname.png)
 
 To verify the CNAME data is loaded in storage:
 
@@ -602,6 +605,52 @@ chrome.storage.local.get("enhancedData_cname_trackers", r => {
 ```
 
 Note: CNAME cloaking is always active when the CNAME Trackers list is enabled - there is no separate toggle. The list uses a `type: "informational"` designation, meaning it contributes to the "info" count in the Enhanced status bar but does not generate any DNR blocking rules.
+
+### 13.6 Enhanced lists consent gate (sync)
+
+Remote fetching of enhanced lists requires the user's explicit consent, stored as `dynamicListsConsent` in `chrome.storage.local`. This opt-in is offered during onboarding (step 3) and in Purpose Settings.
+
+1. Fresh install: open onboarding and proceed to step 3 ("Enhanced lists"). The **Sync list updates** checkbox is unchecked by default.
+2. Complete onboarding **without** checking the Sync box.
+3. Open the Enhanced tab in the popup. The Sync pill should show "Sync: off" and clicking Download or a preset should have no effect on remote fetch (only bundled data is available).
+4. Open Purpose Settings → **Enhanced Lists** section. The **Sync** toggle should be off.
+5. Enable the Sync toggle. The label should change to "Enabled".
+6. Return to the Enhanced tab. The Sync pill should show "Sync: on". Downloading lists should now fetch from the CDN.
+
+To verify via the service worker console:
+
+```js
+chrome.storage.local.get("dynamicListsConsent", r => console.log(r))
+```
+
+### 13.7 Consent-enhanced link
+
+The consent-enhanced link automatically activates Enhanced lists whose category matches a denied consent purpose, without the user manually enabling them.
+
+1. Download at least the EasyList and EasyPrivacy lists (Balanced preset).
+2. Open Purpose Settings → **Enhanced Lists** section. Enable the **Consent link** toggle.
+3. Set the Enhanced preset to **Off** in the Enhanced tab (all lists disabled).
+4. Set the default consent profile to **Strict** (denies ads, analytics, advanced_tracking, third_parties).
+5. Open the Enhanced tab. Lists with matching categories (EasyList for ads, EasyPrivacy for analytics) should appear as enabled with a "Consent-linked" indicator, even though the preset is Off.
+6. In the Log tab, verify that domains from those lists are blocked.
+7. Switch the consent profile to **Permissive** (allows ads, analytics). The consent-linked lists should deactivate (only manually enabled lists remain).
+8. Disable the **Consent link** toggle in Purpose Settings. All lists should follow their manual enabled state only.
+
+Category mapping:
+
+| Denied purpose | Enhanced lists activated |
+|----------------|------------------------|
+| analytics | EasyPrivacy, Blocklist Project Tracking |
+| ads | EasyList, Blocklist Project Ads |
+| advanced_tracking | HaGeZi TIF, Blocklist Project Crypto |
+
+To verify via the service worker console:
+
+```js
+chrome.storage.local.get("consentEnhancedLink", r => console.log(r))
+```
+
+The debug panel (Log → Debug tab) shows "consent-enhanced link: on/off" and lists the consent-linked list IDs.
 
 ## 14. Testing the inter-extension API
 
