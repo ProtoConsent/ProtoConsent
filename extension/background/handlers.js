@@ -5,6 +5,28 @@
 // chrome.runtime.onMessage listener: handles all popup, content-script
 // and SDK bridge messages (rules, whitelist, enhanced, debug, .well-known).
 
+ // Resolve the correct Enhanced preset based on current list enabled states.
+ // @param {Object} lists - enhancedLists metadata from storage
+ // @param {Object} catalog - enhanced-lists.json catalog
+ // @returns {string} "off" | "basic" | "full" | "custom"
+ 
+function resolveEnhancedPreset(lists, catalog) {
+  const downloaded = Object.keys(lists);
+  if (downloaded.length === 0) return "off";
+  const allDisabled = downloaded.every(id => !lists[id].enabled);
+  if (allDisabled) return "off";
+  const allEnabled = downloaded.every(id => !!lists[id].enabled);
+  if (allEnabled) return "full";
+  // Check if enabled set matches "basic"
+  let matchesBasic = true;
+  for (const id of downloaded) {
+    const shouldBeEnabled = catalog[id] ? catalog[id].preset === "basic" : false;
+    if (!!lists[id].enabled !== shouldBeEnabled) { matchesBasic = false; break; }
+  }
+  if (matchesBasic) return "basic";
+  return "custom";
+}
+
 import {
   PURPOSES_FOR_ENFORCEMENT,
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData,
@@ -409,25 +431,28 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (!listId || typeof enabled !== "boolean") {
       sendResponse({ ok: false }); return;
     }
-    withEnhancedStorageLock(() => {
-      return getEnhancedListsFromStorage().then(lists => {
-        if (!lists[listId]) {
-          sendResponse({ ok: false, error: "List not downloaded" }); return;
-        }
-        lists[listId].enabled = enabled;
-        return new Promise(resolve => {
-          chrome.storage.local.set({
-            enhancedLists: lists,
-            enhancedPreset: "custom",
-          }, () => {
-            if (chrome.runtime.lastError) {
-              sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+    loadEnhancedListsCatalog().then(catalog => {
+      withEnhancedStorageLock(() => {
+        return getEnhancedListsFromStorage().then(lists => {
+          if (!lists[listId]) {
+            sendResponse({ ok: false, error: "List not downloaded" }); return;
+          }
+          lists[listId].enabled = enabled;
+          const newPreset = resolveEnhancedPreset(lists, catalog);
+          return new Promise(resolve => {
+            chrome.storage.local.set({
+              enhancedLists: lists,
+              enhancedPreset: newPreset,
+            }, () => {
+              if (chrome.runtime.lastError) {
+                sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                resolve();
+                return;
+              }
+              rebuildAllDynamicRules();
+              sendResponse({ ok: true });
               resolve();
-              return;
-            }
-            rebuildAllDynamicRules();
-            sendResponse({ ok: true });
-            resolve();
+            });
           });
         });
       });
@@ -662,19 +687,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           sendResponse({ ok: true }); return;
         }
         delete lists[listId];
-        let newPreset = preset;
-        if (preset === "full" || preset === "basic") {
-          for (const [id, def] of Object.entries(catalog)) {
-            const data = lists[id];
-            if (!data) continue;
-            const shouldBeEnabled = preset === "full" ? true : def.preset === "basic";
-            const isEnabled = data ? !!data.enabled : false;
-            if (shouldBeEnabled !== isEnabled) {
-              newPreset = "custom";
-              break;
-            }
-          }
-        }
+        const newPreset = resolveEnhancedPreset(lists, catalog);
         return new Promise(resolve => {
           chrome.storage.local.set({ enhancedLists: lists, enhancedPreset: newPreset }, () => {
             if (chrome.runtime.lastError) {
