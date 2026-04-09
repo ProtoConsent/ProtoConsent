@@ -291,16 +291,6 @@ body {
   margin-top: 0;
 }
 
-.pc-header-controls {
-  margin-left: auto;
-  flex: 0 0 auto;
-  display: grid;
-  grid-template-columns: 96px 30px;
-  align-items: end;
-  gap: 10px;
-  margin-top: 0;
-}
-
 .pc-profile {
   width: 96px;
   display: grid;
@@ -586,7 +576,6 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  justify-self: end;
   align-self: end;
   flex-shrink: 0;
   font-size: 15px;

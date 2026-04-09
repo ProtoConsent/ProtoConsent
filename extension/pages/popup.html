@@ -57,28 +57,26 @@
           <img src="../icons/protoconsent_icon_32.png" alt="" class="pc-header-brand-icon" width="16" height="16">
           <span class="pc-header-brand-name">ProtoConsent</span>
         </div>
+        <div class="pc-profile">
+          <div class="pc-profile-label">Profile</div>
+          <div class="pc-profile-dropdown" id="pc-profile-dropdown">
+            <button type="button" id="pc-profile-btn" class="pc-profile-btn" title="Privacy profile - controls which purposes are allowed or blocked">
+              <span id="pc-profile-btn-text">Balanced</span>
+              <span class="pc-profile-chevron" aria-hidden="true">&#x25BE;</span>
+            </button>
+            <div id="pc-profile-menu" class="pc-profile-menu" role="listbox" aria-label="Select profile" hidden>
+              <button type="button" class="pc-profile-option" data-value="strict" role="option">Strict</button>
+              <button type="button" class="pc-profile-option" data-value="balanced" role="option">Balanced</button>
+              <button type="button" class="pc-profile-option" data-value="permissive" role="option">Permissive</button>
+              <button type="button" class="pc-profile-option pc-profile-option-custom" data-value="custom" role="option" hidden>Custom</button>
+            </div>
+          </div>
+        </div>
         <div class="pc-site">
           <div class="pc-site-label">Site</div>
           <div id="pc-site-domain" class="pc-site-domain">loading...</div>
         </div>
-        <div class="pc-header-controls">
-          <div class="pc-profile">
-            <div class="pc-profile-label">Profile</div>
-            <div class="pc-profile-dropdown" id="pc-profile-dropdown">
-              <button type="button" id="pc-profile-btn" class="pc-profile-btn" title="Privacy profile - controls which purposes are allowed or blocked">
-                <span id="pc-profile-btn-text">Balanced</span>
-                <span class="pc-profile-chevron" aria-hidden="true">&#x25BE;</span>
-              </button>
-              <div id="pc-profile-menu" class="pc-profile-menu" role="listbox" aria-label="Select profile" hidden>
-                <button type="button" class="pc-profile-option" data-value="strict" role="option">Strict</button>
-                <button type="button" class="pc-profile-option" data-value="balanced" role="option">Balanced</button>
-                <button type="button" class="pc-profile-option" data-value="permissive" role="option">Permissive</button>
-                <button type="button" class="pc-profile-option pc-profile-option-custom" data-value="custom" role="option" hidden>Custom</button>
-              </div>
-            </div>
-          </div>
-          <button id="pc-reload-btn" class="pc-reload-btn" type="button" title="Reload this page" aria-label="Reload this page">↻</button>
-        </div>
+        <button id="pc-reload-btn" class="pc-reload-btn" type="button" title="Reload this page" aria-label="Reload this page">↻</button>
       </header>
 
       <div id="pc-mode-content" class="pc-mode-content">
