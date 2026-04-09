@@ -22,6 +22,7 @@
         <span class="ob-dot is-active"></span>
         <span class="ob-dot"></span>
         <span class="ob-dot"></span>
+        <span class="ob-dot"></span>
       </div>
       <header class="ob-header">
         <img src="../icons/protoconsent_icon_128.png" alt="ProtoConsent" class="ob-logo" width="64" height="64">
@@ -49,6 +50,7 @@
         <span class="ob-dot"></span>
         <span class="ob-dot is-active"></span>
         <span class="ob-dot"></span>
+        <span class="ob-dot"></span>
       </div>
       <header class="ob-header">
         <h1 class="ob-title">What ProtoConsent does for you</h1>
@@ -57,7 +59,7 @@
       <div class="ob-features">
         <div class="ob-feature-card">
           <div class="ob-feature-icon ob-feature-icon-consent" aria-hidden="true">
-            <img src="../icons/purposes/functional.svg" alt="" width="18" height="18">
+            <img src="../icons/protoconsent_icon_32.png" alt="" width="18" height="18">
           </div>
           <div class="ob-feature-text">
             <div class="ob-feature-title">Consent Control</div>
@@ -70,7 +72,7 @@
           </div>
           <div class="ob-feature-text">
             <div class="ob-feature-title">Enhanced Protection</div>
-            <div class="ob-feature-desc">Optional third-party blocklists add up to 1.8M extra tracking rules.</div>
+            <div class="ob-feature-desc">Optional third-party enhanced lists add up to 1.8M extra tracking rules.</div>
           </div>
         </div>
         <div class="ob-feature-card">
@@ -91,6 +93,33 @@
             <div class="ob-feature-desc">Monitor blocked requests and allow specific domains if needed.</div>
           </div>
         </div>
+        <div class="ob-feature-card">
+          <div class="ob-feature-icon ob-feature-icon-site" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/><path d="M3 9h12M9 3c-2 2-2 10 0 12M9 3c2 2 2 10 0 12" stroke="currentColor" stroke-width="1.5"/></svg>
+          </div>
+          <div class="ob-feature-text">
+            <div class="ob-feature-title">Per-site Control</div>
+            <div class="ob-feature-desc">Override your default profile for specific websites.</div>
+          </div>
+        </div>
+        <div class="ob-feature-card">
+          <div class="ob-feature-icon ob-feature-icon-ch" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2L3 6v6l6 4 6-4V6L9 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 8v4M9 6.5v0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="ob-feature-text">
+            <div class="ob-feature-title">Fingerprint Protection</div>
+            <div class="ob-feature-desc">Strips high-entropy Client Hints headers that websites use to identify your device.</div>
+          </div>
+        </div>
+        <div class="ob-feature-card">
+          <div class="ob-feature-icon ob-feature-icon-wk" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l5.5 3v6.5L9 16 3.5 11.5V5L9 2z" stroke="currentColor" stroke-width="2"/><path d="M7 9l2 2 3-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ob-feature-text">
+            <div class="ob-feature-title">Website Transparency</div>
+            <div class="ob-feature-desc">Checks .well-known/protoconsent.json declarations to verify a site's stated data practices.</div>
+          </div>
+        </div>
       </div>
 
       <div class="ob-action">
@@ -99,9 +128,60 @@
       </div>
     </div>
 
-    <!-- Step 3: Confirmation -->
+    <!-- Step 3: Enhanced lists opt-ins -->
+    <div id="ob-dynamic" class="ob-screen ob-hidden">
+      <div class="ob-dots" aria-hidden="true">
+        <span class="ob-dot"></span>
+        <span class="ob-dot"></span>
+        <span class="ob-dot is-active"></span>
+        <span class="ob-dot"></span>
+      </div>
+      <header class="ob-header">
+        <img src="../icons/purposes/enhanced.svg" alt="" class="ob-logo" width="56" height="56">
+        <h1 class="ob-title">Enhanced lists</h1>
+        <p class="ob-intro">
+          ProtoConsent includes bundled enhanced lists. These options let you
+          extend and automate protection. You can change them later in Settings.
+        </p>
+      </header>
+
+      <div class="ob-dynamic-details">
+        <label class="ob-opt-card" for="ob-sync-toggle">
+          <input type="checkbox" id="ob-sync-toggle" class="ob-opt-check">
+          <div class="ob-opt-content">
+            <div class="ob-opt-icon ob-feature-icon-enhanced" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2v14M5 6l4-4 4 4M5 12l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="ob-opt-text">
+              <span class="ob-opt-title">Sync list updates</span>
+              <span class="ob-opt-desc">Check for enhanced list updates from the ProtoConsent/data repository on GitHub. No data is sent.</span>
+            </div>
+          </div>
+        </label>
+        <label class="ob-opt-card" for="ob-cel-toggle">
+          <input type="checkbox" id="ob-cel-toggle" class="ob-opt-check">
+          <div class="ob-opt-content">
+            <div class="ob-opt-icon ob-feature-icon-cel" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 13l-3-3m0 0a4 4 0 115.66-5.66M4 10l1.34 1.34M11 5l3 3m0 0a4 4 0 01-5.66 5.66M14 8l-1.34-1.34" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="ob-opt-text">
+              <span class="ob-opt-title">Consent-Enhanced link</span>
+              <span class="ob-opt-desc">Automatically enable Enhanced lists that match purposes denied in your <strong id="ob-cel-profile-name">Balanced</strong> profile (e.g., denying Ads activates ad-blocking lists).</span>
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <div class="ob-action">
+        <button id="ob-continue-dynamic" class="ob-save-btn" type="button">Continue</button>
+        <button id="ob-back-dynamic" class="ob-skip-link" type="button">Back</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Confirmation -->
     <div id="ob-done-screen" class="ob-screen ob-hidden">
       <div class="ob-dots" aria-hidden="true">
+        <span class="ob-dot"></span>
         <span class="ob-dot"></span>
         <span class="ob-dot"></span>
         <span class="ob-dot is-active"></span>
@@ -135,6 +215,7 @@
     </footer>
   </div>
 
+  <script src="../config.js"></script>
   <script src="js/onboarding.js"></script>
 </body>
 </html>

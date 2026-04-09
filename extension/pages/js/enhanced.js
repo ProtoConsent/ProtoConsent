@@ -9,21 +9,36 @@
 let epCatalog = {};
 let epLists = {};
 let epPreset = "off";
+let epDynamicConsent = false;
+let epConsentLinkedIds = new Set();
 let _epFocusListId = null; // list to refocus after re-render
+let _celAutoFetchInProgress = false;
 
 // --- Shared stats helper ---
 function getEnhancedStats() {
-  const enabledLists = Object.values(epLists).filter(l => l.enabled);
-  const blockingLists = enabledLists.filter(l => l.type !== "informational");
-  const infoLists = enabledLists.filter(l => l.type === "informational");
+  // Include consent-linked lists as active even if not manually enabled
+  const activeLists = Object.entries(epLists)
+    .filter(([id, l]) => l.enabled || epConsentLinkedIds.has(id))
+    .map(([, l]) => l);
+  const blockingLists = activeLists.filter(l => l.type !== "informational");
+  const infoLists = activeLists.filter(l => l.type === "informational");
+  let updatesAvailable = 0;
+  for (const id of Object.keys(epLists)) {
+    const catalogDef = epCatalog[id];
+    if (catalogDef && catalogDef.version && epLists[id].version &&
+        catalogDef.version > epLists[id].version) {
+      updatesAvailable++;
+    }
+  }
   return {
-    enabledCount: enabledLists.length,
+    enabledCount: activeLists.length,
     blockingCount: blockingLists.length,
     infoCount: infoLists.length,
     totalDomains: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
     downloadedCount: Object.keys(epLists).length,
     catalogCount: Object.keys(epCatalog).length,
     notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id]),
+    updatesAvailable,
   };
 }
 
@@ -60,10 +75,20 @@ function refreshEnhancedState() {
     epCatalog = resp.catalog || {};
     epLists = resp.lists || {};
     epPreset = resp.preset || "off";
+    epDynamicConsent = resp.dynamicConsent === true;
+    epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
     renderEnhancedPresets();
     renderEnhancedLists();
     updateEnhancedStatus();
     if (typeof displayEnhancedScope === "function") displayEnhancedScope();
+    // Auto-download consent-linked lists not yet downloaded
+    const celPending = resp.celPendingDownload || [];
+    if (celPending.length > 0 && !_celAutoFetchInProgress) {
+      _celAutoFetchInProgress = true;
+      downloadAllEnhancedLists(null, celPending);
+    } else if (celPending.length === 0) {
+      _celAutoFetchInProgress = false;
+    }
   });
 }
 
@@ -74,9 +99,7 @@ function renderEnhancedPresets() {
   if (!container) return;
   container.innerHTML = "";
 
-  const allPresets = epPreset === "custom"
-    ? [...EP_PRESETS, { id: "custom", label: "Custom", description: "You have customized individual list toggles" }]
-    : EP_PRESETS;
+  const allPresets = EP_PRESETS;
 
   for (let i = 0; i < allPresets.length; i++) {
     const preset = allPresets[i];
@@ -89,13 +112,34 @@ function renderEnhancedPresets() {
     btn.setAttribute("role", "radio");
     btn.setAttribute("aria-checked", isActive ? "true" : "false");
     btn.setAttribute("tabindex", isActive ? "0" : "-1");
-    if (preset.id === "custom") {
-      btn.disabled = true;
-      btn.setAttribute("aria-label", "Custom preset (set by individual list toggles)");
-    } else {
-      btn.addEventListener("click", () => setEnhancedPreset(preset.id));
-    }
+    btn.addEventListener("click", () => setEnhancedPreset(preset.id));
     container.appendChild(btn);
+  }
+
+  // Custom indicator: small pencil icon when preset is custom
+  if (epPreset === "custom") {
+    const icon = document.createElement("span");
+    icon.className = "ep-preset-custom-icon";
+    icon.textContent = "\u270E";
+    icon.title = "Custom: you have toggled individual lists";
+    icon.setAttribute("aria-label", "Custom preset (set by individual list toggles)");
+    container.appendChild(icon);
+  }
+
+  // Shield level indicator in the preset label
+  const labelEl = document.getElementById("ep-preset-label");
+  if (labelEl) {
+    const shieldCount = epPreset === "full" ? 3 : epPreset === "basic" ? 2 : epPreset === "custom" ? 1 : 0;
+    labelEl.textContent = "";
+    for (let i = 0; i < shieldCount; i++) {
+      const img = document.createElement("img");
+      img.src = ENHANCED_ICON;
+      img.width = 12;
+      img.height = 12;
+      img.className = "ep-preset-shield";
+      labelEl.appendChild(img);
+    }
+    if (shieldCount === 0) labelEl.textContent = "";
   }
 
   // Contextual action button (right side of preset bar)
@@ -127,11 +171,64 @@ function renderPresetAction() {
   const bar = document.getElementById("ep-preset-bar");
   if (!bar) return;
 
-  // Remove previous action if any
-  const prev = bar.querySelector(".ep-preset-action");
-  if (prev) prev.remove();
+  // Remove previous right group if any
+  const prevRight = bar.querySelector(".ep-preset-right");
+  if (prevRight) prevRight.remove();
 
-  const { enabledCount, downloadedCount, catalogCount, notDownloaded } = getEnhancedStats();
+  // Right-side container for sync pill + action button
+  const right = document.createElement("span");
+  right.className = "ep-preset-right";
+
+  const { enabledCount, downloadedCount, catalogCount, notDownloaded, updatesAvailable } = getEnhancedStats();
+
+  // Sync consent pill (before action button)
+  const pill = document.createElement("span");
+  pill.className = "ep-sync-pill" + (epDynamicConsent ? " is-active" : " is-disabled");
+  pill.setAttribute("role", "switch");
+  pill.setAttribute("aria-checked", epDynamicConsent ? "true" : "false");
+  pill.setAttribute("aria-label", "Enhanced list sync");
+  pill.setAttribute("tabindex", "0");
+  const dot = document.createElement("span");
+  dot.className = "ep-sync-dot";
+  dot.setAttribute("aria-hidden", "true");
+  pill.appendChild(dot);
+  pill.appendChild(document.createTextNode("Sync"));
+  pill.title = epDynamicConsent
+    ? "Enhanced list sync enabled - click to disable"
+    : "Enhanced list sync disabled - click to enable";
+  const toggleSync = () => {
+    const newVal = !epDynamicConsent;
+    setDynamicListsConsent(newVal, () => {
+      epDynamicConsent = newVal;
+      // Force-refresh catalog to pick up new consent state
+      chrome.runtime.sendMessage(
+        { type: "PROTOCONSENT_ENHANCED_GET_STATE", forceRefresh: true },
+        (resp) => {
+          if (chrome.runtime.lastError || !resp) return;
+          epCatalog = resp.catalog || {};
+          epLists = resp.lists || {};
+          epPreset = resp.preset || "off";
+          epDynamicConsent = resp.dynamicConsent === true;
+          epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
+          renderEnhancedPresets();
+          renderEnhancedLists();
+          updateEnhancedStatus();
+          // Restore focus to the re-rendered sync pill
+          const newPill = document.querySelector(".ep-sync-pill");
+          if (newPill) newPill.focus();
+        }
+      );
+    });
+  };
+  pill.addEventListener("click", toggleSync);
+  pill.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleSync();
+    }
+  });
+  // Add pill to right container
+  right.appendChild(pill);
 
   if (notDownloaded.length > 0) {
     // Some lists not downloaded: show "↓ Download all"
@@ -141,23 +238,29 @@ function renderPresetAction() {
     btn.textContent = "↓ Download all";
     btn.title = "Download " + notDownloaded.length + " remaining lists";
     btn.addEventListener("click", () => downloadAllEnhancedLists(btn));
-    bar.appendChild(btn);
+    right.appendChild(btn);
   } else if (enabledCount > 0 && notDownloaded.length === 0) {
-    // All downloaded, some enabled: show "↻ Update all"
+    // All downloaded, some enabled: show "↻ Update all" with count if updates available
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ep-preset-action ep-preset-action-update";
-    btn.textContent = "↻ Update all";
-    btn.title = "Refresh all downloaded lists";
+    btn.textContent = updatesAvailable > 0
+      ? "↻ Update " + updatesAvailable + (updatesAvailable === 1 ? " list" : " lists")
+      : "↻ Update all";
+    btn.title = updatesAvailable > 0
+      ? updatesAvailable + " update(s) available"
+      : "Refresh all downloaded lists";
     btn.addEventListener("click", () => updateAllEnhancedLists(btn));
-    bar.appendChild(btn);
+    right.appendChild(btn);
   } else if (downloadedCount > 0) {
     // Downloaded but none enabled (preset off or custom): summary
     const span = document.createElement("span");
     span.className = "ep-preset-action ep-preset-action-summary";
     span.textContent = downloadedCount + "/" + catalogCount + " downloaded";
-    bar.appendChild(span);
+    right.appendChild(span);
   }
+
+  bar.appendChild(right);
 }
 
 function setEnhancedPreset(preset) {
@@ -199,7 +302,8 @@ function renderEnhancedLists() {
     const card = document.createElement("div");
     card.className = "ep-list-card";
     card.dataset.listId = listId;
-    if (listData?.enabled) card.classList.add("is-enabled");
+    const isConsentLinked = epConsentLinkedIds.has(listId);
+    if (listData?.enabled || isConsentLinked) card.classList.add("is-enabled");
 
     // Header row: icon + name + actions
     const header = document.createElement("div");
@@ -229,7 +333,18 @@ function renderEnhancedLists() {
     header.appendChild(nameEl);
 
     // Category pill (CC icon + label) for lists with a mapped purpose
+    // Consent-linked icon placed before category pill when active
     const catInfo = typeof getEnhancedCategoryInfo === "function" ? getEnhancedCategoryInfo(listId) : null;
+    if (isConsentLinked) {
+      const celIcon = document.createElement("img");
+      celIcon.src = "../icons/protoconsent_icon_32.png";
+      celIcon.width = 14;
+      celIcon.height = 14;
+      celIcon.alt = "";
+      celIcon.className = "ep-cel-icon";
+      celIcon.title = "Consent-linked: activated by denied " + (catInfo ? catInfo.label : "purpose");
+      header.appendChild(celIcon);
+    }
     if (catInfo) {
       const pill = document.createElement("span");
       pill.className = "ep-category-pill";
@@ -268,9 +383,15 @@ function renderEnhancedLists() {
       const toggle = document.createElement("input");
       toggle.type = "checkbox";
       toggle.className = "ep-list-toggle";
-      toggle.checked = !!listData.enabled;
-      toggle.title = listData.enabled ? "Disable " + listDef.name : "Enable " + listDef.name;
-      toggle.setAttribute("aria-label", (listData.enabled ? "Disable " : "Enable ") + listDef.name);
+      const isActive = !!listData.enabled || isConsentLinked;
+      toggle.checked = isActive;
+      if (isConsentLinked && !listData.enabled) {
+        toggle.disabled = true;
+        toggle.title = listDef.name + " - activated by consent link";
+      } else {
+        toggle.title = listData.enabled ? "Disable " + listDef.name : "Enable " + listDef.name;
+      }
+      toggle.setAttribute("aria-label", (isActive ? "Disable " : "Enable ") + listDef.name);
       toggle.addEventListener("change", () => {
         toggleEnhancedList(listId, toggle.checked);
       });
@@ -329,6 +450,16 @@ function renderEnhancedLists() {
       if (listData.version) parts.push("v" + listData.version);
       stats.textContent = parts.join(" · ");
       info.appendChild(stats);
+
+      // "Update available" indicator when remote catalog has a newer version
+      if (listData.version && listDef.version && listDef.version > listData.version) {
+        const updateBadge = document.createElement("span");
+        updateBadge.className = "ep-update-badge";
+        updateBadge.textContent = "Update available";
+        updateBadge.title = "Remote version: " + listDef.version +
+          " (installed: " + listData.version + ")";
+        info.appendChild(updateBadge);
+      }
     }
 
     card.appendChild(info);
@@ -455,6 +586,7 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
           btnEl.textContent = completed + "/" + total + "…";
         }
         if (completed >= total) {
+          _celAutoFetchInProgress = false;
           if (btnEl) {
             btnEl.disabled = false;
             btnEl.textContent = failed > 0
@@ -484,58 +616,71 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
 function updateAllEnhancedLists(btnEl) {
   const downloadedIds = Object.keys(epLists);
   if (downloadedIds.length === 0) return;
-  const total = downloadedIds.length;
+
   if (btnEl) {
     btnEl.disabled = true;
-    btnEl.textContent = "0/" + total + "…";
+    btnEl.textContent = "Checking…";
   }
-  let completed = 0;
-  let failed = 0;
-  let skipped = 0;
-  for (const listId of downloadedIds) {
-    chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
-      if (chrome.runtime.lastError) resp = null;
-      completed++;
-      if (!resp?.ok) failed++;
-      else if (resp.skipped) skipped++;
-      if (btnEl) {
-        btnEl.textContent = completed + "/" + total + "…";
-      }
-      if (completed >= total) {
+
+  // Force-refresh remote catalog first to get latest version info
+  chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE", forceRefresh: true }, (resp) => {
+    if (chrome.runtime.lastError) resp = null;
+    if (resp) {
+      epCatalog = resp.catalog || {};
+      epLists = resp.lists || {};
+      epPreset = resp.preset || "off";
+    }
+
+    const total = downloadedIds.length;
+    if (btnEl) btnEl.textContent = "0/" + total + "…";
+    let completed = 0;
+    let failed = 0;
+    let skipped = 0;
+    for (const listId of downloadedIds) {
+      chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
+        if (chrome.runtime.lastError) resp = null;
+        completed++;
+        if (!resp?.ok) failed++;
+        else if (resp.skipped) skipped++;
         if (btnEl) {
-          btnEl.disabled = false;
-          if (failed > 0) btnEl.textContent = failed + " failed";
-          else if (skipped === total) btnEl.textContent = "Up to date";
-          else btnEl.textContent = "Done";
+          btnEl.textContent = completed + "/" + total + "…";
         }
-        // Announce completion via aria-live region
-        const statusEl = document.getElementById("ep-status");
-        if (statusEl) {
-          if (failed > 0) {
-            statusEl.textContent = "Updated " + (total - failed) + " of " + total + " lists, " + failed + " failed";
-            statusEl.className = "ep-status ep-status-warn";
-          } else if (skipped === total) {
-            statusEl.textContent = "All " + total + " lists already up to date";
-            statusEl.className = "ep-status ep-status-active";
-          } else {
-            statusEl.textContent = (total - skipped) + " of " + total + " lists updated" + (skipped > 0 ? ", " + skipped + " already current" : "");
-            statusEl.className = "ep-status ep-status-active";
+        if (completed >= total) {
+          if (btnEl) {
+            btnEl.disabled = false;
+            if (failed > 0) btnEl.textContent = failed + " failed";
+            else if (skipped === total) btnEl.textContent = "Up to date";
+            else btnEl.textContent = "Done";
           }
+          // Announce completion via aria-live region
+          const statusEl = document.getElementById("ep-status");
+          if (statusEl) {
+            if (failed > 0) {
+              statusEl.textContent = "Updated " + (total - failed) + " of " + total + " lists, " + failed + " failed";
+              statusEl.className = "ep-status ep-status-warn";
+            } else if (skipped === total) {
+              statusEl.textContent = "All " + total + " lists already up to date";
+              statusEl.className = "ep-status ep-status-active";
+            } else {
+              statusEl.textContent = (total - skipped) + " of " + total + " lists updated" + (skipped > 0 ? ", " + skipped + " already current" : "");
+              statusEl.className = "ep-status ep-status-active";
+            }
+          }
+          setTimeout(() => refreshEnhancedState(), 500);
         }
-        setTimeout(() => refreshEnhancedState(), 500);
-      }
-    });
-  }
+      });
+    }
+  });
 }
 
 function updateEnhancedStatus() {
   const statusEl = document.getElementById("ep-status");
   if (!statusEl) return;
 
-  const { enabledCount, blockingCount, infoCount, totalDomains } = getEnhancedStats();
-  const infoDomains = Object.values(epLists)
-    .filter(l => l.enabled && l.type === "informational")
-    .reduce((sum, l) => sum + (l.domainCount || 0), 0);
+  const { enabledCount, blockingCount, infoCount, totalDomains, updatesAvailable } = getEnhancedStats();
+  const infoDomains = Object.entries(epLists)
+    .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && l.type === "informational")
+    .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
 
   if (enabledCount > 0) {
     const parts = [];
@@ -546,6 +691,9 @@ function updateEnhancedStatus() {
     if (infoCount > 0) {
       parts.push(infoCount + " info " + (infoCount === 1 ? "list" : "lists") +
         " \u00b7 " + infoDomains.toLocaleString() + " entries");
+    }
+    if (updatesAvailable > 0) {
+      parts.push(updatesAvailable + " update" + (updatesAvailable !== 1 ? "s" : "") + " available");
     }
     statusEl.textContent = parts.join(" \u00b7 ");
     statusEl.className = "ep-status ep-status-active";

@@ -134,6 +134,40 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // Dynamic lists catalog
+    if (bg) {
+      const consent = bg.dynamicListsConsent ? "on" : "off";
+      lines.push("-- dynamic lists: consent " + consent + " --");
+      lines.push("  source: " + (bg.catalogSource || "none"));
+      if (bg.catalogLastFetched) {
+        lines.push("  last load: " + new Date(bg.catalogLastFetched).toISOString());
+      } else {
+        lines.push("  last load: never");
+      }
+      if (bg.catalogLastRemoteFetch) {
+        lines.push("  last remote fetch: " + new Date(bg.catalogLastRemoteFetch).toISOString());
+      }
+      if (bg.catalogError) lines.push("  error: " + bg.catalogError);
+      lines.push("  catalog entries: local " + (bg.catalogLocalCount || 0) +
+        ", remote " + (bg.catalogRemoteCount || 0));
+      lines.push("");
+    }
+
+    // Consent-Enhanced link
+    if (bg) {
+      const cel = bg.consentEnhancedLink ? "on" : "off";
+      lines.push("-- consent-enhanced link: " + cel + " --");
+      if (bg.consentLinkedListIds && bg.consentLinkedListIds.length) {
+        lines.push("  linked lists: " + bg.consentLinkedListIds.join(", "));
+      } else {
+        lines.push("  linked lists: none");
+      }
+      if (bg.celPendingDownload && bg.celPendingDownload.length) {
+        lines.push("  pending download: " + bg.celPendingDownload.join(", "));
+      }
+      lines.push("");
+    }
+
     // Client Hints stripping
     if (bg && bg.chStripping) {
       const toggle = bg.chEnabled ? "on" : "off";

@@ -136,6 +136,20 @@ function getChStrippingEnabled(callback) {
   });
 }
 
+// Toggle dynamic lists consent (blocklist sync from remote catalog).
+function setDynamicListsConsent(enabled, callback) {
+  chrome.storage.local.set({ dynamicListsConsent: enabled }, () => {
+    if (callback) callback();
+  });
+}
+
+// Toggle consent-enhanced link (denied purposes auto-activate Enhanced lists).
+function setConsentEnhancedLink(enabled, callback) {
+  chrome.storage.local.set({ consentEnhancedLink: enabled }, () => {
+    if (callback) callback();
+  });
+}
+
 // Resolve enhanced list category → icon/label info.
 // Returns { icon, short, label } from purposesConfig or ENHANCED_EXTRA_CATEGORIES,
 // or null if no category. Depends on globals: enhancedCatalogConfig (popup.js),

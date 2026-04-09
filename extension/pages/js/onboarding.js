@@ -138,14 +138,40 @@ function wireEvents() {
     save(() => goToScreen('ob-done-screen'));
   });
 
-  // Done → save selected profile and go to done
+  // Done → save selected profile and go to dynamic lists consent
   document.getElementById('ob-done').addEventListener('click', () => {
-    save(() => goToScreen('ob-done-screen'));
+    save(() => {
+      const celProfileEl = document.getElementById('ob-cel-profile-name');
+      if (celProfileEl) celProfileEl.textContent = presets[selectedProfile]?.label || selectedProfile;
+      goToScreen('ob-dynamic');
+    });
   });
 
   // Back → return to profile selection
   document.getElementById('ob-back').addEventListener('click', () => {
     goToScreen('ob-setup');
+  });
+
+  // Dynamic lists: Continue - save checked options and go to done
+  document.getElementById('ob-continue-dynamic').addEventListener('click', () => {
+    const syncChecked = document.getElementById('ob-sync-toggle')?.checked;
+    const celChecked = document.getElementById('ob-cel-toggle')?.checked;
+
+    const saves = [];
+    if (syncChecked) saves.push(cb => setDynamicListsConsent(true, cb));
+    if (celChecked) saves.push(cb => setConsentEnhancedLink(true, cb));
+
+    // Chain saves sequentially, then navigate
+    const run = (i) => {
+      if (i >= saves.length) { goToScreen('ob-done-screen'); return; }
+      saves[i](() => run(i + 1));
+    };
+    run(0);
+  });
+
+  // Dynamic lists: Back → return to features
+  document.getElementById('ob-back-dynamic').addEventListener('click', () => {
+    goToScreen('ob-features');
   });
 
   // Settings link in confirmation screen
@@ -170,7 +196,14 @@ function goToScreen(screenId) {
   const screens = document.querySelectorAll('.ob-screen');
   screens.forEach((s) => s.classList.add('ob-hidden'));
   const target = document.getElementById(screenId);
-  if (target) target.classList.remove('ob-hidden');
+  if (target) {
+    target.classList.remove('ob-hidden');
+    const heading = target.querySelector('.ob-title');
+    if (heading) {
+      heading.setAttribute('tabindex', '-1');
+      heading.focus();
+    }
+  }
 }
 
 function save(callback) {

@@ -187,6 +187,8 @@ Enhanced lists are **not** shipped inside the extension package. Instead:
 2. The JSON files are hosted on GitHub and served via **jsDelivr CDN** (primary) with **raw.githubusercontent.com** as fallback.
 3. The extension fetches the JSON when the user downloads a list from the Enhanced tab. Lists are stored in `chrome.storage.local` with a split architecture: metadata in `enhancedLists`, heavy data in `enhancedData_{listId}`.
 
+Remote fetching is gated behind a consent flag (`dynamicListsConsent` in storage). The user opts in during onboarding or from Purpose Settings. When disabled, the extension only uses bundled list data shipped with the package and does not contact any CDN.
+
 This keeps the extension package small, avoids bundling third-party list content directly, and allows list updates without publishing a new extension version.
 
 ### Presets
@@ -199,6 +201,16 @@ This keeps the extension package small, avoids bundling third-party list content
 | Custom | User has toggled individual lists manually |
 
 When a user downloads lists with the preset set to Off, the extension auto-switches to Balanced.
+
+### Consent-enhanced link
+
+When the user enables the consent-enhanced link (`consentEnhancedLink` in storage), denied purposes in the **default profile** automatically activate Enhanced lists whose `category` matches. For example, if the default profile denies Ads, EasyList and Blocklist Project - Ads are activated; denying Analytics activates EasyPrivacy and Blocklist Project - Tracking. Lists with `category: null` or `category: "security"` are never auto-activated.
+
+The link uses the default profile only, not per-site overrides. Enhanced lists are global (they block across all sites), so tying them to the user's general privacy posture prevents unexpected cross-site effects. The Settings page links the consent-link description to the default profile selector so the connection is clear.
+
+This is a runtime overlay: the background script computes the linked list set on each `rebuildAllDynamicRules()` call based on the default profile's resolved purposes and the catalog's category mapping. It does not modify the stored `enabled` state of any list. Consent-linked lists are included in the rule build alongside manually enabled lists, and appear in the Enhanced tab with a ProtoConsent icon indicator and a disabled (checked) toggle. The link takes priority over the Enhanced "Off" preset - even with Off selected, consent-linked lists are enforced when the feature is active.
+
+Only downloaded lists participate in DNR rule generation. When the Enhanced tab is open and the popup detects consent-linked lists that are not yet downloaded, it triggers an automatic download via the same mechanism as "Download all", provided Sync (`dynamicListsConsent`) is enabled. Without Sync, the consent link still activates already-downloaded lists but will not fetch new ones. Lists without a `fetch_url` in the catalog are skipped.
 
 ### Domain deduplication
 

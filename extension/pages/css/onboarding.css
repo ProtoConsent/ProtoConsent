@@ -50,6 +50,9 @@ body {
   border-radius: 18px;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   box-shadow: 0 20px 42px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06);
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
 }
 
 .ob-hidden {
@@ -172,7 +175,8 @@ body {
 /* Save button */
 .ob-action {
   text-align: center;
-  margin-top: 6px;
+  margin-top: auto;
+  padding-top: 6px;
 }
 
 .ob-save-btn {
@@ -234,7 +238,8 @@ body {
 }
 
 /* Feature overview cards */
-.ob-features {
+.ob-features,
+.ob-dynamic-details {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -282,6 +287,98 @@ body {
   color: #7c3aed;
 }
 
+.ob-feature-icon-site {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.ob-feature-icon-ch {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.ob-feature-icon-wk {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.ob-feature-icon-cel {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+/* Opt-in cards (step 3) */
+.ob-opt-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--pc-line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ob-opt-card:has(.ob-opt-check:checked) {
+  border-color: #9ec5f8;
+  background: linear-gradient(180deg, #f3f8ff 0%, #ebf4ff 100%);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 6px 14px rgba(59, 130, 246, 0.10);
+}
+
+.ob-opt-card:focus-within {
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 2px #1e3a8a;
+}
+
+.ob-opt-check:focus-visible {
+  outline: none;
+}
+
+.ob-opt-check {
+  flex-shrink: 0;
+  accent-color: #2563eb;
+  width: 16px;
+  height: 16px;
+}
+
+.ob-opt-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ob-opt-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ob-opt-text {
+  min-width: 0;
+}
+
+.ob-opt-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pc-text);
+  margin-bottom: 2px;
+}
+
+.ob-opt-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--pc-text-muted);
+  line-height: 1.4;
+}
+
 .ob-feature-text {
   min-width: 0;
 }
@@ -303,6 +400,7 @@ body {
 #ob-done-screen {
   text-align: center;
   padding-top: 40px;
+  align-items: center;
 }
 
 #ob-done-screen .ob-intro {
