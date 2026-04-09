@@ -10,6 +10,7 @@ let epCatalog = {};
 let epLists = {};
 let epPreset = "off";
 let epDynamicConsent = false;
+let epConsentEnhancedLink = false;
 let epConsentLinkedIds = new Set();
 let _epFocusListId = null; // list to refocus after re-render
 let _celAutoFetchInProgress = false;
@@ -98,6 +99,7 @@ function refreshEnhancedState() {
     epLists = resp.lists || {};
     epPreset = resp.preset || "off";
     epDynamicConsent = resp.dynamicConsent === true;
+    epConsentEnhancedLink = resp.consentEnhancedLink === true;
     epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
     renderEnhancedPresets();
     renderEnhancedLists();
@@ -231,6 +233,7 @@ function renderPresetAction() {
           epLists = resp.lists || {};
           epPreset = resp.preset || "off";
           epDynamicConsent = resp.dynamicConsent === true;
+          epConsentEnhancedLink = resp.consentEnhancedLink === true;
           epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
           renderEnhancedPresets();
           renderEnhancedLists();
@@ -251,6 +254,55 @@ function renderPresetAction() {
   });
   // Add pill to right container
   right.appendChild(pill);
+
+  // Consent-Enhanced Link pill
+  const celPill = document.createElement("span");
+  celPill.className = "ep-cel-pill" + (epConsentEnhancedLink ? " is-active" : " is-disabled");
+  celPill.setAttribute("role", "switch");
+  celPill.setAttribute("aria-checked", epConsentEnhancedLink ? "true" : "false");
+  celPill.setAttribute("aria-label", "Consent-enhanced link");
+  celPill.setAttribute("tabindex", "0");
+  const celImg = document.createElement("img");
+  celImg.src = "../icons/protoconsent_icon_32.png";
+  celImg.width = 14;
+  celImg.height = 14;
+  celImg.className = "ep-cel-pill-icon";
+  celImg.setAttribute("aria-hidden", "true");
+  celPill.appendChild(celImg);
+  celPill.title = epConsentEnhancedLink
+    ? "Consent link active - denied purposes auto-activate matching lists. Click to disable"
+    : "Consent link off - click to enable";
+  const toggleCel = () => {
+    const newVal = !epConsentEnhancedLink;
+    setConsentEnhancedLink(newVal, () => {
+      epConsentEnhancedLink = newVal;
+      chrome.runtime.sendMessage(
+        { type: "PROTOCONSENT_ENHANCED_GET_STATE", forceRefresh: true },
+        (resp) => {
+          if (chrome.runtime.lastError || !resp) return;
+          epCatalog = resp.catalog || {};
+          epLists = resp.lists || {};
+          epPreset = resp.preset || "off";
+          epDynamicConsent = resp.dynamicConsent === true;
+          epConsentEnhancedLink = resp.consentEnhancedLink === true;
+          epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
+          renderEnhancedPresets();
+          renderEnhancedLists();
+          updateEnhancedStatus();
+          const newCelPill = document.querySelector(".ep-cel-pill");
+          if (newCelPill) newCelPill.focus();
+        }
+      );
+    });
+  };
+  celPill.addEventListener("click", toggleCel);
+  celPill.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleCel();
+    }
+  });
+  right.appendChild(celPill);
 
   if (notDownloaded.length > 0) {
     // Some lists not downloaded: show "↓ Download all"
