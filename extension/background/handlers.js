@@ -15,13 +15,16 @@ function resolveEnhancedPreset(lists, catalog) {
   if (downloaded.length === 0) return "off";
   const allDisabled = downloaded.every(id => !lists[id].enabled);
   if (allDisabled) return "off";
-  const allEnabled = downloaded.every(id => !!lists[id].enabled);
+  const catalogIds = Object.keys(catalog);
+  const allDownloaded = catalogIds.every(id => !!lists[id]);
+  const allEnabled = allDownloaded && catalogIds.every(id => !!lists[id]?.enabled);
   if (allEnabled) return "full";
   // Check if enabled set matches "basic"
   let matchesBasic = true;
-  for (const id of downloaded) {
+  for (const id of catalogIds) {
     const shouldBeEnabled = catalog[id] ? catalog[id].preset === "basic" : false;
-    if (!!lists[id].enabled !== shouldBeEnabled) { matchesBasic = false; break; }
+    const isEnabled = !!lists[id]?.enabled;
+    if (isEnabled !== shouldBeEnabled) { matchesBasic = false; break; }
   }
   if (matchesBasic) return "basic";
   return "custom";
