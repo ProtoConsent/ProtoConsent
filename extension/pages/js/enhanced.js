@@ -65,15 +65,11 @@ function getEnhancedStats() {
   };
 }
 
-// Auto-switch preset from off to basic before downloading
+// Auto-switch stored preset from off to basic before downloading,
+// so newly fetched lists get enabled. Does NOT touch existing list toggles.
 function ensurePresetForDownload(callback) {
   if (epPreset === "off") {
-    chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_SET_PRESET", preset: "basic" }, (resp) => {
-      if (chrome.runtime.lastError || !resp?.ok) {
-        // Proceed anyway - download will still work, just won't auto-enable
-        callback();
-        return;
-      }
+    chrome.storage.local.set({ enhancedPreset: "basic" }, () => {
       epPreset = "basic";
       callback();
     });

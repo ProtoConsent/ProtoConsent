@@ -297,7 +297,8 @@ async function displayBlockedCount() {
           epIcon.src = ENHANCED_ICON;
           epIcon.width = 12;
           epIcon.height = 12;
-          epIcon.alt = "Enhanced";
+          epIcon.alt = enhancedCount + " blocked by Enhanced Protection";
+          epIcon.title = enhancedCount + " blocked by Enhanced Protection";
           epIcon.className = "pc-counter-enhanced-icon";
           epSpan.appendChild(epIcon);
           epSpan.appendChild(document.createTextNode(enhancedCount + ")"));
@@ -728,7 +729,7 @@ function initProfileSelect() {
 
   menu.addEventListener("click", (e) => {
     const opt = e.target.closest('.pc-profile-option');
-    if (!opt || opt.hidden) return;
+    if (!opt || opt.hidden || opt.disabled) return;
     menu.hidden = true;
     currentProfile = opt.dataset.value;
     if (currentProfile !== "custom") setCustomOptionVisible(false);
@@ -1148,7 +1149,9 @@ function updateGpcIndicator(observedGpc = lastGpcSignalsSent) {
   indicatorEl.classList.remove("is-disabled");
   indicatorEl.classList.toggle("is-active", expectedOn);
   indicatorEl.classList.toggle("is-inactive", !expectedOn);
-  const expectedText = expectedOn ? "GPC: active" : "GPC: inactive";
+  const expectedText = expectedOn
+    ? "GPC: active - do-not-sell/share signal"
+    : "GPC: inactive";
   const domains = lastGpcDomains;
   let observedText;
   if (observedGpc > 0 && domains.length > 0) {

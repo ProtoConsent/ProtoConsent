@@ -377,6 +377,11 @@ body {
   background: #edf5ff;
 }
 
+.pc-profile-option:disabled {
+  color: #9ca3af;
+  cursor: default;
+}
+
 /* Shared pill indicator base */
 .pc-pill-indicator {
   display: inline-flex;
@@ -390,20 +395,19 @@ body {
   background-color: var(--pc-surface);
   color: var(--pc-text-muted);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  cursor: help;
 }
 
 .pc-pill-indicator.is-inactive {
   color: #6b7280;
   border-color: #e5e7eb;
   background-color: #f3f4f6;
-  cursor: help;
 }
 
 .pc-pill-indicator.is-disabled {
   color: #6b7280;
   border-color: #e5e7eb;
   background-color: #f3f4f6;
-  cursor: help;
 }
 
 .pc-pill-dot {
