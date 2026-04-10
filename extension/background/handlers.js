@@ -20,7 +20,7 @@ function resolveEnhancedPreset(lists, catalog) {
   const allDownloaded = catalogIds.every(id => !!lists[id]);
   const allEnabled = allDownloaded && catalogIds.every(id => !!lists[id]?.enabled);
   if (allEnabled) return "full";
-  // Check if enabled set matches "basic"
+  // Check if enabled set matches "basic" among all catalog entries
   let matchesBasic = true;
   for (const id of catalogIds) {
     const shouldBeEnabled = catalog[id] ? catalog[id].preset === "basic" : false;
@@ -483,7 +483,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         : null;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
-      const fetchOpts = { credentials: "omit", signal: controller.signal };
+      const fetchOpts = { credentials: "omit", signal: controller.signal, cache: "no-store" };
       const tryFetch = (url) => fetch(url, fetchOpts).then(res => {
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.json();
