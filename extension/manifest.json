@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ProtoConsent",
   "description": "A browser-side consent control panel that enforces your data-use preferences per site and purpose.",
-  "version": "0.4.0",
+  "version": "0.4.1",
 
   "icons": {
     "16": "icons/protoconsent_icon_16.png",
