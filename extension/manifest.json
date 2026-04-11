@@ -50,6 +50,12 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
+      "js": ["content-scripts/cmp-inject.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    },
+    {
+      "matches": ["<all_urls>"],
       "js": ["content-script.js"],
       "run_at": "document_start",
       "all_frames": true
