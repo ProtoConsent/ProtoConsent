@@ -140,14 +140,28 @@ function bitsToBase64url(bits) {
 // can replace template placeholders.
 // ---------------------------------------------------------------------------
 let _cmpSignaturesCache = null;
+
+export function invalidateCmpSignaturesCache() {
+  _cmpSignaturesCache = null;
+}
+
 export async function updateCmpInjectionData(globalPurposes, gpcEnabled) {
   try {
     if (!_cmpSignaturesCache) {
-      const url = chrome.runtime.getURL("config/cmp-signatures.json");
-      const res = await fetch(url);
-      if (!res.ok) return;
-      _cmpSignaturesCache = await res.json();
-      await chrome.storage.local.set({ _cmpSignatures: _cmpSignaturesCache });
+      // Prefer storage (CDN-updated or bundled init version), fall back to bundled file
+      const stored = await new Promise(resolve => {
+        chrome.storage.local.get(["_cmpSignatures"], r => resolve(r._cmpSignatures));
+      });
+      if (stored && typeof stored === "object" && Object.keys(stored).length > 0) {
+        _cmpSignaturesCache = stored;
+      } else {
+        const url = chrome.runtime.getURL("rules/protoconsent_cmp_signatures.json");
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const wrapper = await res.json();
+        _cmpSignaturesCache = wrapper.signatures || wrapper;
+        await chrome.storage.local.set({ _cmpSignatures: _cmpSignaturesCache });
+      }
     }
 
     const globalNeedsGPC = gpcEnabled && gpcPurposes.some(p => !globalPurposes[p]);

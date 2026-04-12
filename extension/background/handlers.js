@@ -50,6 +50,7 @@ import {
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
+import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { scheduleSessionPersist } from "./session.js";
 
 // Handle a bridge query from the content script.
@@ -608,6 +609,60 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               });
             });
           }
+          if (listDef.type === "cmp") {
+            if (!data.signatures || typeof data.signatures !== "object") {
+              throw new Error("Invalid CMP list format: missing signatures");
+            }
+            const cmpCount = data.cmp_count || Object.keys(data.signatures).length;
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, cmpCount: existing.cmpCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeCmp(lists, shouldEnable);
+                  });
+                }
+                return storeCmp(lists, shouldEnable);
+                function storeCmp(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    cmpCount,
+                    type: "cmp",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { signatures: data.signatures },
+                    _cmpSignatures: data.signatures,
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      invalidateCmpSignaturesCache();
+                      sendResponse({ ok: true, cmpCount });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
           if (!data.rules || !Array.isArray(data.rules)) {
             throw new Error("Invalid list format: missing rules array");
           }
@@ -690,6 +745,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         if (!lists[listId]) {
           sendResponse({ ok: true }); return;
         }
+        const removedType = lists[listId].type;
         delete lists[listId];
         const newPreset = resolveEnhancedPreset(lists, catalog);
         return new Promise(resolve => {
@@ -702,6 +758,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             chrome.storage.local.remove("enhancedData_" + listId, () => {
               if (chrome.runtime.lastError) {
                 // Data key removal failed - log but still report success
+              }
+              // CMP bridge cleanup: clear _cmpSignatures so next rebuild falls back to bundled
+              if (removedType === "cmp") {
+                chrome.storage.local.remove("_cmpSignatures", () => {
+                  invalidateCmpSignaturesCache();
+                  rebuildAllDynamicRules();
+                  sendResponse({ ok: true });
+                  resolve();
+                });
+                return;
               }
               rebuildAllDynamicRules();
               sendResponse({ ok: true });

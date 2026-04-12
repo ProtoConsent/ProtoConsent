@@ -135,8 +135,8 @@ export let _catalogLastRemoteFetch = 0;
 export function setCatalogLastRemoteFetch(v) { _catalogLastRemoteFetch = v; }
 
 export const CATALOG_TTL = 24 * 60 * 60 * 1000; // 24 hours
-export const CATALOG_REMOTE_URL = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists.json";
-export const CATALOG_REMOTE_FALLBACK = "https://raw.githubusercontent.com/ProtoConsent/data/main/lists.json";
+export const CATALOG_REMOTE_URL = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/config/enhanced-lists.json";
+export const CATALOG_REMOTE_FALLBACK = "https://raw.githubusercontent.com/ProtoConsent/data/main/config/enhanced-lists.json";
 export const SUPPORTED_MANIFEST_VERSION = 1;
 
 // Serialized whitelist write queue

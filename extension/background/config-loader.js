@@ -170,7 +170,7 @@ export async function loadPurposesConfig() {
   }
 }
 
-// Enhanced lists catalog - merged from local fallback + remote lists.json
+// Enhanced lists catalog - merged from local fallback + remote config/enhanced-lists.json
 export function loadEnhancedListsCatalog(options) {
   const forceRefresh = options && options.forceRefresh;
 

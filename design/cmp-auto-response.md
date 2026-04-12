@@ -36,7 +36,7 @@ background/cmp-injection.js          content-scripts/cmp-inject.js
 
 ## 3. CMP signatures
 
-Signatures are defined in `config/cmp-signatures.json`. Each entry describes how a specific CMP stores and displays consent:
+Signatures are defined in `rules/protoconsent_cmp_signatures.json` (bundled wrapper with metadata). Each entry in the `signatures` object describes how a specific CMP stores and displays consent:
 
 ```json
 {
@@ -285,7 +285,56 @@ The TCF pill in the popup shows the site's own consent status as reported by its
 
 | File | Role |
 |------|------|
-| `config/cmp-signatures.json` | CMP signature definitions (22 entries) |
-| `background/cmp-injection.js` | TC String generator + storage writer |
+| `rules/protoconsent_cmp_signatures.json` | Bundled CMP signatures (22 entries, wrapped with version/type metadata) |
+| `background/cmp-injection.js` | TC String generator + storage writer + `_cmpSignatures` cache |
+| `background/lifecycle.js` | `initBundledCmpData()` - loads bundled signatures on install |
+| `background/handlers.js` | CDN fetch handler for type `"cmp"` + `_cmpSignatures` bridge write |
 | `content-scripts/cmp-inject.js` | Content script: cookie injection, cosmetic CSS, scroll unlock |
 | `manifest.json` | Registers `cmp-inject.js` as content script at `document_start` |
+
+## 13. CDN fetch and Enhanced Protection integration
+
+CMP signatures are integrated into the Enhanced Protection system as list type `"cmp"`, following the same pattern as cosmetic (`easylist_cosmetic`) and informational (`cname_trackers`) lists.
+
+### Data flow
+
+```
+Install / Update                       CDN fetch (sync enabled)
+       │                                       │
+       ▼                                       ▼
+  rules/protoconsent_cmp_signatures.json            ProtoConsent/data repo
+  (bundled wrapper)                    enhanced/protoconsent_cmp_signatures.json
+       │                                       │
+       ▼                                       ▼
+  initBundledCmpData()                 handlers.js FETCH branch
+  (lifecycle.js, onInstalled)          (type === "cmp")
+       │                                       │
+       └──────────┬────────────────────────────┘
+                  ▼
+         chrome.storage.local
+         ├─ enhancedLists.protoconsent_cmp_signatures   (metadata: enabled, version, cmpCount)
+         ├─ enhancedData_protoconsent_cmp_signatures    (payload: { signatures })
+         └─ _cmpSignatures                 (bridge: raw signatures object)
+                  │
+                  ▼
+         cmp-inject.js reads _cmpSignatures
+         (content script, document_start)
+```
+
+### Bundled (offline)
+
+On first install, `initBundledCmpData()` in `lifecycle.js` loads `rules/protoconsent_cmp_signatures.json` via `chrome.runtime.getURL`, validates the `signatures` object, and writes three storage keys: `enhancedLists.protoconsent_cmp_signatures` (metadata with `type: "cmp"`, `bundled: true`), `enhancedData_protoconsent_cmp_signatures` (the full payload), and `_cmpSignatures` (the bridge key that the content script reads directly).
+
+### CDN update
+
+When the user enables dynamic list sync (`dynamicListsConsent`), the Enhanced Protection handler fetches `enhanced/protoconsent_cmp_signatures.json` from jsDelivr (with raw.githubusercontent.com fallback). On success, it validates `data.signatures`, compares versions to skip no-ops, and writes the same three storage keys. It also calls `invalidateCmpSignaturesCache()` to clear the in-memory cache in `cmp-injection.js`, so the next `updateCmpInjectionData()` call picks up the new signatures from storage.
+
+### Key differences from cosmetic lists
+
+- **No rebuild needed**: Cosmetic lists require `updateCosmeticInjection()` to compile CSS and dynamically register a content script. CMP signatures are read directly from storage by a statically registered content script (`cmp-inject.js`). No `rebuildAllDynamicRules()` call after fetch.
+- **No per-tab state**: Cosmetic lists maintain `tabCosmeticData` in the background for per-tab CSS. CMP injection has no per-tab state; the content script reads global storage on every `document_start`.
+- **Bridge key**: The `_cmpSignatures` storage key is the interface between the Enhanced system and the content script. Both `initBundledCmpData()` and the CDN fetch handler write to it.
+
+### Catalog entry
+
+Listed as **ProtoConsent Banners** in the Enhanced Protection UI (`config/enhanced-lists.json`), with `type: "cmp"`, `preset: "basic"` (auto-enabled), `order: 10` (first in the list). The UI shows a green pill and "N banner templates" stats.

@@ -471,7 +471,7 @@ function displayEnhancedScope() {
     const infoDomains = Object.entries(epLists)
       .filter(([id, l]) => (l.enabled || celIds.has(id)) && l.type === "informational")
       .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
-    renderEnhancedScopeLine(el, stats.blockingCount + stats.cosmeticCount, stats.totalRules, stats.infoCount, infoDomains);
+    renderEnhancedScopeLine(el, stats.blockingCount + stats.cosmeticCount + stats.cmpCount, stats.totalRules, stats.infoCount, infoDomains);
   } else {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
       if (chrome.runtime.lastError || !resp) return;
@@ -480,14 +480,16 @@ function displayEnhancedScope() {
       const activeLists = Object.entries(lists)
         .filter(([id, l]) => l.enabled || celIds.has(id))
         .map(([, l]) => l);
-      const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic");
+      const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp");
       const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
+      const cmpLists = activeLists.filter(l => l.type === "cmp");
       const infoLists = activeLists.filter(l => l.type === "informational");
       const blockingRules = blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0);
       const cosmeticRules = cosmeticLists.reduce((sum, l) =>
         sum + (l.genericCount || 0) + (l.domainRuleCount || 0), 0);
-      renderEnhancedScopeLine(el, blockingLists.length + cosmeticLists.length,
-        blockingRules + cosmeticRules,
+      const cmpTemplates = cmpLists.reduce((sum, l) => sum + (l.cmpCount || 0), 0);
+      renderEnhancedScopeLine(el, blockingLists.length + cosmeticLists.length + cmpLists.length,
+        blockingRules + cosmeticRules + cmpTemplates,
         infoLists.length,
         infoLists.reduce((sum, l) => sum + (l.domainCount || 0), 0));
     });

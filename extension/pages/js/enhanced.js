@@ -21,9 +21,10 @@ function getEnhancedStats() {
   const activeLists = Object.entries(epLists)
     .filter(([id, l]) => l.enabled || epConsentLinkedIds.has(id))
     .map(([, l]) => l);
-  const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic");
+  const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp");
   const infoLists = activeLists.filter(l => l.type === "informational");
   const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
+  const cmpLists = activeLists.filter(l => l.type === "cmp");
   let updatesAvailable = 0;
   for (const id of Object.keys(epLists)) {
     if (id.startsWith(CORE_PREFIX) && id !== CORE_PREFIX + "analytics") continue;
@@ -35,6 +36,7 @@ function getEnhancedStats() {
   }
   const cosmeticRules = cosmeticLists.reduce((sum, l) =>
     sum + (l.genericCount || 0) + (l.domainRuleCount || 0), 0);
+  const cmpTemplates = cmpLists.reduce((sum, l) => sum + (l.cmpCount || 0), 0);
 
   // Count protoconsent_* group as 1 for display counts
   const coreActive = activeLists.some((l, i) => {
@@ -54,9 +56,11 @@ function getEnhancedStats() {
     blockingCount: blockingLists.length - coreExtraEnabled,
     infoCount: infoLists.length,
     cosmeticCount: cosmeticLists.length,
+    cmpCount: cmpLists.length,
     totalDomains: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
     cosmeticRules,
-    totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules,
+    cmpTemplates,
+    totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules + cmpTemplates,
     downloadedCount: Object.keys(epLists).length - coreExtraDownloaded,
     catalogCount: Object.keys(epCatalog).length - coreExtraCatalog,
     notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !id.startsWith(CORE_PREFIX))
@@ -360,7 +364,8 @@ function renderEnhancedLists() {
   if (!container) return;
   container.innerHTML = "";
 
-  const catalogEntries = Object.entries(epCatalog);
+  const catalogEntries = Object.entries(epCatalog)
+    .sort(([, a], [, b]) => (a.order ?? 999) - (b.order ?? 999));
   if (catalogEntries.length === 0) {
     container.innerHTML = '<div class="ep-empty">No enhanced lists available.</div>';
     return;
@@ -427,6 +432,13 @@ function renderEnhancedLists() {
       pill.title = "Cosmetic filtering - hides ad elements on pages";
       pill.setAttribute("aria-label", "Cosmetic filtering");
       pill.textContent = "\u25D0 Cosmetic";
+      header.appendChild(pill);
+    } else if (listDef.type === "cmp") {
+      const pill = document.createElement("span");
+      pill.className = "ep-category-pill ep-cmp-pill";
+      pill.title = "CMP auto-response - handles cookie consent banners";
+      pill.setAttribute("aria-label", "Banner auto-response");
+      pill.textContent = "\u26A1 Banners";
       header.appendChild(pill);
     } else if (catInfo) {
       const pill = document.createElement("span");
@@ -529,6 +541,8 @@ function renderEnhancedLists() {
       } else if (listData.type === "cosmetic") {
         if (listData.genericCount) parts.push(listData.genericCount.toLocaleString() + " generic rules");
         if (listData.domainRuleCount) parts.push(listData.domainRuleCount.toLocaleString() + " site rules");
+      } else if (listData.type === "cmp") {
+        if (listData.cmpCount) parts.push(listData.cmpCount.toLocaleString() + " banner templates");
       } else {
         if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " tracking rules");
         if (listData.pathRuleCount) parts.push(listData.pathRuleCount.toLocaleString() + " path rules");
@@ -791,16 +805,16 @@ function updateEnhancedStatus() {
   const statusEl = document.getElementById("ep-status");
   if (!statusEl) return;
 
-  const { enabledCount, blockingCount, infoCount, cosmeticCount, totalDomains, cosmeticRules, updatesAvailable } = getEnhancedStats();
+  const { enabledCount, blockingCount, infoCount, cosmeticCount, cmpCount, totalDomains, cosmeticRules, cmpTemplates, updatesAvailable } = getEnhancedStats();
   const infoDomains = Object.entries(epLists)
     .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && l.type === "informational")
     .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
 
   if (enabledCount > 0) {
     const parts = [];
-    if (blockingCount > 0 || cosmeticCount > 0) {
-      const listCount = blockingCount + cosmeticCount;
-      const ruleCount = totalDomains + cosmeticRules;
+    if (blockingCount > 0 || cosmeticCount > 0 || cmpCount > 0) {
+      const listCount = blockingCount + cosmeticCount + cmpCount;
+      const ruleCount = totalDomains + cosmeticRules + cmpTemplates;
       parts.push(listCount + " " + (listCount === 1 ? "list" : "lists") +
         " \u00b7 " + ruleCount.toLocaleString() + " rules");
     }

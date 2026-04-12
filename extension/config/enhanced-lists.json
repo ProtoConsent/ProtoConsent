@@ -6,6 +6,7 @@
     "license": "GPL-3.0-or-later",
     "category": "analytics",
     "preset": "basic",
+    "order": 30,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_analytics.json"
   },
   "protoconsent_ads": {
@@ -15,6 +16,7 @@
     "license": "GPL-3.0-or-later",
     "category": "ads",
     "preset": "basic",
+    "order": 31,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_ads.json"
   },
   "protoconsent_personalization": {
@@ -24,6 +26,7 @@
     "license": "GPL-3.0-or-later",
     "category": "personalization",
     "preset": "basic",
+    "order": 32,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_personalization.json"
   },
   "protoconsent_third_parties": {
@@ -33,6 +36,7 @@
     "license": "GPL-3.0-or-later",
     "category": "third_parties",
     "preset": "basic",
+    "order": 33,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_third_parties.json"
   },
   "protoconsent_advanced_tracking": {
@@ -42,7 +46,30 @@
     "license": "GPL-3.0-or-later",
     "category": "advanced_tracking",
     "preset": "basic",
+    "order": 34,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_advanced_tracking.json"
+  },
+  "protoconsent_cmp_signatures": {
+    "name": "ProtoConsent Banners",
+    "description": "CMP auto-response templates - cookie injection, cosmetic hiding, scroll unlock",
+    "source": "https://github.com/ProtoConsent/data",
+    "license": "GPL-3.0-or-later",
+    "category": null,
+    "type": "cmp",
+    "preset": "basic",
+    "order": 10,
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_cmp_signatures.json"
+  },
+  "easylist_cosmetic": {
+    "name": "EasyList Cosmetic",
+    "description": "Element hiding - hides ad containers and banners",
+    "source": "https://easylist.to/",
+    "license": "GPL-3.0+ / CC BY-SA 3.0+",
+    "category": "ads",
+    "type": "cosmetic",
+    "preset": "basic",
+    "order": 20,
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easylist_cosmetic.json"
   },
   "easyprivacy": {
     "name": "EasyPrivacy",
@@ -51,6 +78,7 @@
     "license": "GPL-3.0+ / CC BY-SA 3.0+",
     "category": "analytics",
     "preset": "basic",
+    "order": 100,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easyprivacy.json"
   },
   "easylist": {
@@ -60,6 +88,7 @@
     "license": "GPL-3.0+ / CC BY-SA 3.0+",
     "category": "ads",
     "preset": "basic",
+    "order": 110,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easylist.json"
   },
   "adguard_dns": {
@@ -69,6 +98,7 @@
     "license": "GPL-3.0",
     "category": null,
     "preset": "basic",
+    "order": 120,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/adguard_dns.json"
   },
   "steven_black": {
@@ -78,6 +108,7 @@
     "license": "MIT",
     "category": null,
     "preset": "basic",
+    "order": 130,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/steven_black.json"
   },
   "oisd_small": {
@@ -87,6 +118,7 @@
     "license": "GPL-3.0",
     "category": null,
     "preset": "full",
+    "order": 200,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/oisd_small.json"
   },
   "hagezi_pro": {
@@ -96,6 +128,7 @@
     "license": "GPL-3.0",
     "category": null,
     "preset": "full",
+    "order": 210,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/hagezi_pro.json"
   },
   "hagezi_tif": {
@@ -105,6 +138,7 @@
     "license": "GPL-3.0",
     "category": "advanced_tracking",
     "preset": "full",
+    "order": 220,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/hagezi_tif.json"
   },
   "onehosts_lite": {
@@ -114,6 +148,7 @@
     "license": "MPL-2.0",
     "category": null,
     "preset": "full",
+    "order": 230,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/onehosts_lite.json"
   },
   "blp_ads": {
@@ -123,6 +158,7 @@
     "license": "Unlicense",
     "category": "ads",
     "preset": "full",
+    "order": 240,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_ads.json"
   },
   "blp_tracking": {
@@ -132,6 +168,7 @@
     "license": "Unlicense",
     "category": "analytics",
     "preset": "full",
+    "order": 250,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_tracking.json"
   },
   "blp_crypto": {
@@ -141,6 +178,7 @@
     "license": "Unlicense",
     "category": "advanced_tracking",
     "preset": "full",
+    "order": 260,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_crypto.json"
   },
   "blp_phishing": {
@@ -150,6 +188,7 @@
     "license": "Unlicense",
     "category": "security",
     "preset": "full",
+    "order": 270,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_phishing.json"
   },
   "cname_trackers": {
@@ -160,16 +199,7 @@
     "category": null,
     "type": "informational",
     "preset": "basic",
+    "order": 300,
     "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/cname_trackers.json"
-  },
-  "easylist_cosmetic": {
-    "name": "EasyList Cosmetic",
-    "description": "Element hiding - hides ad containers and banners",
-    "source": "https://easylist.to/",
-    "license": "GPL-3.0+ / CC BY-SA 3.0+",
-    "category": "ads",
-    "type": "cosmetic",
-    "preset": "basic",
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easylist_cosmetic.json"
   }
 }

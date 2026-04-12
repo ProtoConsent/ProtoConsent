@@ -58,6 +58,8 @@ chrome.runtime.onStartup?.addListener(() => {
 chrome.runtime.onInstalled.addListener(async (details) => {
   // Load bundled cosmetic data if not yet downloaded remotely
   await initBundledCosmeticData();
+  // Load bundled CMP signatures if not yet downloaded remotely
+  await initBundledCmpData();
 
   rebuildAllDynamicRules();
 
@@ -103,5 +105,39 @@ async function initBundledCosmeticData() {
     });
   } catch (e) {
     console.warn("ProtoConsent: failed to load bundled cosmetic data:", e);
+  }
+}
+
+// Initialize bundled CMP signature data on first install or update.
+// If remote data has already been fetched, this is a no-op.
+async function initBundledCmpData() {
+  const result = await new Promise(resolve => {
+    chrome.storage.local.get(["enhancedData_protoconsent_cmp_signatures", "enhancedLists"], resolve);
+  });
+  if (chrome.runtime.lastError || result.enhancedData_protoconsent_cmp_signatures) return;
+
+  try {
+    const res = await fetch(chrome.runtime.getURL("rules/protoconsent_cmp_signatures.json"));
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!data.signatures || typeof data.signatures !== "object") return;
+    const lists = result.enhancedLists || {};
+    lists.protoconsent_cmp_signatures = {
+      enabled: true,
+      version: data.version || "bundled",
+      lastFetched: Date.now(),
+      cmpCount: data.cmp_count || Object.keys(data.signatures).length,
+      type: "cmp",
+      bundled: true,
+    };
+    await new Promise(resolve => {
+      chrome.storage.local.set({
+        enhancedLists: lists,
+        enhancedData_protoconsent_cmp_signatures: { signatures: data.signatures },
+        _cmpSignatures: data.signatures,
+      }, resolve);
+    });
+  } catch (e) {
+    console.warn("ProtoConsent: failed to load bundled CMP data:", e);
   }
 }
