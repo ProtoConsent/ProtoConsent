@@ -21,12 +21,14 @@ function getEnhancedStats() {
   const activeLists = Object.entries(epLists)
     .filter(([id, l]) => l.enabled || epConsentLinkedIds.has(id))
     .map(([, l]) => l);
-  const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic");
+  const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp");
   const infoLists = activeLists.filter(l => l.type === "informational");
   const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
+  const cmpLists = activeLists.filter(l => l.type === "cmp");
   let updatesAvailable = 0;
   for (const id of Object.keys(epLists)) {
-    if (id.startsWith(CORE_PREFIX) && id !== CORE_PREFIX + "analytics") continue;
+    if (id.startsWith(CORE_PREFIX) && (!epCatalog[id] || epCatalog[id].type !== "cmp")) continue;
+    if (epLists[id].bundled) continue;
     const catalogDef = epCatalog[id];
     if (catalogDef && catalogDef.version && epLists[id].version &&
         catalogDef.version > epLists[id].version) {
@@ -35,16 +37,18 @@ function getEnhancedStats() {
   }
   const cosmeticRules = cosmeticLists.reduce((sum, l) =>
     sum + (l.genericCount || 0) + (l.domainRuleCount || 0), 0);
+  const cmpTemplates = cmpLists.reduce((sum, l) => sum + (l.cmpCount || 0), 0);
 
-  // Count protoconsent_* group as 1 for display counts
+  // Count protoconsent_* group as 1 for display counts (excludes CMP which renders separately)
+  const isCoreId = (id) => id.startsWith(CORE_PREFIX) && epCatalog[id]?.type !== "cmp";
   const coreActive = activeLists.some((l, i) => {
     const id = Object.entries(epLists).filter(([, v]) => v === l).map(([k]) => k)[0];
-    return id && id.startsWith(CORE_PREFIX);
+    return id && isCoreId(id);
   });
   const coreActiveIds = Object.keys(epLists).filter(id =>
-    id.startsWith(CORE_PREFIX) && (epLists[id].enabled || epConsentLinkedIds.has(id)));
-  const coreDownloadedIds = Object.keys(epLists).filter(id => id.startsWith(CORE_PREFIX));
-  const coreCatalogIds = Object.keys(epCatalog).filter(id => id.startsWith(CORE_PREFIX));
+    isCoreId(id) && (epLists[id].enabled || epConsentLinkedIds.has(id)));
+  const coreDownloadedIds = Object.keys(epLists).filter(id => isCoreId(id));
+  const coreCatalogIds = Object.keys(epCatalog).filter(id => isCoreId(id));
   const coreExtraEnabled = Math.max(0, coreActiveIds.length - 1);
   const coreExtraDownloaded = Math.max(0, coreDownloadedIds.length - 1);
   const coreExtraCatalog = Math.max(0, coreCatalogIds.length - 1);
@@ -54,12 +58,14 @@ function getEnhancedStats() {
     blockingCount: blockingLists.length - coreExtraEnabled,
     infoCount: infoLists.length,
     cosmeticCount: cosmeticLists.length,
+    cmpCount: cmpLists.length,
     totalDomains: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
     cosmeticRules,
-    totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules,
+    cmpTemplates,
+    totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules + cmpTemplates,
     downloadedCount: Object.keys(epLists).length - coreExtraDownloaded,
     catalogCount: Object.keys(epCatalog).length - coreExtraCatalog,
-    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !id.startsWith(CORE_PREFIX))
+    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isCoreId(id))
       .concat(coreCatalogIds.length > 0 && !coreDownloadedIds.length ? [coreCatalogIds[0]] : []),
     updatesAvailable,
   };
@@ -272,24 +278,28 @@ function renderPresetAction() {
   const toggleCel = () => {
     const newVal = !epConsentEnhancedLink;
     setConsentEnhancedLink(newVal, () => {
-      epConsentEnhancedLink = newVal;
-      chrome.runtime.sendMessage(
-        { type: "PROTOCONSENT_ENHANCED_GET_STATE", forceRefresh: true },
-        (resp) => {
-          if (chrome.runtime.lastError || !resp) return;
-          epCatalog = resp.catalog || {};
-          epLists = resp.lists || {};
-          epPreset = resp.preset || "off";
-          epDynamicConsent = resp.dynamicConsent === true;
-          epConsentEnhancedLink = resp.consentEnhancedLink === true;
-          epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
-          renderEnhancedPresets();
-          renderEnhancedLists();
-          updateEnhancedStatus();
-          const newCelPill = document.querySelector(".ep-cel-pill");
-          if (newCelPill) newCelPill.focus();
-        }
-      );
+      // Trigger rebuild so lastConsentLinkedListIds updates before we read state
+      chrome.runtime.sendMessage({ type: "PROTOCONSENT_RULES_UPDATED" }, () => {
+        void chrome.runtime.lastError;
+        epConsentEnhancedLink = newVal;
+        chrome.runtime.sendMessage(
+          { type: "PROTOCONSENT_ENHANCED_GET_STATE", forceRefresh: true },
+          (resp) => {
+            if (chrome.runtime.lastError || !resp) return;
+            epCatalog = resp.catalog || {};
+            epLists = resp.lists || {};
+            epPreset = resp.preset || "off";
+            epDynamicConsent = resp.dynamicConsent === true;
+            epConsentEnhancedLink = resp.consentEnhancedLink === true;
+            epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
+            renderEnhancedPresets();
+            renderEnhancedLists();
+            updateEnhancedStatus();
+            const newCelPill = document.querySelector(".ep-cel-pill");
+            if (newCelPill) newCelPill.focus();
+          }
+        );
+      });
     });
   };
   celPill.addEventListener("click", toggleCel);
@@ -360,7 +370,8 @@ function renderEnhancedLists() {
   if (!container) return;
   container.innerHTML = "";
 
-  const catalogEntries = Object.entries(epCatalog);
+  const catalogEntries = Object.entries(epCatalog)
+    .sort(([, a], [, b]) => (a.order ?? 999) - (b.order ?? 999));
   if (catalogEntries.length === 0) {
     container.innerHTML = '<div class="ep-empty">No enhanced lists available.</div>';
     return;
@@ -373,7 +384,7 @@ function renderEnhancedLists() {
   }
 
   for (const [listId, listDef] of catalogEntries) {
-    if (listId.startsWith(CORE_PREFIX)) continue;
+    if (listId.startsWith(CORE_PREFIX) && listDef.type !== "cmp") continue;
     const listData = epLists[listId];
     const card = document.createElement("div");
     card.className = "ep-list-card";
@@ -427,6 +438,13 @@ function renderEnhancedLists() {
       pill.title = "Cosmetic filtering - hides ad elements on pages";
       pill.setAttribute("aria-label", "Cosmetic filtering");
       pill.textContent = "\u25D0 Cosmetic";
+      header.appendChild(pill);
+    } else if (listDef.type === "cmp") {
+      const pill = document.createElement("span");
+      pill.className = "ep-category-pill ep-cmp-pill";
+      pill.title = "CMP auto-response - handles cookie consent banners";
+      pill.setAttribute("aria-label", "Banner auto-response");
+      pill.textContent = "\u26A1 Banners";
       header.appendChild(pill);
     } else if (catInfo) {
       const pill = document.createElement("span");
@@ -529,6 +547,8 @@ function renderEnhancedLists() {
       } else if (listData.type === "cosmetic") {
         if (listData.genericCount) parts.push(listData.genericCount.toLocaleString() + " generic rules");
         if (listData.domainRuleCount) parts.push(listData.domainRuleCount.toLocaleString() + " site rules");
+      } else if (listData.type === "cmp") {
+        if (listData.cmpCount) parts.push(listData.cmpCount.toLocaleString() + " banner templates");
       } else {
         if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " tracking rules");
         if (listData.pathRuleCount) parts.push(listData.pathRuleCount.toLocaleString() + " path rules");
@@ -645,7 +665,7 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
     const coreBtn = document.querySelector('.ep-list-download-btn[data-list-id="protoconsent_core"]');
     let corePending = false;
     for (const listId of notDownloaded) {
-      if (listId.startsWith(CORE_PREFIX)) {
+      if (listId.startsWith(CORE_PREFIX) && epCatalog[listId]?.type !== "cmp") {
         if (!corePending && coreBtn) {
           coreBtn.disabled = true;
           coreBtn.textContent = "Pending\u2026";
@@ -665,9 +685,10 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
     let failed = 0;
     let coreCompleted = 0;
     let coreFailed = 0;
-    const coreTotal = notDownloaded.filter(id => id.startsWith(CORE_PREFIX)).length;
+    const isCoreInDownload = (id) => id.startsWith(CORE_PREFIX) && epCatalog[id]?.type !== "cmp";
+    const coreTotal = notDownloaded.filter(id => isCoreInDownload(id)).length;
     for (const listId of notDownloaded) {
-      const cardBtn = listId.startsWith(CORE_PREFIX)
+      const cardBtn = isCoreInDownload(listId)
         ? null
         : document.querySelector('.ep-list-download-btn[data-list-id="' + listId + '"]');
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
@@ -675,7 +696,7 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
         completed++;
         if (!resp?.ok) {
           failed++;
-          if (listId.startsWith(CORE_PREFIX)) coreFailed++;
+          if (isCoreInDownload(listId)) coreFailed++;
           if (cardBtn) {
             cardBtn.textContent = "Failed";
             cardBtn.classList.remove("is-pending");
@@ -686,7 +707,7 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
           cardBtn.classList.remove("is-pending");
         }
         // Update Core card button progress
-        if (listId.startsWith(CORE_PREFIX)) {
+        if (isCoreInDownload(listId)) {
           coreCompleted++;
           if (coreBtn && coreCompleted >= coreTotal) {
             coreBtn.textContent = coreFailed > 0 ? coreFailed + " failed" : "Done";
@@ -791,16 +812,16 @@ function updateEnhancedStatus() {
   const statusEl = document.getElementById("ep-status");
   if (!statusEl) return;
 
-  const { enabledCount, blockingCount, infoCount, cosmeticCount, totalDomains, cosmeticRules, updatesAvailable } = getEnhancedStats();
+  const { enabledCount, blockingCount, infoCount, cosmeticCount, cmpCount, totalDomains, cosmeticRules, cmpTemplates, updatesAvailable } = getEnhancedStats();
   const infoDomains = Object.entries(epLists)
     .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && l.type === "informational")
     .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
 
   if (enabledCount > 0) {
     const parts = [];
-    if (blockingCount > 0 || cosmeticCount > 0) {
-      const listCount = blockingCount + cosmeticCount;
-      const ruleCount = totalDomains + cosmeticRules;
+    if (blockingCount > 0 || cosmeticCount > 0 || cmpCount > 0) {
+      const listCount = blockingCount + cosmeticCount + cmpCount;
+      const ruleCount = totalDomains + cosmeticRules + cmpTemplates;
       parts.push(listCount + " " + (listCount === 1 ? "list" : "lists") +
         " \u00b7 " + ruleCount.toLocaleString() + " rules");
     }

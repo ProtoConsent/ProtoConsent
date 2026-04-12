@@ -33,9 +33,9 @@ function resolveEnhancedPreset(lists, catalog) {
 
 import {
   PURPOSES_FOR_ENFORCEMENT,
-  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData,
+  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
-  tabNavigating, logPorts,
+  tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
   _catalogLocalCount, _catalogRemoteCount, _catalogLastRemoteFetch,
 } from "./state.js";
@@ -50,6 +50,7 @@ import {
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
+import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { scheduleSessionPersist } from "./session.js";
 
 // Handle a bridge query from the content script.
@@ -97,7 +98,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (PURPOSES_FOR_ENFORCEMENT.length === 0) {
       rebuildAllDynamicRules();
     }
-    Promise.all([loadBlocklistsConfig(), getWhitelistFromStorage()]).then(([bl, whitelist]) => {
+    Promise.all([sessionRestoreReady, loadBlocklistsConfig(), getWhitelistFromStorage()]).then(([, bl, whitelist]) => {
       const purposeDomainCounts = {};
       const purposePathCounts = {};
       for (const key of PURPOSES_FOR_ENFORCEMENT) {
@@ -186,10 +187,47 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return;
   }
 
+  // CMP auto-response applied notification from cmp-inject.js
+  if (message.type === "PROTOCONSENT_CMP_APPLIED") {
+    const tabId = _sender && _sender.tab ? _sender.tab.id : null;
+    if (tabId && message.domain) {
+      tabCmpData.set(tabId, {
+        domain: message.domain,
+        cmpIds: message.cmpIds || [],
+        cookieCount: message.cookieCount || 0,
+        selectorCount: message.selectorCount || 0,
+        scrollUnlock: !!message.scrollUnlock,
+        ts: Date.now(),
+      });
+      scheduleSessionPersist();
+      for (const port of logPorts) {
+        try {
+          port.postMessage({
+            type: "cmp",
+            domain: message.domain,
+            cmpIds: message.cmpIds || [],
+            cookieCount: message.cookieCount || 0,
+            selectorCount: message.selectorCount || 0,
+            scrollUnlock: !!message.scrollUnlock,
+            tabId,
+          });
+        } catch (_) {}
+      }
+    }
+    return;
+  }
+
   // Popup requests cosmetic state for a tab
   if (message.type === "PROTOCONSENT_GET_COSMETIC") {
     const info = tabCosmeticData.get(message.tabId) || null;
     sendResponse({ cosmetic: info });
+    return;
+  }
+
+  // Popup requests CMP auto-response state for a tab
+  if (message.type === "PROTOCONSENT_GET_CMP") {
+    const info = tabCmpData.get(message.tabId) || null;
+    sendResponse({ cmp: info });
     return;
   }
 
@@ -608,6 +646,60 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               });
             });
           }
+          if (listDef.type === "cmp") {
+            if (!data.signatures || typeof data.signatures !== "object") {
+              throw new Error("Invalid CMP list format: missing signatures");
+            }
+            const cmpCount = data.cmp_count || Object.keys(data.signatures).length;
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, cmpCount: existing.cmpCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeCmp(lists, shouldEnable);
+                  });
+                }
+                return storeCmp(lists, shouldEnable);
+                function storeCmp(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    cmpCount,
+                    type: "cmp",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { signatures: data.signatures },
+                    _cmpSignatures: data.signatures,
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      invalidateCmpSignaturesCache();
+                      sendResponse({ ok: true, cmpCount });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
           if (!data.rules || !Array.isArray(data.rules)) {
             throw new Error("Invalid list format: missing rules array");
           }
@@ -690,6 +782,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         if (!lists[listId]) {
           sendResponse({ ok: true }); return;
         }
+        const removedType = lists[listId].type;
         delete lists[listId];
         const newPreset = resolveEnhancedPreset(lists, catalog);
         return new Promise(resolve => {
@@ -702,6 +795,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             chrome.storage.local.remove("enhancedData_" + listId, () => {
               if (chrome.runtime.lastError) {
                 // Data key removal failed - log but still report success
+              }
+              // CMP bridge cleanup: clear _cmpSignatures so next rebuild falls back to bundled
+              if (removedType === "cmp") {
+                chrome.storage.local.remove("_cmpSignatures", () => {
+                  invalidateCmpSignaturesCache();
+                  rebuildAllDynamicRules();
+                  sendResponse({ ok: true });
+                  resolve();
+                });
+                return;
               }
               rebuildAllDynamicRules();
               sendResponse({ ok: true });

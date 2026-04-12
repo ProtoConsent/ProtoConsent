@@ -25,7 +25,7 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
     - [Selection criteria for path rules](#selection-criteria-for-path-rules)
     - [Interaction with per-site overrides](#interaction-with-per-site-overrides)
   - [7. Enhanced protection lists (third-party)](#7-enhanced-protection-lists-third-party)
-    - [Current lists (v0.3)](#current-lists-v03)
+    - [Current lists (v0.4)](#current-lists-v04)
     - [Removed from earlier candidates](#removed-from-earlier-candidates)
     - [Distribution model](#distribution-model)
     - [Presets](#presets)
@@ -33,6 +33,7 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
     - [Domain deduplication](#domain-deduplication)
     - [ABP format parsing](#abp-format-parsing)
     - [Cosmetic filtering](#cosmetic-filtering)
+    - [CMP auto-response signatures](#cmp-auto-response-signatures)
   - [8. ProtoConsent Core lists](#8-protoconsent-core-lists)
   - [9. Adding a new Enhanced list](#9-adding-a-new-enhanced-list)
   - [10. Automated refresh](#10-automated-refresh)
@@ -165,9 +166,9 @@ For **block overrides**, path-extracted domains that overlap with the initiator 
 
 Beyond the core static rulesets shipped with the extension, ProtoConsent supports **enhanced protection** via third-party blocklists converted to DNR-compatible JSON. These lists are optional - the user opts in from the Enhanced tab in the popup.
 
-### Current lists (v0.3)
+### Current lists (v0.4)
 
-13 lists organized in two presets.
+13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), organized in two presets.
 
 **Balanced preset** (5 lists - enabled by default when user selects Balanced):
 
@@ -178,6 +179,7 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 | [AdGuard DNS Filter](https://github.com/AdguardTeam/AdGuardSDNSFilter) | GPL-3.0 | ~165K | - | - |
 | [Steven Black Unified](https://github.com/StevenBlack/hosts) | MIT | ~49K | - | - |
 | [EasyList Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | - | - | `ads` |
+| [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | - | - | - |
 
 **Full preset** (adds 8 lists):
 
@@ -194,7 +196,7 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 
 Domain counts are approximate and change with each upstream update.
 
-Lists with a **category** display the corresponding Consent Commons icon in the UI. The `security` category is ProtoConsent-specific (not part of Consent Commons). Cosmetic lists display a dedicated pill instead of a category icon.
+Lists with a **category** display the corresponding Consent Commons icon in the UI. The `security` category is ProtoConsent-specific (not part of Consent Commons). Cosmetic lists display a dedicated pill instead of a category icon. CMP lists display a dedicated pill ("Banners") and show template counts instead of domain/rule counts.
 
 ### Removed from earlier candidates
 
@@ -211,9 +213,9 @@ Enhanced lists are **not** shipped inside the extension package. Instead:
 2. The JSON files are hosted on GitHub and served via **jsDelivr CDN** (primary) with **raw.githubusercontent.com** as fallback.
 3. The extension fetches the JSON when the user downloads a list from the Enhanced tab. Lists are stored in `chrome.storage.local` with a split architecture: metadata in `enhancedLists`, heavy data in `enhancedData_{listId}`.
 
-Remote fetching is gated behind a consent flag (`dynamicListsConsent` in storage). The user opts in during onboarding or from Purpose Settings. When disabled, the extension only uses bundled list data shipped with the package and does not contact any CDN. The cosmetic list (`easylist_cosmetic.json`) is bundled in `extension/rules/` and loaded into storage on first install, ensuring cosmetic filtering works out of the box without remote fetching.
+Remote fetching is gated behind a consent flag (`dynamicListsConsent` in storage). The user opts in during onboarding or from Purpose Settings. When disabled, the extension only uses bundled list data shipped with the package and does not contact any CDN. The cosmetic list (`easylist_cosmetic.json`) and the CMP signatures list (`protoconsent_cmp_signatures.json`) are bundled in `extension/rules/` and loaded into storage on first install, ensuring cosmetic filtering and CMP auto-response work out of the box without remote fetching.
 
-This keeps the extension package small, avoids bundling third-party list content directly (except the cosmetic baseline), and allows list updates without publishing a new extension version.
+This keeps the extension package small, avoids bundling third-party list content directly (except the cosmetic and CMP baselines), and allows list updates without publishing a new extension version.
 
 ### Presets
 
@@ -259,6 +261,30 @@ The cosmetic list is a separate enhanced list (`type: "cosmetic"` in `enhanced-l
 
 Cosmetic filtering is purely visual cleanup - it does not block network requests or affect privacy. It is active by default (Balanced preset) and can be disabled independently in the Enhanced tab.
 
+### CMP auto-response signatures
+
+ProtoConsent ships CMP auto-response signatures as an enhanced list (`type: "cmp"` in `enhanced-lists.json`). The list contains templates that describe how each consent management platform stores consent, including cookie patterns, banner selectors, and scroll lock behavior.
+
+Unlike blocking or cosmetic lists, CMP signatures do not produce DNR rules or CSS. Instead, a statically registered content script (`cmp-inject.js`) reads the signatures from storage at `document_start` and injects consent cookies before any CMP script loads.
+
+The CMP list follows the same distribution model as cosmetic:
+
+1. A bundled copy in `extension/rules/protoconsent_cmp_signatures.json` is loaded into storage on first install via `initBundledCmpData()` in `lifecycle.js`.
+2. When sync is enabled, the extension fetches `enhanced/protoconsent_cmp_signatures.json` from CDN and writes the signatures to storage, clearing the in-memory cache so the next page load picks up the update.
+3. The bridge key `_cmpSignatures` in `chrome.storage.local` is the interface between the Enhanced system and the content script. Both bundled init and CDN fetch write to it.
+
+Key differences from cosmetic:
+
+- **No rebuild step**: Writing to `_cmpSignatures` is sufficient. The content script reads it directly on every page load.
+- **Statically registered**: `cmp-inject.js` is declared in `manifest.json`, not dynamically registered like `cosmetic-inject.js`.
+- **No `category`**: CMP signatures are not purpose-specific. The consent-enhanced link does not auto-activate this list.
+
+For the full signature format, supported CMPs, and three-layer response architecture, see [cmp-auto-response.md](cmp-auto-response.md).
+
+| List | License | Templates | Scope |
+| --- | --- | --- | --- |
+| [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | 22 | Global (most), domain-scoped (Bing) |
+
 ## 8. ProtoConsent Core lists
 
 The extension ships static rulesets (`block_*.json`) for day-1 blocking. The same domains and path rules are also published as 5 Enhanced-format JSON files in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo, one per purpose:
@@ -295,7 +321,7 @@ A GitHub Actions workflow in the data repo refreshes all Enhanced lists weekly:
 
 - **Schedule:** Tuesdays at 04:42 UTC (cron: `42 4 * * 2`)
 - **Manual trigger:** `workflow_dispatch` with optional `list` parameter for single-list refresh
-- **Steps:** `convert.js` (blocklists) → `convert-cname.js` (CNAME trackers) → `convert-cosmetic.js` (cosmetic rules) → `generate-manifest.js` (rebuild `lists.json`) → commit and push if changes detected
+- **Steps:** `convert.js` (blocklists) → `convert-cname.js` (CNAME trackers) → `convert-cosmetic.js` (cosmetic rules) → `generate-manifest.js` (rebuild `config/enhanced-lists.json`) → commit and push if changes detected
 - **Workflow file:** `.github/workflows/refresh-lists.yml`
 
 The extension picks up updated lists on the next sync check (controlled by `dynamicListsConsent`). jsDelivr CDN caching may delay propagation by a few minutes after the commit.

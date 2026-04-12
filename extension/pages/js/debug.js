@@ -134,6 +134,13 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // CMP auto-response lists
+    if (bg && bg.cmpLists) {
+      lines.push("— CMP auto-response —");
+      lines.push("  CMP lists: " + (bg.cmpLists.length > 0 ? bg.cmpLists.join(", ") : "(none)"));
+      lines.push("");
+    }
+
     // Dynamic lists catalog
     if (bg) {
       const consent = bg.dynamicListsConsent ? "on" : "off";
@@ -219,6 +226,24 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
             tcfLines.push("");
             // Append to existing content
             content.textContent += "\n\n" + tcfLines.join("\n");
+          }
+        });
+        // CMP auto-response injection (current tab)
+        chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_CMP", tabId: tabs[0].id }, (resp) => {
+          if (chrome.runtime.lastError) { void chrome.runtime.lastError; }
+          if (resp && resp.cmp) {
+            const c = resp.cmp;
+            const cmpLines = [];
+            cmpLines.push("— CMP injection (this tab) —");
+            cmpLines.push("  domain: " + c.domain);
+            cmpLines.push("  matched CMPs: " + c.cmpIds.join(", "));
+            cmpLines.push("  cookies: " + c.cookieCount);
+            cmpLines.push("  selectors: " + c.selectorCount);
+            cmpLines.push("  scroll unlock: " + (c.scrollUnlock ? "yes" : "no"));
+            cmpLines.push("  timestamp: " + new Date(c.ts).toLocaleTimeString());
+            cmpLines.push("");
+            const pre = document.querySelector("#pc-log-debug");
+            if (pre) pre.textContent += "\n" + cmpLines.join("\n");
           }
         });
       }

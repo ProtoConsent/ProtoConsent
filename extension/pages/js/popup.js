@@ -471,7 +471,7 @@ function displayEnhancedScope() {
     const infoDomains = Object.entries(epLists)
       .filter(([id, l]) => (l.enabled || celIds.has(id)) && l.type === "informational")
       .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
-    renderEnhancedScopeLine(el, stats.blockingCount + stats.cosmeticCount, stats.totalRules, stats.infoCount, infoDomains);
+    renderEnhancedScopeLine(el, stats.blockingCount + stats.cosmeticCount + stats.cmpCount, stats.totalRules, stats.infoCount, infoDomains);
   } else {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
       if (chrome.runtime.lastError || !resp) return;
@@ -480,14 +480,16 @@ function displayEnhancedScope() {
       const activeLists = Object.entries(lists)
         .filter(([id, l]) => l.enabled || celIds.has(id))
         .map(([, l]) => l);
-      const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic");
+      const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp");
       const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
+      const cmpLists = activeLists.filter(l => l.type === "cmp");
       const infoLists = activeLists.filter(l => l.type === "informational");
       const blockingRules = blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0);
       const cosmeticRules = cosmeticLists.reduce((sum, l) =>
         sum + (l.genericCount || 0) + (l.domainRuleCount || 0), 0);
-      renderEnhancedScopeLine(el, blockingLists.length + cosmeticLists.length,
-        blockingRules + cosmeticRules,
+      const cmpTemplates = cmpLists.reduce((sum, l) => sum + (l.cmpCount || 0), 0);
+      renderEnhancedScopeLine(el, blockingLists.length + cosmeticLists.length + cmpLists.length,
+        blockingRules + cosmeticRules + cmpTemplates,
         infoLists.length,
         infoLists.reduce((sum, l) => sum + (l.domainCount || 0), 0));
     });
@@ -578,6 +580,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleDescBtn = document.getElementById("pc-toggle-descriptions");
   if (toggleDescBtn) {
     toggleDescBtn.addEventListener("click", () => {
+      if (activeMode === "enhanced") {
+        // Enhanced tab: toggle .ep-list-card is-expanded
+        const cards = document.querySelectorAll(".ep-list-card");
+        let collapsedCount = 0;
+        cards.forEach((card) => {
+          if (!card.classList.contains("is-expanded")) collapsedCount++;
+        });
+        const shouldExpand = collapsedCount > cards.length / 2;
+        cards.forEach((card) => {
+          card.classList.toggle("is-expanded", shouldExpand);
+          const header = card.querySelector(".ep-list-header");
+          if (header) header.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
+        });
+        toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
+        toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
+        return;
+      }
+      // Consent tab: toggle .pc-purpose-description is-collapsed
       const descriptions = document.querySelectorAll(".pc-purpose-description");
       const chevrons = document.querySelectorAll(".pc-purpose-chevron");
       const leftEls = document.querySelectorAll(".pc-purpose-left");

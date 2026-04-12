@@ -46,6 +46,9 @@ export const tabTcfData = new Map();
 // Per-tab cosmetic filtering applied data
 export const tabCosmeticData = new Map();
 
+// Per-tab CMP auto-response applied data
+export const tabCmpData = new Map();
+
 // Maps dynamic block rule IDs to their purpose (rebuilt on each rule update).
 export let dynamicBlockRuleMap = {};
 export function setDynamicBlockRuleMap(v) { dynamicBlockRuleMap = v; }
@@ -91,6 +94,10 @@ export function setGpcRemoveDomains(v) { gpcRemoveDomains = v; }
 // Per-tab tracking of unique domains that received GPC signals.
 export const tabGpcDomains = new Map();
 
+// Session restore promise - handlers must await this before reading tab data.
+export let sessionRestoreReady = Promise.resolve();
+export function setSessionRestoreReady(v) { sessionRestoreReady = v; }
+
 // Last rebuild debug snapshot (served to popup on request)
 export let lastRebuildDebug = {};
 export function setLastRebuildDebug(v) { lastRebuildDebug = v; }
@@ -135,8 +142,8 @@ export let _catalogLastRemoteFetch = 0;
 export function setCatalogLastRemoteFetch(v) { _catalogLastRemoteFetch = v; }
 
 export const CATALOG_TTL = 24 * 60 * 60 * 1000; // 24 hours
-export const CATALOG_REMOTE_URL = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists.json";
-export const CATALOG_REMOTE_FALLBACK = "https://raw.githubusercontent.com/ProtoConsent/data/main/lists.json";
+export const CATALOG_REMOTE_URL = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/config/enhanced-lists.json";
+export const CATALOG_REMOTE_FALLBACK = "https://raw.githubusercontent.com/ProtoConsent/data/main/config/enhanced-lists.json";
 export const SUPPORTED_MANIFEST_VERSION = 1;
 
 // Serialized whitelist write queue
