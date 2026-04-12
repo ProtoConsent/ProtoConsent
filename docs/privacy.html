@@ -89,6 +89,9 @@
               <li>Creates declarative network rules to block requests matching denied purposes and to allow whitelisted domains</li>
               <li>Sends a <code>Sec-GPC: 1</code> header to sites where privacy-relevant purposes are denied</li>
               <li>Writes temporary consent cookies on sites that use known consent management platforms (CMPs), based on your purpose preferences, to suppress consent banners. These cookies are deleted automatically after 5 seconds. No data is sent to any server; cookies are written locally in your browser.</li>
+              <li>Detects CMP consent banners via CSS selectors and optionally hides them with injected styles. No data leaves your browser.</li>
+              <li>Reads consent cookies set by CMPs to display their consent status in the Log tab (read-only, no modification).</li>
+              <li>Reads localStorage entries from known CMPs (e.g. Usercentrics, CCM19) and probes standard consent APIs (TCF, GPP) to detect consent frameworks. This runs in the page context (MAIN world), is strictly read-only, and no data is sent anywhere.</li>
               <li>Removes high-entropy Client Hints headers (<code>Sec-CH-UA-*</code>) when advanced tracking is denied, reducing browser fingerprinting surface. No data is sent; headers are removed before the request leaves your browser.</li>
               <li>Fetches <code>.well-known/protoconsent.json</code> from sites when you open the side panel in the popup, to display their declared data practices (cached locally, never forwarded)</li>
               <li>Queries matched blocking rules to display request counts in the popup</li>
@@ -116,7 +119,7 @@
                 </tr>
                 <tr>
                   <td><code>scripting</code></td>
-                  <td>Register the GPC content script and TCF detection script at runtime</td>
+                  <td>Register content scripts at runtime (GPC signal, TCF/GPP detection, CMP banner detection)</td>
                 </tr>
                 <tr>
                   <td><code>declarativeNetRequest</code></td>
