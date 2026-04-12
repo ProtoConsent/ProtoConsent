@@ -31,6 +31,7 @@ import {
   loadBlocklistsConfig, loadPresetsConfig, loadPurposesConfig,
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
+import { updateCmpInjectionData } from "./cmp-injection.js";
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
 export async function rebuildAllDynamicRules() {
@@ -582,6 +583,7 @@ async function _rebuildAllDynamicRulesImpl() {
 
     await updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled);
     await updateCosmeticInjection(enhancedListsMeta, enhancedData, permissiveSites, consentLinkedListIds);
+    await updateCmpInjectionData(globalPurposes, gpcEnabled);
 
   } catch (e) {
     console.error("ProtoConsent: failed to rebuild dynamic rules:", e);

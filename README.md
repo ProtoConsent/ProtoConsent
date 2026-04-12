@@ -27,6 +27,7 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 - **Optional enhanced protection** with 19 curated enhanced lists (5 ProtoConsent Core purpose-based lists plus EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project, AdGuard CNAME Trackers) including cosmetic filtering (element-hiding CSS). Three presets (Off, Balanced, Full) or individual list selection. Remote fetch gated behind an explicit consent toggle. Consent-enhanced link optionally auto-activates lists matching denied purposes.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.
 - **Visibility:** real‑time log monitoring, blocked domains grouped by purpose with [Consent Commons](https://consentcommons.com/) icons, GPC signal tracking, Client Hints status, cookie consent detection, CNAME trackers and domain whitelist management.
+- **Consent banner auto-response:** cookie consent popups from 22 CMP frameworks (OneTrust, Cookiebot, Quantcast, IAB TCF v2.2, CookieYes, Complianz, Fides, Microsoft/Bing, and others) are answered automatically based on your purpose preferences. No DOM interaction, no click simulation, no waiting for the banner to render. See [cmp-auto-response.md](design/cmp-auto-response.md).
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` to declare their data practices. No SDK or code changes required.
 - **JavaScript SDK** (MIT licensed) for web pages to query user preferences. TypeScript declarations included.
 - **Inter-extension API:** other browser extensions can query the user's consent state via `chrome.runtime.sendMessage`, with TOFU trust model and rate limiting.
@@ -103,6 +104,7 @@ See [architecture.md](design/architecture.md) for the full technical description
 
 **Implementation**
 - [Technical architecture](design/architecture.md) – components, data model, flows, design decisions
+- [CMP auto-response](design/cmp-auto-response.md) – consent banner suppression, CMP signatures, TC String generation
 - [Testing guide](design/testing-guide.md) – installation, test scenarios
 - [Icons and layers](design/icons-and-layers.md) – visual language and icon mapping
 

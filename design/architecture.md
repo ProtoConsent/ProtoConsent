@@ -44,6 +44,13 @@ The extension provides a popup interface to manage profiles and purposes per sit
     - [12.4 Management UI](#124-management-ui)
     - [12.5 Observability](#125-observability)
     - [12.6 Supported message types](#126-supported-message-types)
+  - [13. CMP auto-response](#13-cmp-auto-response)
+    - [13.1 Pipeline](#131-pipeline)
+    - [13.2 Three-layer response](#132-three-layer-response)
+    - [13.3 TC String generation](#133-tc-string-generation)
+    - [13.4 Limitations](#134-limitations)
+    - [12.5 Observability](#125-observability)
+    - [12.6 Supported message types](#126-supported-message-types)
 
 ## 2. Components
 
@@ -428,4 +435,31 @@ Events are buffered in memory (up to 50 entries) and persisted to `chrome.storag
 | `protoconsent:error` | provider → consumer | Returned for disabled API, unauthorized, invalid, or rate-limited queries. Codes: `disabled`, `need_authorization`, `invalid_domain`, `rate_limited`, `unknown_type`, `internal`. |
 
 For message format details, see [inter-extension-protocol.md](spec/inter-extension-protocol.md).
+
+## 13. CMP auto-response
+
+ProtoConsent can automatically respond to consent banners by injecting the consent cookies that CMPs expect to find on page load. This prevents the banner from appearing without simulating clicks or interacting with the banner DOM.
+
+For the full design, signature format, TC String specification, and list of supported CMPs, see [cmp-auto-response.md](cmp-auto-response.md).
+
+### 13.1 Pipeline
+
+The background module (`background/cmp-injection.js`) pre-computes injection data whenever global purposes change: it loads CMP signatures from `config/cmp-signatures.json`, generates an IAB TCF v2.2 TC String, and writes everything to `chrome.storage.local`. The content script (`content-scripts/cmp-inject.js`) runs at `document_start` in ISOLATED world, reads the pre-computed data, and executes the three-layer response.
+
+### 13.2 Three-layer response
+
+1. **Cookie injection**: For each applicable CMP signature, the content script resolves template placeholders with user purpose values and writes the resulting cookies. A cleanup timer deletes the injected cookies after 5 seconds to reduce HTTP overhead on subsequent requests.
+2. **Cosmetic CSS**: Banner and overlay selectors from all applicable signatures are combined into a single `<style>` element as a safety net.
+3. **Scroll unlock**: CSS class removal + inline style overrides for scroll lock patterns, with a `MutationObserver` watching for CMP re-locking attempts.
+
+### 13.3 TC String generation
+
+For CMPs that read the `euconsent-v2` cookie, ProtoConsent generates a valid IAB TCF v2.2 Transparency and Consent String. The generator maps ProtoConsent's purpose model to TCF's 24-purpose bitfield, respects the v2.2 legitimate interest restrictions (purposes 3-6 cannot use LI), and encodes the result as base64url with no external dependencies.
+
+### 13.4 Limitations
+
+- The content script currently runs in ISOLATED world. `window.__tcfapi` and `localStorage` are not accessible from this context; MAIN world injection is the known resolution (see [cmp-auto-response.md](cmp-auto-response.md#92-known-solutions)).
+- No click simulation (by design -- ProtoConsent declares consent via data, not interaction).
+- Proprietary consent systems (custom cookies, protobuf-encoded tokens) are not covered unless a known signature exists.
+- The TC String uses empty vendor sections; CMPs that require specific vendor consent may not fully accept it.
 

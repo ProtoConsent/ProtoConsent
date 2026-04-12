@@ -55,6 +55,13 @@
 				<h2>Consent <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
 			</div>
 			<div id="preset-list"></div>
+			<details class="ps-accordion">
+				<summary class="ps-accordion-header">Purpose reference</summary>
+				<div class="ps-accordion-body">
+					<span class="ps-section-note">Changes happen via <a href="#default-profile-section" class="ps-cel-note-link">profile selection above</a>.</span>
+					<div id="purpose-list"></div>
+				</div>
+			</details>
 		</section>
 
 		<section id="privacy-signals-section" class="ps-section ps-hidden">
@@ -62,16 +69,11 @@
 			<div id="privacy-signals-list" class="ps-dynamic-grid"></div>
 		</section>
 
-		<section id="enhanced-presets-section" class="ps-section ps-hidden">
+		<section id="enhanced-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
-				<h2>Enhanced Protection <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
+				<h2>Enhanced Protection</h2>
 			</div>
 			<p class="ps-enhanced-desc">Optional third-party blocklists for additional protection. These are independent of your consent profile.</p>
-			<div id="enhanced-preset-list"></div>
-		</section>
-
-		<section id="dynamic-lists-section" class="ps-section ps-hidden">
-			<h2>Enhanced Lists</h2>
 			<div class="ps-dynamic-grid">
 				<div class="ps-gpc-toggle-row">
 					<div>
@@ -92,15 +94,65 @@
 			</div>
 			<div id="ps-cel-note" class="ps-cel-note ps-hidden"></div>
 			<div id="ps-cel-mode-panel" class="ps-cel-mode-panel ps-hidden"></div>
+			<details class="ps-accordion">
+				<summary class="ps-accordion-header">Enhanced presets</summary>
+				<div class="ps-accordion-body">
+					<div id="enhanced-preset-list"></div>
+				</div>
+			</details>
 		</section>
 
-		<section id="purposes-section" class="ps-section ps-hidden">
+		<section id="cmp-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
-				<h2>Purposes <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
-				<span class="ps-section-note">Changes happen via <a href="#default-profile-section" class="ps-cel-note-link">profile selection above</a>.</span>
+				<h2>CMP Auto-response</h2>
 			</div>
-			<div id="purpose-list"></div>
+			<div class="ps-dynamic-grid">
+				<div class="ps-gpc-toggle-row">
+					<div>
+						<span class="ps-gpc-info-name">Master switch</span>
+						<div class="ps-gpc-info-desc">Cookie banners disappear automatically. ProtoConsent answers them for you, accepting or rejecting each purpose based on your profile.</div>
+					</div>
+					<label class="ps-gpc-toggle-label" for="cmp-auto-toggle" id="cmp-auto-label">Enabled</label>
+					<input type="checkbox" id="cmp-auto-toggle" class="ps-gpc-toggle" aria-label="CMP auto-response" checked>
+				</div>
+			</div>
+			<div id="cmp-detail" class="ps-cmp-detail">
+				<details class="ps-accordion">
+					<summary class="ps-accordion-header">CMP list</summary>
+					<div class="ps-accordion-body">
+						<div id="cmp-list" class="ps-cmp-list"></div>
+					</div>
+				</details>
+				<details class="ps-accordion">
+					<summary class="ps-accordion-header">Advanced</summary>
+					<div class="ps-accordion-body">
+						<div class="ps-cmp-advanced-row">
+							<div>
+								<label for="cmp-uuid-input" class="ps-gpc-info-name">Custom UUID</label>
+								<div class="ps-gpc-info-desc">Consent cookies include an identifier. Leave empty (recommended): a new random ID is generated each session, so sites cannot link your visits. Fixed: the same ID is reused, which some sites may require but allows them to recognize you across visits.</div>
+							</div>
+							<div class="ps-cmp-input-wrap">
+								<input type="text" id="cmp-uuid-input" class="ps-cmp-text-input" placeholder="Random" spellcheck="false" autocomplete="off" maxlength="36" pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}">
+								<span id="cmp-uuid-error" class="ps-cmp-field-error ps-hidden"></span>
+								<span id="cmp-uuid-saved" class="ps-cmp-field-saved ps-hidden">Saved</span>
+							</div>
+						</div>
+						<div class="ps-cmp-advanced-row">
+							<div>
+								<label for="cmp-maxage-input" class="ps-gpc-info-name">Cookie lifetime (days)</label>
+								<div class="ps-gpc-info-desc">How long injected consent cookies persist. Range: 1-365 days. Default: 90.</div>
+							</div>
+							<div class="ps-cmp-input-wrap">
+								<input type="number" id="cmp-maxage-input" class="ps-cmp-text-input" min="1" max="365" step="1" placeholder="90">
+								<span id="cmp-maxage-error" class="ps-cmp-field-error ps-hidden"></span>
+								<span id="cmp-maxage-saved" class="ps-cmp-field-saved ps-hidden">Saved</span>
+							</div>
+						</div>
+					</div>
+				</details>
+			</div>
 		</section>
+
 		<section id="inter-ext-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
 				<h2>Inter-extension API</h2>
@@ -118,29 +170,29 @@
 
 			<div id="inter-ext-container" class="ps-hidden">
 				<!-- Pending -->
-				<details id="inter-ext-pending" class="ps-ext-accordion">
-					<summary class="ps-ext-accordion-header">
+				<details id="inter-ext-pending" class="ps-accordion">
+					<summary class="ps-accordion-header">
 						Pending requests <span id="inter-ext-pending-count" class="ps-ext-badge ps-ext-badge-warn" aria-label="pending count">0</span>
 					</summary>
-					<div id="inter-ext-pending-list" class="ps-ext-accordion-body">
+					<div id="inter-ext-pending-list" class="ps-accordion-body">
 						<p class="ps-ext-empty">No pending requests.</p>
 					</div>
 				</details>
 
 				<!-- Authorized -->
-				<details id="inter-ext-allow" class="ps-ext-accordion">
-					<summary class="ps-ext-accordion-header">Authorized extensions <span id="inter-ext-allow-count" class="ps-ext-badge" aria-label="authorized count">0</span></summary>
-					<div id="inter-ext-allow-list" class="ps-ext-accordion-body">
+				<details id="inter-ext-allow" class="ps-accordion">
+					<summary class="ps-accordion-header">Authorized extensions <span id="inter-ext-allow-count" class="ps-ext-badge" aria-label="authorized count">0</span></summary>
+					<div id="inter-ext-allow-list" class="ps-accordion-body">
 						<p class="ps-ext-empty">No authorized extensions.</p>
 					</div>
 				</details>
 
 				<!-- Blocked -->
-				<details id="inter-ext-deny" class="ps-ext-accordion">
-					<summary class="ps-ext-accordion-header">
+				<details id="inter-ext-deny" class="ps-accordion">
+					<summary class="ps-accordion-header">
 						Blocked extensions <span id="inter-ext-deny-count" class="ps-ext-badge ps-ext-badge-deny" aria-label="blocked count">0</span>
 					</summary>
-					<div id="inter-ext-deny-list" class="ps-ext-accordion-body">
+					<div id="inter-ext-deny-list" class="ps-accordion-body">
 						<p class="ps-ext-empty">No blocked extensions.</p>
 					</div>
 				</details>

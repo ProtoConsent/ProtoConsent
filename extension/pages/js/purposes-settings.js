@@ -20,6 +20,7 @@ async function init() {
 		renderPresets(presets, purposes);
 		renderEnhancedPresets();
 		renderDynamicListsToggle(purposes);
+		initCmpSection();
 		initInterExt();
 
 		const versionEl = document.getElementById('viewer-version');
@@ -162,8 +163,7 @@ function initDefaultProfile(purposes) {
 
 function renderPurposes(purposes) {
 	const container = document.getElementById('purpose-list');
-	const section = document.getElementById('purposes-section');
-	if (!container || !section) return;
+	if (!container) return;
 
 	const purposeEntries = Object.values(purposes)
 		.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -219,7 +219,6 @@ function renderPurposes(purposes) {
 
 		container.appendChild(card);
 	}
-	section.classList.remove('ps-hidden');
 }
 
 function updateConsentPresetHighlight(activeProfile) {
@@ -474,7 +473,7 @@ function renderPrivacySignals(purposes) {
 
 function renderEnhancedPresets() {
 	const container = document.getElementById('enhanced-preset-list');
-	const section = document.getElementById('enhanced-presets-section');
+	const section = document.getElementById('enhanced-section');
 	if (!container || !section) return;
 
 	Promise.all([
@@ -620,6 +619,158 @@ function renderEnhancedPresets() {
 	});
 }
 
+function initCmpSection() {
+	const section = document.getElementById('cmp-section');
+	const toggle = document.getElementById('cmp-auto-toggle');
+	const toggleLabel = document.getElementById('cmp-auto-label');
+	const detail = document.getElementById('cmp-detail');
+	const listEl = document.getElementById('cmp-list');
+	const uuidInput = document.getElementById('cmp-uuid-input');
+	const maxageInput = document.getElementById('cmp-maxage-input');
+	if (!section || !toggle || !detail || !listEl) return;
+
+	fetch(chrome.runtime.getURL('config/cmp-signatures.json'))
+		.then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+		.then(sigs => {
+			const cmpIds = Object.keys(sigs);
+
+			chrome.storage.local.get(['cmpAutoResponse', 'cmpEnabled', 'cmpCustomUuid', 'cmpCookieMaxAge'], (data) => {
+				const masterOn = data.cmpAutoResponse !== false;
+				const enabled = data.cmpEnabled || {};
+
+				toggle.checked = masterOn;
+				toggleLabel.textContent = masterOn ? 'Enabled' : 'Disabled';
+				if (!masterOn) detail.classList.add('ps-hidden');
+
+				// Per-CMP checkboxes
+				for (const id of cmpIds) {
+					const row = document.createElement('div');
+					row.className = 'ps-cmp-toggle-row';
+
+					const label = document.createElement('label');
+					label.setAttribute('for', 'cmp-' + id);
+					label.textContent = id.replace(/_/g, ' ');
+
+					const cb = document.createElement('input');
+					cb.type = 'checkbox';
+					cb.id = 'cmp-' + id;
+					cb.checked = enabled[id] !== false;
+					cb.addEventListener('change', () => {
+						chrome.storage.local.get(['cmpEnabled'], (r) => {
+							const cur = r.cmpEnabled || {};
+							cur[id] = cb.checked;
+							chrome.storage.local.set({ cmpEnabled: cur });
+						});
+					});
+
+					row.appendChild(label);
+					row.appendChild(cb);
+					listEl.appendChild(row);
+				}
+
+				// UUID input
+				if (uuidInput) {
+					const uuidError = document.getElementById('cmp-uuid-error');
+					const uuidSaved = document.getElementById('cmp-uuid-saved');
+					const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+					uuidInput.value = data.cmpCustomUuid || '';
+					if (data.cmpCustomUuid) { uuidInput.classList.add('ps-cmp-input-saved'); }
+
+					const validateUuid = () => {
+						const val = uuidInput.value.trim();
+						if (!val) {
+							uuidInput.classList.remove('ps-cmp-input-error', 'ps-cmp-input-saved');
+							if (uuidError) uuidError.classList.add('ps-hidden');
+							if (uuidSaved) uuidSaved.classList.add('ps-hidden');
+							return true;
+						}
+						if (!UUID_RE.test(val)) {
+							if (uuidError) { uuidError.textContent = 'Invalid UUID v4 format'; uuidError.classList.remove('ps-hidden'); }
+							uuidInput.classList.add('ps-cmp-input-error');
+							uuidInput.classList.remove('ps-cmp-input-saved');
+							if (uuidSaved) uuidSaved.classList.add('ps-hidden');
+							return false;
+						}
+						uuidInput.classList.remove('ps-cmp-input-error');
+						if (uuidError) uuidError.classList.add('ps-hidden');
+						return true;
+					};
+
+					uuidInput.addEventListener('input', validateUuid);
+					uuidInput.addEventListener('change', () => {
+						if (!validateUuid()) return;
+						const val = uuidInput.value.trim();
+						chrome.storage.local.set({ cmpCustomUuid: val });
+						if (val) {
+							uuidInput.classList.add('ps-cmp-input-saved');
+							if (uuidSaved) { uuidSaved.classList.remove('ps-hidden'); setTimeout(() => uuidSaved.classList.add('ps-hidden'), 2000); }
+						} else {
+							uuidInput.classList.remove('ps-cmp-input-saved');
+						}
+					});
+				}
+
+				// Max-age input (days -> seconds)
+				if (maxageInput) {
+					const maxageError = document.getElementById('cmp-maxage-error');
+					const maxageSaved = document.getElementById('cmp-maxage-saved');
+					const storedDays = data.cmpCookieMaxAge ? Math.round(data.cmpCookieMaxAge / 86400) : '';
+					maxageInput.value = storedDays;
+					if (storedDays) { maxageInput.classList.add('ps-cmp-input-saved'); }
+
+					const validateMaxage = () => {
+						const raw = maxageInput.value.trim();
+						if (!raw) {
+							maxageInput.classList.remove('ps-cmp-input-error', 'ps-cmp-input-saved');
+							if (maxageError) maxageError.classList.add('ps-hidden');
+							if (maxageSaved) maxageSaved.classList.add('ps-hidden');
+							return true;
+						}
+						const days = parseInt(raw, 10);
+						if (isNaN(days) || days < 1 || days > 365) {
+							if (maxageError) { maxageError.textContent = 'Must be 1\u2013365'; maxageError.classList.remove('ps-hidden'); }
+							maxageInput.classList.add('ps-cmp-input-error');
+							maxageInput.classList.remove('ps-cmp-input-saved');
+							if (maxageSaved) maxageSaved.classList.add('ps-hidden');
+							return false;
+						}
+						maxageInput.classList.remove('ps-cmp-input-error');
+						if (maxageError) maxageError.classList.add('ps-hidden');
+						return true;
+					};
+
+					maxageInput.addEventListener('input', validateMaxage);
+					maxageInput.addEventListener('change', () => {
+						if (!validateMaxage()) return;
+						const raw = maxageInput.value.trim();
+						if (!raw) {
+							chrome.storage.local.remove('cmpCookieMaxAge');
+							maxageInput.classList.remove('ps-cmp-input-saved');
+							return;
+						}
+						const days = parseInt(raw, 10);
+						chrome.storage.local.set({ cmpCookieMaxAge: days * 86400 });
+						maxageInput.classList.add('ps-cmp-input-saved');
+						if (maxageSaved) { maxageSaved.classList.remove('ps-hidden'); setTimeout(() => maxageSaved.classList.add('ps-hidden'), 2000); }
+					});
+				}
+
+				section.classList.remove('ps-hidden');
+			});
+		})
+		.catch(err => {
+			console.warn('ProtoConsent: failed to load CMP signatures:', err);
+		});
+
+	toggle.addEventListener('change', () => {
+		const on = toggle.checked;
+		toggleLabel.textContent = on ? 'Enabled' : 'Disabled';
+		chrome.storage.local.set({ cmpAutoResponse: on });
+		if (on) detail.classList.remove('ps-hidden');
+		else detail.classList.add('ps-hidden');
+	});
+}
+
 function notifyBackground(cb) {
 	chrome.runtime.sendMessage({ type: 'PROTOCONSENT_RULES_UPDATED' }, () => {
 		void chrome.runtime.lastError;
@@ -636,7 +787,8 @@ const EXPORT_KEYS = [
 	"gpcEnabled", "chStrippingEnabled", "enhancedPreset", "enhancedLists",
 	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending",
 	"dynamicListsConsent", "consentEnhancedLink",
-	"celMode", "celCustomPurposes"
+	"celMode", "celCustomPurposes",
+	"cmpAutoResponse", "cmpEnabled", "cmpCookieMaxAge", "cmpCustomUuid"
 ];
 
 const VALID_PROFILES = ["strict", "balanced", "permissive", "custom"];
@@ -747,11 +899,34 @@ function validateImport(data) {
 		} else errors.push("celCustomPurposes: must be {key: boolean}");
 	}
 
+	if ("cmpAutoResponse" in data) {
+		if (typeof data.cmpAutoResponse === "boolean") clean.cmpAutoResponse = data.cmpAutoResponse;
+		else errors.push("cmpAutoResponse: must be boolean");
+	}
+	if ("cmpEnabled" in data) {
+		const ce = data.cmpEnabled;
+		if (typeof ce === "object" && ce !== null && !Array.isArray(ce) &&
+			Object.values(ce).every(v => typeof v === "boolean")) {
+			clean.cmpEnabled = sanitizeObjectKeys(ce);
+		} else errors.push("cmpEnabled: must be {key: boolean}");
+	}
+	if ("cmpCookieMaxAge" in data) {
+		if (typeof data.cmpCookieMaxAge === "number" && data.cmpCookieMaxAge > 0 && data.cmpCookieMaxAge <= 31536000) {
+			clean.cmpCookieMaxAge = data.cmpCookieMaxAge;
+		} else errors.push("cmpCookieMaxAge: must be number (1-31536000)");
+	}
+	if ("cmpCustomUuid" in data) {
+		const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+		if (typeof data.cmpCustomUuid === "string" && (data.cmpCustomUuid === "" || UUID_RE.test(data.cmpCustomUuid))) {
+			clean.cmpCustomUuid = data.cmpCustomUuid;
+		} else errors.push("cmpCustomUuid: must be empty or valid UUID v4");
+	}
+
 	return { clean, errors };
 }
 
 function renderDynamicListsToggle(purposes) {
-	const section = document.getElementById('dynamic-lists-section');
+	const section = document.getElementById('enhanced-section');
 	const toggle = document.getElementById('ps-dynamic-toggle');
 	const label = document.getElementById('ps-dynamic-label');
 	const celToggle = document.getElementById('ps-cel-toggle');

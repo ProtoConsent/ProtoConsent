@@ -299,6 +299,11 @@ body {
   color: #047857;
 }
 
+.ob-feature-icon-cmp {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
 .ob-feature-icon-cel {
   background: #ede9fe;
   color: #6d28d9;

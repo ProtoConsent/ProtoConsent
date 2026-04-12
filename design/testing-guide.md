@@ -71,6 +71,13 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [15.1 Exporting configuration](#151-exporting-configuration)
     - [15.2 Importing configuration](#152-importing-configuration)
     - [15.3 Partial imports and validation](#153-partial-imports-and-validation)
+  - [16. Testing CMP auto-response](#16-testing-cmp-auto-response)
+    - [16.1 Verifying banner suppression](#161-verifying-banner-suppression)
+    - [16.2 Checking injected cookies](#162-checking-injected-cookies)
+    - [16.3 Verifying cookie cleanup](#163-verifying-cookie-cleanup)
+    - [16.4 Cosmetic CSS and scroll unlock](#164-cosmetic-css-and-scroll-unlock)
+    - [16.5 Domain-scoped signatures (Bing/Microsoft)](#165-domain-scoped-signatures-bingmicrosoft)
+    - [16.6 Verifying CMP injection data from the service worker console](#166-verifying-cmp-injection-data-from-the-service-worker-console)
 
 ## 1. Requirements
 
@@ -808,3 +815,59 @@ ProtoConsent allows exporting and importing the full configuration (site rules, 
 1. Edit the exported JSON to remove a section (for example, delete the `whitelist` key).
 2. Import the modified file. Only the present keys should be applied - missing sections should remain unchanged.
 3. Try importing an invalid file (for example, a text file or malformed JSON). The import should show an error message without modifying the existing configuration.
+
+## 16. Testing CMP auto-response
+
+CMP auto-response injects consent cookies before CMP scripts load, suppressing consent banners based on the user's purpose preferences. See [cmp-auto-response.md](cmp-auto-response.md) for the full design.
+
+### 16.1 Verifying banner suppression
+
+1. Choose a site that uses a known CMP (for example, a site using OneTrust or Cookiebot).
+2. Clear the site's cookies in DevTools → **Application** → **Cookies** → right-click → **Clear**.
+3. Make sure ProtoConsent is loaded with a profile assigned (e.g. Balanced).
+4. Reload the page. The consent banner should **not** appear.
+5. Disable ProtoConsent (toggle off or unload the extension), clear cookies again, and reload. The banner should appear.
+
+### 16.2 Checking injected cookies
+
+1. On the same site, open DevTools → **Application** → **Cookies**.
+2. Look for the CMP-specific cookie (for example, `OptanonConsent` for OneTrust, `CookieConsent` for Cookiebot, `euconsent-v2` for IAB TCF sites).
+3. Verify the cookie value contains your purpose preferences. For example, with OneTrust and Balanced profile (analytics allowed, ads denied), the `groups` parameter should show `2:1` (analytics allowed) and `4:0` (ads denied).
+4. Check that the cookie has `SameSite=Lax` and the domain is `.{registrable-domain}`.
+
+### 16.3 Verifying cookie cleanup
+
+1. On a site where CMP cookies were injected, open DevTools → **Application** → **Cookies**.
+2. Note the CMP cookies immediately after page load (within 1-2 seconds).
+3. Wait 5 seconds. The injected cookies should be deleted automatically.
+4. Reload the page. The cookies are re-injected at `document_start` and the banner stays suppressed.
+
+### 16.4 Cosmetic CSS and scroll unlock
+
+1. On a site with a known CMP, inspect the `<head>` for a `<style data-pc-cmp>` element. It should contain `display:none!important` rules targeting the CMP's banner selectors.
+2. Verify the page scrolls normally. Without ProtoConsent, some CMPs lock scrolling (e.g. OneTrust adds `ot-sdk-show-settings` to `<body>`). With ProtoConsent, the lock class should be removed and scrolling should work.
+3. To test scroll unlock specifically, use the service worker console to clear the CMP cookies: `chrome.storage.local.remove(['_cmpSignatures'])`, reload, and verify the cosmetic layer still hides the banner and scroll works.
+
+### 16.5 Domain-scoped signatures (Bing/Microsoft)
+
+1. Visit `bing.com` (or any Microsoft property: `outlook.com`, `msn.com`).
+2. The Bing consent banner (`#bnp_container`) should not appear.
+3. Check cookies for `BCP`. With Balanced (ads and personalization denied), the value should be `AD=0&AL=1&SM=0` (analytics allowed, ads and personalization denied).
+4. Visit a non-Microsoft site. The `BCP` cookie should **not** be injected (the Bing signature is domain-scoped).
+
+### 16.6 Verifying CMP injection data from the service worker console
+
+Open the service worker console for the extension and run:
+
+```js
+chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString'], r => {
+  console.log('Signatures loaded:', Object.keys(r._cmpSignatures || {}).length);
+  console.log('User purposes:', r._userPurposes);
+  console.log('TC String:', r._tcString?.slice(0, 40) + '...');
+})
+```
+
+Expected output:
+- `Signatures loaded: 22` (all CMP signatures from `cmp-signatures.json`)
+- `User purposes:` an object with boolean values per purpose plus `gpc: 0` or `gpc: 1`
+- `TC String:` a base64url-encoded string starting with `C` (version 2 in 6-bit encoding)
