@@ -14,8 +14,11 @@
   const protocol = window.location.protocol;
   if (protocol !== 'http:' && protocol !== 'https:') return;
 
-  const { _cmpSignatures: sigs, _userPurposes: prefs, _tcString: tcString, _cmpUuid: storedUuid } =
-    await chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString', '_cmpUuid']);
+  const { _cmpSignatures: sigs, _userPurposes: prefs, _tcString: tcString, _cmpUuid: storedUuid,
+    cmpAutoResponse, cmpEnabled, cmpCookieMaxAge, cmpCustomUuid } =
+    await chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString', '_cmpUuid',
+      'cmpAutoResponse', 'cmpEnabled', 'cmpCookieMaxAge', 'cmpCustomUuid']);
+  if (cmpAutoResponse === false) return;
   if (!sigs || !prefs) return;
 
   // Registrable domain (simple heuristic)
@@ -42,14 +45,18 @@
   const applicableSigs = {};
   for (const [cmpId, cmp] of Object.entries(sigs)) {
     if (cmp.domains && !cmp.domains.some(d => d === domain || d === brand)) continue;
+    if (cmpEnabled && cmpEnabled[cmpId] === false) continue;
     applicableSigs[cmpId] = cmp;
   }
 
   // Persistent UUID: reuse across page loads so CMPs see consistent identity
-  const uuid = storedUuid || crypto.randomUUID();
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const customValid = cmpCustomUuid && UUID_RE.test(cmpCustomUuid);
+  const uuid = (customValid ? cmpCustomUuid : null) || storedUuid || crypto.randomUUID();
   if (!storedUuid) chrome.storage.local.set({ _cmpUuid: uuid });
 
   // --- Layer 1: Cookie injection ---
+  const maxAge = cmpCookieMaxAge || 7776000;
   const injectedCookies = [];
   for (const [cmpId, cmp] of Object.entries(applicableSigs)) {
     if (!cmp.cookie) continue;
@@ -73,7 +80,7 @@
 
       // Sanitize: strip semicolons to prevent cookie attribute injection
       val = val.replaceAll(';', '');
-      document.cookie = `${c.name}=${val}; path=/; domain=.${domain}; SameSite=Lax; max-age=7776000`;
+      document.cookie = `${c.name}=${val}; path=/; domain=.${domain}; SameSite=Lax; max-age=${maxAge}`;
       injectedCookies.push(c.name);
     }
   }

@@ -284,5 +284,17 @@
     "format": { "allow": "1", "deny": "0" },
     "selector": null,
     "lockClass": null
+  },
+
+  "fides": {
+    "cookie": [
+      {
+        "name": "fides_consent",
+        "template": "%7B%22consent%22%3A%7B%7D%2C%22identity%22%3A%7B%22fides_user_device_id%22%3A%22{UUID}%22%7D%2C%22fides_meta%22%3A%7B%22version%22%3A%220.9.0%22%2C%22createdAt%22%3A%22{DATE_ISO}%22%2C%22updatedAt%22%3A%22{DATE_ISO}%22%2C%22consentMethod%22%3A%22reject%22%7D%2C%22tcf_consent%22%3A%7B%22system_consent_preferences%22%3A%7B%7D%2C%22system_legitimate_interests_preferences%22%3A%7B%7D%7D%7D"
+      }
+    ],
+    "selector": "#fides-overlay, #fides-banner-container, #fides-banner-inner-container",
+    "lockClass": "fides-no-scroll",
+    "note": "Ethyca Fides (open source). Cookie omits fides_string/non_applicable_notice_keys (site-specific). Falls back to cosmetic if cookie alone insufficient."
   }
 }

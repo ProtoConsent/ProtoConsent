@@ -94,6 +94,57 @@
 			<div id="ps-cel-mode-panel" class="ps-cel-mode-panel ps-hidden"></div>
 		</section>
 
+		<section id="cmp-section" class="ps-section ps-hidden">
+			<div class="ps-section-head">
+				<h2>CMP Auto-response</h2>
+			</div>
+			<div class="ps-dynamic-grid">
+				<div class="ps-gpc-toggle-row">
+					<div>
+						<span class="ps-gpc-info-name">Master switch</span>
+						<div class="ps-gpc-info-desc">Automatically respond to cookie consent banners based on your purpose settings.</div>
+					</div>
+					<label class="ps-gpc-toggle-label" for="cmp-auto-toggle" id="cmp-auto-label">Enabled</label>
+					<input type="checkbox" id="cmp-auto-toggle" class="ps-gpc-toggle" aria-label="CMP auto-response" checked>
+				</div>
+			</div>
+			<div id="cmp-detail" class="ps-cmp-detail">
+				<details class="ps-ext-accordion">
+					<summary class="ps-ext-accordion-header">CMP list</summary>
+					<div class="ps-ext-accordion-body">
+						<div id="cmp-list" class="ps-cmp-list"></div>
+					</div>
+				</details>
+				<details class="ps-ext-accordion">
+					<summary class="ps-ext-accordion-header">Advanced</summary>
+					<div class="ps-ext-accordion-body">
+						<div class="ps-cmp-advanced-row">
+							<div>
+								<label for="cmp-uuid-input" class="ps-gpc-info-name">Custom UUID</label>
+								<div class="ps-gpc-info-desc">Consent cookies include an identifier. Leave empty (recommended): a new random ID is generated each session, so sites cannot link your visits. Fixed: the same ID is reused, which some sites may require but allows them to recognize you across visits.</div>
+							</div>
+							<div class="ps-cmp-input-wrap">
+								<input type="text" id="cmp-uuid-input" class="ps-cmp-text-input" placeholder="Random" spellcheck="false" autocomplete="off" maxlength="36" pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}">
+								<span id="cmp-uuid-error" class="ps-cmp-field-error ps-hidden"></span>
+								<span id="cmp-uuid-saved" class="ps-cmp-field-saved ps-hidden">Saved</span>
+							</div>
+						</div>
+						<div class="ps-cmp-advanced-row">
+							<div>
+								<label for="cmp-maxage-input" class="ps-gpc-info-name">Cookie lifetime (days)</label>
+								<div class="ps-gpc-info-desc">How long injected consent cookies persist. Range: 1-365 days. Default: 90.</div>
+							</div>
+							<div class="ps-cmp-input-wrap">
+								<input type="number" id="cmp-maxage-input" class="ps-cmp-text-input" min="1" max="365" step="1" placeholder="90">
+								<span id="cmp-maxage-error" class="ps-cmp-field-error ps-hidden"></span>
+								<span id="cmp-maxage-saved" class="ps-cmp-field-saved ps-hidden">Saved</span>
+							</div>
+						</div>
+					</div>
+				</details>
+			</div>
+		</section>
+
 		<section id="purposes-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
 				<h2>Purposes <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
