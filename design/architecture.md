@@ -436,15 +436,15 @@ Events are buffered in memory (up to 50 entries) and persisted to `chrome.storag
 
 For message format details, see [inter-extension-protocol.md](spec/inter-extension-protocol.md).
 
-## 13. CMP auto-response
+## 13. CMP auto-response and banner observation
 
-ProtoConsent can automatically respond to consent banners by injecting the consent cookies that CMPs expect to find on page load. This prevents the banner from appearing without simulating clicks or interacting with the banner DOM.
+ProtoConsent can automatically respond to consent banners by injecting the consent cookies that CMPs expect to find on page load. This prevents the banner from appearing without simulating clicks or interacting with the banner DOM. In addition, a detection and observation pipeline identifies CMP presence on pages and compares the CMP's stored consent against the user's ProtoConsent preferences.
 
 For the full design, signature format, TC String specification, and list of supported CMPs, see [cmp-auto-response.md](cmp-auto-response.md).
 
 ### 13.1 Pipeline
 
-The background module (`background/cmp-injection.js`) pre-computes injection data whenever global purposes change: it loads CMP signatures from `chrome.storage.local` (populated at install from the bundled `config/cmp-signatures.json`, refreshed via CDN when Enhanced Protection is active), generates an IAB TCF v2.2 TC String, and writes everything to `chrome.storage.local`. The content script (`content-scripts/cmp-inject.js`) runs at `document_start` in ISOLATED world, reads the pre-computed data, and executes the three-layer response.
+The background module (`background/cmp-injection.js`) pre-computes injection data whenever global purposes change: it loads CMP signatures from `chrome.storage.local` (populated at install from the bundled `rules/protoconsent_cmp_signatures.json`, refreshed via CDN when Enhanced Protection is active), generates an IAB TCF v2.2 TC String, and writes everything to `chrome.storage.local`. The content script (`content-scripts/cmp-inject.js`) runs at `document_start` in ISOLATED world, reads the pre-computed data, and executes the three-layer response.
 
 ### 13.2 Three-layer response
 
@@ -456,20 +456,34 @@ The background module (`background/cmp-injection.js`) pre-computes injection dat
 
 For CMPs that read the `euconsent-v2` cookie, ProtoConsent generates a valid IAB TCF v2.2 Transparency and Consent String. The generator maps ProtoConsent's purpose model to TCF's 24-purpose bitfield, respects the v2.2 legitimate interest restrictions (purposes 3-6 cannot use LI), and encodes the result as base64url with no external dependencies.
 
-### 13.4 Limitations
+### 13.4 Banner detection and consent observation
 
-- The content script currently runs in ISOLATED world. `window.__tcfapi` and `localStorage` are not accessible from this context; MAIN world injection is the known resolution (see [cmp-auto-response.md](cmp-auto-response.md#92-known-solutions)).
+A separate detection and observation pipeline runs independently of auto-response:
+
+- **CSS banner detection** (`content-scripts/cmp-detect.js`, ISOLATED world, `document_idle`): Queries CSS selectors from `_cmpDetectors` (285 CMPs sourced from Consent-O-Matic + hand-maintained). Reports CMP presence and showing state. Includes a 4-second delayed recheck for async-loaded CMPs (e.g., Usercentrics loaded via GTM). Reports `[banner]` lines in the Log.
+- **Cookie observation** (`cmp-detect.js`, delayed 6s after `cmp-inject.js` cleanup): Reads cookies by name from `_cmpSignatures`. The background (`cmp-cookie-decode.js`) decodes cookie values for OneTrust, Cookiebot, CookieYes, Complianz, and Wix, and compares against user purposes. Reports `[banner-consent]` lines with per-purpose conflicts or match confirmation.
+- **localStorage observation** (`content-scripts/tcf-detect.js`, MAIN world, `document_idle`): Reads `uc_settings` (Usercentrics) and `ccm_consent` (CCM19) from `localStorage`. Parses in MAIN world with monkey-patch-safe references (`_JSONparse`, `_JSONstringify`, `_isArray`), sanitizes fields (type checks, size limits, field whitelisting), and sends compact JSON via `postMessage` relay through `content-script.js`. The background decodes and detects conflicts.
+- **Site-specific hiding** (`cmp-detect.js`): Applies per-site CSS hiding rules from `_cmpSiteSignatures` when a CMP is detected on a matching domain.
+- **TCF/GPP detection** (`tcf-detect.js`, MAIN world): Calls `window.__tcfapi` and `window.__gpp` APIs to read the CMP's own consent status. Reported in the popup as TCF/GPP pills.
+
+### 13.5 Limitations
+
 - No click simulation (by design -- ProtoConsent declares consent via data, not interaction).
 - Proprietary consent systems (custom cookies, protobuf-encoded tokens) are not covered unless a known signature exists.
 - The TC String uses empty vendor sections; CMPs that require specific vendor consent may not fully accept it.
+- localStorage observation is read-only: it detects conflicts but cannot pre-empt localStorage-based CMPs.
 
-### 13.5 CDN fetch and Enhanced integration
+### 13.6 CDN fetch and Enhanced integration
 
-CMP signatures are bundled as `config/cmp-signatures.json` and loaded into `chrome.storage.local` at install. When Enhanced Protection is active, the catalog includes a `protoconsent_cmp_signatures` list entry that enables CDN-based updates. The CDN copy is fetched alongside other Enhanced lists and merged into storage, keeping signatures current without extension updates. See [blocklists.md](blocklists.md) for distribution details.
+CMP signatures, detectors, and site-specific rules are bundled in `extension/rules/` and loaded into `chrome.storage.local` at install/update. When Enhanced Protection is active, the catalog includes list entries for `protoconsent_cmp_signatures`, `protoconsent_cmp_detectors`, and `protoconsent_cmp_signatures_site` that enable CDN-based updates. See [blocklists.md](blocklists.md) for distribution details.
 
-### 13.6 Observability
+### 13.7 Observability
 
-After executing all three layers, the content script sends a `PROTOCONSENT_CMP_APPLIED` message to the background service worker with the domain, matched CMP IDs, cookie count, selector count, and scroll unlock status. The background stores this in a per-tab `tabCmpData` Map (mirroring `tabCosmeticData`), persists it to `chrome.storage.session`, and streams it to connected Log ports.
+Three content scripts report CMP activity to the background:
 
-In the popup, CMP events appear as `[cmp]` lines in the Log Requests stream (purple, alongside block/GPC/cosmetic/ext events). The Debug panel displays both the enabled CMP signature lists (from the rebuild snapshot) and the per-tab injection data for the current tab. Historical replay on popup open uses `PROTOCONSENT_GET_CMP` to recover data after service worker restarts.
+1. `cmp-inject.js` sends `PROTOCONSENT_CMP_APPLIED` with matched CMPs, cookie count, selector count, and scroll unlock status. Stored in `tabCmpData`.
+2. `cmp-detect.js` sends `PROTOCONSENT_CMP_DETECTED` with CSS detections, cookie observations, and site-specific hiding. Stored in `tabCmpDetectData`.
+3. `tcf-detect.js` (relayed via `content-script.js`) sends `PROTOCONSENT_CMP_STORAGE_DETECTED` with localStorage entries and `PROTOCONSENT_TCF_DETECTED`/`PROTOCONSENT_GPP_DETECTED` for API detection. Storage entries stored in `tabCmpDetectData`, GPP data in `tabGppData`.
+
+All three Maps are persisted to `chrome.storage.session` and streamed to connected Log ports. In the Log tab, `[banner]` lines (pink) show CSS detection, `[banner-consent]` lines (violet) show consent state comparison with per-purpose conflicts. The Debug panel displays per-tab data for all sources. Historical replay on popup open uses `PROTOCONSENT_GET_CMP_DETECT`.
 

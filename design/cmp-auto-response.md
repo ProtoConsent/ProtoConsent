@@ -77,7 +77,7 @@ Signatures are defined in `rules/protoconsent_cmp_signatures.json` (bundled wrap
 | `domains` | string[] | No | If present, signature only applies to these domains/brands. Matched against the registrable domain and its brand (first label). Signatures without `domains` apply globally. |
 | `note` | string | No | Internal documentation about the CMP's behaviour or limitations. |
 
-### Supported CMPs (22)
+### Supported CMPs (23)
 
 | CMP | Cookie(s) | Format | Scope |
 |-----|-----------|--------|-------|
@@ -98,7 +98,8 @@ Signatures are defined in `rules/protoconsent_cmp_signatures.json` (bundled wrap
 | Osano | `osano_consentmanager` | Presence-only | Global |
 | Sirdata | (cosmetic only) | - | Global |
 | Civic | (cosmetic only) | - | Global |
-| CCM19 | (cosmetic only) | localStorage-based | Global |
+| CCM19 | (localStorage observation) | `ccm_consent` categories: analytics/marketing/functional booleans | Global |
+| Usercentrics | (localStorage observation) | `uc_settings` services with history actions | Global |
 | Amasty | `amcookie_policy_restriction`, `amcookie_allowed` | allowed/-1 | Global |
 | Wix | `consent-policy` | URL-encoded JSON with ess/func/anl/adv/dt3 | Global |
 | Fides | `fides_consent` | URL-encoded JSON with consent/identity/meta | Global |
@@ -110,7 +111,8 @@ Based on cookie support, signatures fall into three categories:
 
 - **Full cookie injection**: Template produces a valid cookie that the CMP reads and accepts (OneTrust, Cookiebot, CookieYes, Complianz, Wix, Fides, Bing). Banner suppressed at the source.
 - **Presence/minimal injection**: Cookie signals "consent given" but lacks full purpose mapping (Sourcepoint, TrustArc, Quantcast, ConsentManager, Osano, Amasty). CMP may still initialize but skips the banner.
-- **Cosmetic only**: No injectable cookie (localStorage-based, site-specific, or no known format). Banner is hidden via CSS. (Borlabs, Termly, Axeptio, Sirdata, Civic, CCM19, Didomi).
+- **Cosmetic only**: No injectable cookie and no observable storage format. Banner is hidden via CSS. (Borlabs, Termly, Axeptio, Sirdata, Civic, Didomi).
+- **localStorage observation**: CMP stores consent in `localStorage` instead of cookies. A MAIN world content script (`tcf-detect.js`) reads and parses the storage entry, sending a compact summary to the background for decoding and conflict detection. Banner hiding via CSS selectors. (Usercentrics via `uc_settings`, CCM19 via `ccm_consent`).
 
 ## 4. TC String (IAB TCF v2.2)
 
@@ -240,24 +242,29 @@ Background (`cmp-injection.js`):
 
 ### 9.1 Current limitations
 
-- **ISOLATED world**: The content script currently runs in Chrome's ISOLATED world, which cannot access the page's JavaScript context. This means `window.__tcfapi`, `localStorage`, and `window.__cmp` are not reachable. CMPs that store consent exclusively in localStorage (like CCM19) fall back to cosmetic hiding, and third-party scripts that call `__tcfapi` instead of reading the cookie will not receive a response. MAIN world injection resolves this (see [9.2](#92-known-solutions)).
 - **No click simulation**: ProtoConsent does not simulate clicks on banner buttons. This is a deliberate design choice -- the extension declares consent via data, not interaction.
 - **CMP-specific cookies**: Some CMPs (like Didomi) use site-specific tokens that cannot be templated. These fall back to cosmetic hiding.
 - **Proprietary consent systems**: Sites with fully custom consent systems (not using any standard CMP) are not covered. The signature approach targets widely-deployed CMP frameworks.
 - **TC String vendor sections**: The generated TC String has empty vendor consent and disclosed vendor sections. CMPs that check for specific vendor IDs may not fully accept it, though in practice CMPs read the purpose bits.
+- **localStorage observation is read-only**: The MAIN world script (`tcf-detect.js`) reads localStorage entries but does not write to them. It observes what the CMP stored, compares against user preferences, and reports conflicts. It cannot pre-empt localStorage-based CMPs the way cookie injection pre-empts cookie-based CMPs.
 
-### 9.2 Known solutions
+### 9.2 MAIN world integration (v0.4.3)
 
-**MAIN world injection**: Manifest V3 supports `"world": "MAIN"` for content scripts, which runs in the page's JavaScript context. This would allow:
-- Injecting `window.__tcfapi` so third-party scripts receive proper TCF callbacks
-- Writing to `localStorage` for CMPs that use it exclusively (CCM19, some Didomi configurations)
-- Populating `window.__cmp` (legacy TCF v1.1 API) for older sites
+A MAIN world content script (`tcf-detect.js`, registered at `document_idle`) provides read access to the page's JavaScript context. This enables:
 
-MAIN world access is the known resolution for the ISOLATED world limitations. The current ISOLATED approach was chosen because it requires no page-context trust and avoids interference with page scripts. Adding a MAIN world script requires only a manifest entry and a new file -- the rest of the pipeline (signatures, storage, cookie injection) remains unchanged.
+- **TCF detection**: Calls `window.__tcfapi("getTCData", 2, ...)` to read the CMP's own consent status. Reported in the popup as a TCF pill.
+- **GPP detection**: Calls `window.__gpp("ping", ...)` to detect the Global Privacy Platform API.
+- **localStorage observation**: Reads `uc_settings` (Usercentrics) and `ccm_consent` (CCM19) from `localStorage`. Parses in MAIN world to avoid message size issues, sends compact JSON to the background via `postMessage` relay through `content-script.js`.
+
+Security hardening for MAIN world: native references (`JSON.parse`, `JSON.stringify`, `Array.isArray`, `setTimeout`, `postMessage`, `Object.freeze`) are captured at script start before page code can monkey-patch them. All data from localStorage is sanitized with type checks, field whitelisting, and size limits before being sent to the extension.
+
+The MAIN world script is read-only and observational. It does not write to `localStorage`, inject `__tcfapi`, or modify page state. Future versions may add `__tcfapi` injection for third-party script compatibility.
 
 ### 9.3 Notable exceptions
 
 **Google (SOCS cookie)**: Google's consent cookie uses Protocol Buffers encoding with a GWS server version field (e.g., `gws_20260408-0_RC1`) that appears to be tied to server deployments and cannot be predicted or templated. The banner DOM uses Closure Compiler-minified class names that are also unstable across deploys. Neither the cookie nor the selectors can be reliably templated. This has been investigated and documented; it remains an open problem.
+
+**Usercentrics (opaque service IDs)**: Usercentrics uses internal service IDs without human-readable names in `uc_settings`. The decoder reports aggregate allow/deny counts and user interaction status, but cannot map individual services to ProtoConsent purposes. The MAIN world API `window.UC_UI.getServicesBaseInfo()` returns service names and categories, but is not present on all implementations (e.g., Porsche uses custom Porsche Design System web components with `uc-layer1`/`uc-layer2` instead of the standard SDK) and loads asynchronously. Worth exploring in a future version for purpose-level conflict detection on Usercentrics sites. See [Usercentrics Browser SDK v4 docs](https://docs.usercentrics.com/cmp_browser_sdk/4.17.0/index.html).
 
 **Consent walls**: Some sites (e.g., Le Figaro) offer no "reject" option -- only "accept cookies" or "subscribe". These are pay-or-consent walls where the consent mechanism is deliberately tied to a paywall. Cookie injection cannot bypass a paywall, which is by design: ProtoConsent expresses user preferences, it does not circumvent access controls.
 
@@ -269,30 +276,42 @@ MAIN world access is the known resolution for the ISOLATED world limitations. Th
 | **Timing** | Before CMP loads (preventive) | After banner renders (reactive) | Before CMP loads (preventive) |
 | **Banner appears** | No (cookie pre-empts it) | Briefly (until click fires) | No (script blocked) |
 | **CMP reads preferences** | Yes (from injected cookie) | Yes (via its own UI flow) | No (CMP never loads) |
-| **`__tcfapi` available** | Not yet (ISOLATED world) | Yes (CMP creates it) | No (CMP blocked) |
+| **`__tcfapi` available** | Read-only (MAIN world observes it) | Yes (CMP creates it) | No (CMP blocked) |
 | **Purpose-level control** | Yes (per-purpose consent values) | Varies (most are all-or-nothing) | No (binary block/allow) |
 | **Maintenance model** | Signature JSON per CMP | CSS selectors + click targets per CMP | Filter lists (domain-based) |
 | **Breakage risk** | Low (CMP sees valid consent) | Medium (DOM changes break selectors) | High (consent wall, `__tcfapi` undefined) |
 | **Dark pattern risk** | None (no interaction to misinterpret) | A failed or partial click can be treated by the CMP as implicit consent | None (CMP never loads) |
 
-## 11. Interaction with TCF detection
+## 11. Interaction with TCF detection and banner observation
 
-CMP auto-response and TCF detection are independent systems. Auto-response injects cookies at `document_start` in ISOLATED world. TCF detection (`tcf-detect.js`) runs in MAIN world and reads the CMP's JavaScript API (`__tcfapi`). The cookie and the JavaScript API are separate interfaces maintained by the CMP.
+CMP auto-response and CMP observation are complementary systems:
 
-The TCF pill in the popup shows the site's own consent status as reported by its CMP, not the state applied by ProtoConsent.
+- **Auto-response** (`cmp-inject.js`, ISOLATED world, `document_start`): Injects consent cookies before any CMP script loads. Preventive.
+- **Banner detection** (`cmp-detect.js`, ISOLATED world, `document_idle`): Detects CMP presence via CSS selectors from `_cmpDetectors` (285 CMPs). Reports `[banner]` lines in the Log. Includes a 4-second delayed recheck for async-loaded CMPs (e.g., Usercentrics via GTM).
+- **Cookie observation** (`cmp-detect.js`, delayed 6s): Reads cookies by name from `_cmpSignatures`. Background decodes cookie values (OneTrust, Cookiebot, CookieYes, Complianz, Wix) and compares against user purposes. Reports `[banner-consent]` lines with conflicts or matches.
+- **localStorage observation** (`tcf-detect.js`, MAIN world, `document_idle`): Reads `uc_settings` and `ccm_consent` from `localStorage`. Background decodes compact JSON (Usercentrics history actions, CCM19 category booleans) and compares against user purposes. Reports `[banner-consent]` lines.
+- **TCF/GPP detection** (`tcf-detect.js`, MAIN world): Calls `__tcfapi` and `__gpp` APIs. The TCF pill in the popup shows the site's own consent status as reported by its CMP.
+
+The `[banner]` and `[banner-consent]` tags in the Log distinguish detection (CSS presence) from observation (consent state comparison). Both are streamed via `logPorts` and persisted in `tabCmpDetectData` per tab with session persistence.
 
 ## 12. Files
 
 | File | Role |
 |------|------|
-| `rules/protoconsent_cmp_signatures.json` | Bundled CMP signatures (22 entries, wrapped with version/type metadata) |
+| `rules/protoconsent_cmp_signatures.json` | Bundled CMP signatures (23 entries, wrapped with version/type metadata) |
+| `rules/protoconsent_cmp_detectors.json` | Bundled CMP CSS detectors (285 entries, from Consent-O-Matic + hand-maintained) |
+| `rules/protoconsent_cmp_signatures_site.json` | Bundled site-specific CMP hiding rules |
 | `background/cmp-injection.js` | TC String generator + storage writer + `_cmpSignatures` cache |
-| `background/lifecycle.js` | `initBundledCmpData()` - loads bundled signatures on install |
-| `background/handlers.js` | CDN fetch handler for type `"cmp"` + `_cmpSignatures` bridge write + `PROTOCONSENT_CMP_APPLIED` / `PROTOCONSENT_GET_CMP` handlers |
-| `background/state.js` | `tabCmpData` Map - per-tab CMP injection data |
-| `background/session.js` | Persist/restore `tabCmpData` to `chrome.storage.session` |
+| `background/cmp-cookie-decode.js` | Cookie and localStorage decoders: OneTrust, Cookiebot, CookieYes, Complianz, Wix (cookies), Usercentrics, CCM19 (localStorage). Conflict detection vs user purposes |
+| `background/lifecycle.js` | `initBundledCmpData()`, `initBundledCmpDetectors()`, `initBundledCmpSiteSignatures()` - loads bundled data on install/update |
+| `background/handlers.js` | CDN fetch handlers for `cmp`/`cmp_detectors`/`cmp_site` types + `PROTOCONSENT_CMP_DETECTED`, `PROTOCONSENT_CMP_STORAGE_DETECTED`, `PROTOCONSENT_CMP_APPLIED`, `PROTOCONSENT_GET_CMP_DETECT` handlers |
+| `background/state.js` | `tabCmpData`, `tabCmpDetectData`, `tabGppData` Maps - per-tab CMP data |
+| `background/session.js` | Persist/restore `tabCmpData`, `tabCmpDetectData`, `tabGppData` to `chrome.storage.session` |
 | `content-scripts/cmp-inject.js` | Content script: cookie injection, cosmetic CSS, scroll unlock, observability report |
-| `manifest.json` | Registers `cmp-inject.js` as content script at `document_start` |
+| `content-scripts/cmp-detect.js` | Content script (ISOLATED, `document_idle`): CSS banner detection via `_cmpDetectors`, cookie observation via `_cmpSignatures`, site-specific hiding via `_cmpSiteSignatures` |
+| `content-scripts/tcf-detect.js` | Content script (MAIN, `document_idle`): TCF/GPP API detection, localStorage observation (Usercentrics, CCM19) |
+| `content-scripts/content-script.js` | Bridge: sanitizes and relays MAIN world messages (TCF, GPP, storage) to background |
+| `manifest.json` | Registers `cmp-inject.js`, `cmp-detect.js`, `content-script.js`, `tcf-detect.js` as content scripts |
 
 ## 13. CDN fetch and Enhanced Protection integration
 
@@ -334,7 +353,7 @@ When the user enables dynamic list sync (`dynamicListsConsent`), the Enhanced Pr
 ### Key differences from cosmetic lists
 
 - **No rebuild needed**: Cosmetic lists require `updateCosmeticInjection()` to compile CSS and dynamically register a content script. CMP signatures are read directly from storage by a statically registered content script (`cmp-inject.js`). No `rebuildAllDynamicRules()` call after fetch.
-- **Per-tab observability**: The content script reports activity to the background via `PROTOCONSENT_CMP_APPLIED` message, stored in `tabCmpData` per tab and persisted to `chrome.storage.session`. The Log tab shows CMP events in the Requests stream and the Debug panel shows per-tab injection details.
+- **Per-tab observability**: Three content scripts report activity to the background: `cmp-inject.js` via `PROTOCONSENT_CMP_APPLIED`, `cmp-detect.js` via `PROTOCONSENT_CMP_DETECTED`, and `tcf-detect.js` (relayed through `content-script.js`) via `PROTOCONSENT_CMP_STORAGE_DETECTED`. Data is stored in `tabCmpData` (injection), `tabCmpDetectData` (detection + observation), and `tabGppData` (GPP), all persisted to `chrome.storage.session`. The Log tab shows `[banner]` lines for CSS detection and `[banner-consent]` lines for consent state comparison. The Debug panel shows per-tab details for all three data sources.
 - **Bridge key**: The `_cmpSignatures` storage key is the interface between the Enhanced system and the content script. Both `initBundledCmpData()` and the CDN fetch handler write to it.
 
 ### Catalog entry
@@ -394,7 +413,7 @@ Full entry (cookie injection):
 
 See [testing-guide.md, section 16](testing-guide.md#16-testing-cmp-auto-response) for testing instructions. Key checks:
 - Visit a site using the CMP. Verify the banner does not appear.
-- Check the Log tab Requests stream for a `[cmp]` line showing the CMP ID.
+- Check the Log tab Requests stream for a `[banner]` line showing the CMP ID and detection state.
 - Check Purpose Settings to verify the new CMP appears in the list.
 - If cookie injection: inspect cookies to verify the correct values were set and cleaned up after 5 seconds.
 - If cosmetic only: verify the banner is hidden via CSS (check for `<style data-pc-cmp>`).

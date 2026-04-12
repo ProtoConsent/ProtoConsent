@@ -869,7 +869,7 @@ chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString'], r => 
 ```
 
 Expected output:
-- `Signatures loaded: 22` (all CMP signatures from `cmp-signatures.json`)
+- `Signatures loaded: 23` (all CMP signatures from `cmp-signatures.json`)
 - `User purposes:` an object with boolean values per purpose plus `gpc: 0` or `gpc: 1`
 - `TC String:` a base64url-encoded string starting with `C` (version 2 in 6-bit encoding)
 
