@@ -6,7 +6,7 @@
 // chrome.storage.session (survives SW restarts). Badge text updates.
 
 import {
-  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData,
+  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   _extEventLog,
 } from "./state.js";
 
@@ -35,7 +35,11 @@ export function persistTabDataToSession() {
   for (const [tabId, data] of tabCosmeticData) {
     cosmetic[tabId] = data;
   }
-  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _extEventLog: _extEventLog });
+  const cmp = {};
+  for (const [tabId, data] of tabCmpData) {
+    cmp[tabId] = data;
+  }
+  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _tabCmp: cmp, _extEventLog: _extEventLog });
 }
 
 export async function restoreTabDataFromSession() {
@@ -55,6 +59,11 @@ export async function restoreTabDataFromSession() {
     if (result._tabCosmetic) {
       for (const [tabId, data] of Object.entries(result._tabCosmetic)) {
         tabCosmeticData.set(Number(tabId), data);
+      }
+    }
+    if (result._tabCmp) {
+      for (const [tabId, data] of Object.entries(result._tabCmp)) {
+        tabCmpData.set(Number(tabId), data);
       }
     }
     // Restore inter-extension event log
@@ -77,6 +86,9 @@ export async function restoreTabDataFromSession() {
       }
       for (const tabId of tabCosmeticData.keys()) {
         if (!existingTabs.has(tabId)) tabCosmeticData.delete(tabId);
+      }
+      for (const tabId of tabCmpData.keys()) {
+        if (!existingTabs.has(tabId)) tabCmpData.delete(tabId);
       }
     }
     // Restore per-tab TCF detection data (keys: "tcf_<tabId>")

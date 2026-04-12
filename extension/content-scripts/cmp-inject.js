@@ -212,4 +212,19 @@
       setTimeout(() => observer.disconnect(), CMP_OBSERVER_TIMEOUT);
     }
   }
+
+  // Report CMP activity to background for observability
+  if (window === window.top) {
+    const cmpIds = Object.keys(applicableSigs);
+    if (cmpIds.length > 0) {
+      chrome.runtime.sendMessage({
+        type: "PROTOCONSENT_CMP_APPLIED",
+        domain: domain,
+        cmpIds: cmpIds,
+        cookieCount: injectedCookies.length,
+        selectorCount: selectors.length,
+        scrollUnlock: lockEntries.length > 0,
+      }, () => { void chrome.runtime.lastError; });
+    }
+  }
 })();

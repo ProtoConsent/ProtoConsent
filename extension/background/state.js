@@ -46,6 +46,9 @@ export const tabTcfData = new Map();
 // Per-tab cosmetic filtering applied data
 export const tabCosmeticData = new Map();
 
+// Per-tab CMP auto-response applied data
+export const tabCmpData = new Map();
+
 // Maps dynamic block rule IDs to their purpose (rebuilt on each rule update).
 export let dynamicBlockRuleMap = {};
 export function setDynamicBlockRuleMap(v) { dynamicBlockRuleMap = v; }

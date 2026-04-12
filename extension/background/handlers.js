@@ -33,7 +33,7 @@ function resolveEnhancedPreset(lists, catalog) {
 
 import {
   PURPOSES_FOR_ENFORCEMENT,
-  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData,
+  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -187,10 +187,47 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return;
   }
 
+  // CMP auto-response applied notification from cmp-inject.js
+  if (message.type === "PROTOCONSENT_CMP_APPLIED") {
+    const tabId = _sender && _sender.tab ? _sender.tab.id : null;
+    if (tabId && message.domain) {
+      tabCmpData.set(tabId, {
+        domain: message.domain,
+        cmpIds: message.cmpIds || [],
+        cookieCount: message.cookieCount || 0,
+        selectorCount: message.selectorCount || 0,
+        scrollUnlock: !!message.scrollUnlock,
+        ts: Date.now(),
+      });
+      scheduleSessionPersist();
+      for (const port of logPorts) {
+        try {
+          port.postMessage({
+            type: "cmp",
+            domain: message.domain,
+            cmpIds: message.cmpIds || [],
+            cookieCount: message.cookieCount || 0,
+            selectorCount: message.selectorCount || 0,
+            scrollUnlock: !!message.scrollUnlock,
+            tabId,
+          });
+        } catch (_) {}
+      }
+    }
+    return;
+  }
+
   // Popup requests cosmetic state for a tab
   if (message.type === "PROTOCONSENT_GET_COSMETIC") {
     const info = tabCosmeticData.get(message.tabId) || null;
     sendResponse({ cosmetic: info });
+    return;
+  }
+
+  // Popup requests CMP auto-response state for a tab
+  if (message.type === "PROTOCONSENT_GET_CMP") {
+    const info = tabCmpData.get(message.tabId) || null;
+    sendResponse({ cmp: info });
     return;
   }
 

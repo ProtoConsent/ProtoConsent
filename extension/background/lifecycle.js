@@ -6,7 +6,7 @@
 // handler (rebuild + first-install onboarding redirect).
 
 import {
-  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData,
+  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   tabNavigating, tabLastUrl,
 } from "./state.js";
 import { scheduleSessionPersist } from "./session.js";
@@ -21,6 +21,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabGpcDomains.delete(tabId);
       tabTcfData.delete(tabId);
       tabCosmeticData.delete(tabId);
+      tabCmpData.delete(tabId);
       if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
       scheduleSessionPersist();
       chrome.action.setBadgeText({ tabId, text: "" }).catch(() => {});
@@ -44,6 +45,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   tabGpcDomains.delete(tabId);
   tabTcfData.delete(tabId);
   tabCosmeticData.delete(tabId);
+  tabCmpData.delete(tabId);
   tabLastUrl.delete(tabId);
   if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
   scheduleSessionPersist();
