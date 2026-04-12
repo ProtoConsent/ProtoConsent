@@ -11,7 +11,8 @@
 
 const CORE_PREFIX = "protoconsent_";
 function getCoreIds() {
-  return Object.keys(epCatalog).filter(id => id.startsWith(CORE_PREFIX));
+  return Object.keys(epCatalog).filter(id =>
+    id.startsWith(CORE_PREFIX) && epCatalog[id].type !== "cmp");
 }
 
 function renderCoreCard(coreIds) {
