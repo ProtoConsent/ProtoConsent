@@ -162,7 +162,7 @@ For each applicable signature, the content script:
 3. Sanitizes the value (strips semicolons to prevent cookie attribute injection)
 4. Writes the cookie with `path=/; domain=.{registrable}; SameSite=Lax; max-age={maxAge}`
 
-A persistent UUID is maintained across page loads so CMPs see a consistent identity.
+A fresh random UUID is generated for each page visit via `crypto.randomUUID()`, so consent cookies contain a unique, unlinkable identifier every time. Sites cannot correlate visits through this field. If the user sets a fixed UUID in Purpose Settings (`cmpCustomUuid`), that value is used instead.
 
 **Cookie cleanup**: Injected cookies are deleted after `CMP_CLEANUP_DELAY` (5 seconds). CMPs read their cookies synchronously during script initialization (first 1-2 seconds). Deleting the cookies afterwards reduces HTTP overhead on subsequent same-domain requests (images, XHR, lazy loads). Cookies are re-injected on the next navigation via `document_start`.
 
@@ -212,7 +212,7 @@ CMP auto-response is controlled from **Purpose Settings** (right-click extension
 | `cmpAutoResponse` | boolean | `true` | Master toggle. Set to `false` to disable all CMP injection. |
 | `cmpEnabled` | object | `{}` | Per-CMP toggles. `{ "onetrust": false }` disables OneTrust specifically. |
 | `cmpCookieMaxAge` | number | `7776000` (90 days) | Cookie expiration in seconds. |
-| `cmpCustomUuid` | string | `null` | User-provided UUID override for consent cookies. |
+| `cmpCustomUuid` | string | `null` | User-provided fixed UUID for consent cookies. When empty (default), a unique random UUID is generated per page visit. |
 
 For testing instructions, see [testing-guide.md, section 16](testing-guide.md#16-testing-cmp-auto-response).
 

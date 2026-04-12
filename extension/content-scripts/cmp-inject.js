@@ -20,9 +20,9 @@
   const protocol = window.location.protocol;
   if (protocol !== 'http:' && protocol !== 'https:') return;
 
-  const { _cmpSignatures: sigs, _userPurposes: prefs, _tcString: tcString, _cmpUuid: storedUuid,
+  const { _cmpSignatures: sigs, _userPurposes: prefs, _tcString: tcString,
     cmpAutoResponse, cmpEnabled, cmpCookieMaxAge, cmpCustomUuid } =
-    await chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString', '_cmpUuid',
+    await chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString',
       'cmpAutoResponse', 'cmpEnabled', 'cmpCookieMaxAge', 'cmpCustomUuid']);
   if (cmpAutoResponse === false) return;
   if (!sigs || !prefs) return;
@@ -55,11 +55,10 @@
     applicableSigs[cmpId] = cmp;
   }
 
-  // Persistent UUID: reuse across page loads so CMPs see consistent identity
+  // UUID: fresh random per page visit (unlinkable), unless user set a fixed one
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const customValid = cmpCustomUuid && UUID_RE.test(cmpCustomUuid);
-  const uuid = (customValid ? cmpCustomUuid : null) || storedUuid || crypto.randomUUID();
-  if (!storedUuid) chrome.storage.local.set({ _cmpUuid: uuid });
+  const uuid = customValid ? cmpCustomUuid : crypto.randomUUID();
 
   // --- Layer 1: Cookie injection ---
   const maxAge = cmpCookieMaxAge || CMP_DEFAULT_MAX_AGE;
