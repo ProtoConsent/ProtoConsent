@@ -276,24 +276,28 @@ function renderPresetAction() {
   const toggleCel = () => {
     const newVal = !epConsentEnhancedLink;
     setConsentEnhancedLink(newVal, () => {
-      epConsentEnhancedLink = newVal;
-      chrome.runtime.sendMessage(
-        { type: "PROTOCONSENT_ENHANCED_GET_STATE", forceRefresh: true },
-        (resp) => {
-          if (chrome.runtime.lastError || !resp) return;
-          epCatalog = resp.catalog || {};
-          epLists = resp.lists || {};
-          epPreset = resp.preset || "off";
-          epDynamicConsent = resp.dynamicConsent === true;
-          epConsentEnhancedLink = resp.consentEnhancedLink === true;
-          epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
-          renderEnhancedPresets();
-          renderEnhancedLists();
-          updateEnhancedStatus();
-          const newCelPill = document.querySelector(".ep-cel-pill");
-          if (newCelPill) newCelPill.focus();
-        }
-      );
+      // Trigger rebuild so lastConsentLinkedListIds updates before we read state
+      chrome.runtime.sendMessage({ type: "PROTOCONSENT_RULES_UPDATED" }, () => {
+        void chrome.runtime.lastError;
+        epConsentEnhancedLink = newVal;
+        chrome.runtime.sendMessage(
+          { type: "PROTOCONSENT_ENHANCED_GET_STATE", forceRefresh: true },
+          (resp) => {
+            if (chrome.runtime.lastError || !resp) return;
+            epCatalog = resp.catalog || {};
+            epLists = resp.lists || {};
+            epPreset = resp.preset || "off";
+            epDynamicConsent = resp.dynamicConsent === true;
+            epConsentEnhancedLink = resp.consentEnhancedLink === true;
+            epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
+            renderEnhancedPresets();
+            renderEnhancedLists();
+            updateEnhancedStatus();
+            const newCelPill = document.querySelector(".ep-cel-pill");
+            if (newCelPill) newCelPill.focus();
+          }
+        );
+      });
     });
   };
   celPill.addEventListener("click", toggleCel);

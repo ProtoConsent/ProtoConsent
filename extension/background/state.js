@@ -91,6 +91,10 @@ export function setGpcRemoveDomains(v) { gpcRemoveDomains = v; }
 // Per-tab tracking of unique domains that received GPC signals.
 export const tabGpcDomains = new Map();
 
+// Session restore promise - handlers must await this before reading tab data.
+export let sessionRestoreReady = Promise.resolve();
+export function setSessionRestoreReady(v) { sessionRestoreReady = v; }
+
 // Last rebuild debug snapshot (served to popup on request)
 export let lastRebuildDebug = {};
 export function setLastRebuildDebug(v) { lastRebuildDebug = v; }

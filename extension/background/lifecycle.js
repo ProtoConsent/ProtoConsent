@@ -23,7 +23,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabCosmeticData.delete(tabId);
       if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
       scheduleSessionPersist();
-      chrome.action.setBadgeText({ tabId, text: "" });
+      chrome.action.setBadgeText({ tabId, text: "" }).catch(() => {});
     }
   } else if (changeInfo.status === "complete") {
     tabNavigating.delete(tabId);

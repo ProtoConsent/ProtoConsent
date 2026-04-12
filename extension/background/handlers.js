@@ -35,7 +35,7 @@ import {
   PURPOSES_FOR_ENFORCEMENT,
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
-  tabNavigating, logPorts,
+  tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
   _catalogLocalCount, _catalogRemoteCount, _catalogLastRemoteFetch,
 } from "./state.js";
@@ -98,7 +98,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (PURPOSES_FOR_ENFORCEMENT.length === 0) {
       rebuildAllDynamicRules();
     }
-    Promise.all([loadBlocklistsConfig(), getWhitelistFromStorage()]).then(([bl, whitelist]) => {
+    Promise.all([sessionRestoreReady, loadBlocklistsConfig(), getWhitelistFromStorage()]).then(([, bl, whitelist]) => {
       const purposeDomainCounts = {};
       const purposePathCounts = {};
       for (const key of PURPOSES_FOR_ENFORCEMENT) {
