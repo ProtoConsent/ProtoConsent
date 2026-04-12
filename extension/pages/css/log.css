@@ -264,6 +264,14 @@
   color: #67b8f0;
 }
 
+.pc-log-line-detect {
+  color: #f472b6;
+}
+
+.pc-log-line-observe {
+  color: #a78bfa;
+}
+
 .pc-log-line-ts {
   color: #64748b;
 }

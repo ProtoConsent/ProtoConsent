@@ -34,6 +34,7 @@ function resolveEnhancedPreset(lists, catalog) {
 import {
   PURPOSES_FOR_ENFORCEMENT,
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
+  tabCmpDetectData, tabGppData,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -51,6 +52,7 @@ import {
 } from "./config-loader.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
 import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
+import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
 import { scheduleSessionPersist } from "./session.js";
 
 // Handle a bridge query from the content script.
@@ -235,6 +237,117 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === "PROTOCONSENT_GET_TCF") {
     const info = tabTcfData.get(message.tabId) || null;
     sendResponse({ tcf: info });
+    return;
+  }
+
+  // CMP detection notification from cmp-detect.js
+  if (message.type === "PROTOCONSENT_CMP_DETECTED") {
+    const tabId = _sender && _sender.tab ? _sender.tab.id : null;
+    if (tabId && message.domain) {
+      const detected = Array.isArray(message.detected) ? message.detected.slice(0, 50) : [];
+      const cookies = Array.isArray(message.cookies) ? message.cookies.slice(0, 50) : [];
+      const siteHidden = Array.isArray(message.siteHidden) ? message.siteHidden.slice(0, 50) : [];
+
+      const finalize = (observation) => {
+        // Merge into existing entry to preserve storageObservation from earlier probe
+        const existing = tabCmpDetectData.get(tabId);
+        const detectData = {
+          domain: String(message.domain).slice(0, 200),
+          detected: detected.length > 0 ? detected : (existing?.detected || []),
+          cookies: cookies.length > 0 ? cookies : (existing?.cookies || []),
+          siteHidden: siteHidden.length > 0 ? siteHidden : (existing?.siteHidden || []),
+          observation: observation.length > 0 ? observation : (existing?.observation || []),
+          ts: Date.now(),
+        };
+        // Preserve storage observation fields if present
+        if (existing?.storageObservation) detectData.storageObservation = existing.storageObservation;
+        if (existing?.storageEntries) detectData.storageEntries = existing.storageEntries;
+        tabCmpDetectData.set(tabId, detectData);
+        scheduleSessionPersist();
+        for (const port of logPorts) {
+          try {
+            port.postMessage({ type: "cmp_detect", tabId, ...detectData });
+          } catch (_) {}
+        }
+      };
+
+      if (cookies.length > 0) {
+        chrome.storage.local.get("_userPurposes", (result) => {
+          const userPurposes = result._userPurposes || null;
+          finalize(decodeCmpCookies(cookies, userPurposes));
+        });
+      } else {
+        finalize([]);
+      }
+    }
+    return;
+  }
+
+  // GPP detection from tcf-detect.js
+  if (message.type === "PROTOCONSENT_GPP_DETECTED") {
+    const tabId = _sender && _sender.tab ? _sender.tab.id : null;
+    if (tabId) {
+      const gppData = {
+        detected: true,
+        gppVersion: (typeof message.gppVersion === "string" && message.gppVersion.length < 20) ? message.gppVersion : null,
+        supportedAPIs: Array.isArray(message.supportedAPIs) ? message.supportedAPIs.slice(0, 20) : null,
+        ts: Date.now(),
+      };
+      tabGppData.set(tabId, gppData);
+      scheduleSessionPersist();
+    }
+    return;
+  }
+
+  // CMP localStorage observation from tcf-detect.js (MAIN world)
+  if (message.type === "PROTOCONSENT_CMP_STORAGE_DETECTED") {
+    const tabId = _sender && _sender.tab ? _sender.tab.id : null;
+    if (tabId && Array.isArray(message.entries)) {
+      const entries = message.entries.slice(0, 10).filter(e =>
+        e && typeof e.cmpId === "string" && typeof e.key === "string" && typeof e.raw === "string"
+      );
+      if (entries.length > 0) {
+        chrome.storage.local.get("_userPurposes", (result) => {
+          const userPurposes = result._userPurposes || null;
+          const observation = decodeCmpStorage(entries, userPurposes);
+          // Derive domain from sender tab URL
+          let senderDomain = "";
+          try {
+            if (_sender.tab && _sender.tab.url) senderDomain = new URL(_sender.tab.url).hostname.replace(/^www\./, "");
+          } catch (_) {}
+          // Merge into existing tabCmpDetectData (may already have CSS detect + cookies)
+          const existing = tabCmpDetectData.get(tabId) || { domain: senderDomain, detected: [], cookies: [], siteHidden: [], observation: [], ts: Date.now() };
+          if (!existing.domain) existing.domain = senderDomain;
+          existing.storageObservation = observation;
+          existing.storageEntries = entries.map(e => ({ cmpId: e.cmpId, key: e.key }));
+          tabCmpDetectData.set(tabId, existing);
+          scheduleSessionPersist();
+          // Stream to log
+          const domain = existing.domain || senderDomain;
+          for (const port of logPorts) {
+            try {
+              port.postMessage({
+                type: "cmp_detect",
+                domain,
+                detected: [],
+                cookies: [],
+                siteHidden: [],
+                observation: [],
+                storageObservation: observation,
+                tabId,
+              });
+            } catch (_) {}
+          }
+        });
+      }
+    }
+    return;
+  }
+
+  // Popup requests CMP detection state for a tab
+  if (message.type === "PROTOCONSENT_GET_CMP_DETECT") {
+    const info = tabCmpDetectData.get(message.tabId) || null;
+    sendResponse({ cmpDetect: info });
     return;
   }
 
@@ -700,6 +813,112 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               });
             });
           }
+          if (listDef.type === "cmp_detectors") {
+            if (!data.detectors || typeof data.detectors !== "object") {
+              throw new Error("Invalid CMP detectors list format: missing detectors");
+            }
+            const cmpCount = data.cmp_count || Object.keys(data.detectors).length;
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, cmpCount: existing.cmpCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeCmpDetectors(lists, shouldEnable);
+                  });
+                }
+                return storeCmpDetectors(lists, shouldEnable);
+                function storeCmpDetectors(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    cmpCount,
+                    type: "cmp_detectors",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { detectors: data.detectors },
+                    _cmpDetectors: data.detectors,
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      sendResponse({ ok: true, cmpCount });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
+          if (listDef.type === "cmp_site") {
+            if (!data.signatures || typeof data.signatures !== "object") {
+              throw new Error("Invalid CMP site list format: missing signatures");
+            }
+            const cmpCount = data.cmp_count || Object.keys(data.signatures).length;
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, cmpCount: existing.cmpCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeCmpSite(lists, shouldEnable);
+                  });
+                }
+                return storeCmpSite(lists, shouldEnable);
+                function storeCmpSite(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    cmpCount,
+                    type: "cmp_site",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { signatures: data.signatures },
+                    _cmpSiteSignatures: data.signatures,
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      sendResponse({ ok: true, cmpCount });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
           if (!data.rules || !Array.isArray(data.rules)) {
             throw new Error("Invalid list format: missing rules array");
           }
@@ -801,6 +1020,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 chrome.storage.local.remove("_cmpSignatures", () => {
                   invalidateCmpSignaturesCache();
                   rebuildAllDynamicRules();
+                  sendResponse({ ok: true });
+                  resolve();
+                });
+                return;
+              }
+              if (removedType === "cmp_detectors") {
+                chrome.storage.local.remove("_cmpDetectors", () => {
+                  sendResponse({ ok: true });
+                  resolve();
+                });
+                return;
+              }
+              if (removedType === "cmp_site") {
+                chrome.storage.local.remove("_cmpSiteSignatures", () => {
                   sendResponse({ ok: true });
                   resolve();
                 });

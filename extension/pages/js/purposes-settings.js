@@ -535,8 +535,20 @@ function renderEnhancedPresets() {
 			const pills = document.createElement('div');
 			pills.className = 'ps-preset-purposes';
 			let coreRendered = false;
+			let cmpRendered = false;
 			for (const [listId, listDef] of Object.entries(catalog)) {
-				if (listId.startsWith('protoconsent_')) {
+				if (CMP_IDS.has(listId)) {
+					if (cmpRendered) continue;
+					cmpRendered = true;
+					const included = preset.id === 'full' ||
+						(preset.id === 'basic' && listDef.preset === 'basic');
+					const pill = document.createElement('span');
+					pill.className = 'ps-preset-pill ' + (included ? 'allowed' : 'denied');
+					pill.textContent = 'ProtoConsent Banners' + (included ? ' \u2713' : ' \u2717');
+					pills.appendChild(pill);
+					continue;
+				}
+				if (CORE_IDS.has(listId)) {
 					if (coreRendered) continue;
 					coreRendered = true;
 					const included = preset.id === 'full' ||
@@ -587,11 +599,25 @@ function renderEnhancedPresets() {
 			const pills = document.createElement('div');
 			pills.className = 'ps-preset-purposes';
 			let coreRendered = false;
+			let cmpRendered = false;
 			for (const [listId, listDef] of Object.entries(catalog)) {
-				if (listId.startsWith('protoconsent_')) {
+				if (CMP_IDS.has(listId)) {
+					if (cmpRendered) continue;
+					cmpRendered = true;
+					const cmpIdList = Object.keys(catalog).filter(id => CMP_IDS.has(id));
+					const cmpData = cmpIdList.map(id => enhancedLists[id]).filter(Boolean);
+					if (cmpData.length === 0) continue;
+					const allEnabled = cmpData.every(d => !!d.enabled);
+					const pill = document.createElement('span');
+					pill.className = 'ps-preset-pill ' + (allEnabled ? 'allowed' : 'denied');
+					pill.textContent = 'ProtoConsent Banners' + (allEnabled ? ' \u2713' : ' \u2717');
+					pills.appendChild(pill);
+					continue;
+				}
+				if (CORE_IDS.has(listId)) {
 					if (coreRendered) continue;
 					coreRendered = true;
-					const coreIds = Object.keys(catalog).filter(id => id.startsWith('protoconsent_'));
+					const coreIds = Object.keys(catalog).filter(id => CORE_IDS.has(id));
 					const coreData = coreIds.map(id => enhancedLists[id]).filter(Boolean);
 					if (coreData.length === 0) continue;
 					const allEnabled = coreData.every(d => !!d.enabled) || coreIds.some(id => celIds.has(id));
@@ -774,6 +800,22 @@ function initCmpSection() {
 		if (on) detail.classList.remove('ps-hidden');
 		else detail.classList.add('ps-hidden');
 	});
+
+	// CMP Detection toggle
+	const detectToggle = document.getElementById('cmp-detect-toggle');
+	const detectLabel = document.getElementById('cmp-detect-label');
+	if (detectToggle && detectLabel) {
+		chrome.storage.local.get(['cmpDetectionEnabled'], (data) => {
+			const on = data.cmpDetectionEnabled !== false;
+			detectToggle.checked = on;
+			detectLabel.textContent = on ? 'Enabled' : 'Disabled';
+		});
+		detectToggle.addEventListener('change', () => {
+			const on = detectToggle.checked;
+			detectLabel.textContent = on ? 'Enabled' : 'Disabled';
+			chrome.storage.local.set({ cmpDetectionEnabled: on });
+		});
+	}
 }
 
 function notifyBackground(cb) {
@@ -793,7 +835,8 @@ const EXPORT_KEYS = [
 	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending",
 	"dynamicListsConsent", "consentEnhancedLink",
 	"celMode", "celCustomPurposes",
-	"cmpAutoResponse", "cmpEnabled", "cmpCookieMaxAge", "cmpCustomUuid"
+	"cmpAutoResponse", "cmpEnabled", "cmpCookieMaxAge", "cmpCustomUuid",
+	"cmpDetectionEnabled"
 ];
 
 const VALID_PROFILES = ["strict", "balanced", "permissive", "custom"];
@@ -907,6 +950,10 @@ function validateImport(data) {
 	if ("cmpAutoResponse" in data) {
 		if (typeof data.cmpAutoResponse === "boolean") clean.cmpAutoResponse = data.cmpAutoResponse;
 		else errors.push("cmpAutoResponse: must be boolean");
+	}
+	if ("cmpDetectionEnabled" in data) {
+		if (typeof data.cmpDetectionEnabled === "boolean") clean.cmpDetectionEnabled = data.cmpDetectionEnabled;
+		else errors.push("cmpDetectionEnabled: must be boolean");
 	}
 	if ("cmpEnabled" in data) {
 		const ce = data.cmpEnabled;

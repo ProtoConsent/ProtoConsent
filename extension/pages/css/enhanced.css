@@ -135,6 +135,16 @@
   background: linear-gradient(180deg, #fffcf0 0%, #ffffff 100%);
 }
 
+.ep-list-card.is-own {
+  border-color: var(--pc-accent, #1d4ed8);
+  background: linear-gradient(180deg, var(--pc-accent-soft, #dbeafe) 0%, #ffffff 100%);
+}
+
+.ep-list-card.is-own.is-enabled {
+  border-color: var(--pc-accent, #1d4ed8);
+  background: linear-gradient(180deg, #93c5fd 0%, var(--pc-accent-soft, #dbeafe) 100%);
+}
+
 .ep-list-header {
   display: flex;
   align-items: center;

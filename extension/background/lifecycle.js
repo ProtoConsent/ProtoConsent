@@ -7,6 +7,7 @@
 
 import {
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
+  tabCmpDetectData, tabGppData,
   tabNavigating, tabLastUrl,
 } from "./state.js";
 import { scheduleSessionPersist } from "./session.js";
@@ -22,6 +23,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabTcfData.delete(tabId);
       tabCosmeticData.delete(tabId);
       tabCmpData.delete(tabId);
+      tabCmpDetectData.delete(tabId);
+      tabGppData.delete(tabId);
       if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
       scheduleSessionPersist();
       chrome.action.setBadgeText({ tabId, text: "" }).catch(() => {});
@@ -46,6 +49,8 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   tabTcfData.delete(tabId);
   tabCosmeticData.delete(tabId);
   tabCmpData.delete(tabId);
+  tabCmpDetectData.delete(tabId);
+  tabGppData.delete(tabId);
   tabLastUrl.delete(tabId);
   if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
   scheduleSessionPersist();
@@ -58,10 +63,31 @@ chrome.runtime.onStartup?.addListener(() => {
 
 // Also rebuild when the extension is installed or updated
 chrome.runtime.onInstalled.addListener(async (details) => {
+  // On install or update: force reload CMP data from bundled.
+  // On update: protects against stale/bad data.
+  // On install: Chrome may preserve storage across reinstall if extension ID
+  // is unchanged (unpacked load from same folder), so clear stale entries.
+  if (details.reason === 'update' || details.reason === 'install') {
+    await new Promise(resolve => {
+      chrome.storage.local.remove([
+        "enhancedData_protoconsent_cmp_signatures",
+        "enhancedData_protoconsent_cmp_detectors",
+        "enhancedData_protoconsent_cmp_signatures_site",
+        "_cmpSignatures",
+        "_cmpDetectors",
+        "_cmpSiteSignatures",
+      ], resolve);
+    });
+  }
+
   // Load bundled cosmetic data if not yet downloaded remotely
   await initBundledCosmeticData();
-  // Load bundled CMP signatures if not yet downloaded remotely
+  // Load bundled CMP signatures (always fresh after update)
   await initBundledCmpData();
+  // Load bundled CMP detectors (always fresh after update)
+  await initBundledCmpDetectors();
+  // Load bundled CMP site-specific signatures (always fresh after update)
+  await initBundledCmpSiteSignatures();
 
   rebuildAllDynamicRules();
 
@@ -141,5 +167,73 @@ async function initBundledCmpData() {
     });
   } catch (e) {
     console.warn("ProtoConsent: failed to load bundled CMP data:", e);
+  }
+}
+
+// Initialize bundled CMP detector data on first install or update.
+// If remote data has already been fetched, this is a no-op.
+async function initBundledCmpDetectors() {
+  const result = await new Promise(resolve => {
+    chrome.storage.local.get(["enhancedData_protoconsent_cmp_detectors", "enhancedLists"], resolve);
+  });
+  if (chrome.runtime.lastError || result.enhancedData_protoconsent_cmp_detectors) return;
+
+  try {
+    const res = await fetch(chrome.runtime.getURL("rules/protoconsent_cmp_detectors.json"));
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!data.detectors || typeof data.detectors !== "object") return;
+    const lists = result.enhancedLists || {};
+    lists.protoconsent_cmp_detectors = {
+      enabled: true,
+      version: data.version || "bundled",
+      lastFetched: Date.now(),
+      cmpCount: data.cmp_count || Object.keys(data.detectors).length,
+      type: "cmp_detectors",
+      bundled: true,
+    };
+    await new Promise(resolve => {
+      chrome.storage.local.set({
+        enhancedLists: lists,
+        enhancedData_protoconsent_cmp_detectors: { detectors: data.detectors },
+        _cmpDetectors: data.detectors,
+      }, resolve);
+    });
+  } catch (e) {
+    console.warn("ProtoConsent: failed to load bundled CMP detectors:", e);
+  }
+}
+
+// Initialize bundled CMP site-specific signature data on first install or update.
+// If remote data has already been fetched, this is a no-op.
+async function initBundledCmpSiteSignatures() {
+  const result = await new Promise(resolve => {
+    chrome.storage.local.get(["enhancedData_protoconsent_cmp_signatures_site", "enhancedLists"], resolve);
+  });
+  if (chrome.runtime.lastError || result.enhancedData_protoconsent_cmp_signatures_site) return;
+
+  try {
+    const res = await fetch(chrome.runtime.getURL("rules/protoconsent_cmp_signatures_site.json"));
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!data.signatures || typeof data.signatures !== "object") return;
+    const lists = result.enhancedLists || {};
+    lists.protoconsent_cmp_signatures_site = {
+      enabled: true,
+      version: data.version || "bundled",
+      lastFetched: Date.now(),
+      cmpCount: data.cmp_count || Object.keys(data.signatures).length,
+      type: "cmp_site",
+      bundled: true,
+    };
+    await new Promise(resolve => {
+      chrome.storage.local.set({
+        enhancedLists: lists,
+        enhancedData_protoconsent_cmp_signatures_site: { signatures: data.signatures },
+        _cmpSiteSignatures: data.signatures,
+      }, resolve);
+    });
+  } catch (e) {
+    console.warn("ProtoConsent: failed to load bundled CMP site signatures:", e);
   }
 }
