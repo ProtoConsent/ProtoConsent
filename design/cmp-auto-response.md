@@ -273,8 +273,15 @@ MAIN world access is the known resolution for the ISOLATED world limitations. Th
 | **Purpose-level control** | Yes (per-purpose consent values) | Varies (most are all-or-nothing) | No (binary block/allow) |
 | **Maintenance model** | Signature JSON per CMP | CSS selectors + click targets per CMP | Filter lists (domain-based) |
 | **Breakage risk** | Low (CMP sees valid consent) | Medium (DOM changes break selectors) | High (consent wall, `__tcfapi` undefined) |
+| **Dark pattern risk** | None (no interaction to misinterpret) | A failed or partial click can be treated by the CMP as implicit consent | None (CMP never loads) |
 
-## 11. Files
+## 11. Interaction with TCF detection
+
+CMP auto-response and TCF detection are independent systems. Auto-response injects cookies at `document_start` in ISOLATED world. TCF detection (`tcf-detect.js`) runs in MAIN world and reads the CMP's JavaScript API (`__tcfapi`). The cookie and the JavaScript API are separate interfaces maintained by the CMP.
+
+The TCF pill in the popup shows the site's own consent status as reported by its CMP, not the state applied by ProtoConsent.
+
+## 12. Files
 
 | File | Role |
 |------|------|

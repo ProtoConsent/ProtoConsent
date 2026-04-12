@@ -454,11 +454,11 @@ function loadTcfInfo() {
 function renderTcfInfo(container, tcf) {
   container.replaceChildren();
   container.setAttribute("role", "region");
-  container.setAttribute("aria-label", "Cookie Consent Banner");
+  container.setAttribute("aria-label", "Site Consent Status");
 
   const titleEl = document.createElement("div");
   titleEl.className = "pc-declaration-title";
-  titleEl.textContent = "Cookie Consent Banner";
+  titleEl.textContent = "This site's consent status";
   container.appendChild(titleEl);
 
   // CMP provider
@@ -503,7 +503,7 @@ function renderTcfInfo(container, tcf) {
   // Reassurance note
   const noteEl = document.createElement("div");
   noteEl.className = "pc-tcf-note";
-  noteEl.textContent = "ProtoConsent enforces your preferences at the network level regardless.";
+  noteEl.textContent = "Your choices are applied by ProtoConsent independently of the site consent status shown above.";
   container.appendChild(noteEl);
 
   // Make side panel visible if not already (TCF found without .well-known)
