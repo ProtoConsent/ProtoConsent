@@ -11,6 +11,12 @@
 (async () => {
   'use strict';
 
+  // --- Constants ---
+  const CMP_DEFAULT_MAX_AGE = 7776000;   // 90 days (seconds)
+  const CMP_CLEANUP_DELAY   = 5000;      // ms before deleting injected cookies
+  const CMP_ENFORCE_TIMEOUT = 10000;     // ms watching for CMP re-lock attempts
+  const CMP_OBSERVER_TIMEOUT = 15000;    // ms safety limit for banner detection
+
   const protocol = window.location.protocol;
   if (protocol !== 'http:' && protocol !== 'https:') return;
 
@@ -56,7 +62,7 @@
   if (!storedUuid) chrome.storage.local.set({ _cmpUuid: uuid });
 
   // --- Layer 1: Cookie injection ---
-  const maxAge = cmpCookieMaxAge || 7776000;
+  const maxAge = cmpCookieMaxAge || CMP_DEFAULT_MAX_AGE;
   const injectedCookies = [];
   for (const [cmpId, cmp] of Object.entries(applicableSigs)) {
     if (!cmp.cookie) continue;
@@ -85,7 +91,8 @@
     }
   }
 
-  // Cleanup: delete injected cookies after CMPs have read them (~10s).
+  // Cleanup: delete injected cookies after CMPs have read them (~5s).
+  // CMPs read their cookie synchronously during script init (first 1-2s).
   // Reduces HTTP overhead on subsequent requests (images, XHR, lazy loads).
   // Cookies are re-injected on next navigation via document_start.
   if (injectedCookies.length) {
@@ -93,7 +100,7 @@
       for (const name of injectedCookies) {
         document.cookie = `${name}=; path=/; domain=.${domain}; max-age=0`;
       }
-    }, 10000);
+    }, CMP_CLEANUP_DELAY);
   }
 
   // --- Layer 2: Cosmetic safety net ---
@@ -169,7 +176,7 @@
       };
       if (document.body) startWatch();
       else document.addEventListener('DOMContentLoaded', startWatch, { once: true });
-      setTimeout(() => mo.disconnect(), 10000);
+      setTimeout(() => mo.disconnect(), CMP_ENFORCE_TIMEOUT);
     };
 
     const tryUnlock = () => {
@@ -203,7 +210,7 @@
         }
       }, { once: true });
       // Safety timeout: stop observing after 15s
-      setTimeout(() => observer.disconnect(), 15000);
+      setTimeout(() => observer.disconnect(), CMP_OBSERVER_TIMEOUT);
     }
   }
 })();

@@ -296,5 +296,24 @@
     "selector": "#fides-overlay, #fides-banner-container, #fides-banner-inner-container",
     "lockClass": "fides-no-scroll",
     "note": "Ethyca Fides (open source). Cookie omits fides_string/non_applicable_notice_keys (site-specific). Falls back to cosmetic if cookie alone insufficient."
+  },
+
+  "bing": {
+    "cookie": [
+      {
+        "name": "BCP",
+        "template": "AD={ads}&AL={analytics}&SM={personalization}"
+      }
+    ],
+    "purposeMap": {
+      "analytics": "AL",
+      "personalization": "SM",
+      "ads": "AD"
+    },
+    "format": { "allow": "1", "deny": "0" },
+    "selector": "#bnp_container, .bnp_overlay_wrapper",
+    "lockClass": null,
+    "domains": ["bing", "microsoft", "outlook", "live", "msn"],
+    "note": "Microsoft/Bing consent banner. BCP cookie uses simple key=value pairs. Covers bing.com, microsoft.com, outlook.com, live.com, msn.com."
   }
 }

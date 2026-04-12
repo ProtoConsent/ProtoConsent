@@ -22,6 +22,12 @@ const TCF_PURPOSE_MAP = {
   analytics:         [8, 9],     // Measure content performance, market research
   personalization:   [5, 6],     // Content profile, personalized content
 };
+
+// TCF v2.2 core segment fixed values
+const TCF_CMP_ID             = 1;  // Placeholder (no registered CMP ID yet)
+const TCF_CMP_VERSION        = 1;
+const TCF_VENDOR_LIST_VERSION = 1;  // Minimal
+const TCF_POLICY_VERSION     = 4;  // TCF v2.2
 // Purposes 10 (develop/improve products) and special purposes are not mapped —
 // they follow the most restrictive denied purpose or stay 0.
 
@@ -47,13 +53,13 @@ function encodeTcString(globalPurposes) {
   pushBits(2, 6);           // Version = 2
   pushBits(now, 36);        // Created
   pushBits(now, 36);        // LastUpdated
-  pushBits(1, 12);          // CmpId (1 = placeholder; no registered ID yet)
-  pushBits(1, 12);          // CmpVersion
+  pushBits(TCF_CMP_ID, 12);         // CmpId
+  pushBits(TCF_CMP_VERSION, 12);    // CmpVersion
   pushBits(0, 6);           // ConsentScreen
   pushLetter("E");          // ConsentLanguage: EN
   pushLetter("N");
-  pushBits(1, 12);          // VendorListVersion (minimal)
-  pushBits(4, 6);           // TcfPolicyVersion = 4 (TCF v2.2)
+  pushBits(TCF_VENDOR_LIST_VERSION, 12);  // VendorListVersion
+  pushBits(TCF_POLICY_VERSION, 6);        // TcfPolicyVersion
   pushBits(1, 1);           // IsServiceSpecific = true
   pushBits(0, 1);           // UseNonStandardTexts = false
 
