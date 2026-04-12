@@ -283,7 +283,7 @@ For the full signature format, supported CMPs, and three-layer response architec
 
 | List | License | Templates | Scope |
 | --- | --- | --- | --- |
-| [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | 22 | Global (most), domain-scoped (Bing) |
+| [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | 23 | Global (most), domain-scoped (Bing) |
 
 ## 8. ProtoConsent Core lists
 

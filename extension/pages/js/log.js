@@ -510,14 +510,6 @@ function connectLogPort() {
       let detail = "[cosmetic] " + msg.domain;
       if (msg.siteRules > 0) detail += " +" + msg.siteRules + " site rules";
       appendLogLine(detail, "cosmetic");
-    } else if (msg.type === "cmp") {
-      let detail = "[cmp] " + msg.domain + " - " + msg.cmpIds.join(", ");
-      const parts = [];
-      if (msg.cookieCount > 0) parts.push(msg.cookieCount + " cookies");
-      if (msg.selectorCount > 0) parts.push(msg.selectorCount + " selectors");
-      if (msg.scrollUnlock) parts.push("scroll unlock");
-      if (parts.length > 0) detail += " (" + parts.join(", ") + ")";
-      appendLogLine(detail, "cmp");
     } else if (msg.type === "ext") {
       const sid = msg.sender.length > 16 ? msg.sender.slice(0, 8) + "\u2026" + msg.sender.slice(-6) : msg.sender;
       const action = (msg.action || "").replace("protoconsent:", "");
@@ -529,6 +521,8 @@ function connectLogPort() {
         detail += " \u2717 " + msg.result;
       }
       appendLogLine("[ext] " + sid + " \u2192 " + detail, "ext", msg.ts);
+    } else if (msg.type === "cmp_detect") {
+      renderCmpDetectLog(msg);
     }
   });
 
@@ -584,16 +578,9 @@ function replayHistoricalLog() {
       if (c.siteRules > 0) detail += " +" + c.siteRules + " site rules";
       appendLogLine(detail, "cosmetic", c.ts);
     });
-    chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_CMP", tabId: tabs[0].id }, (resp) => {
-      if (chrome.runtime.lastError || !resp?.cmp) return;
-      const c = resp.cmp;
-      let detail = "[cmp] " + c.domain + " - " + c.cmpIds.join(", ");
-      const parts = [];
-      if (c.cookieCount > 0) parts.push(c.cookieCount + " cookies");
-      if (c.selectorCount > 0) parts.push(c.selectorCount + " selectors");
-      if (c.scrollUnlock) parts.push("scroll unlock");
-      if (parts.length > 0) detail += " (" + parts.join(", ") + ")";
-      appendLogLine(detail, "cmp", c.ts);
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_CMP_DETECT", tabId: tabs[0].id }, (resp) => {
+      if (chrome.runtime.lastError || !resp?.cmpDetect) return;
+      renderCmpDetectLog(resp.cmpDetect);
     });
   });
 
@@ -626,6 +613,8 @@ function appendLogLine(text, type, ts) {
   else if (type === "cosmetic") line.className = "pc-log-line-cosmetic";
   else if (type === "cmp") line.className = "pc-log-line-cmp";
   else if (type === "ext") line.className = "pc-log-line-ext";
+  else if (type === "banner") line.className = "pc-log-line-detect";
+  else if (type === "banner-consent") line.className = "pc-log-line-observe";
 
   const tsSpan = document.createElement("span");
   tsSpan.className = "pc-log-line-ts";
@@ -664,6 +653,66 @@ function appendLogLine(text, type, ts) {
   }
 
   if (atBottom) pre.scrollTop = pre.scrollHeight;
+}
+
+// --- CMP detect/observe log rendering ---
+
+function renderCmpDetectLog(msg) {
+  const domain = msg.domain || "?";
+
+  // Detection lines
+  if (Array.isArray(msg.detected)) {
+    for (const d of msg.detected) {
+      const state = d.showing ? "showing" : (d.present ? "present" : "detected");
+      appendLogLine("[banner] " + domain + " - " + d.cmpId + " (" + state + ")", "banner", msg.ts);
+    }
+  }
+
+  // Site-specific hiding lines
+  if (Array.isArray(msg.siteHidden)) {
+    for (const s of msg.siteHidden) {
+      appendLogLine("[banner] " + domain + " - " + s.cmpId + " site-specific (" + s.selectorCount + " selectors)", "banner", msg.ts);
+    }
+  }
+
+  // Observation lines (cookie decoding)
+  if (Array.isArray(msg.observation)) {
+    for (const obs of msg.observation) {
+      if (obs.conflicts && obs.conflicts.length > 0) {
+        for (const c of obs.conflicts) {
+          const cmpStr = c.cmpValue ? "allow" : "deny";
+          const usStr = c.userValue ? "allow" : "deny";
+          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": " + c.purpose + " CMP=" + cmpStr + " us=" + usStr, "banner-consent", msg.ts);
+        }
+      } else {
+        appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": consent matches", "banner-consent", msg.ts);
+      }
+    }
+  }
+
+  // Storage observation lines (localStorage-based CMPs)
+  if (Array.isArray(msg.storageObservation)) {
+    for (const obs of msg.storageObservation) {
+      // Summary results (e.g. Usercentrics without service names)
+      if (obs.summary && obs.decoded) {
+        if (obs.decoded._noInteraction) {
+          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": banner pending (no user interaction)", "banner-consent", msg.ts);
+        } else if (typeof obs.decoded._allow === "number") {
+          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": " + obs.decoded._allow + " allow / " + obs.decoded._deny + " deny", "banner-consent", msg.ts);
+        }
+        continue;
+      }
+      if (obs.conflicts && obs.conflicts.length > 0) {
+        for (const c of obs.conflicts) {
+          const cmpStr = c.cmpValue ? "allow" : "deny";
+          const usStr = c.userValue ? "allow" : "deny";
+          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": " + c.purpose + " CMP=" + cmpStr + " us=" + usStr, "banner-consent", msg.ts);
+        }
+      } else {
+        appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": consent matches", "banner-consent", msg.ts);
+      }
+    }
+  }
 }
 
 // --- Whitelist helpers ---

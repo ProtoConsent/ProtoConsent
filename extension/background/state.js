@@ -49,6 +49,12 @@ export const tabCosmeticData = new Map();
 // Per-tab CMP auto-response applied data
 export const tabCmpData = new Map();
 
+// Per-tab CMP detection data (from cmp-detect.js)
+export const tabCmpDetectData = new Map();
+
+// Per-tab GPP detection data (from tcf-detect.js __gpp probe)
+export const tabGppData = new Map();
+
 // Maps dynamic block rule IDs to their purpose (rebuilt on each rule update).
 export let dynamicBlockRuleMap = {};
 export function setDynamicBlockRuleMap(v) { dynamicBlockRuleMap = v; }

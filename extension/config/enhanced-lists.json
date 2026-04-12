@@ -6,8 +6,12 @@
     "license": "GPL-3.0-or-later",
     "category": "analytics",
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_analytics.json",
     "order": 30,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_analytics.json"
+    "version": "2026-04-11",
+    "generated": "2026-04-10T02:04:41.264Z",
+    "domain_count": 100,
+    "path_rule_count": 562
   },
   "protoconsent_ads": {
     "name": "ProtoConsent Ads",
@@ -16,8 +20,12 @@
     "license": "GPL-3.0-or-later",
     "category": "ads",
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_ads.json",
     "order": 31,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_ads.json"
+    "version": "2026-04-10",
+    "generated": "2026-04-10T01:06:44.468Z",
+    "domain_count": 14623,
+    "path_rule_count": 533
   },
   "protoconsent_personalization": {
     "name": "ProtoConsent Personalization",
@@ -26,8 +34,12 @@
     "license": "GPL-3.0-or-later",
     "category": "personalization",
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_personalization.json",
     "order": 32,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_personalization.json"
+    "version": "2026-04-10",
+    "generated": "2026-04-10T01:06:44.470Z",
+    "domain_count": 10,
+    "path_rule_count": 14
   },
   "protoconsent_third_parties": {
     "name": "ProtoConsent Third Parties",
@@ -36,8 +48,12 @@
     "license": "GPL-3.0-or-later",
     "category": "third_parties",
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_third_parties.json",
     "order": 33,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_third_parties.json"
+    "version": "2026-04-10",
+    "generated": "2026-04-10T01:06:44.471Z",
+    "domain_count": 16,
+    "path_rule_count": 110
   },
   "protoconsent_advanced_tracking": {
     "name": "ProtoConsent Advanced Tracking",
@@ -46,30 +62,12 @@
     "license": "GPL-3.0-or-later",
     "category": "advanced_tracking",
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_advanced_tracking.json",
     "order": 34,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_advanced_tracking.json"
-  },
-  "protoconsent_cmp_signatures": {
-    "name": "ProtoConsent Banners",
-    "description": "CMP auto-response templates - cookie injection, cosmetic hiding, scroll unlock",
-    "source": "https://github.com/ProtoConsent/data",
-    "license": "GPL-3.0-or-later",
-    "category": null,
-    "type": "cmp",
-    "preset": "basic",
-    "order": 10,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_cmp_signatures.json"
-  },
-  "easylist_cosmetic": {
-    "name": "EasyList Cosmetic",
-    "description": "Element hiding - hides ad containers and banners",
-    "source": "https://easylist.to/",
-    "license": "GPL-3.0+ / CC BY-SA 3.0+",
-    "category": "ads",
-    "type": "cosmetic",
-    "preset": "basic",
-    "order": 20,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easylist_cosmetic.json"
+    "version": "2026-04-10",
+    "generated": "2026-04-10T01:06:44.473Z",
+    "domain_count": 3345,
+    "path_rule_count": 30
   },
   "easyprivacy": {
     "name": "EasyPrivacy",
@@ -78,8 +76,12 @@
     "license": "GPL-3.0+ / CC BY-SA 3.0+",
     "category": "analytics",
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easyprivacy.json",
     "order": 100,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easyprivacy.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:50.265Z",
+    "domain_count": 46354,
+    "path_rule_count": 4038
   },
   "easylist": {
     "name": "EasyList",
@@ -88,8 +90,12 @@
     "license": "GPL-3.0+ / CC BY-SA 3.0+",
     "category": "ads",
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easylist.json",
     "order": 110,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easylist.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:50.441Z",
+    "domain_count": 57535,
+    "path_rule_count": 1605
   },
   "adguard_dns": {
     "name": "AdGuard DNS Filter",
@@ -98,8 +104,12 @@
     "license": "GPL-3.0",
     "category": null,
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/adguard_dns.json",
     "order": 120,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/adguard_dns.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:51.290Z",
+    "domain_count": 164863,
+    "path_rule_count": 0
   },
   "steven_black": {
     "name": "Steven Black Unified",
@@ -108,8 +118,12 @@
     "license": "MIT",
     "category": null,
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/steven_black.json",
     "order": 130,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/steven_black.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:50.732Z",
+    "domain_count": 49428,
+    "path_rule_count": 0
   },
   "oisd_small": {
     "name": "OISD Small",
@@ -118,8 +132,12 @@
     "license": "GPL-3.0",
     "category": null,
     "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/oisd_small.json",
     "order": 200,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/oisd_small.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:53.457Z",
+    "domain_count": 56242,
+    "path_rule_count": 0
   },
   "hagezi_pro": {
     "name": "HaGeZi Pro",
@@ -128,8 +146,12 @@
     "license": "GPL-3.0",
     "category": null,
     "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/hagezi_pro.json",
     "order": 210,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/hagezi_pro.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:54.464Z",
+    "domain_count": 196906,
+    "path_rule_count": 0
   },
   "hagezi_tif": {
     "name": "HaGeZi TIF",
@@ -138,8 +160,12 @@
     "license": "GPL-3.0",
     "category": "advanced_tracking",
     "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/hagezi_tif.json",
     "order": 220,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/hagezi_tif.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:57.480Z",
+    "domain_count": 975004,
+    "path_rule_count": 0
   },
   "onehosts_lite": {
     "name": "1Hosts Lite",
@@ -148,8 +174,12 @@
     "license": "MPL-2.0",
     "category": null,
     "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/onehosts_lite.json",
     "order": 230,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/onehosts_lite.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:58.218Z",
+    "domain_count": 94153,
+    "path_rule_count": 0
   },
   "blp_ads": {
     "name": "Blocklist Project - Ads",
@@ -158,8 +188,12 @@
     "license": "Unlicense",
     "category": "ads",
     "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_ads.json",
     "order": 240,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_ads.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:58.968Z",
+    "domain_count": 69744,
+    "path_rule_count": 0
   },
   "blp_tracking": {
     "name": "Blocklist Project - Tracking",
@@ -168,8 +202,12 @@
     "license": "Unlicense",
     "category": "analytics",
     "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_tracking.json",
     "order": 250,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_tracking.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:59.123Z",
+    "domain_count": 14935,
+    "path_rule_count": 0
   },
   "blp_crypto": {
     "name": "Blocklist Project - Crypto",
@@ -178,8 +216,12 @@
     "license": "Unlicense",
     "category": "advanced_tracking",
     "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_crypto.json",
     "order": 260,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_crypto.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:59.287Z",
+    "domain_count": 10402,
+    "path_rule_count": 0
   },
   "blp_phishing": {
     "name": "Blocklist Project - Phishing",
@@ -188,18 +230,91 @@
     "license": "Unlicense",
     "category": "security",
     "preset": "full",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_phishing.json",
     "order": 270,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/blp_phishing.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:25:59.785Z",
+    "domain_count": 117996,
+    "path_rule_count": 0
   },
   "cname_trackers": {
     "name": "AdGuard CNAME Trackers",
-    "description": "CNAME-cloaked tracker detection (\u21C9 in Log), informational only",
+    "description": "CNAME-cloaked tracker detection (⇉ in Log), informational only",
     "source": "https://github.com/AdguardTeam/cname-trackers",
     "license": "MIT",
     "category": null,
-    "type": "informational",
     "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/cname_trackers.json",
+    "type": "informational",
     "order": 300,
-    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/cname_trackers.json"
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:26:01.671Z",
+    "domain_count": 229037,
+    "path_rule_count": 0
+  },
+  "easylist_cosmetic": {
+    "name": "EasyList Cosmetic",
+    "description": "Element hiding - hides ad containers and banners",
+    "source": "https://easylist.to/",
+    "license": "GPL-3.0+ / CC BY-SA 3.0+",
+    "category": "ads",
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/easylist_cosmetic.json",
+    "type": "cosmetic",
+    "order": 20,
+    "version": "2026-04-12",
+    "generated": "2026-04-12T16:26:02.034Z",
+    "domain_count": 7314,
+    "path_rule_count": 0,
+    "generic_count": 13662,
+    "domain_rule_count": 14991
+  },
+  "protoconsent_cmp_signatures": {
+    "name": "ProtoConsent Banners",
+    "description": "CMP auto-response templates - cookie injection, cosmetic hiding, scroll unlock",
+    "source": "https://github.com/ProtoConsent/data",
+    "license": "GPL-3.0-or-later",
+    "category": null,
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_cmp_signatures.json",
+    "type": "cmp",
+    "order": 10,
+    "version": "2026-04-12",
+    "generated": "2026-04-12T17:47:42.305Z",
+    "domain_count": 0,
+    "path_rule_count": 0,
+    "cmp_count": 23
+  },
+  "protoconsent_cmp_detectors": {
+    "name": "ProtoConsent CMP Detectors",
+    "description": "CSS detection selectors for CMP presence/visibility - used by CMP detection",
+    "source": "https://github.com/ProtoConsent/data",
+    "license": "GPL-3.0-or-later",
+    "category": null,
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_cmp_detectors.json",
+    "type": "cmp_detectors",
+    "order": 11,
+    "version": "2026-04-12",
+    "generated": "2026-04-12T17:47:42.312Z",
+    "domain_count": 0,
+    "path_rule_count": 0,
+    "cmp_count": 285
+  },
+  "protoconsent_cmp_signatures_site": {
+    "name": "ProtoConsent Site Banners",
+    "description": "Site-specific CMP hiding selectors with detection - 75 CMPs",
+    "source": "https://github.com/ProtoConsent/data",
+    "license": "GPL-3.0-or-later",
+    "category": null,
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent_cmp_signatures_site.json",
+    "type": "cmp_site",
+    "order": 12,
+    "version": "2026-04-12",
+    "generated": "2026-04-12T17:47:42.305Z",
+    "domain_count": 0,
+    "path_rule_count": 0,
+    "cmp_count": 337
   }
 }

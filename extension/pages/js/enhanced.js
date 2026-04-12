@@ -21,13 +21,13 @@ function getEnhancedStats() {
   const activeLists = Object.entries(epLists)
     .filter(([id, l]) => l.enabled || epConsentLinkedIds.has(id))
     .map(([, l]) => l);
-  const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp");
+  const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp" && l.type !== "cmp_detectors" && l.type !== "cmp_site");
   const infoLists = activeLists.filter(l => l.type === "informational");
   const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
-  const cmpLists = activeLists.filter(l => l.type === "cmp");
+  const cmpLists = activeLists.filter(l => l.type === "cmp" || l.type === "cmp_detectors" || l.type === "cmp_site");
   let updatesAvailable = 0;
   for (const id of Object.keys(epLists)) {
-    if (id.startsWith(CORE_PREFIX) && (!epCatalog[id] || epCatalog[id].type !== "cmp")) continue;
+    if (CORE_IDS.has(id) || CMP_IDS.has(id)) continue;
     if (epLists[id].bundled) continue;
     const catalogDef = epCatalog[id];
     if (catalogDef && catalogDef.version && epLists[id].version &&
@@ -39,22 +39,25 @@ function getEnhancedStats() {
     sum + (l.genericCount || 0) + (l.domainRuleCount || 0), 0);
   const cmpTemplates = cmpLists.reduce((sum, l) => sum + (l.cmpCount || 0), 0);
 
-  // Count protoconsent_* group as 1 for display counts (excludes CMP which renders separately)
-  const isCoreId = (id) => id.startsWith(CORE_PREFIX) && epCatalog[id]?.type !== "cmp";
-  const coreActive = activeLists.some((l, i) => {
-    const id = Object.entries(epLists).filter(([, v]) => v === l).map(([k]) => k)[0];
-    return id && isCoreId(id);
-  });
+  // Count grouped lists (Core = 5, CMP = 3) as 1 each for display
+  const isGroupedId = (id) => CORE_IDS.has(id) || CMP_IDS.has(id);
   const coreActiveIds = Object.keys(epLists).filter(id =>
-    isCoreId(id) && (epLists[id].enabled || epConsentLinkedIds.has(id)));
-  const coreDownloadedIds = Object.keys(epLists).filter(id => isCoreId(id));
-  const coreCatalogIds = Object.keys(epCatalog).filter(id => isCoreId(id));
+    CORE_IDS.has(id) && (epLists[id].enabled || epConsentLinkedIds.has(id)));
+  const coreDownloadedIds = Object.keys(epLists).filter(id => CORE_IDS.has(id));
+  const coreCatalogIds = Object.keys(epCatalog).filter(id => CORE_IDS.has(id));
+  const cmpActiveIds = Object.keys(epLists).filter(id =>
+    CMP_IDS.has(id) && (epLists[id].enabled || epConsentLinkedIds.has(id)));
+  const cmpDownloadedIds = Object.keys(epLists).filter(id => CMP_IDS.has(id));
+  const cmpCatalogIds = Object.keys(epCatalog).filter(id => CMP_IDS.has(id));
   const coreExtraEnabled = Math.max(0, coreActiveIds.length - 1);
   const coreExtraDownloaded = Math.max(0, coreDownloadedIds.length - 1);
   const coreExtraCatalog = Math.max(0, coreCatalogIds.length - 1);
+  const cmpExtraEnabled = Math.max(0, cmpActiveIds.length - 1);
+  const cmpExtraDownloaded = Math.max(0, cmpDownloadedIds.length - 1);
+  const cmpExtraCatalog = Math.max(0, cmpCatalogIds.length - 1);
 
   return {
-    enabledCount: activeLists.length - coreExtraEnabled,
+    enabledCount: activeLists.length - coreExtraEnabled - cmpExtraEnabled,
     blockingCount: blockingLists.length - coreExtraEnabled,
     infoCount: infoLists.length,
     cosmeticCount: cosmeticLists.length,
@@ -63,10 +66,11 @@ function getEnhancedStats() {
     cosmeticRules,
     cmpTemplates,
     totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules + cmpTemplates,
-    downloadedCount: Object.keys(epLists).length - coreExtraDownloaded,
-    catalogCount: Object.keys(epCatalog).length - coreExtraCatalog,
-    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isCoreId(id))
-      .concat(coreCatalogIds.length > 0 && !coreDownloadedIds.length ? [coreCatalogIds[0]] : []),
+    downloadedCount: Object.keys(epLists).length - coreExtraDownloaded - cmpExtraDownloaded,
+    catalogCount: Object.keys(epCatalog).length - coreExtraCatalog - cmpExtraCatalog,
+    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id))
+      .concat(coreCatalogIds.length > 0 && !coreDownloadedIds.length ? [coreCatalogIds[0]] : [])
+      .concat(cmpCatalogIds.length > 0 && !cmpDownloadedIds.length ? [cmpCatalogIds[0]] : []),
     updatesAvailable,
   };
 }
@@ -383,8 +387,14 @@ function renderEnhancedLists() {
     container.appendChild(renderCoreCard(coreIds));
   }
 
+  // Render grouped ProtoConsent Banners (CMP) card
+  const cmpIds = getCmpIds();
+  if (cmpIds.length > 0) {
+    container.appendChild(renderCmpCard(cmpIds));
+  }
+
   for (const [listId, listDef] of catalogEntries) {
-    if (listId.startsWith(CORE_PREFIX) && listDef.type !== "cmp") continue;
+    if (CORE_IDS.has(listId) || CMP_IDS.has(listId)) continue;
     const listData = epLists[listId];
     const card = document.createElement("div");
     card.className = "ep-list-card";
@@ -661,16 +671,27 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
     const presetBtns = document.querySelectorAll(".ep-preset-btn");
     for (const b of presetBtns) b.disabled = true;
     // Mark each card's Download button as pending
-    // For protoconsent_* sub-lists, target the grouped Core card button
+    // For grouped sub-lists, target the group card button
     const coreBtn = document.querySelector('.ep-list-download-btn[data-list-id="protoconsent_core"]');
+    const cmpBtn = document.querySelector('.ep-list-download-btn[data-list-id="protoconsent_cmp"]');
     let corePending = false;
+    let cmpPending = false;
     for (const listId of notDownloaded) {
-      if (listId.startsWith(CORE_PREFIX) && epCatalog[listId]?.type !== "cmp") {
+      if (CORE_IDS.has(listId)) {
         if (!corePending && coreBtn) {
           coreBtn.disabled = true;
           coreBtn.textContent = "Pending\u2026";
           coreBtn.classList.add("is-pending");
           corePending = true;
+        }
+        continue;
+      }
+      if (CMP_IDS.has(listId)) {
+        if (!cmpPending && cmpBtn) {
+          cmpBtn.disabled = true;
+          cmpBtn.textContent = "Pending\u2026";
+          cmpBtn.classList.add("is-pending");
+          cmpPending = true;
         }
         continue;
       }
@@ -685,10 +706,13 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
     let failed = 0;
     let coreCompleted = 0;
     let coreFailed = 0;
-    const isCoreInDownload = (id) => id.startsWith(CORE_PREFIX) && epCatalog[id]?.type !== "cmp";
-    const coreTotal = notDownloaded.filter(id => isCoreInDownload(id)).length;
+    let cmpCompleted = 0;
+    let cmpFailed = 0;
+    const isGroupedInDownload = (id) => CORE_IDS.has(id) || CMP_IDS.has(id);
+    const coreTotal = notDownloaded.filter(id => CORE_IDS.has(id)).length;
+    const cmpTotal = notDownloaded.filter(id => CMP_IDS.has(id)).length;
     for (const listId of notDownloaded) {
-      const cardBtn = isCoreInDownload(listId)
+      const cardBtn = isGroupedInDownload(listId)
         ? null
         : document.querySelector('.ep-list-download-btn[data-list-id="' + listId + '"]');
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
@@ -696,7 +720,8 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
         completed++;
         if (!resp?.ok) {
           failed++;
-          if (isCoreInDownload(listId)) coreFailed++;
+          if (CORE_IDS.has(listId)) coreFailed++;
+          if (CMP_IDS.has(listId)) cmpFailed++;
           if (cardBtn) {
             cardBtn.textContent = "Failed";
             cardBtn.classList.remove("is-pending");
@@ -707,7 +732,7 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
           cardBtn.classList.remove("is-pending");
         }
         // Update Core card button progress
-        if (isCoreInDownload(listId)) {
+        if (CORE_IDS.has(listId)) {
           coreCompleted++;
           if (coreBtn && coreCompleted >= coreTotal) {
             coreBtn.textContent = coreFailed > 0 ? coreFailed + " failed" : "Done";
@@ -715,6 +740,17 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
             if (coreFailed > 0) coreBtn.classList.add("is-failed");
           } else if (coreBtn) {
             coreBtn.textContent = coreCompleted + "/" + coreTotal + "\u2026";
+          }
+        }
+        // Update CMP card button progress
+        if (CMP_IDS.has(listId)) {
+          cmpCompleted++;
+          if (cmpBtn && cmpCompleted >= cmpTotal) {
+            cmpBtn.textContent = cmpFailed > 0 ? cmpFailed + " failed" : "Done";
+            cmpBtn.classList.remove("is-pending");
+            if (cmpFailed > 0) cmpBtn.classList.add("is-failed");
+          } else if (cmpBtn) {
+            cmpBtn.textContent = cmpCompleted + "/" + cmpTotal + "\u2026";
           }
         }
         if (btnEl) {

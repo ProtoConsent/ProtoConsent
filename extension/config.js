@@ -59,6 +59,22 @@ function formatHHMMSS(ts) {
 // Enhanced Protection shield icon path (used by popup, log, enhanced tab).
 const ENHANCED_ICON = "../icons/purposes/enhanced.svg";
 
+// Explicit IDs for grouped Enhanced cards.
+// Core = the 5 purpose-based blocking lists shown as one "ProtoConsent Core" card.
+// CMP = the 3 banner-related lists shown as one "ProtoConsent Banners" card.
+const CORE_IDS = new Set([
+  "protoconsent_analytics",
+  "protoconsent_ads",
+  "protoconsent_personalization",
+  "protoconsent_third_parties",
+  "protoconsent_advanced_tracking",
+]);
+const CMP_IDS = new Set([
+  "protoconsent_cmp_signatures",
+  "protoconsent_cmp_detectors",
+  "protoconsent_cmp_signatures_site",
+]);
+
 // Non-purpose categories used by enhanced lists (not part of Consent Commons).
 const ENHANCED_EXTRA_CATEGORIES = {
   security: { icon: "../icons/purposes/security.svg", short: "Sec", label: "Security" },
