@@ -626,7 +626,7 @@ async function updateGPCContentScript(rulesByDomain, presets, defaultConfig, glo
         id: GPC_SCRIPT_ID,
         matches: ["<all_urls>"],
         excludeMatches: excludeDomains.length > 0 ? excludeDomains : undefined,
-        js: ["gpc-signal.js"],
+        js: ["content-scripts/gpc-signal.js"],
         runAt: "document_start",
         world: "MAIN",
         allFrames: true,
@@ -635,7 +635,7 @@ async function updateGPCContentScript(rulesByDomain, presets, defaultConfig, glo
       await chrome.scripting.registerContentScripts([{
         id: GPC_SCRIPT_ID,
         matches: includeDomains,
-        js: ["gpc-signal.js"],
+        js: ["content-scripts/gpc-signal.js"],
         runAt: "document_start",
         world: "MAIN",
         allFrames: true,

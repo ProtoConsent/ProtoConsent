@@ -7,6 +7,7 @@
 
 import {
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
+  tabCmpDetectData, tabGppData,
   _extEventLog,
 } from "./state.js";
 
@@ -39,7 +40,15 @@ export function persistTabDataToSession() {
   for (const [tabId, data] of tabCmpData) {
     cmp[tabId] = data;
   }
-  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _tabCmp: cmp, _extEventLog: _extEventLog });
+  const cmpDetect = {};
+  for (const [tabId, data] of tabCmpDetectData) {
+    cmpDetect[tabId] = data;
+  }
+  const gpp = {};
+  for (const [tabId, data] of tabGppData) {
+    gpp[tabId] = data;
+  }
+  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _tabCmp: cmp, _tabCmpDetect: cmpDetect, _tabGpp: gpp, _extEventLog: _extEventLog });
 }
 
 export async function restoreTabDataFromSession() {
@@ -66,6 +75,16 @@ export async function restoreTabDataFromSession() {
         tabCmpData.set(Number(tabId), data);
       }
     }
+    if (result._tabCmpDetect) {
+      for (const [tabId, data] of Object.entries(result._tabCmpDetect)) {
+        tabCmpDetectData.set(Number(tabId), data);
+      }
+    }
+    if (result._tabGpp) {
+      for (const [tabId, data] of Object.entries(result._tabGpp)) {
+        tabGppData.set(Number(tabId), data);
+      }
+    }
     // Restore inter-extension event log
     if (Array.isArray(result._extEventLog)) {
       _extEventLog.length = 0;
@@ -89,6 +108,12 @@ export async function restoreTabDataFromSession() {
       }
       for (const tabId of tabCmpData.keys()) {
         if (!existingTabs.has(tabId)) tabCmpData.delete(tabId);
+      }
+      for (const tabId of tabCmpDetectData.keys()) {
+        if (!existingTabs.has(tabId)) tabCmpDetectData.delete(tabId);
+      }
+      for (const tabId of tabGppData.keys()) {
+        if (!existingTabs.has(tabId)) tabGppData.delete(tabId);
       }
     }
     // Restore per-tab TCF detection data (keys: "tcf_<tabId>")

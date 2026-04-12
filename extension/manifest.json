@@ -56,13 +56,19 @@
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["content-script.js"],
+      "js": ["content-scripts/cmp-detect.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-scripts/content-script.js"],
       "run_at": "document_start",
       "all_frames": true
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["tcf-detect.js"],
+      "js": ["content-scripts/tcf-detect.js"],
       "run_at": "document_idle",
       "world": "MAIN"
     }

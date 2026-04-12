@@ -246,6 +246,59 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
             if (pre) pre.textContent += "\n" + cmpLines.join("\n");
           }
         });
+        // CMP detection (2.B.1 — CSS detectors + cookie observation)
+        chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_CMP_DETECT", tabId: tabs[0].id }, (resp) => {
+          if (chrome.runtime.lastError) { void chrome.runtime.lastError; }
+          if (resp && resp.cmpDetect) {
+            const cd = resp.cmpDetect;
+            const lines2 = [];
+            lines2.push("— CMP detection (this tab) —");
+            lines2.push("  domain: " + cd.domain);
+            lines2.push("  timestamp: " + new Date(cd.ts).toLocaleTimeString());
+            // CSS detections
+            if (Array.isArray(cd.detected) && cd.detected.length > 0) {
+              lines2.push("  CSS detections: " + cd.detected.length);
+              for (const d of cd.detected) {
+                const state = d.showing ? "showing" : (d.present ? "present" : "detected");
+                lines2.push("    " + d.cmpId + " (" + state + ")");
+              }
+            } else {
+              lines2.push("  CSS detections: 0");
+            }
+            // Cookie detections
+            if (Array.isArray(cd.cookies) && cd.cookies.length > 0) {
+              lines2.push("  cookie detections: " + cd.cookies.length);
+              for (const c2 of cd.cookies) {
+                lines2.push("    " + c2.cmpId + ": " + c2.cookieName + " = " + (c2.rawValue || "").slice(0, 80));
+              }
+            } else {
+              lines2.push("  cookie detections: 0");
+            }
+            // Site-specific hiding
+            if (Array.isArray(cd.siteHidden) && cd.siteHidden.length > 0) {
+              lines2.push("  site-specific hiding: " + cd.siteHidden.length);
+              for (const s of cd.siteHidden) {
+                lines2.push("    " + s.cmpId + " (" + s.selectorCount + " selectors)");
+              }
+            }
+            // Observation (cookie decoding)
+            if (Array.isArray(cd.observation) && cd.observation.length > 0) {
+              lines2.push("  observation: " + cd.observation.length + " CMPs decoded");
+              for (const obs of cd.observation) {
+                if (obs.conflicts && obs.conflicts.length > 0) {
+                  for (const cf of obs.conflicts) {
+                    lines2.push("    " + obs.cmpId + ": " + cf.purpose + " CMP=" + (cf.cmpValue ? "allow" : "deny") + " us=" + (cf.userValue ? "allow" : "deny"));
+                  }
+                } else {
+                  lines2.push("    " + obs.cmpId + ": consent matches");
+                }
+              }
+            }
+            lines2.push("");
+            const pre = document.querySelector("#pc-log-debug");
+            if (pre) pre.textContent += "\n" + lines2.join("\n");
+          }
+        });
       }
     });
 

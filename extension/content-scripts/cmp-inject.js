@@ -50,7 +50,7 @@
   // Entries without "domains" apply globally (standard CMPs).
   const applicableSigs = {};
   for (const [cmpId, cmp] of Object.entries(sigs)) {
-    if (cmp.domains && !cmp.domains.some(d => d === domain || d === brand)) continue;
+    if (cmp.domains && !cmp.domains.some(d => d === domain || (brand.length >= 3 && d === brand))) continue;
     if (cmpEnabled && cmpEnabled[cmpId] === false) continue;
     applicableSigs[cmpId] = cmp;
   }
@@ -58,10 +58,16 @@
   // UUID: fresh random per page visit (unlinkable), unless user set a fixed one
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const customValid = cmpCustomUuid && UUID_RE.test(cmpCustomUuid);
-  const uuid = customValid ? cmpCustomUuid : crypto.randomUUID();
+  const uuid = customValid ? cmpCustomUuid
+    : (typeof crypto.randomUUID === 'function' ? crypto.randomUUID()
+      : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)));
+
+  // Sanitize TC string: only allow base64url-safe chars (IAB TCF spec)
+  const safeTcString = typeof tcString === 'string'
+    ? tcString.replace(/[^A-Za-z0-9_\-.~+/=]/g, '').slice(0, 2000) : '';
 
   // --- Layer 1: Cookie injection ---
-  const maxAge = cmpCookieMaxAge || CMP_DEFAULT_MAX_AGE;
+  const maxAge = Math.min(Math.max(Number(cmpCookieMaxAge) || CMP_DEFAULT_MAX_AGE, 60), 31536000);
   const injectedCookies = [];
   for (const [cmpId, cmp] of Object.entries(applicableSigs)) {
     if (!cmp.cookie) continue;
@@ -77,16 +83,21 @@
         .replace('{UUID}', uuid)
         .replace('{TIMESTAMP}', String(now.getTime()))
         .replace('{STAMP}', String(Math.random()).slice(2, 10))
-        .replace('{TC_STRING}', tcString || '');
+        .replace('{TC_STRING}', safeTcString);
 
       for (const [purpose, allowed] of Object.entries(prefs)) {
         val = val.replaceAll(`{${purpose}}`, allowed ? fmt.allow : fmt.deny);
       }
 
+      // Strip unconsumed placeholders (e.g. new purposes not yet in prefs)
+      val = val.replace(/\{[a-z_]+\}/g, fmt.deny);
+
       // Sanitize: strip semicolons to prevent cookie attribute injection
       val = val.replaceAll(';', '');
-      document.cookie = `${c.name}=${val}; path=/; domain=.${domain}; SameSite=Lax; max-age=${maxAge}`;
-      injectedCookies.push(c.name);
+      try {
+        document.cookie = `${c.name}=${val}; path=/; domain=.${domain}; SameSite=Lax; max-age=${maxAge}`;
+        injectedCookies.push(c.name);
+      } catch (_) { /* sandboxed document, skip */ }
     }
   }
 
@@ -97,15 +108,25 @@
   if (injectedCookies.length) {
     setTimeout(() => {
       for (const name of injectedCookies) {
-        document.cookie = `${name}=; path=/; domain=.${domain}; max-age=0`;
+        try { document.cookie = `${name}=; path=/; domain=.${domain}; max-age=0`; } catch (_) {}
       }
     }, CMP_CLEANUP_DELAY);
   }
 
   // --- Layer 2: Cosmetic safety net ---
+  // Banned selectors that would break page layout if hidden globally
+  const BANNED_SELS = new Set([
+    'div', 'span', 'body', 'html', 'main', 'header', 'footer', 'section',
+    'article', 'aside', 'nav', 'title', '*', '[role="dialog"]',
+    '.modal', '.overlay', '.modal-backdrop', '.popup',
+  ]);
   const selectors = [];
   for (const cmp of Object.values(applicableSigs)) {
-    if (cmp.selector) selectors.push(cmp.selector);
+    if (cmp.selector) {
+      // Filter out dangerous individual selectors
+      const safe = cmp.selector.split(',').map(s => s.trim()).filter(s => s && !BANNED_SELS.has(s));
+      if (safe.length) selectors.push(safe.join(', '));
+    }
   }
   if (selectors.length) {
     const style = document.createElement('style');
@@ -120,8 +141,8 @@
   const lockEntries = [];
   for (const cmp of Object.values(applicableSigs)) {
     if (cmp.selector) {
-      const sels = cmp.selector.split(',').map(s => s.trim());
-      lockEntries.push({ sels, cls: cmp.lockClass || null });
+      const sels = cmp.selector.split(',').map(s => s.trim()).filter(s => s && !BANNED_SELS.has(s));
+      if (sels.length) lockEntries.push({ sels, cls: cmp.lockClass || null });
     }
   }
   if (lockEntries.length) {
