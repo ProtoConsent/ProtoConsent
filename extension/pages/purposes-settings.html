@@ -55,6 +55,13 @@
 				<h2>Consent <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
 			</div>
 			<div id="preset-list"></div>
+			<details class="ps-accordion">
+				<summary class="ps-accordion-header">Purpose reference</summary>
+				<div class="ps-accordion-body">
+					<span class="ps-section-note">Changes happen via <a href="#default-profile-section" class="ps-cel-note-link">profile selection above</a>.</span>
+					<div id="purpose-list"></div>
+				</div>
+			</details>
 		</section>
 
 		<section id="privacy-signals-section" class="ps-section ps-hidden">
@@ -62,16 +69,11 @@
 			<div id="privacy-signals-list" class="ps-dynamic-grid"></div>
 		</section>
 
-		<section id="enhanced-presets-section" class="ps-section ps-hidden">
+		<section id="enhanced-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
-				<h2>Enhanced Protection <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
+				<h2>Enhanced Protection</h2>
 			</div>
 			<p class="ps-enhanced-desc">Optional third-party blocklists for additional protection. These are independent of your consent profile.</p>
-			<div id="enhanced-preset-list"></div>
-		</section>
-
-		<section id="dynamic-lists-section" class="ps-section ps-hidden">
-			<h2>Enhanced Lists</h2>
 			<div class="ps-dynamic-grid">
 				<div class="ps-gpc-toggle-row">
 					<div>
@@ -92,6 +94,12 @@
 			</div>
 			<div id="ps-cel-note" class="ps-cel-note ps-hidden"></div>
 			<div id="ps-cel-mode-panel" class="ps-cel-mode-panel ps-hidden"></div>
+			<details class="ps-accordion">
+				<summary class="ps-accordion-header">Enhanced presets</summary>
+				<div class="ps-accordion-body">
+					<div id="enhanced-preset-list"></div>
+				</div>
+			</details>
 		</section>
 
 		<section id="cmp-section" class="ps-section ps-hidden">
@@ -109,15 +117,15 @@
 				</div>
 			</div>
 			<div id="cmp-detail" class="ps-cmp-detail">
-				<details class="ps-ext-accordion">
-					<summary class="ps-ext-accordion-header">CMP list</summary>
-					<div class="ps-ext-accordion-body">
+				<details class="ps-accordion">
+					<summary class="ps-accordion-header">CMP list</summary>
+					<div class="ps-accordion-body">
 						<div id="cmp-list" class="ps-cmp-list"></div>
 					</div>
 				</details>
-				<details class="ps-ext-accordion">
-					<summary class="ps-ext-accordion-header">Advanced</summary>
-					<div class="ps-ext-accordion-body">
+				<details class="ps-accordion">
+					<summary class="ps-accordion-header">Advanced</summary>
+					<div class="ps-accordion-body">
 						<div class="ps-cmp-advanced-row">
 							<div>
 								<label for="cmp-uuid-input" class="ps-gpc-info-name">Custom UUID</label>
@@ -145,13 +153,6 @@
 			</div>
 		</section>
 
-		<section id="purposes-section" class="ps-section ps-hidden">
-			<div class="ps-section-head">
-				<h2>Purposes <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
-				<span class="ps-section-note">Changes happen via <a href="#default-profile-section" class="ps-cel-note-link">profile selection above</a>.</span>
-			</div>
-			<div id="purpose-list"></div>
-		</section>
 		<section id="inter-ext-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
 				<h2>Inter-extension API</h2>
@@ -169,29 +170,29 @@
 
 			<div id="inter-ext-container" class="ps-hidden">
 				<!-- Pending -->
-				<details id="inter-ext-pending" class="ps-ext-accordion">
-					<summary class="ps-ext-accordion-header">
+				<details id="inter-ext-pending" class="ps-accordion">
+					<summary class="ps-accordion-header">
 						Pending requests <span id="inter-ext-pending-count" class="ps-ext-badge ps-ext-badge-warn" aria-label="pending count">0</span>
 					</summary>
-					<div id="inter-ext-pending-list" class="ps-ext-accordion-body">
+					<div id="inter-ext-pending-list" class="ps-accordion-body">
 						<p class="ps-ext-empty">No pending requests.</p>
 					</div>
 				</details>
 
 				<!-- Authorized -->
-				<details id="inter-ext-allow" class="ps-ext-accordion">
-					<summary class="ps-ext-accordion-header">Authorized extensions <span id="inter-ext-allow-count" class="ps-ext-badge" aria-label="authorized count">0</span></summary>
-					<div id="inter-ext-allow-list" class="ps-ext-accordion-body">
+				<details id="inter-ext-allow" class="ps-accordion">
+					<summary class="ps-accordion-header">Authorized extensions <span id="inter-ext-allow-count" class="ps-ext-badge" aria-label="authorized count">0</span></summary>
+					<div id="inter-ext-allow-list" class="ps-accordion-body">
 						<p class="ps-ext-empty">No authorized extensions.</p>
 					</div>
 				</details>
 
 				<!-- Blocked -->
-				<details id="inter-ext-deny" class="ps-ext-accordion">
-					<summary class="ps-ext-accordion-header">
+				<details id="inter-ext-deny" class="ps-accordion">
+					<summary class="ps-accordion-header">
 						Blocked extensions <span id="inter-ext-deny-count" class="ps-ext-badge ps-ext-badge-deny" aria-label="blocked count">0</span>
 					</summary>
-					<div id="inter-ext-deny-list" class="ps-ext-accordion-body">
+					<div id="inter-ext-deny-list" class="ps-accordion-body">
 						<p class="ps-ext-empty">No blocked extensions.</p>
 					</div>
 				</details>

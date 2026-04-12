@@ -163,8 +163,7 @@ function initDefaultProfile(purposes) {
 
 function renderPurposes(purposes) {
 	const container = document.getElementById('purpose-list');
-	const section = document.getElementById('purposes-section');
-	if (!container || !section) return;
+	if (!container) return;
 
 	const purposeEntries = Object.values(purposes)
 		.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -220,7 +219,6 @@ function renderPurposes(purposes) {
 
 		container.appendChild(card);
 	}
-	section.classList.remove('ps-hidden');
 }
 
 function updateConsentPresetHighlight(activeProfile) {
@@ -475,7 +473,7 @@ function renderPrivacySignals(purposes) {
 
 function renderEnhancedPresets() {
 	const container = document.getElementById('enhanced-preset-list');
-	const section = document.getElementById('enhanced-presets-section');
+	const section = document.getElementById('enhanced-section');
 	if (!container || !section) return;
 
 	Promise.all([
@@ -928,7 +926,7 @@ function validateImport(data) {
 }
 
 function renderDynamicListsToggle(purposes) {
-	const section = document.getElementById('dynamic-lists-section');
+	const section = document.getElementById('enhanced-section');
 	const toggle = document.getElementById('ps-dynamic-toggle');
 	const label = document.getElementById('ps-dynamic-label');
 	const celToggle = document.getElementById('ps-cel-toggle');

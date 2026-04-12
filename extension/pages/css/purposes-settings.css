@@ -151,6 +151,12 @@ body {
   text-align: right;
 }
 
+.ps-accordion-body > .ps-section-note {
+  text-align: left;
+  display: block;
+  margin-bottom: 10px;
+}
+
 .ps-purpose-card,
 .ps-preset-card {
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
@@ -787,14 +793,14 @@ body {
 
 /* --- Inter-extension API --- */
 
-.ps-ext-accordion {
+.ps-accordion {
   border: 1px solid var(--pc-line);
   border-radius: 10px;
   margin-top: 10px;
   background: var(--pc-surface);
 }
 
-.ps-ext-accordion-header {
+.ps-accordion-header {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -807,22 +813,22 @@ body {
   user-select: none;
 }
 
-.ps-ext-accordion-header::-webkit-details-marker {
+.ps-accordion-header::-webkit-details-marker {
   display: none;
 }
 
-.ps-ext-accordion-header::before {
+.ps-accordion-header::before {
   content: "\25B6";
   font-size: 9px;
   color: var(--pc-text-soft);
   transition: transform 0.15s;
 }
 
-details[open] > .ps-ext-accordion-header::before {
+details[open] > .ps-accordion-header::before {
   transform: rotate(90deg);
 }
 
-.ps-ext-accordion-body {
+.ps-accordion-body {
   padding: 0 14px 10px;
 }
 
