@@ -629,9 +629,13 @@ function initCmpSection() {
 	const maxageInput = document.getElementById('cmp-maxage-input');
 	if (!section || !toggle || !detail || !listEl) return;
 
-	fetch(chrome.runtime.getURL('config/cmp-signatures.json'))
-		.then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-		.then(sigs => {
+	chrome.storage.local.get(['_cmpSignatures'], (stored) => {
+		const sigsPromise = stored._cmpSignatures
+			? Promise.resolve(stored._cmpSignatures)
+			: fetch(chrome.runtime.getURL('rules/protoconsent_cmp_signatures.json'))
+				.then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+				.then(wrapper => wrapper.signatures || wrapper);
+		sigsPromise.then(sigs => {
 			const cmpIds = Object.keys(sigs);
 
 			chrome.storage.local.get(['cmpAutoResponse', 'cmpEnabled', 'cmpCustomUuid', 'cmpCookieMaxAge'], (data) => {
@@ -761,6 +765,7 @@ function initCmpSection() {
 		.catch(err => {
 			console.warn('ProtoConsent: failed to load CMP signatures:', err);
 		});
+	});
 
 	toggle.addEventListener('change', () => {
 		const on = toggle.checked;

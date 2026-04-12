@@ -510,6 +510,14 @@ function connectLogPort() {
       let detail = "[cosmetic] " + msg.domain;
       if (msg.siteRules > 0) detail += " +" + msg.siteRules + " site rules";
       appendLogLine(detail, "cosmetic");
+    } else if (msg.type === "cmp") {
+      let detail = "[cmp] " + msg.domain + " - " + msg.cmpIds.join(", ");
+      const parts = [];
+      if (msg.cookieCount > 0) parts.push(msg.cookieCount + " cookies");
+      if (msg.selectorCount > 0) parts.push(msg.selectorCount + " selectors");
+      if (msg.scrollUnlock) parts.push("scroll unlock");
+      if (parts.length > 0) detail += " (" + parts.join(", ") + ")";
+      appendLogLine(detail, "cmp");
     } else if (msg.type === "ext") {
       const sid = msg.sender.length > 16 ? msg.sender.slice(0, 8) + "\u2026" + msg.sender.slice(-6) : msg.sender;
       const action = (msg.action || "").replace("protoconsent:", "");
@@ -576,6 +584,17 @@ function replayHistoricalLog() {
       if (c.siteRules > 0) detail += " +" + c.siteRules + " site rules";
       appendLogLine(detail, "cosmetic", c.ts);
     });
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_CMP", tabId: tabs[0].id }, (resp) => {
+      if (chrome.runtime.lastError || !resp?.cmp) return;
+      const c = resp.cmp;
+      let detail = "[cmp] " + c.domain + " - " + c.cmpIds.join(", ");
+      const parts = [];
+      if (c.cookieCount > 0) parts.push(c.cookieCount + " cookies");
+      if (c.selectorCount > 0) parts.push(c.selectorCount + " selectors");
+      if (c.scrollUnlock) parts.push("scroll unlock");
+      if (parts.length > 0) detail += " (" + parts.join(", ") + ")";
+      appendLogLine(detail, "cmp", c.ts);
+    });
   });
 
   if (!hasData) {
@@ -605,6 +624,7 @@ function appendLogLine(text, type, ts) {
   if (type === "block") line.className = "pc-log-line-block";
   else if (type === "gpc") line.className = "pc-log-line-gpc";
   else if (type === "cosmetic") line.className = "pc-log-line-cosmetic";
+  else if (type === "cmp") line.className = "pc-log-line-cmp";
   else if (type === "ext") line.className = "pc-log-line-ext";
 
   const tsSpan = document.createElement("span");

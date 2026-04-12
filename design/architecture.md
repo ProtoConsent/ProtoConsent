@@ -49,8 +49,8 @@ The extension provides a popup interface to manage profiles and purposes per sit
     - [13.2 Three-layer response](#132-three-layer-response)
     - [13.3 TC String generation](#133-tc-string-generation)
     - [13.4 Limitations](#134-limitations)
-    - [12.5 Observability](#125-observability)
-    - [12.6 Supported message types](#126-supported-message-types)
+    - [13.5 CDN fetch and Enhanced integration](#135-cdn-fetch-and-enhanced-integration)
+    - [13.6 Observability](#136-observability)
 
 ## 2. Components
 
@@ -444,7 +444,7 @@ For the full design, signature format, TC String specification, and list of supp
 
 ### 13.1 Pipeline
 
-The background module (`background/cmp-injection.js`) pre-computes injection data whenever global purposes change: it loads CMP signatures from `config/cmp-signatures.json`, generates an IAB TCF v2.2 TC String, and writes everything to `chrome.storage.local`. The content script (`content-scripts/cmp-inject.js`) runs at `document_start` in ISOLATED world, reads the pre-computed data, and executes the three-layer response.
+The background module (`background/cmp-injection.js`) pre-computes injection data whenever global purposes change: it loads CMP signatures from `chrome.storage.local` (populated at install from the bundled `config/cmp-signatures.json`, refreshed via CDN when Enhanced Protection is active), generates an IAB TCF v2.2 TC String, and writes everything to `chrome.storage.local`. The content script (`content-scripts/cmp-inject.js`) runs at `document_start` in ISOLATED world, reads the pre-computed data, and executes the three-layer response.
 
 ### 13.2 Three-layer response
 
@@ -462,4 +462,14 @@ For CMPs that read the `euconsent-v2` cookie, ProtoConsent generates a valid IAB
 - No click simulation (by design -- ProtoConsent declares consent via data, not interaction).
 - Proprietary consent systems (custom cookies, protobuf-encoded tokens) are not covered unless a known signature exists.
 - The TC String uses empty vendor sections; CMPs that require specific vendor consent may not fully accept it.
+
+### 13.5 CDN fetch and Enhanced integration
+
+CMP signatures are bundled as `config/cmp-signatures.json` and loaded into `chrome.storage.local` at install. When Enhanced Protection is active, the catalog includes a `protoconsent_cmp_signatures` list entry that enables CDN-based updates. The CDN copy is fetched alongside other Enhanced lists and merged into storage, keeping signatures current without extension updates. See [blocklists.md](blocklists.md) for distribution details.
+
+### 13.6 Observability
+
+After executing all three layers, the content script sends a `PROTOCONSENT_CMP_APPLIED` message to the background service worker with the domain, matched CMP IDs, cookie count, selector count, and scroll unlock status. The background stores this in a per-tab `tabCmpData` Map (mirroring `tabCosmeticData`), persists it to `chrome.storage.session`, and streams it to connected Log ports.
+
+In the popup, CMP events appear as `[cmp]` lines in the Log Requests stream (purple, alongside block/GPC/cosmetic/ext events). The Debug panel displays both the enabled CMP signature lists (from the rebuild snapshot) and the per-tab injection data for the current tab. Historical replay on popup open uses `PROTOCONSENT_GET_CMP` to recover data after service worker restarts.
 

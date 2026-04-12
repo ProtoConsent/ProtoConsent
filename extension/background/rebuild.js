@@ -320,6 +320,7 @@ async function _rebuildAllDynamicRulesImpl() {
       if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
       if (listMeta.type === "informational") continue;
       if (listMeta.type === "cosmetic") continue;
+      if (listMeta.type === "cmp") continue;
       const listData = enhancedData[listId];
       if (!listData) continue;
 
@@ -550,6 +551,9 @@ async function _rebuildAllDynamicRulesImpl() {
         celPendingDownload: celPendingDownload,
         cosmeticLists: Object.entries(enhancedListsMeta)
           .filter(([id, m]) => m.type === "cosmetic" && (m.enabled || consentLinkedListIds.has(id)))
+          .map(([id]) => id),
+        cmpLists: Object.entries(enhancedListsMeta)
+          .filter(([id, m]) => m.type === "cmp" && (m.enabled || consentLinkedListIds.has(id)))
           .map(([id]) => id),
         ts: Date.now(),
       });
