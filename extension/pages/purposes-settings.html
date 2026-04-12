@@ -129,7 +129,7 @@
 						<div class="ps-cmp-advanced-row">
 							<div>
 								<label for="cmp-uuid-input" class="ps-gpc-info-name">Custom UUID</label>
-								<div class="ps-gpc-info-desc">Consent cookies include an identifier. Leave empty (recommended): a new random ID is generated each session, so sites cannot link your visits. Fixed: the same ID is reused, which some sites may require but allows them to recognize you across visits.</div>
+								<div class="ps-gpc-info-desc">Consent cookies include an identifier. Leave empty (recommended): a unique random ID is generated for each page visit, so sites cannot link your visits. Set a fixed UUID only if a specific site requires it - the same ID will be reused across all visits, allowing sites to recognize you.</div>
 							</div>
 							<div class="ps-cmp-input-wrap">
 								<input type="text" id="cmp-uuid-input" class="ps-cmp-text-input" placeholder="Random" spellcheck="false" autocomplete="off" maxlength="36" pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}">
