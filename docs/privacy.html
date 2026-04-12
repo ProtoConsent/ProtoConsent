@@ -88,6 +88,7 @@
               <li>Stores your purpose preferences and domain whitelist per site in local storage</li>
               <li>Creates declarative network rules to block requests matching denied purposes and to allow whitelisted domains</li>
               <li>Sends a <code>Sec-GPC: 1</code> header to sites where privacy-relevant purposes are denied</li>
+              <li>Writes temporary consent cookies on sites that use known consent management platforms (CMPs), based on your purpose preferences, to suppress consent banners. These cookies are deleted automatically after 5 seconds. No data is sent to any server; cookies are written locally in your browser.</li>
               <li>Removes high-entropy Client Hints headers (<code>Sec-CH-UA-*</code>) when advanced tracking is denied, reducing browser fingerprinting surface. No data is sent; headers are removed before the request leaves your browser.</li>
               <li>Fetches <code>.well-known/protoconsent.json</code> from sites when you open the side panel in the popup, to display their declared data practices (cached locally, never forwarded)</li>
               <li>Queries matched blocking rules to display request counts in the popup</li>
@@ -115,7 +116,7 @@
                 </tr>
                 <tr>
                   <td><code>scripting</code></td>
-                  <td>Register the GPC content script at runtime</td>
+                  <td>Register the GPC content script and TCF detection script at runtime</td>
                 </tr>
                 <tr>
                   <td><code>declarativeNetRequest</code></td>
@@ -135,10 +136,13 @@
                 </tr>
                 <tr>
                   <td><code>host_permissions (&lt;all_urls&gt;)</code></td>
-                  <td>Apply blocking and header rules across all domains</td>
+                  <td>Required by declarativeNetRequest, scripting, and webRequest to operate across all domains</td>
                 </tr>
               </tbody>
             </table>
+            <p>
+              No data is collected, transmitted, or shared. No remote code execution. No analytics. All preferences are stored locally in your browser.
+            </p>
           </section>
 
           <section class="article-section">

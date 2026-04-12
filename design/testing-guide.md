@@ -78,6 +78,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [16.4 Cosmetic CSS and scroll unlock](#164-cosmetic-css-and-scroll-unlock)
     - [16.5 Domain-scoped signatures (Bing/Microsoft)](#165-domain-scoped-signatures-bingmicrosoft)
     - [16.6 Verifying CMP injection data from the service worker console](#166-verifying-cmp-injection-data-from-the-service-worker-console)
+    - [16.7 Verifying CMP observability in the Log and Debug tabs](#167-verifying-cmp-observability-in-the-log-and-debug-tabs)
 
 ## 1. Requirements
 
@@ -871,3 +872,34 @@ Expected output:
 - `Signatures loaded: 22` (all CMP signatures from `cmp-signatures.json`)
 - `User purposes:` an object with boolean values per purpose plus `gpc: 0` or `gpc: 1`
 - `TC String:` a base64url-encoded string starting with `C` (version 2 in 6-bit encoding)
+
+### 16.7 Verifying CMP observability in the Log and Debug tabs
+
+CMP auto-response reports its activity to the background service worker. This data appears in the popup's Log tab (Requests stream) and Debug panel.
+
+#### Log tab - Requests stream
+
+1. Visit a site with a known CMP (e.g. a site using OneTrust) with a profile assigned.
+2. Open the popup and navigate to the **Log** tab.
+3. In the **Requests** subtab, look for a purple `[cmp]` line. The format is:
+   ```
+   14:32:05 [cmp] example.com - onetrust (3 cookies, 2 selectors, scroll unlock)
+   ```
+4. The line should show the correct domain, CMP ID(s), cookie count, selector count, and scroll unlock status.
+5. Visit a site without a CMP (e.g. `example.com`). No `[cmp]` line should appear.
+
+#### Debug panel - CMP sections
+
+1. Enable debug mode (`DEBUG_RULES = true` in `config.js`) and reload the extension.
+2. Open the popup on a CMP site and navigate to **Log > Debug**.
+3. Look for two CMP sections:
+   - **CMP auto-response**: lists enabled CMP signature lists (from the rebuild snapshot).
+   - **CMP injection (this tab)**: shows the domain, matched CMPs, cookie count, selector count, scroll unlock status, and timestamp for the current tab.
+4. On a non-CMP site, the "CMP injection" section should not appear.
+
+#### Session persistence
+
+1. Visit a CMP site and verify the `[cmp]` line appears in the Requests stream.
+2. Kill the service worker (via `chrome://serviceworker-internals/` → Stop/Unregister, then navigate to trigger restart).
+3. Open the popup again. The `[cmp]` line should still appear via historical replay from `chrome.storage.session`.
+4. Navigate to a different site. The CMP data for the previous tab should be cleared.

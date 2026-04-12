@@ -288,8 +288,10 @@ The TCF pill in the popup shows the site's own consent status as reported by its
 | `rules/protoconsent_cmp_signatures.json` | Bundled CMP signatures (22 entries, wrapped with version/type metadata) |
 | `background/cmp-injection.js` | TC String generator + storage writer + `_cmpSignatures` cache |
 | `background/lifecycle.js` | `initBundledCmpData()` - loads bundled signatures on install |
-| `background/handlers.js` | CDN fetch handler for type `"cmp"` + `_cmpSignatures` bridge write |
-| `content-scripts/cmp-inject.js` | Content script: cookie injection, cosmetic CSS, scroll unlock |
+| `background/handlers.js` | CDN fetch handler for type `"cmp"` + `_cmpSignatures` bridge write + `PROTOCONSENT_CMP_APPLIED` / `PROTOCONSENT_GET_CMP` handlers |
+| `background/state.js` | `tabCmpData` Map - per-tab CMP injection data |
+| `background/session.js` | Persist/restore `tabCmpData` to `chrome.storage.session` |
+| `content-scripts/cmp-inject.js` | Content script: cookie injection, cosmetic CSS, scroll unlock, observability report |
 | `manifest.json` | Registers `cmp-inject.js` as content script at `document_start` |
 
 ## 13. CDN fetch and Enhanced Protection integration
@@ -332,9 +334,71 @@ When the user enables dynamic list sync (`dynamicListsConsent`), the Enhanced Pr
 ### Key differences from cosmetic lists
 
 - **No rebuild needed**: Cosmetic lists require `updateCosmeticInjection()` to compile CSS and dynamically register a content script. CMP signatures are read directly from storage by a statically registered content script (`cmp-inject.js`). No `rebuildAllDynamicRules()` call after fetch.
-- **No per-tab state**: Cosmetic lists maintain `tabCosmeticData` in the background for per-tab CSS. CMP injection has no per-tab state; the content script reads global storage on every `document_start`.
+- **Per-tab observability**: The content script reports activity to the background via `PROTOCONSENT_CMP_APPLIED` message, stored in `tabCmpData` per tab and persisted to `chrome.storage.session`. The Log tab shows CMP events in the Requests stream and the Debug panel shows per-tab injection details.
 - **Bridge key**: The `_cmpSignatures` storage key is the interface between the Enhanced system and the content script. Both `initBundledCmpData()` and the CDN fetch handler write to it.
 
 ### Catalog entry
 
-Listed as **ProtoConsent Banners** in the Enhanced Protection UI (`config/enhanced-lists.json`), with `type: "cmp"`, `preset: "basic"` (auto-enabled), `order: 10` (first in the list). The UI shows a green pill and "N banner templates" stats.
+Listed as **ProtoConsent Banners** in the Enhanced Protection UI (`config/enhanced-lists.json`), with `type: "cmp"`, `preset: "basic"` (auto-enabled), `order: 10` (first in the list). The UI shows a purple pill and "N banner templates" stats.
+
+For the full CDN distribution model, bundled fallback, and automated refresh workflow, see [blocklists.md, CMP auto-response signatures](blocklists.md#cmp-auto-response-signatures).
+
+## 14. Adding a new CMP
+
+To add support for a new consent management platform:
+
+### 1. Research the CMP
+
+Identify:
+- **Cookie name(s)** the CMP reads at initialization. Inspect the site's cookies before/after accepting consent. Note the format (JSON, URL-encoded, delimited groups, presence-only).
+- **Purpose mapping**: how the CMP maps purpose consent to cookie values. Match to ProtoConsent's 6 purposes (functional, analytics, ads, personalization, third_parties, advanced_tracking).
+- **Allow/deny format**: what values represent consent granted vs denied (`1`/`0`, `true`/`false`, `allow`/`deny`, etc.).
+- **Banner selector(s)**: CSS selectors for the banner container and overlay elements. Use browser DevTools to identify stable selectors (IDs are best, classes with CMP-specific prefixes are acceptable).
+- **Scroll lock**: check if the CMP adds a CSS class to `body`/`html` or sets inline `overflow: hidden` when the banner is shown.
+- **Domain scope**: is this a standard CMP used across many sites (global), or specific to a domain/brand?
+
+### 2. Create the signature entry
+
+Add a JSON entry to `rules/protoconsent_cmp_signatures.json` (inside the `signatures` object) and to `enhanced/protoconsent_cmp_signatures.json` in the data repo. See [section 3](#3-cmp-signatures) for the full field reference.
+
+Minimal entry (cosmetic only, no injectable cookie):
+```json
+"my_cmp": {
+  "selector": "#my-cmp-banner, .my-cmp-overlay",
+  "lockClass": "my-cmp-no-scroll"
+}
+```
+
+Full entry (cookie injection):
+```json
+"my_cmp": {
+  "cookie": [
+    {
+      "name": "my_cmp_consent",
+      "template": "analytics={analytics}&ads={ads}&personalization={personalization}"
+    }
+  ],
+  "format": { "allow": "1", "deny": "0" },
+  "purposeMap": { "analytics": "analytics", "ads": "ads", "personalization": "personalization" },
+  "selector": "#my-cmp-banner",
+  "lockClass": null
+}
+```
+
+### 3. Update counts
+
+- Update `cmp_count` in both wrapper files (`rules/protoconsent_cmp_signatures.json` and `enhanced/protoconsent_cmp_signatures.json`).
+- Update `LIST_CATALOG` in `scripts/generate-manifest.js` if the count is hardcoded (otherwise `generate-manifest.js` reads it from the file).
+
+### 4. Test
+
+See [testing-guide.md, section 16](testing-guide.md#16-testing-cmp-auto-response) for testing instructions. Key checks:
+- Visit a site using the CMP. Verify the banner does not appear.
+- Check the Log tab Requests stream for a `[cmp]` line showing the CMP ID.
+- Check Purpose Settings to verify the new CMP appears in the list.
+- If cookie injection: inspect cookies to verify the correct values were set and cleaned up after 5 seconds.
+- If cosmetic only: verify the banner is hidden via CSS (check for `<style data-pc-cmp>`).
+
+### 5. No code changes needed
+
+The UI and background automatically handle any entries in the signatures file. No extension code changes are required to add a new CMP - only the JSON signature files need updating.
