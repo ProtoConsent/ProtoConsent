@@ -1047,6 +1047,38 @@ footer {
   max-width: 300px;
 }
 
+.gen-optional-label {
+  font-weight: normal;
+  font-size: 13px;
+  color: var(--pc-muted);
+}
+
+.gen-retention-extra {
+  display: none;
+  gap: 8px;
+  align-items: center;
+}
+
+.gen-retention-extra.is-visible {
+  display: flex;
+}
+
+.gen-input-number {
+  width: 80px;
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid var(--pc-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--pc-text-main);
+}
+
+.gen-input-number:focus {
+  outline: none;
+  border-color: var(--pc-accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
 @media (max-width: 600px) {
   #gen-purposes { grid-template-columns: 1fr; }
   .gen-purpose-name { min-width: 90px; }

@@ -60,10 +60,10 @@
     // 1. protoconsent field
     if (typeof json.protoconsent !== "string") {
       checks.push({ level: "error", msg: 'Missing "protoconsent" field (string required).' });
-    } else if (json.protoconsent !== "0.1") {
-      checks.push({ level: "warn", msg: 'Version is "' + json.protoconsent + '", expected "0.1". Forward-compatible, but verify.' });
+    } else if (json.protoconsent !== "0.1" && json.protoconsent !== "0.2") {
+      checks.push({ level: "warn", msg: 'Version is "' + json.protoconsent + '", expected "0.1" or "0.2". Forward-compatible, but verify.' });
     } else {
-      checks.push({ level: "pass", msg: 'Version: "0.1"' });
+      checks.push({ level: "pass", msg: 'Version: "' + json.protoconsent + '"' });
     }
 
     // 2. purposes object
@@ -123,11 +123,54 @@
       if (entry.provider !== undefined) {
         if (typeof entry.provider !== "string") {
           checks.push({ level: "warn", msg: PURPOSE_LABELS[key] + ': "provider" should be a string.' });
+        } else {
+          checks.push({ level: "info", msg: PURPOSE_LABELS[key] + ': "provider" is deprecated in v0.2. Use "providers" array instead.' });
+        }
+      }
+
+      if (entry.providers !== undefined) {
+        if (!Array.isArray(entry.providers)) {
+          checks.push({ level: "warn", msg: PURPOSE_LABELS[key] + ': "providers" should be an array.' });
+        } else if (entry.providers.length === 0) {
+          checks.push({ level: "warn", msg: PURPOSE_LABELS[key] + ': "providers" is empty.' });
+        } else if (!entry.providers.every(function (p) { return typeof p === "string"; })) {
+          checks.push({ level: "warn", msg: PURPOSE_LABELS[key] + ': all entries in "providers" should be strings.' });
+        }
+      }
+
+      if (entry.retention !== undefined) {
+        if (typeof entry.retention !== "object" || Array.isArray(entry.retention)) {
+          checks.push({ level: "warn", msg: PURPOSE_LABELS[key] + ': "retention" should be an object.' });
+        } else {
+          var rt = entry.retention;
+          if (typeof rt.type !== "string") {
+            checks.push({ level: "error", msg: PURPOSE_LABELS[key] + ': retention.type is required (string).' });
+          } else if (["session", "fixed", "until_withdrawal"].indexOf(rt.type) === -1) {
+            checks.push({ level: "warn", msg: PURPOSE_LABELS[key] + ': unknown retention type "' + rt.type + '".' });
+          } else if (rt.type === "fixed") {
+            if (typeof rt.value !== "number" || !Number.isInteger(rt.value)) {
+              checks.push({ level: "error", msg: PURPOSE_LABELS[key] + ': retention.value must be an integer.' });
+            } else if (rt.value <= 0) {
+              checks.push({ level: "error", msg: PURPOSE_LABELS[key] + ': retention.value must be > 0. Use type "session" instead.' });
+            }
+            if (typeof rt.unit !== "string" || ["days", "months", "years"].indexOf(rt.unit) === -1) {
+              checks.push({ level: "error", msg: PURPOSE_LABELS[key] + ': retention.unit must be "days", "months", or "years".' });
+            }
+          }
+        }
+      }
+
+      if (entry.used === false) {
+        var detailFields = ["legal_basis", "providers", "sharing", "retention"]
+          .filter(function (f) { return entry[f] !== undefined; });
+        if (detailFields.length > 0) {
+          checks.push({ level: "warn", msg: PURPOSE_LABELS[key] + ": " + detailFields.join(", ") +
+            ' present but "used" is false. These fields are only meaningful when used is true.' });
         }
       }
 
       // Extra fields in purpose entry
-      var knownPurposeFields = ["used", "legal_basis", "sharing", "provider"];
+      var knownPurposeFields = ["used", "legal_basis", "sharing", "provider", "providers", "retention"];
       var extraPurposeFields = Object.keys(entry).filter(function (k) { return knownPurposeFields.indexOf(k) === -1; });
       if (extraPurposeFields.length > 0) {
         checks.push({ level: "info", msg: PURPOSE_LABELS[key] + ": extra fields (ignored by extension): " + extraPurposeFields.join(", ") + "." });
@@ -163,8 +206,61 @@
       }
     }
 
-    // 7. rights_url
+    // 7. links
+    if (json.links !== undefined) {
+      if (typeof json.links !== "object" || Array.isArray(json.links)) {
+        checks.push({ level: "warn", msg: '"links" should be an object.' });
+      } else {
+        var linkKeys = ["policy", "rights"];
+        for (var li = 0; li < linkKeys.length; li++) {
+          var lk = linkKeys[li];
+          if (json.links[lk] !== undefined) {
+            if (typeof json.links[lk] !== "string") {
+              checks.push({ level: "warn", msg: '"links.' + lk + '" should be a string.' });
+            } else if (/^https:\/\//.test(json.links[lk])) {
+              checks.push({ level: "pass", msg: "Link (" + lk + "): " + json.links[lk] });
+            } else if (/^http:\/\//.test(json.links[lk])) {
+              checks.push({ level: "warn", msg: "Link (" + lk + ") uses http:// (HTTPS is recommended)." });
+            } else {
+              checks.push({ level: "warn", msg: '"links.' + lk + '" should start with https:// or http://.' });
+            }
+          }
+        }
+        var knownLinkFields = ["policy", "rights"];
+        var extraLinkFields = Object.keys(json.links).filter(function (k) { return knownLinkFields.indexOf(k) === -1; });
+        if (extraLinkFields.length > 0) {
+          checks.push({ level: "info", msg: "Extra fields in links (ignored): " + extraLinkFields.join(", ") + "." });
+        }
+      }
+    }
+
+    // 8. last_updated
+    if (json.last_updated !== undefined) {
+      if (typeof json.last_updated !== "string") {
+        checks.push({ level: "warn", msg: '"last_updated" should be a string.' });
+      } else if (/T/.test(json.last_updated)) {
+        checks.push({ level: "warn", msg: '"last_updated" should be date only (YYYY-MM-DD), not datetime.' });
+      } else if (!/^\d{4}-\d{2}-\d{2}$/.test(json.last_updated)) {
+        checks.push({ level: "warn", msg: '"last_updated" should be ISO 8601 date (YYYY-MM-DD).' });
+      } else {
+        var updDate = new Date(json.last_updated + "T00:00:00Z");
+        var now = new Date();
+        if (updDate > now) {
+          checks.push({ level: "warn", msg: '"last_updated" is in the future (' + json.last_updated + ').' });
+        } else {
+          checks.push({ level: "pass", msg: "Last updated: " + json.last_updated });
+          var twelveMonthsAgo = new Date(now);
+          twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
+          if (updDate < twelveMonthsAgo) {
+            checks.push({ level: "info", msg: "Declaration is over 12 months old. It may be outdated." });
+          }
+        }
+      }
+    }
+
+    // 9. rights_url (deprecated in v0.2)
     if (json.rights_url !== undefined) {
+      checks.push({ level: "info", msg: '"rights_url" is deprecated in v0.2. Use "links.rights" instead.' });
       if (typeof json.rights_url !== "string") {
         checks.push({ level: "warn", msg: '"rights_url" should be a string.' });
       } else if (/^https:\/\//.test(json.rights_url)) {
@@ -176,8 +272,8 @@
       }
     }
 
-    // 8. Extra top-level fields
-    var knownTopLevel = ["protoconsent", "purposes", "data_handling", "rights_url"];
+    // 10. Extra top-level fields
+    var knownTopLevel = ["protoconsent", "purposes", "data_handling", "rights_url", "links", "last_updated"];
     var extraFields = Object.keys(json).filter(function (k) { return knownTopLevel.indexOf(k) === -1; });
     if (extraFields.length > 0) {
       checks.push({ level: "info", msg: "Extra top-level fields (ignored by extension): " + extraFields.join(", ") + "." });
@@ -284,9 +380,15 @@
       detailEl.className = "vld-preview-detail";
       if (entry) {
         var details = [];
-        if (entry.provider) details.push(entry.provider);
+        if (entry.providers && entry.providers.length) details.push(entry.providers.join(", "));
+        else if (entry.provider) details.push(entry.provider);
         if (entry.sharing) details.push("sharing: " + entry.sharing.replace(/_/g, " "));
-        if (details.length > 0) detailEl.textContent = details.join(" · ");
+        if (entry.retention) {
+          if (entry.retention.type === "session") details.push("session");
+          else if (entry.retention.type === "fixed" && entry.retention.value && entry.retention.unit) details.push(entry.retention.value + " " + entry.retention.unit);
+          else if (entry.retention.type === "until_withdrawal") details.push("until withdrawal");
+        }
+        if (details.length > 0) detailEl.textContent = details.join(" \u00b7 ");
       }
 
       row.appendChild(nameEl);
@@ -326,7 +428,81 @@
       }
     }
 
-    if (json.rights_url && /^https?:\/\//.test(json.rights_url)) {
+    // Last updated
+    if (json.last_updated && typeof json.last_updated === "string") {
+      var updEl = document.createElement("div");
+      updEl.className = "vld-preview-data";
+      var updText = "Last updated: " + json.last_updated;
+      var updParsed = new Date(json.last_updated + "T00:00:00Z");
+      var updNow = new Date();
+      var updThreshold = new Date(updNow);
+      updThreshold.setFullYear(updThreshold.getFullYear() - 1);
+      if (!isNaN(updParsed.getTime()) && updParsed < updThreshold) {
+        updText += " (may be outdated)";
+      }
+      updEl.textContent = updText;
+      previewDiv.appendChild(updEl);
+    }
+
+    // Links (v0.2)
+    if (json.links && typeof json.links === "object") {
+      var linkEntries = [
+        { key: "policy", label: "Privacy policy" },
+        { key: "rights", label: "Your rights" },
+      ];
+      for (var lpi = 0; lpi < linkEntries.length; lpi++) {
+        var le = linkEntries[lpi];
+        var linkUrl = json.links[le.key];
+        if (!linkUrl || typeof linkUrl !== "string" || !/^https?:\/\//.test(linkUrl)) continue;
+
+        var linkRowEl = document.createElement("div");
+        linkRowEl.className = "vld-preview-data";
+
+        var linkHeading = document.createElement("span");
+        linkHeading.className = "vld-preview-purpose";
+        linkHeading.textContent = le.label;
+        linkRowEl.appendChild(linkHeading);
+
+        // Domain match check
+        var linkInputDomain = sanitizeDomain(domainInput.value);
+        var linkHost = "";
+        try { linkHost = new URL(linkUrl).hostname.replace(/^www\./, ""); } catch (_) {}
+        var linkSiteDomain = linkInputDomain ? linkInputDomain.replace(/^www\./, "") : "";
+        var linkIsSame = linkHost.indexOf(".") !== -1 && linkSiteDomain && (
+          linkHost === linkSiteDomain
+          || linkHost.endsWith("." + linkSiteDomain)
+          || linkSiteDomain.endsWith("." + linkHost)
+        );
+
+        if (linkIsSame && linkHost) {
+          var linkAnchor = document.createElement("a");
+          linkAnchor.href = linkUrl;
+          linkAnchor.textContent = le.label + " \u2197";
+          linkAnchor.target = "_blank";
+          linkAnchor.rel = "noopener noreferrer";
+          linkAnchor.className = "vld-preview-link";
+          linkRowEl.appendChild(linkAnchor);
+        } else {
+          var linkUrlLabel = document.createElement("span");
+          linkUrlLabel.className = "vld-preview-link--url";
+          var linkMaxLen = 50;
+          linkUrlLabel.textContent = linkUrl.length > linkMaxLen ? linkUrl.slice(0, linkMaxLen) + "[...]" : linkUrl;
+          linkUrlLabel.title = linkUrl;
+          linkRowEl.appendChild(linkUrlLabel);
+          if (linkHost && linkInputDomain) {
+            var linkWarn = document.createElement("span");
+            linkWarn.className = "vld-preview-warning";
+            linkWarn.textContent = "Different domain \u2013 not clickable";
+            linkRowEl.appendChild(linkWarn);
+          }
+        }
+
+        previewDiv.appendChild(linkRowEl);
+      }
+    }
+
+    // Fallback: rights_url (v0.1)
+    if (json.rights_url && /^https?:\/\//.test(json.rights_url) && !(json.links && json.links.rights)) {
       var rightsEl = document.createElement("div");
       rightsEl.className = "vld-preview-data";
 
