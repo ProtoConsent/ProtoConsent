@@ -38,6 +38,79 @@
     { value: "third_parties", label: "Third parties" },
   ];
 
+  // --- Site declaration templates ---
+
+  var TEMPLATES = [
+    {
+      id: "scratch",
+      label: "Start from scratch",
+      description: "All purposes off. Build your declaration from zero.",
+      purposes: {
+        functional: { used: false },
+        analytics: { used: false },
+        ads: { used: false },
+        personalization: { used: false },
+        third_parties: { used: false },
+        advanced_tracking: { used: false },
+      },
+    },
+    {
+      id: "blog",
+      label: "Blog / informational site",
+      description: "Only functional cookies. No tracking, no ads.",
+      purposes: {
+        functional: { used: true, legal_basis: "consent", sharing: "none" },
+        analytics: { used: false },
+        ads: { used: false },
+        personalization: { used: false },
+        third_parties: { used: false },
+        advanced_tracking: { used: false },
+      },
+    },
+    {
+      id: "analytics",
+      label: "Site with analytics",
+      description: "Functional + privacy-friendly analytics. No ads or tracking.",
+      purposes: {
+        functional: { used: true, legal_basis: "consent", sharing: "none" },
+        analytics: { used: true, legal_basis: "consent", sharing: "none" },
+        ads: { used: false },
+        personalization: { used: false },
+        third_parties: { used: false },
+        advanced_tracking: { used: false },
+      },
+      data_handling: { storage_region: "eu" },
+    },
+    {
+      id: "ecommerce",
+      label: "E-commerce",
+      description: "Functional, analytics, ads and personalization. Common for online stores.",
+      purposes: {
+        functional: { used: true, legal_basis: "contractual", sharing: "none" },
+        analytics: { used: true, legal_basis: "legitimate_interest", sharing: "none" },
+        ads: { used: true, legal_basis: "consent", sharing: "third_parties" },
+        personalization: { used: true, legal_basis: "consent", sharing: "none" },
+        third_parties: { used: false },
+        advanced_tracking: { used: false },
+      },
+      data_handling: { storage_region: "eu", international_transfers: false },
+    },
+    {
+      id: "full",
+      label: "Full declaration",
+      description: "All six purposes enabled. Adjust legal bases and sharing to match your site.",
+      purposes: {
+        functional: { used: true, legal_basis: "legitimate_interest", sharing: "none" },
+        analytics: { used: true, legal_basis: "legitimate_interest", sharing: "none" },
+        ads: { used: true, legal_basis: "consent", sharing: "third_parties" },
+        personalization: { used: true, legal_basis: "consent", sharing: "within_group" },
+        third_parties: { used: true, legal_basis: "consent", sharing: "third_parties" },
+        advanced_tracking: { used: true, legal_basis: "consent", sharing: "none" },
+      },
+      data_handling: { storage_region: "eu", international_transfers: true },
+    },
+  ];
+
   var ICON_PATH = "assets/icons/declaration/";
   var LEGAL_BASIS_ICONS = {
     consent: ICON_PATH + "consent.png",
@@ -49,6 +122,8 @@
   };
 
   // DOM
+  var templateSelect = document.getElementById("gen-template");
+  var templateDesc = document.getElementById("gen-template-desc");
   var purposesContainer = document.getElementById("gen-purposes");
   var regionInput = document.getElementById("gen-region");
   var regionHint = regionInput.nextElementSibling;
@@ -164,6 +239,7 @@
     cb.addEventListener("change", function () {
       usedLabel.textContent = cb.checked ? "Used" : "Not used";
       cb.setAttribute("aria-checked", String(cb.checked));
+      clearTemplateSelection();
       update();
     });
 
@@ -173,6 +249,14 @@
   // Init purpose rows
   for (var i = 0; i < KNOWN_PURPOSES.length; i++) {
     purposesContainer.appendChild(buildPurposeRow(KNOWN_PURPOSES[i]));
+  }
+
+  // Populate template dropdown
+  for (var t = 0; t < TEMPLATES.length; t++) {
+    var opt = document.createElement("option");
+    opt.value = TEMPLATES[t].id;
+    opt.textContent = TEMPLATES[t].label;
+    templateSelect.appendChild(opt);
   }
 
   // --- Build JSON ---
@@ -407,15 +491,74 @@
     }
   }
 
+  // --- Template logic ---
+
+  function applyTemplate(tpl) {
+    for (var j = 0; j < KNOWN_PURPOSES.length; j++) {
+      var key = KNOWN_PURPOSES[j];
+      var entry = tpl.purposes[key] || { used: false };
+      var cb = document.getElementById("gen-used-" + key);
+      var label = document.getElementById("gen-used-label-" + key);
+      var lb = document.getElementById("gen-lb-" + key);
+      var sh = document.getElementById("gen-sh-" + key);
+      var pr = document.getElementById("gen-pr-" + key);
+      cb.checked = !!entry.used;
+      cb.setAttribute("aria-checked", String(cb.checked));
+      label.textContent = cb.checked ? "Used" : "Not used";
+      lb.value = entry.legal_basis || "";
+      sh.value = entry.sharing || "";
+      pr.value = entry.provider || "";
+      pr.classList.remove("is-invalid");
+      var prHint = pr.nextElementSibling;
+      if (prHint) prHint.classList.remove("is-invalid");
+    }
+    // data_handling
+    var dh = tpl.data_handling || {};
+    regionInput.value = dh.storage_region || "";
+    regionInput.classList.remove("is-invalid");
+    regionHint.classList.remove("is-invalid");
+    intlToggle.checked = !!dh.international_transfers;
+    // rights_url
+    rightsInput.value = tpl.rights_url || "";
+    rightsInput.classList.remove("is-invalid");
+    rightsHint.classList.remove("is-invalid");
+    update();
+  }
+
+  function clearTemplateSelection() {
+    templateSelect.value = "";
+    templateDesc.textContent = "";
+  }
+
+  templateSelect.addEventListener("change", function () {
+    var id = templateSelect.value;
+    if (!id) {
+      templateDesc.textContent = "";
+      return;
+    }
+    for (var i = 0; i < TEMPLATES.length; i++) {
+      if (TEMPLATES[i].id === id) {
+        templateDesc.textContent = TEMPLATES[i].description;
+        applyTemplate(TEMPLATES[i]);
+        return;
+      }
+    }
+  });
+
   // --- Event delegation for optional fields ---
 
   regionInput.addEventListener("input", function () {
     validateRegion();
+    clearTemplateSelection();
     update();
   });
-  intlToggle.addEventListener("change", update);
+  intlToggle.addEventListener("change", function () {
+    clearTemplateSelection();
+    update();
+  });
   rightsInput.addEventListener("input", function () {
     validateRightsUrl();
+    clearTemplateSelection();
     update();
   });
 
@@ -433,11 +576,15 @@
 
   // Selects and provider inputs inside purposes
   purposesContainer.addEventListener("change", function (e) {
-    if (e.target.tagName === "SELECT") update();
+    if (e.target.tagName === "SELECT") {
+      clearTemplateSelection();
+      update();
+    }
   });
   purposesContainer.addEventListener("input", function (e) {
     if (e.target.type === "text") {
       validateProvider(e.target);
+      clearTemplateSelection();
       update();
     }
   });

@@ -1035,6 +1035,18 @@ footer {
   margin-left: auto;
 }
 
+/* Template selector */
+.gen-template-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gen-template-select {
+  max-width: 300px;
+}
+
 @media (max-width: 600px) {
   #gen-purposes { grid-template-columns: 1fr; }
   .gen-purpose-name { min-width: 90px; }
@@ -1042,4 +1054,5 @@ footer {
   .gen-field-label { min-width: auto; }
   .gen-select, .gen-input { max-width: 100%; }
   .gen-validate-link { margin-left: 0; margin-top: 4px; }
+  .gen-template-select { max-width: 100%; }
 }
