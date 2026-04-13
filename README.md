@@ -26,7 +26,8 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 - **Network‑level enforcement** of purpose‑based decisions via curated blocklists organised by purpose, with visible results (blocked counts, domain detail). See [blocklists.md](design/blocklists.md).
 - **Optional enhanced protection** with 19 curated enhanced lists (5 ProtoConsent Core purpose-based lists plus EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project, AdGuard CNAME Trackers) including cosmetic filtering (element-hiding CSS). Three presets (Off, Balanced, Full) or individual list selection. Remote fetch gated behind an explicit consent toggle. Consent-enhanced link optionally auto-activates lists matching denied purposes.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.
-- **Consent banner auto-response:** cookie consent popups from 22 CMP frameworks (OneTrust, Cookiebot, Quantcast, IAB TCF v2.2, CookieYes, Complianz, Fides, Microsoft/Bing, and others) are answered automatically based on your purpose preferences. No DOM interaction, no click simulation, no waiting for the banner to render. Signatures updated via CDN alongside Enhanced lists. CMP activity is visible in the Log and Debug tabs. See [cmp-auto-response.md](design/cmp-auto-response.md).
+- **Consent banner auto-response:** cookie consent popups from 23 CMP frameworks (OneTrust, Cookiebot, Quantcast, IAB TCF v2.2, CookieYes, Complianz, Fides, Usercentrics, Microsoft/Bing, and others) are answered automatically based on your purpose preferences. No DOM interaction, no click simulation, no waiting for the banner to render. Signatures updated via CDN alongside Enhanced lists. See [cmp-auto-response.md](design/cmp-auto-response.md).
+- **Banner detection and observation:** CSS-based detection of 285+ CMP banners (via Autoconsent data), site-specific hiding rules for 235+ sites, cookie consent state decoding and comparison against your preferences. CMP activity is visible in the Log tab as banner and consent lines.
 - **Visibility:** real‑time log monitoring, blocked domains grouped by purpose with [Consent Commons](https://consentcommons.com/) icons, GPC signal tracking, Client Hints status, cookie consent detection, CNAME trackers and domain whitelist management.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` to declare their data practices. No SDK or code changes required.
 - **JavaScript SDK** (MIT licensed) for web pages to query user preferences. TypeScript declarations included.
@@ -80,7 +81,7 @@ Websites can publish a `.well-known/protoconsent.json` to declare their data pra
 
 ProtoConsent offers two ways for websites to participate, both optional:
 
-- **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, sharing scope). No SDK, no code changes, just a JSON file. See the [spec](design/spec/protoconsent-well-known.md), the [demo site source](https://github.com/ProtoConsent/demo) for a complete example, and the [online validator](https://protoconsent.org/validate.html) to check your file.
+- **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, retention, sharing scope). No SDK, no code changes, just a JSON file. See the [spec](design/spec/protoconsent-well-known.md), the [JSON Schema](docs/schema/v0.2.json), the [demo site source](https://github.com/ProtoConsent/demo) for a complete example, or use the online tools: [generator](https://protoconsent.org/generate.html), [validator](https://protoconsent.org/validate.html), [CI action](https://github.com/ProtoConsent/validate-action).
 - **Integrate the SDK:** import `sdk/protoconsent.js` (MIT) and call `get('analytics')` to read the user's preferences. Returns `true`, `false`, or `null` (extension not installed). See the [quick example](design/spec/signalling-protocol.md#quick-example) and [SDK source](sdk/protoconsent.js).
 
 For a visual walkthrough of both paths, see [protoconsent.org/developers](https://protoconsent.org/developers.html).
@@ -98,9 +99,10 @@ See [architecture.md](design/architecture.md) for the full technical description
 - [Product overview](design/product-overview.md) – problem, solution, features, scope, and roadmap
 
 **Specifications**
-- [Purpose‑signalling protocol](design/spec/signalling-protocol.md) – data model, communication mechanism, SDK API
-- [Site declaration spec](design/spec/protoconsent-well-known.md) – `.well-known/protoconsent.json` format
-- [Blocklists methodology](design/blocklists.md) – sources, curation, DNR format, enhanced lists
+- [Purpose-signalling protocol](design/spec/signalling-protocol.md) - data model, communication mechanism, SDK API
+- [Site declaration spec](design/spec/protoconsent-well-known.md) - `.well-known/protoconsent.json` format
+- [JSON Schema](docs/schema/v0.2.json) - machine-readable schema for `protoconsent.json` (v0.2)
+- [Blocklists methodology](design/blocklists.md) - sources, curation, DNR format, enhanced lists
 
 **Implementation**
 - [Technical architecture](design/architecture.md) – components, data model, flows, design decisions
@@ -110,9 +112,9 @@ See [architecture.md](design/architecture.md) for the full technical description
 
 ## What's next
 
-- `.well-known/protoconsent.json` declaration generator
 - SDK `onchange` API for real-time site adaptation
-- Ecosystem outreach
+- Popup refactor with dedicated protocol tab
+- Ecosystem outreach and pilot sites
 
 See [product-overview.md](design/product-overview.md) for the full roadmap.
 
