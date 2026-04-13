@@ -38,6 +38,19 @@
     { value: "third_parties", label: "Third parties" },
   ];
 
+  var RETENTION_TYPE_OPTIONS = [
+    { value: "", label: "-- none --" },
+    { value: "session", label: "Session" },
+    { value: "fixed", label: "Fixed" },
+    { value: "until_withdrawal", label: "Until withdrawal" },
+  ];
+
+  var RETENTION_UNIT_OPTIONS = [
+    { value: "days", label: "days" },
+    { value: "months", label: "months" },
+    { value: "years", label: "years" },
+  ];
+
   // --- Site declaration templates ---
 
   var TEMPLATES = [
@@ -59,7 +72,7 @@
       label: "Blog / informational site",
       description: "Only functional cookies. No tracking, no ads.",
       purposes: {
-        functional: { used: true, legal_basis: "consent", sharing: "none" },
+        functional: { used: true, legal_basis: "consent", sharing: "none", retention: { type: "session" } },
         analytics: { used: false },
         ads: { used: false },
         personalization: { used: false },
@@ -72,8 +85,8 @@
       label: "Site with analytics",
       description: "Functional + privacy-friendly analytics. No ads or tracking.",
       purposes: {
-        functional: { used: true, legal_basis: "consent", sharing: "none" },
-        analytics: { used: true, legal_basis: "consent", sharing: "none" },
+        functional: { used: true, legal_basis: "consent", sharing: "none", retention: { type: "session" } },
+        analytics: { used: true, legal_basis: "consent", sharing: "none", retention: { type: "fixed", value: 30, unit: "days" } },
         ads: { used: false },
         personalization: { used: false },
         third_parties: { used: false },
@@ -86,10 +99,10 @@
       label: "E-commerce",
       description: "Functional, analytics, ads and personalization. Common for online stores.",
       purposes: {
-        functional: { used: true, legal_basis: "contractual", sharing: "none" },
-        analytics: { used: true, legal_basis: "legitimate_interest", sharing: "none" },
-        ads: { used: true, legal_basis: "consent", sharing: "third_parties" },
-        personalization: { used: true, legal_basis: "consent", sharing: "none" },
+        functional: { used: true, legal_basis: "contractual", sharing: "none", retention: { type: "session" } },
+        analytics: { used: true, legal_basis: "legitimate_interest", sharing: "none", retention: { type: "fixed", value: 90, unit: "days" } },
+        ads: { used: true, legal_basis: "consent", sharing: "third_parties", retention: { type: "fixed", value: 90, unit: "days" } },
+        personalization: { used: true, legal_basis: "consent", sharing: "none", retention: { type: "fixed", value: 30, unit: "days" } },
         third_parties: { used: false },
         advanced_tracking: { used: false },
       },
@@ -100,12 +113,12 @@
       label: "Full declaration",
       description: "All six purposes enabled. Adjust legal bases and sharing to match your site.",
       purposes: {
-        functional: { used: true, legal_basis: "legitimate_interest", sharing: "none" },
-        analytics: { used: true, legal_basis: "legitimate_interest", sharing: "none" },
-        ads: { used: true, legal_basis: "consent", sharing: "third_parties" },
-        personalization: { used: true, legal_basis: "consent", sharing: "within_group" },
-        third_parties: { used: true, legal_basis: "consent", sharing: "third_parties" },
-        advanced_tracking: { used: true, legal_basis: "consent", sharing: "none" },
+        functional: { used: true, legal_basis: "legitimate_interest", sharing: "none", retention: { type: "session" } },
+        analytics: { used: true, legal_basis: "legitimate_interest", sharing: "none", retention: { type: "fixed", value: 90, unit: "days" } },
+        ads: { used: true, legal_basis: "consent", sharing: "third_parties", retention: { type: "fixed", value: 180, unit: "days" } },
+        personalization: { used: true, legal_basis: "consent", sharing: "within_group", retention: { type: "fixed", value: 30, unit: "days" } },
+        third_parties: { used: true, legal_basis: "consent", sharing: "third_parties", retention: { type: "until_withdrawal" } },
+        advanced_tracking: { used: true, legal_basis: "consent", sharing: "none", retention: { type: "fixed", value: 365, unit: "days" } },
       },
       data_handling: { storage_region: "eu", international_transfers: true },
     },
@@ -128,6 +141,8 @@
   var regionInput = document.getElementById("gen-region");
   var regionHint = regionInput.nextElementSibling;
   var intlToggle = document.getElementById("gen-intl");
+  var policyInput = document.getElementById("gen-policy");
+  var policyHint = document.getElementById("gen-policy-error");
   var rightsInput = document.getElementById("gen-rights");
   var rightsHint = document.getElementById("gen-rights-error");
   var previewDiv = document.getElementById("gen-preview");
@@ -148,6 +163,16 @@
       sel.appendChild(opt);
     }
     return sel;
+  }
+
+  function toggleRetentionFields(key) {
+    var rtType = document.getElementById("gen-rt-" + key).value;
+    var extra = document.getElementById("gen-rt-extra-" + key);
+    if (rtType === "fixed") {
+      extra.classList.add("is-visible");
+    } else {
+      extra.classList.remove("is-visible");
+    }
   }
 
   function buildPurposeRow(key) {
@@ -210,28 +235,55 @@
     shField.appendChild(buildSelect("gen-sh-" + key, SHARING_OPTIONS));
     opts.appendChild(shField);
 
-    // Provider
+    // Providers
     var prField = document.createElement("div");
     prField.className = "gen-field";
     var prLabel = document.createElement("label");
     prLabel.className = "gen-field-label";
     prLabel.htmlFor = "gen-pr-" + key;
-    prLabel.textContent = "Provider";
+    prLabel.textContent = "Providers";
     prField.appendChild(prLabel);
     var prInput = document.createElement("input");
     prInput.type = "text";
     prInput.id = "gen-pr-" + key;
     prInput.className = "gen-input";
-    prInput.placeholder = "e.g. Google Analytics";
+    prInput.placeholder = "e.g. Google Analytics, Hotjar";
     prInput.autocomplete = "off";
     prInput.spellcheck = false;
-    prInput.maxLength = 80;
+    prInput.maxLength = 200;
     var prHint = document.createElement("span");
     prHint.className = "gen-hint";
-    prHint.textContent = "No HTML or special chars";
+    prHint.textContent = "Comma-separated. No HTML or special chars";
     prField.appendChild(prInput);
     prField.appendChild(prHint);
     opts.appendChild(prField);
+
+    // Retention type
+    var rtField = document.createElement("div");
+    rtField.className = "gen-field";
+    var rtLabel = document.createElement("label");
+    rtLabel.className = "gen-field-label";
+    rtLabel.htmlFor = "gen-rt-" + key;
+    rtLabel.textContent = "Retention";
+    rtField.appendChild(rtLabel);
+    rtField.appendChild(buildSelect("gen-rt-" + key, RETENTION_TYPE_OPTIONS));
+
+    // Retention value + unit (hidden unless type=fixed)
+    var rtExtra = document.createElement("div");
+    rtExtra.className = "gen-retention-extra";
+    rtExtra.id = "gen-rt-extra-" + key;
+    var rvInput = document.createElement("input");
+    rvInput.type = "number";
+    rvInput.id = "gen-rv-" + key;
+    rvInput.className = "gen-input-number";
+    rvInput.placeholder = "30";
+    rvInput.min = "1";
+    rvInput.max = "9999";
+    rtExtra.appendChild(rvInput);
+    rtExtra.appendChild(buildSelect("gen-ru-" + key, RETENTION_UNIT_OPTIONS));
+    rtField.appendChild(rtExtra);
+
+    opts.appendChild(rtField);
 
     row.appendChild(opts);
 
@@ -261,8 +313,16 @@
 
   // --- Build JSON ---
 
+  function todayISO() {
+    var d = new Date();
+    var yyyy = d.getFullYear();
+    var mm = String(d.getMonth() + 1).padStart(2, "0");
+    var dd = String(d.getDate()).padStart(2, "0");
+    return yyyy + "-" + mm + "-" + dd;
+  }
+
   function buildJson() {
-    var obj = { protoconsent: "0.1", purposes: {} };
+    var obj = { protoconsent: "0.2", purposes: {} };
 
     for (var i = 0; i < KNOWN_PURPOSES.length; i++) {
       var key = KNOWN_PURPOSES[i];
@@ -275,7 +335,20 @@
         var pr = document.getElementById("gen-pr-" + key).value.trim();
         if (lb) entry.legal_basis = lb;
         if (sh) entry.sharing = sh;
-        if (pr) entry.provider = pr;
+        if (pr) {
+          entry.providers = pr.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+        }
+
+        var rtType = document.getElementById("gen-rt-" + key).value;
+        if (rtType) {
+          entry.retention = { type: rtType };
+          if (rtType === "fixed") {
+            var rtVal = parseInt(document.getElementById("gen-rv-" + key).value, 10);
+            var rtUnit = document.getElementById("gen-ru-" + key).value;
+            if (rtVal > 0) entry.retention.value = rtVal;
+            if (rtUnit) entry.retention.unit = rtUnit;
+          }
+        }
       }
 
       obj.purposes[key] = entry;
@@ -290,9 +363,17 @@
       if (intl) obj.data_handling.international_transfers = true;
     }
 
-    // Rights URL
+    // Links
+    var policy = policyInput.value.trim();
     var rights = rightsInput.value.trim();
-    if (rights) obj.rights_url = rights;
+    if (policy || rights) {
+      obj.links = {};
+      if (policy) obj.links.policy = policy;
+      if (rights) obj.links.rights = rights;
+    }
+
+    // Last updated (auto)
+    obj.last_updated = todayISO();
 
     return JSON.stringify(obj, null, 2);
   }
@@ -350,8 +431,13 @@
       detailEl.className = "vld-preview-detail";
       if (entry) {
         var details = [];
-        if (entry.provider) details.push(entry.provider);
+        if (entry.providers && entry.providers.length) details.push(entry.providers.join(", "));
         if (entry.sharing) details.push("sharing: " + entry.sharing.replace(/_/g, " "));
+        if (entry.retention) {
+          if (entry.retention.type === "session") details.push("session");
+          else if (entry.retention.type === "fixed" && entry.retention.value && entry.retention.unit) details.push(entry.retention.value + " " + entry.retention.unit);
+          else if (entry.retention.type === "until_withdrawal") details.push("until withdrawal");
+        }
         if (details.length > 0) detailEl.textContent = details.join(" \u00b7 ");
       }
 
@@ -386,22 +472,39 @@
       }
     }
 
-    if (json.rights_url) {
-      var rightsEl = document.createElement("div");
-      rightsEl.className = "vld-preview-data";
-      var heading = document.createElement("span");
-      heading.className = "vld-preview-purpose";
-      heading.textContent = "Rights URL";
-      rightsEl.appendChild(heading);
-      var urlLabel = document.createElement("span");
-      urlLabel.className = "vld-preview-link--url";
-      var maxLen = 50;
-      urlLabel.textContent = json.rights_url.length > maxLen
-        ? json.rights_url.slice(0, maxLen) + "[...]"
-        : json.rights_url;
-      urlLabel.title = json.rights_url;
-      rightsEl.appendChild(urlLabel);
-      previewDiv.appendChild(rightsEl);
+    // Links
+    if (json.links && typeof json.links === "object") {
+      var linkEntries = [
+        { key: "policy", label: "Privacy policy" },
+        { key: "rights", label: "Your rights" },
+      ];
+      for (var lpi = 0; lpi < linkEntries.length; lpi++) {
+        var le = linkEntries[lpi];
+        var linkUrl = json.links[le.key];
+        if (!linkUrl || typeof linkUrl !== "string") continue;
+
+        var linkRowEl = document.createElement("div");
+        linkRowEl.className = "vld-preview-data";
+        var linkHeading = document.createElement("span");
+        linkHeading.className = "vld-preview-purpose";
+        linkHeading.textContent = le.label;
+        linkRowEl.appendChild(linkHeading);
+        var linkUrlLabel = document.createElement("span");
+        linkUrlLabel.className = "vld-preview-link--url";
+        var linkMaxLen = 50;
+        linkUrlLabel.textContent = linkUrl.length > linkMaxLen ? linkUrl.slice(0, linkMaxLen) + "[...]" : linkUrl;
+        linkUrlLabel.title = linkUrl;
+        linkRowEl.appendChild(linkUrlLabel);
+        previewDiv.appendChild(linkRowEl);
+      }
+    }
+
+    // Last updated
+    if (json.last_updated) {
+      var updEl = document.createElement("div");
+      updEl.className = "vld-preview-data";
+      updEl.textContent = "Last updated: " + json.last_updated;
+      previewDiv.appendChild(updEl);
     }
   }
 
@@ -475,19 +578,19 @@
     }
   }
 
-  function validateRightsUrl() {
-    var val = rightsInput.value.trim();
+  function validateUrlField(input, hint) {
+    var val = input.value.trim();
     if (!val) {
-      rightsInput.classList.remove("is-invalid");
-      rightsHint.classList.remove("is-invalid");
+      input.classList.remove("is-invalid");
+      hint.classList.remove("is-invalid");
       return;
     }
     if (isValidUrl(val)) {
-      rightsInput.classList.remove("is-invalid");
-      rightsHint.classList.remove("is-invalid");
+      input.classList.remove("is-invalid");
+      hint.classList.remove("is-invalid");
     } else {
-      rightsInput.classList.add("is-invalid");
-      rightsHint.classList.add("is-invalid");
+      input.classList.add("is-invalid");
+      hint.classList.add("is-invalid");
     }
   }
 
@@ -502,15 +605,28 @@
       var lb = document.getElementById("gen-lb-" + key);
       var sh = document.getElementById("gen-sh-" + key);
       var pr = document.getElementById("gen-pr-" + key);
+      var rt = document.getElementById("gen-rt-" + key);
+      var rv = document.getElementById("gen-rv-" + key);
+      var ru = document.getElementById("gen-ru-" + key);
       cb.checked = !!entry.used;
       cb.setAttribute("aria-checked", String(cb.checked));
       label.textContent = cb.checked ? "Used" : "Not used";
       lb.value = entry.legal_basis || "";
       sh.value = entry.sharing || "";
-      pr.value = entry.provider || "";
+      pr.value = (entry.providers || []).join(", ");
       pr.classList.remove("is-invalid");
       var prHint = pr.nextElementSibling;
       if (prHint) prHint.classList.remove("is-invalid");
+      if (entry.retention) {
+        rt.value = entry.retention.type || "";
+        rv.value = entry.retention.value || "";
+        ru.value = entry.retention.unit || "days";
+      } else {
+        rt.value = "";
+        rv.value = "";
+        ru.value = "days";
+      }
+      toggleRetentionFields(key);
     }
     // data_handling
     var dh = tpl.data_handling || {};
@@ -518,8 +634,11 @@
     regionInput.classList.remove("is-invalid");
     regionHint.classList.remove("is-invalid");
     intlToggle.checked = !!dh.international_transfers;
-    // rights_url
-    rightsInput.value = tpl.rights_url || "";
+    // links
+    policyInput.value = "";
+    policyInput.classList.remove("is-invalid");
+    policyHint.classList.remove("is-invalid");
+    rightsInput.value = "";
     rightsInput.classList.remove("is-invalid");
     rightsHint.classList.remove("is-invalid");
     update();
@@ -556,8 +675,13 @@
     clearTemplateSelection();
     update();
   });
+  policyInput.addEventListener("input", function () {
+    validateUrlField(policyInput, policyHint);
+    clearTemplateSelection();
+    update();
+  });
   rightsInput.addEventListener("input", function () {
-    validateRightsUrl();
+    validateUrlField(rightsInput, rightsHint);
     clearTemplateSelection();
     update();
   });
@@ -574,9 +698,12 @@
     }
   }
 
-  // Selects and provider inputs inside purposes
+  // Selects, provider inputs, and number inputs inside purposes
   purposesContainer.addEventListener("change", function (e) {
     if (e.target.tagName === "SELECT") {
+      // Handle retention type toggles
+      var rtMatch = e.target.id && e.target.id.match(/^gen-rt-(.+)$/);
+      if (rtMatch) toggleRetentionFields(rtMatch[1]);
       clearTemplateSelection();
       update();
     }
@@ -584,6 +711,10 @@
   purposesContainer.addEventListener("input", function (e) {
     if (e.target.type === "text") {
       validateProvider(e.target);
+      clearTemplateSelection();
+      update();
+    }
+    if (e.target.type === "number") {
       clearTemplateSelection();
       update();
     }
