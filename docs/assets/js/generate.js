@@ -341,12 +341,14 @@
 
         var rtType = document.getElementById("gen-rt-" + key).value;
         if (rtType) {
-          entry.retention = { type: rtType };
           if (rtType === "fixed") {
             var rtVal = parseInt(document.getElementById("gen-rv-" + key).value, 10);
             var rtUnit = document.getElementById("gen-ru-" + key).value;
-            if (rtVal > 0) entry.retention.value = rtVal;
-            if (rtUnit) entry.retention.unit = rtUnit;
+            if (rtVal > 0 && rtUnit) {
+              entry.retention = { type: "fixed", value: rtVal, unit: rtUnit };
+            }
+          } else {
+            entry.retention = { type: rtType };
           }
         }
       }

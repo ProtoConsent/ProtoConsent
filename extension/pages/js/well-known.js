@@ -46,8 +46,35 @@ function sanitizeDeclaration(raw) {
       if (typeof entry.legal_basis === "string" && KNOWN_LEGAL_BASIS.includes(entry.legal_basis)) {
         p.legal_basis = entry.legal_basis;
       }
-      if (typeof entry.provider === "string") p.provider = entry.provider.slice(0, WELL_KNOWN_MAX_STRING_LEN);
       if (typeof entry.sharing === "string") p.sharing = entry.sharing.slice(0, WELL_KNOWN_MAX_STRING_LEN);
+      // v0.2: providers array (replaces provider string)
+      if (Array.isArray(entry.providers)) {
+        const prov = entry.providers
+          .filter(function(s) { return typeof s === "string" && s.trim(); })
+          .map(function(s) { return s.slice(0, WELL_KNOWN_MAX_STRING_LEN); })
+          .slice(0, 20);
+        if (prov.length > 0) p.providers = prov;
+      }
+      // v0.1 fallback: provider string -> providers array
+      if (!p.providers && typeof entry.provider === "string" && entry.provider.trim()) {
+        p.providers = [entry.provider.slice(0, WELL_KNOWN_MAX_STRING_LEN)];
+      }
+      // v0.2: retention object
+      if (entry.retention && typeof entry.retention === "object" && !Array.isArray(entry.retention)) {
+        const rt = entry.retention;
+        if (rt.type === "session" || rt.type === "until_withdrawal") {
+          p.retention = { type: rt.type };
+        } else if (rt.type === "fixed") {
+          const fixedRt = { type: "fixed" };
+          if (typeof rt.value === "number" && rt.value > 0 && Number.isInteger(rt.value)) {
+            fixedRt.value = rt.value;
+          }
+          if (typeof rt.unit === "string" && ["days", "months", "years"].includes(rt.unit)) {
+            fixedRt.unit = rt.unit;
+          }
+          if (fixedRt.value && fixedRt.unit) p.retention = fixedRt;
+        }
+      }
       clean.purposes[key] = p;
     }
   }
@@ -61,8 +88,24 @@ function sanitizeDeclaration(raw) {
     }
     if (Object.keys(dh).length > 0) clean.data_handling = dh;
   }
-  if (typeof raw.rights_url === "string" && /^https?:\/\//i.test(raw.rights_url)) {
-    clean.rights_url = raw.rights_url.slice(0, 500);
+  // v0.2: links object (replaces rights_url)
+  if (raw.links && typeof raw.links === "object" && !Array.isArray(raw.links)) {
+    const ln = {};
+    if (typeof raw.links.policy === "string" && /^https?:\/\//i.test(raw.links.policy)) {
+      ln.policy = raw.links.policy.slice(0, 500);
+    }
+    if (typeof raw.links.rights === "string" && /^https?:\/\//i.test(raw.links.rights)) {
+      ln.rights = raw.links.rights.slice(0, 500);
+    }
+    if (Object.keys(ln).length > 0) clean.links = ln;
+  }
+  // v0.1 fallback: rights_url -> links.rights
+  if (!clean.links && typeof raw.rights_url === "string" && /^https?:\/\//i.test(raw.rights_url)) {
+    clean.links = { rights: raw.rights_url.slice(0, 500) };
+  }
+  // v0.2: last_updated date
+  if (typeof raw.last_updated === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.last_updated)) {
+    clean.last_updated = raw.last_updated;
   }
   return clean;
 }
@@ -281,6 +324,21 @@ function renderSiteDeclaration(container, declaration) {
           LEGAL_BASIS_LABELS[entry.legal_basis] || entry.legal_basis.replace(/_/g, " ")
         ));
       }
+      // v0.2: retention inline after legal basis
+      if (entry.retention) {
+        let retText = "";
+        if (entry.retention.type === "session") retText = "session";
+        else if (entry.retention.type === "fixed" && entry.retention.value && entry.retention.unit) {
+          retText = entry.retention.value + " " + entry.retention.unit;
+        } else if (entry.retention.type === "until_withdrawal") retText = "withdrawal";
+        if (retText) {
+          basisEl.appendChild(document.createTextNode(" \u00B7 "));
+          const retSpan = document.createElement("span");
+          retSpan.className = "pc-declaration-retention";
+          retSpan.textContent = retText;
+          basisEl.appendChild(retSpan);
+        }
+      }
     } else {
       checkEl.textContent = "✗";
       checkEl.classList.add("not-used");
@@ -300,7 +358,9 @@ function renderSiteDeclaration(container, declaration) {
   for (const purposeKey of PURPOSES_TO_SHOW) {
     const entry = declaration.purposes[purposeKey];
     if (entry && entry.used) {
-      if (typeof entry.provider === "string") providers.add(entry.provider);
+      if (Array.isArray(entry.providers)) {
+        entry.providers.forEach(function(p) { providers.add(p); });
+      }
       if (typeof entry.sharing === "string") sharingValues.add(entry.sharing.replace(/_/g, " "));
     }
   }
@@ -340,7 +400,7 @@ function renderSiteDeclaration(container, declaration) {
   if (providers.size > 0) {
     const provEl = document.createElement("div");
     provEl.className = "pc-declaration-data";
-    provEl.textContent = "Provider: " + [...providers].join(", ");
+    provEl.textContent = (providers.size === 1 ? "Provider: " : "Providers: ") + [...providers].join(", ");
     container.appendChild(provEl);
   }
 
@@ -362,59 +422,88 @@ function renderSiteDeclaration(container, declaration) {
     container.appendChild(shareEl);
   }
 
-  // Rights URL (only https:// or http:// to prevent javascript: / data: XSS)
-  if (typeof declaration.rights_url === "string" &&
-      /^https?:\/\//i.test(declaration.rights_url)) {
-    const rightsEl = document.createElement("div");
-    rightsEl.className = "pc-declaration-data";
+  // Links (v0.2) — policy and rights URLs (also handles v0.1 rights_url via sanitizer fallback)
+  if (declaration.links && typeof declaration.links === "object") {
+    const linkDefs = [
+      { key: "policy", heading: "Privacy policy" },
+      { key: "rights", heading: "Your rights" },
+    ];
+    for (const ld of linkDefs) {
+      const linkUrl = declaration.links[ld.key];
+      if (typeof linkUrl !== "string" || !/^https?:\/\//i.test(linkUrl)) continue;
 
-    // Truncate display URL if too long, full URL always in title
-    const fullUrl = declaration.rights_url;
-    const maxLen = 50;
-    const displayUrl = fullUrl.length > maxLen
-      ? fullUrl.slice(0, maxLen) + "[...]"
-      : fullUrl;
+      const linkEl = document.createElement("div");
+      linkEl.className = "pc-declaration-data";
 
-    // Check if rights_url domain matches the current site (strip www.)
-    // Allow same domain or parent/subdomain relationship (same registrable domain)
-    let rightsHost = "";
-    try { rightsHost = new URL(fullUrl).hostname.replace(/^www\./, ""); } catch (_) {}
-    const siteDomain = (currentDomain || "").replace(/^www\./, "");
-    const isSameDomain = rightsHost.includes(".") && (
-      rightsHost === siteDomain
-      || rightsHost.endsWith("." + siteDomain)
-      || siteDomain.endsWith("." + rightsHost)
-    );
+      const maxLen = 50;
+      const displayUrl = linkUrl.length > maxLen ? linkUrl.slice(0, maxLen) + "[...]" : linkUrl;
 
-    // Always show the full URL first so the user knows where the link goes
-    const heading = document.createElement("span");
-    heading.className = "pc-declaration-purpose";
-    heading.textContent = "Rights URL";
-    rightsEl.appendChild(heading);
+      // Domain check (anti-phishing: only make same-domain links clickable)
+      let linkHost = "";
+      try { linkHost = new URL(linkUrl).hostname.replace(/^www\./, ""); } catch (_) {}
+      const siteDomain = (currentDomain || "").replace(/^www\./, "");
+      const isSameDomain = linkHost.includes(".") && (
+        linkHost === siteDomain
+        || linkHost.endsWith("." + siteDomain)
+        || siteDomain.endsWith("." + linkHost)
+      );
 
-    const urlLabel = document.createElement("span");
-    urlLabel.className = "pc-declaration-link--url";
-    urlLabel.textContent = displayUrl;
-    urlLabel.title = fullUrl;
-    rightsEl.appendChild(urlLabel);
+      const headingEl = document.createElement("span");
+      headingEl.className = "pc-declaration-purpose";
+      headingEl.textContent = ld.heading;
+      linkEl.appendChild(headingEl);
 
-    if (isSameDomain && rightsHost) {
-      // Same domain: clickable action
-      const rightsLink = document.createElement("a");
-      rightsLink.href = fullUrl;
-      rightsLink.textContent = "See your rights ↗";
-      rightsLink.target = "_blank";
-      rightsLink.rel = "noopener noreferrer";
-      rightsLink.className = "pc-declaration-link";
-      rightsEl.appendChild(rightsLink);
-    } else if (rightsHost) {
-      // External domain: warning, not clickable (anti-phishing)
-      const warnEl = document.createElement("span");
-      warnEl.className = "pc-declaration-warning";
-      warnEl.textContent = "Different domain \u002D not clickable";
-      rightsEl.appendChild(warnEl);
+      const urlLabel = document.createElement("span");
+      urlLabel.className = "pc-declaration-link--url";
+      urlLabel.textContent = displayUrl;
+      urlLabel.title = linkUrl;
+      linkEl.appendChild(urlLabel);
+
+      const actionRow = document.createElement("div");
+      actionRow.className = "pc-declaration-actions";
+
+      if (isSameDomain && linkHost) {
+        const anchor = document.createElement("a");
+        anchor.href = linkUrl;
+        anchor.textContent = ld.heading + " \u2197";
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+        anchor.className = "pc-declaration-link";
+        actionRow.appendChild(anchor);
+      } else if (linkHost) {
+        const warnEl = document.createElement("span");
+        warnEl.className = "pc-declaration-warning";
+        warnEl.textContent = "Different domain \u002D not clickable";
+        actionRow.appendChild(warnEl);
+      }
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "pc-declaration-copy";
+      copyBtn.textContent = "Copy URL";
+      copyBtn.title = linkUrl;
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(linkUrl).then(() => {
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => { copyBtn.textContent = "Copy URL"; }, 1500);
+        }).catch(() => {
+          copyBtn.textContent = "Failed";
+          setTimeout(() => { copyBtn.textContent = "Copy URL"; }, 1500);
+        });
+      });
+      actionRow.appendChild(copyBtn);
+
+      linkEl.appendChild(actionRow);
+      container.appendChild(linkEl);
     }
-    container.appendChild(rightsEl);
+  }
+
+  // v0.2: last_updated date
+  if (typeof declaration.last_updated === "string") {
+    const updEl = document.createElement("div");
+    updEl.className = "pc-declaration-data";
+    updEl.textContent = "Updated: " + declaration.last_updated;
+    container.appendChild(updEl);
   }
 
   // Show the side tab and wire toggle (guard against duplicate listeners)

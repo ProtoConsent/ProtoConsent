@@ -62,7 +62,7 @@ body {
 }
 
 #popup-layout.has-side-panel {
-  width: 614px;
+  width: 664px;
 }
 
 .pc-mode-rail {
@@ -1100,7 +1100,7 @@ body {
 }
 
 .pc-side-panel.is-open {
-  width: 180px;
+  width: 230px;
   height: auto;
   max-height: 580px;
   padding: 8px;
@@ -1217,6 +1217,10 @@ body {
   vertical-align: middle;
 }
 
+.pc-declaration-retention {
+  font-style: italic;
+}
+
 .pc-declaration-data {
   margin-top: 8px;
   padding-top: 6px;
@@ -1248,6 +1252,28 @@ body {
   color: var(--pc-danger);
   font-size: 11px;
   cursor: default;
+}
+
+.pc-declaration-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.pc-declaration-copy {
+  font-family: inherit;
+  font-size: 11px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--pc-accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pc-declaration-copy:hover {
+  text-decoration: underline;
 }
 
 
