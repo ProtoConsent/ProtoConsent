@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://protoconsent.org/schema/v0.2.json",
+  "title": "ProtoConsent .well-known declaration",
+  "description": "Schema for .well-known/protoconsent.json files (spec v0.2). See https://github.com/ProtoConsent/ProtoConsent/blob/main/design/spec/protoconsent-well-known.md",
+  "type": "object",
+  "required": ["protoconsent", "purposes"],
+  "properties": {
+    "protoconsent": {
+      "type": "string",
+      "description": "Protocol version.",
+      "const": "0.2"
+    },
+    "purposes": {
+      "type": "object",
+      "description": "Purpose declarations. At least one known purpose must be present.",
+      "minProperties": 1,
+      "properties": {
+        "functional": { "$ref": "#/$defs/purposeEntry" },
+        "analytics": { "$ref": "#/$defs/purposeEntry" },
+        "ads": { "$ref": "#/$defs/purposeEntry" },
+        "personalization": { "$ref": "#/$defs/purposeEntry" },
+        "third_parties": { "$ref": "#/$defs/purposeEntry" },
+        "advanced_tracking": { "$ref": "#/$defs/purposeEntry" }
+      },
+      "additionalProperties": true
+    },
+    "data_handling": {
+      "type": "object",
+      "description": "Data storage and transfer information.",
+      "properties": {
+        "storage_region": {
+          "type": "string",
+          "description": "Where user data is primarily stored. ISO 3166-1 alpha-2 country code, or \"eu\", \"eea\", \"international\"."
+        },
+        "international_transfers": {
+          "type": "boolean",
+          "description": "Whether data is transferred outside the storage region."
+        }
+      },
+      "additionalProperties": true
+    },
+    "links": {
+      "type": "object",
+      "description": "Related URLs.",
+      "properties": {
+        "policy": {
+          "type": "string",
+          "pattern": "^https?://",
+          "description": "General privacy policy URL."
+        },
+        "rights": {
+          "type": "string",
+          "pattern": "^https?://",
+          "description": "Data subject rights section of the privacy policy."
+        }
+      },
+      "additionalProperties": true
+    },
+    "last_updated": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "ISO 8601 date (YYYY-MM-DD). When this declaration was last reviewed or updated."
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "purposeEntry": {
+      "type": "object",
+      "required": ["used"],
+      "properties": {
+        "used": {
+          "type": "boolean",
+          "description": "Whether this purpose is active on the site."
+        },
+        "legal_basis": {
+          "type": "string",
+          "enum": [
+            "consent",
+            "contractual",
+            "legitimate_interest",
+            "legal_obligation",
+            "public_interest",
+            "vital_interest"
+          ],
+          "description": "Legal basis invoked (GDPR Article 6(1))."
+        },
+        "providers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Names of the service providers used for this purpose."
+        },
+        "sharing": {
+          "type": "string",
+          "enum": ["none", "within_group", "third_parties"],
+          "description": "Data sharing scope."
+        },
+        "retention": {
+          "$ref": "#/$defs/retention",
+          "description": "Data retention period for this purpose."
+        }
+      },
+      "additionalProperties": true
+    },
+    "retention": {
+      "description": "Data retention period. Discriminated union on the \"type\" field.",
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Data retained only for the session duration.",
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "session" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Data retained for a specific period.",
+          "required": ["type", "value", "unit"],
+          "properties": {
+            "type": { "const": "fixed" },
+            "value": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Duration amount."
+            },
+            "unit": {
+              "type": "string",
+              "enum": ["days", "months", "years"],
+              "description": "Duration unit."
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Data retained until the user withdraws consent.",
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "until_withdrawal" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}
