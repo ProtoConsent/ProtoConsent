@@ -323,7 +323,7 @@ function renderLogDomains(initialVisible) {
 
     const tdAction = document.createElement("td");
     tdAction.className = "pc-log-domains-action";
-    if (row.domain) {
+    if (row.domain && (typeof can !== "function" || can("whitelistOverrides"))) {
       const isWhitelisted = isWhitelistedHere(row.domain);
       const btn = document.createElement("button");
       btn.type = "button";
@@ -834,6 +834,12 @@ function renderLogWhitelist() {
   const container = document.getElementById("pc-log-whitelist");
   if (!container) return;
   container.innerHTML = "";
+
+  // In ProtoConsent Mode, whitelist is not applicable
+  if (typeof can === "function" && !can("whitelistOverrides")) {
+    container.innerHTML = '<div class="pc-log-empty">Whitelist is not applicable in ProtoConsent Mode. Network blocking is handled by your external blocker.</div>';
+    return;
+  }
 
   const wl = lastWhitelist || {};
   // Flatten: each entry is { domain, site, purpose }

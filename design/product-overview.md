@@ -29,6 +29,7 @@ For each site, ProtoConsent stores a local rule that combines a profile with exp
 **Lightweight user interface:**
 
 - A compact popup UI lets users see the active profile and purposes for the current site at a glance, and change them with a few clicks instead of reconfiguring each consent banner from scratch.
+- The popup provides four views accessible via a vertical tab rail: **Consent** (purpose toggles and blocked stats), **Proto** (operating mode dashboard with signal status, purpose-attributed blocks, CMP detection, and cosmetic filtering), **Enhanced** (optional third-party blocklists), and **Log** (real-time request monitoring, blocked domains, GPC tracking, whitelist management, debug).
 - A real-time counter and badge show how many tracking requests have been blocked and how many carry the GPC privacy signal, giving users immediate, visible feedback on enforcement activity.
 - When advanced tracking is denied, high-entropy Client Hints headers (Sec-CH-UA-*) are stripped to reduce fingerprinting surface, with a global toggle in Purpose Settings.
 - When an IAB TCF consent management platform (CMP) is detected on the page, a pill indicator appears in the popup with the CMP's consent state, so users can compare what the site's banner is doing with what ProtoConsent enforces at the network level.
@@ -42,6 +43,21 @@ For each site, ProtoConsent stores a local rule that combines a profile with exp
 > Third-party list sources: EasyList, EasyPrivacy, AdGuard DNS, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project, AdGuard CNAME Trackers. See [blocklists.md](blocklists.md) for the full catalog.
 
 **Site declarations:** Websites can publish a [`.well-known/protoconsent.json`](spec/protoconsent-well-known.md) file to declare their data practices. The extension reads this file and displays the site's declared purposes, legal bases, providers, and data handling details in a side panel, using [Consent Commons](https://consentcommons.com/) icons. No SDK or code changes required - just a static JSON file, like `robots.txt` or `security.txt`.
+
+**Operating modes:** ProtoConsent supports two operating modes, selectable in Purpose Settings. In *Standalone* mode (default), the extension blocks requests directly using its own static and dynamic rulesets. In *ProtoConsent Mode*, the extension delegates network blocking to an external blocker (such as uBlock Origin, AdGuard, or Brave Shields) and focuses on purpose attribution, GPC signaling, CMP auto-response, cosmetic filtering, and Client Hints stripping. A dedicated Proto tab in the popup shows the current mode, signal status (GPC, CMP detection, cosmetic filtering), purpose-attributed blocks with domain detail, and CMP auto-response state. A semaphore indicator in the popup header shows the active mode at a glance (green for ProtoConsent Mode, red for Standalone). The mode is stored locally and triggers an immediate rebuild on change.
+
+The two modes share the same consent engine: attribution indexes, GPC policy, CMP cookie injection, Client Hints stripping, and cosmetic hiding work identically in both modes. Only the enforcement strategy changes - standalone generates DNR block rules, while ProtoConsent Mode disables its own blocking and observes `ERR_BLOCKED_BY_CLIENT` events from external sources. A capabilities table gates mode-dependent behaviour:
+
+| Capability | Standalone | ProtoConsent Mode |
+|---|---|---|
+| Own blocking (static + dynamic rulesets) | Yes | No |
+| Observe external blocks | Yes | Yes |
+| Whitelist overrides | Yes | No |
+| Enhanced DNR rules | Yes | No |
+| GPC signaling | Yes | Yes |
+| CMP auto-response | Yes | Yes |
+| Client Hints stripping | Yes | Yes |
+| Cosmetic filtering | Yes | Yes |
 
 **Purpose‑signalling protocol and SDK:** An open [protocol](spec/signalling-protocol.md) and a lightweight [JavaScript SDK](../sdk/protoconsent.js) (MIT licensed) allow websites to query the user's consent preferences directly from the page. The SDK returns simple boolean values per purpose - no identity, no cross‑site tracking. Blocking works regardless of whether sites integrate the SDK.
 
@@ -79,6 +95,7 @@ The user opens a website and, if needed, adjusts the profile or individual purpo
 | v0.4.1 | Fix: enhanced list fetch bypasses browser HTTP cache, Core list download no longer re-enables unrelated lists, cursor:help on all popup pills, Custom profile selectable in dropdown. Improved: GPC tooltip ("do-not-sell/share signal"), enhanced shield icon accessibility |
 | v0.4.2 | CMP auto-response: consent banner suppression for 22 CMP frameworks via cookie injection at `document_start`, IAB TCF v2.2 TC String generation, cosmetic CSS safety net, scroll unlock, CDN-based signature updates via Enhanced integration, per-tab observability in Log Requests and Debug panel, session persistence for CMP data ([cmp-auto-response.md](cmp-auto-response.md)). Fixes: session restore race condition, badge "No tab with id" error, consent-enhanced link toggle |
 | v0.4.3 | CMP banner detection (285 detectors via CSS, async recheck for late-loaded CMPs), localStorage consent observation (Usercentrics, CCM19), cookie consent decoders (OneTrust, Cookiebot, CookieYes, Complianz, Wix), Log tags `[banner]`/`[banner-consent]`, Debug panel CMP section, Usercentrics added to signatures (23 CMPs), MAIN world security hardening (monkey-patch guards, field sanitization), content scripts consolidated into `content-scripts/`, ProtoConsent own lists blue brand styling in Enhanced tab |
+| v0.5.0 (dev) | Operating modes (Standalone/ProtoConsent Mode), capabilities table with `can()` gating, Proto tab (mode dashboard, signal status, purpose-attributed blocks, CMP detection accordion, cosmetic status), mode indicator pill in popup header, mode toggle in Purpose Settings, whitelist gating in ProtoConsent Mode, coverage metrics and unattributed buffer |
 | **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | **Documentation** | [Protocol spec](spec/signalling-protocol.md), [.well-known spec](spec/protoconsent-well-known.md), [inter-extension protocol](spec/inter-extension-protocol.md), [CMP auto-response](cmp-auto-response.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [blocklist methodology](blocklists.md) |
 

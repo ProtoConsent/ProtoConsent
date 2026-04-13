@@ -48,6 +48,7 @@ function getActivePurposes() {
 async function initPopup() {
   try {
     await loadDebugFlag();
+    await loadOperatingMode();
     initModeRail();
     await loadConfigs();
     await loadDefaultProfile();
@@ -72,7 +73,6 @@ async function refreshPopupState() {
   renderPurposesList();
   await displayBlockedCount();
   await loadSiteDeclaration();
-  loadTcfInfo();
 }
 
 // Auto-retry initPopup when the active tab finishes loading.
@@ -103,6 +103,7 @@ function initModeRail() {
       setActiveMode(mode);
       if (mode === "log" && typeof initLogTab === "function") initLogTab();
       if (mode === "enhanced" && typeof initEnhancedTab === "function") initEnhancedTab();
+      if (mode === "proto" && typeof initProtoTab === "function") initProtoTab();
     });
   });
   setActiveMode(activeMode);
@@ -593,6 +594,19 @@ document.addEventListener("DOMContentLoaded", () => {
           const header = card.querySelector(".ep-list-header");
           if (header) header.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
         });
+        toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
+        toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
+        return;
+      }
+      if (activeMode === "proto") {
+        // Proto tab: toggle .proto-card is-expanded
+        const cards = document.querySelectorAll("#pc-view-proto .proto-card");
+        let collapsedCount = 0;
+        cards.forEach((card) => {
+          if (!card.classList.contains("is-expanded")) collapsedCount++;
+        });
+        const shouldExpand = collapsedCount > cards.length / 2;
+        if (typeof toggleProtoDetails === "function") toggleProtoDetails(shouldExpand);
         toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
         toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
         return;
@@ -1272,23 +1286,19 @@ function updateTcfIndicator() {
       const tcf = resp.tcf;
       indicatorEl.classList.remove("is-disabled", "is-inactive");
       indicatorEl.classList.add("is-active");
-      // Only make clickable if the side panel has TCF content rendered
-      const tcfContainer = document.getElementById("pc-tcf-declaration");
-      const hasContent = tcfContainer && tcfContainer.children.length > 0;
-      if (hasContent) {
-        indicatorEl.style.cursor = "pointer";
-        if (!indicatorEl._tcfClickBound) {
-          indicatorEl.setAttribute("role", "button");
-          indicatorEl.setAttribute("tabindex", "0");
-          indicatorEl.addEventListener("click", toggleSidePanel);
-          indicatorEl.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              toggleSidePanel();
-            }
-          });
-          indicatorEl._tcfClickBound = true;
-        }
+      // Make clickable - navigate to Proto tab where TCF accordion lives
+      indicatorEl.style.cursor = "pointer";
+      if (!indicatorEl._tcfClickBound) {
+        indicatorEl.setAttribute("role", "button");
+        indicatorEl.setAttribute("tabindex", "0");
+        indicatorEl.addEventListener("click", navigateToProtoTcf);
+        indicatorEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            navigateToProtoTcf();
+          }
+        });
+        indicatorEl._tcfClickBound = true;
       }
       let tip = "Cookie banner detected";
       if (tcf.purposeConsents) {
@@ -1428,4 +1438,42 @@ function showPopupError(message) {
 
   listEl.appendChild(errorEl);
   listEl.appendChild(buttonEl);
+}
+
+// Load operating mode from storage and set default tab + indicator
+async function loadOperatingMode() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["operatingMode"], (result) => {
+      const mode = result.operatingMode || "standalone";
+      // Update global from config.js
+      if (typeof operatingMode !== "undefined") operatingMode = mode;
+      // In ProtoConsent Mode, default to Proto tab
+      if (mode === "protoconsent") activeMode = "proto";
+      updateModeIndicator(mode);
+      resolve();
+    });
+  });
+}
+
+function updateModeIndicator(mode) {
+  const indicator = document.getElementById("pc-mode-indicator");
+  const label = document.getElementById("pc-mode-label");
+  if (!indicator || !label) return;
+
+  const isProto = mode === "protoconsent";
+  indicator.hidden = false;
+  indicator.classList.toggle("is-protoconsent", isProto);
+  label.textContent = isProto ? "Monitoring" : "Blocking";
+  indicator.title = isProto
+    ? "Monitoring mode - complementing external blocker"
+    : "Blocking mode - blocking and monitoring";
+
+  // Click navigates to Proto tab
+  if (!indicator._clickBound) {
+    indicator.addEventListener("click", () => {
+      setActiveMode("proto");
+      if (typeof initProtoTab === "function") initProtoTab();
+    });
+    indicator._clickBound = true;
+  }
 }

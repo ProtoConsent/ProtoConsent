@@ -1,0 +1,453 @@
+/*
+ * ProtoConsent browser extension - Proto tab styles
+ * Copyright (C) 2026 ProtoConsent contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/* Proto view layout */
+#pc-view-proto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Status banner */
+.proto-status {
+  padding: 4px;
+  border: 1px solid var(--pc-line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f0fdfa 0%, #ccfbf1 100%);
+  display: flex;
+  justify-content: center;
+}
+
+.proto-status.is-standalone {
+  background: linear-gradient(180deg, #fef2f2 0%, #fecaca 100%);
+  border-color: #fca5a5;
+}
+
+.proto-status-inner {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 7px;
+  padding: 4px 16px;
+}
+
+.proto-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--pc-accent);
+}
+
+.proto-status-badge.is-on .proto-status-check {
+  color: #059669;
+}
+
+.proto-status-badge.is-off .proto-status-check {
+  color: #dc2626;
+}
+
+.proto-status-badge.is-off {
+  color: #6b7280;
+}
+
+/* Proto pills row (mirrors Consent tab indicators) */
+.proto-pills {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  margin: 2px 0 4px;
+  position: relative;
+}
+
+/* CNAME pill - absolutely positioned left, out of flow */
+.pc-cname-indicator {
+  position: absolute;
+  left: 0;
+}
+
+.pc-cname-indicator .pc-pill-dot {
+  background: #9ca3af;
+}
+
+.pc-cname-indicator.is-active {
+  border-color: #d6b06b;
+  background: #fefce8;
+  color: #78350f;
+}
+
+.pc-cname-indicator.is-active .pc-pill-dot {
+  background: #b45309;
+}
+
+/* Declarations section (Site Declaration, TCF, Mismatch) */
+.proto-declarations {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.proto-declarations:empty {
+  display: none;
+}
+
+/* TCF accordion body - no scroll, show full content */
+.proto-tcf-body {
+  max-height: none;
+  overflow-y: visible;
+}
+
+/* TCF accordion container */
+.proto-tcf-accord:empty {
+  display: none;
+}
+
+/* Individual signal row containers */
+.proto-signal-single:empty {
+  display: none;
+}
+
+/* Scope summary row */
+.proto-scope-core {
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--pc-accent);
+}
+
+.proto-scope-enhanced {
+  font-weight: 600;
+  font-size: 11px;
+  color: #b45309;
+}
+
+/* Mismatch accordion */
+.proto-mismatch-dot {
+  background: #f59e0b;
+}
+
+.proto-mismatch-count {
+  color: #92400e;
+}
+
+.proto-card-mismatch {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.proto-mismatch-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.proto-mismatch-purpose {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.proto-mismatch-detail {
+  color: #92400e;
+  font-size: 9px;
+}
+
+/* Coverage bar */
+.proto-coverage {
+  margin: 4px 0;
+}
+
+.proto-coverage:empty {
+  display: none;
+}
+
+.proto-coverage-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  overflow: hidden;
+  margin: 6px 0 4px;
+}
+
+.proto-coverage-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #10b981, #059669);
+  transition: width 0.3s ease;
+}
+
+.proto-coverage-text {
+  font-size: 10px;
+  color: var(--pc-text-muted);
+  display: flex;
+  justify-content: space-between;
+}
+
+.proto-coverage-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pc-text-soft);
+}
+
+/* Signal rows */
+
+.proto-signal-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 6px 10px 8px;
+  border: 1px solid var(--pc-line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.proto-signal-link {
+  cursor: pointer;
+}
+
+.proto-signal-link:hover {
+  background: #f0f4f8;
+}
+
+.proto-signal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.proto-signal-dot.is-active {
+  background: #10b981;
+}
+
+.proto-signal-dot.is-inactive {
+  background: #9ca3af;
+}
+
+.proto-signal-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pc-text);
+}
+
+.proto-signal-detail {
+  color: var(--pc-accent);
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Accordion cards (purposes + CMP) */
+.proto-cmp-detect,
+.proto-purposes,
+.proto-cmp {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.proto-cmp-detect:empty,
+.proto-purposes:empty,
+.proto-cmp:empty {
+  display: none;
+}
+
+.proto-card {
+  border: 1px solid var(--pc-line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+.proto-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  user-select: none;
+}
+
+.proto-card-header:hover {
+  background: #f8fafc;
+}
+
+.proto-card-chevron {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--pc-text-soft);
+  display: inline-block;
+}
+
+.proto-card-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.proto-card-icon-cat {
+  width: 20px;
+  height: 20px;
+  margin-left: -2px;
+}
+
+.proto-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pc-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.proto-card-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--pc-accent);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Declaration badge in purpose card headers */
+.proto-card-decl {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.proto-decl-used {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.proto-decl-not-used {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.proto-decl-mismatch {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.proto-decl-none {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.proto-card-body {
+  display: none;
+  padding: 0 10px 6px 26px;
+  font-size: 10px;
+  color: var(--pc-text-muted);
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.proto-card.is-expanded .proto-card-body {
+  display: block;
+}
+
+.proto-card-empty {
+  font-style: italic;
+}
+
+.proto-card-more {
+  font-style: italic;
+  color: var(--pc-text-muted);
+}
+
+/* CMP card variant */
+.proto-card-cmp .proto-card-header {
+  border-bottom: none;
+}
+
+/* Domain rows inside purpose accordion */
+.proto-purpose-domain {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.proto-purpose-domain-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.proto-purpose-domain-count {
+  flex-shrink: 0;
+  color: var(--pc-text-soft);
+}
+
+/* Unattributed section */
+.proto-unattributed {
+  font-size: 11px;
+}
+
+.proto-unattributed summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--pc-text-soft);
+  padding: 4px 0;
+}
+
+.proto-unattributed-list {
+  font-size: 10px;
+  color: var(--pc-text-muted);
+  max-height: 100px;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+/* CMP Detection body lines */
+.proto-cmp-line {
+  padding: 1px 0;
+}
+
+.proto-cmp-source {
+  font-weight: 600;
+  color: var(--pc-text-soft);
+  margin-top: 4px;
+  padding-bottom: 1px;
+}
+
+.proto-cmp-source:first-child {
+  margin-top: 0;
+}
+
+.proto-cmp-purpose-row {
+  padding: 1px 0 1px 8px;
+}
+
+.proto-cmp-purpose-row.is-match {
+  color: #065f46;
+}
+
+.proto-cmp-purpose-row.is-conflict {
+  color: #92400e;
+  font-weight: 600;
+}

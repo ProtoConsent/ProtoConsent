@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="css/popup.css">
   <link rel="stylesheet" href="css/log.css">
   <link rel="stylesheet" href="css/enhanced.css">
+  <link rel="stylesheet" href="css/proto.css">
   <link rel="icon" type="image/png" sizes="32x32" href="../icons/protoconsent_icon_32.png">
 </head>
 <body>
@@ -20,7 +21,6 @@
     <!-- Side panel: site declaration (hidden until data loads) -->
     <aside id="pc-side-panel" class="pc-side-panel" aria-label="Site declaration" aria-hidden="true">
       <div id="pc-site-declaration" class="pc-site-declaration"></div>
-      <div id="pc-tcf-declaration" class="pc-tcf-declaration"></div>
     </aside>
 
     <!-- Tab to toggle side panel (hidden until data loads) -->
@@ -34,6 +34,12 @@
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">CONSENT</text>
+        </svg>
+      </button>
+      <button type="button" class="pc-mode-tab" id="pc-mode-tab-proto" data-mode="proto" role="tab" aria-selected="false" aria-controls="pc-view-proto" aria-label="Proto: Observability for ProtoConsent Mode" title="ProtoConsent Mode observability">
+        <span class="pc-mode-tab-dot" aria-hidden="true"></span>
+        <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
+          <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">PROTO</text>
         </svg>
       </button>
       <button type="button" class="pc-mode-tab" id="pc-mode-tab-enhanced" data-mode="enhanced" role="tab" aria-selected="false" aria-controls="pc-view-enhanced" aria-label="Enhanced: Enforce protection with blocklists" title="Enforce protection with blocklists">
@@ -76,7 +82,13 @@
           <div class="pc-site-label">Site</div>
           <div id="pc-site-domain" class="pc-site-domain">loading...</div>
         </div>
-        <button id="pc-reload-btn" class="pc-reload-btn" type="button" title="Reload this page" aria-label="Reload this page">↻</button>
+        <div class="pc-reload-wrapper">
+          <div id="pc-mode-indicator" class="pc-mode-indicator pc-pill-indicator" title="Operating mode" hidden>
+            <span class="pc-mode-dot pc-pill-dot" aria-hidden="true"></span>
+            <span id="pc-mode-label">Standalone</span>
+          </div>
+          <button id="pc-reload-btn" class="pc-reload-btn" type="button" title="Reload this page" aria-label="Reload this page">↻</button>
+        </div>
       </header>
 
       <div id="pc-mode-content" class="pc-mode-content">
@@ -125,6 +137,46 @@
           </div>
           <div id="ep-lists" class="ep-lists"></div>
           <div id="ep-status" class="ep-status" aria-live="polite"></div>
+        </section>
+
+        <section id="pc-view-proto" class="pc-view" data-mode-view="proto" role="tabpanel" aria-labelledby="pc-mode-tab-proto" hidden aria-hidden="true">
+          <h2 class="visually-hidden">ProtoConsent Mode</h2>
+          <div id="proto-status" class="proto-status"></div>
+          <div id="proto-pills" class="proto-pills">
+            <div id="proto-gpc-pill" class="pc-gpc-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="GPC signal">
+              <span class="pc-gpc-dot pc-pill-dot" aria-hidden="true"></span>
+              <span>GPC</span>
+            </div>
+            <div id="proto-ch-pill" class="pc-ch-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="Client Hints stripping">
+              <span class="pc-ch-dot pc-pill-dot" aria-hidden="true"></span>
+              <span>CH</span>
+            </div>
+            <div id="proto-wk-pill" class="pc-wk-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title=".well-known declaration">
+              <span class="pc-wk-dot pc-pill-dot" aria-hidden="true"></span>
+              <span>WK</span>
+            </div>
+            <div id="proto-tcf-pill" class="pc-tcf-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="TCF CMP detection">
+              <span class="pc-tcf-dot pc-pill-dot" aria-hidden="true"></span>
+              <span>TCF</span>
+            </div>
+            <div id="proto-cname-pill" class="pc-cname-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="CNAME cloaking: domains disguised via DNS aliases to evade blocking">
+              <span class="pc-cname-dot pc-pill-dot" aria-hidden="true"></span>
+              <span>CNAME <span id="proto-cname-count">0</span></span>
+            </div>
+          </div>
+          <div id="proto-declarations" class="proto-declarations"></div>
+          <div id="proto-scope" class="proto-signal-single"></div>
+          <div id="proto-coverage" class="proto-coverage"></div>
+          <div id="proto-gpc-signal" class="proto-signal-single"></div>
+          <div id="proto-tcf-accord" class="proto-tcf-accord"></div>
+          <div id="proto-cmp-detect" class="proto-cmp-detect"></div>
+          <div id="proto-cosmetic-signal" class="proto-signal-single"></div>
+          <div id="proto-purposes" class="proto-purposes"></div>
+          <div id="proto-cmp" class="proto-cmp"></div>
+          <details id="proto-unattributed" class="proto-unattributed" hidden>
+            <summary>Unmatched hostnames</summary>
+            <div id="proto-unattributed-list"></div>
+          </details>
         </section>
 
         <section id="pc-view-log" class="pc-view" data-mode-view="log" role="tabpanel" aria-labelledby="pc-mode-tab-log" hidden aria-hidden="true">
@@ -186,5 +238,6 @@
   <script src="js/log.js"></script>
   <script src="js/enhanced-core.js"></script>
   <script src="js/enhanced.js"></script>
+  <script src="js/proto.js"></script>
 </body>
 </html>

@@ -9,6 +9,7 @@ import {
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabNavigating, tabLastUrl,
+  tabCoverageMetrics,
 } from "./state.js";
 import { scheduleSessionPersist } from "./session.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
@@ -25,6 +26,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabCmpData.delete(tabId);
       tabCmpDetectData.delete(tabId);
       tabGppData.delete(tabId);
+      tabCoverageMetrics.delete(tabId);
       if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
       scheduleSessionPersist();
       chrome.action.setBadgeText({ tabId, text: "" }).catch(() => {});
@@ -51,6 +53,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   tabCmpData.delete(tabId);
   tabCmpDetectData.delete(tabId);
   tabGppData.delete(tabId);
+  tabCoverageMetrics.delete(tabId);
   tabLastUrl.delete(tabId);
   if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
   scheduleSessionPersist();

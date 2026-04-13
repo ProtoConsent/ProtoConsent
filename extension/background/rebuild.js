@@ -20,6 +20,7 @@ import {
   _rebuildRunning, setRebuildRunning,
   _rebuildQueued, setRebuildQueued,
   GPC_SCRIPT_ID, COSMETIC_SCRIPT_ID,
+  setOperatingMode, can,
 } from "./state.js";
 import {
   getDefaultProfileConfig, resolvePurposes, getAllRulesFromStorage,
@@ -62,6 +63,12 @@ async function _rebuildAllDynamicRulesImpl() {
 
   try {
     await loadPurposesConfig();
+
+    // Load operating mode before any gating decisions
+    const storedMode = await new Promise(r =>
+      chrome.storage.local.get(["operatingMode"], res => r(res.operatingMode || "standalone"))
+    );
+    setOperatingMode(storedMode);
 
     const [rulesByDomain, blocklists, presets, defaultConfig, whitelist, enhancedListsMeta] = await Promise.all([
       getAllRulesFromStorage(),
@@ -111,22 +118,29 @@ async function _rebuildAllDynamicRulesImpl() {
       const hasPaths = blocklists[purposeKey]?.pathDomains?.length > 0;
       if (!hasDomains && !hasPaths) continue;
       const rulesetId = "block_" + purposeKey;
-      if (!globalPurposes[purposeKey]) {
-        if (hasDomains) enableIds.push(rulesetId);
-        if (hasPaths) enableIds.push(rulesetId + "_paths");
+      if (can("ownBlocking")) {
+        if (!globalPurposes[purposeKey]) {
+          if (hasDomains) enableIds.push(rulesetId);
+          if (hasPaths) enableIds.push(rulesetId + "_paths");
+        } else {
+          if (hasDomains) disableIds.push(rulesetId);
+          if (hasPaths) disableIds.push(rulesetId + "_paths");
+        }
       } else {
+        // ProtoConsent Mode: disable all static blocking rulesets
         if (hasDomains) disableIds.push(rulesetId);
         if (hasPaths) disableIds.push(rulesetId + "_paths");
       }
     }
 
-    setEnabledBlockRulesets(new Set(enableIds));
+    setEnabledBlockRulesets(can("ownBlocking") ? new Set(enableIds) : new Set());
 
-    // 3. Per-site overrides (priority 2)
+    // 3. Per-site overrides (priority 2) - standalone only
     const allowOverrides = {};
     const blockOverrides = {};
     const permissiveSites = [];
 
+    if (can("ownBlocking")) {
     for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
       const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
 
@@ -194,11 +208,13 @@ async function _rebuildAllDynamicRulesImpl() {
         }
       }
     }
+    } // end can("ownBlocking")
 
-    // 4. Whitelist allow rules (priority 3)
+    // 4. Whitelist allow rules (priority 3) - standalone only
     const globalWhitelistDomains = [];
     const perSiteWhitelist = {};
 
+    if (can("whitelistOverrides")) {
     for (const [domain, siteMap] of Object.entries(whitelist)) {
       if (!isValidHostname(domain)) continue;
       for (const site of Object.keys(siteMap)) {
@@ -257,6 +273,7 @@ async function _rebuildAllDynamicRulesImpl() {
       });
       whitelistRulesAdded++;
     }
+    } // end can("whitelistOverrides")
 
     // 5. Enhanced Protection lists (dynamic block rules, priority 2)
     const consentLinkedListIds = new Set();
@@ -316,6 +333,7 @@ async function _rebuildAllDynamicRulesImpl() {
 
     const enhancedExclude = permissiveSites.length > 0 ? permissiveSites : undefined;
 
+    if (can("enhancedDnr")) {
     for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
       if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
       if (listMeta.type === "informational") continue;
@@ -358,8 +376,9 @@ async function _rebuildAllDynamicRulesImpl() {
         }
       }
     }
+    } // end can("enhancedDnr")
 
-    // Build enhanced reverse index for onErrorOccurred attribution
+    // Build enhanced reverse index for onErrorOccurred attribution (always, both modes)
     const newEnhancedReverseIndex = new Map();
     for (const [listId, listData] of Object.entries(enhancedData)) {
       if (listData.domains?.length) {

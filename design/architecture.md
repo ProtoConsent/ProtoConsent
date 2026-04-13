@@ -51,12 +51,22 @@ The extension provides a popup interface to manage profiles and purposes per sit
     - [13.4 Limitations](#134-limitations)
     - [13.5 CDN fetch and Enhanced integration](#135-cdn-fetch-and-enhanced-integration)
     - [13.6 Observability](#136-observability)
+  - [14. Operating modes](#14-operating-modes)
+    - [14.1 Mode definition](#141-mode-definition)
+    - [14.2 Capabilities table](#142-capabilities-table)
+    - [14.3 Rebuild gating](#143-rebuild-gating)
+    - [14.4 Mode transitions](#144-mode-transitions)
+    - [14.5 Coverage metrics](#145-coverage-metrics)
+    - [14.6 Proto tab](#146-proto-tab)
+    - [14.7 UI gating](#147-ui-gating)
+    - [14.8 Message types](#148-message-types)
 
 ## 2. Components
 
 **Popup UI** – The main user-facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. Purpose categories are shown with [Consent Commons](https://consentcommons.com/) icons. The popup does not enforce anything directly; it sends messages to the background component when settings change.
 
 - **Consent view**: purpose toggles and per-purpose blocked stats
+- **Proto view**: operating mode dashboard showing signal status (GPC with link to Log detail, CMP detection, cosmetic filtering), purpose-attributed blocks as accordion cards with Consent Commons icons, CMP auto-response state, and unattributed hostnames. Auto-refreshes every 3 seconds while active.
 - **Enhanced view**: optional third-party blocklists with preset selection and per-list controls
 - **Log view**: real-time request monitoring, blocked domains grouped by purpose, and GPC signal tracking per domain
 - **Site declaration panel**: when a site publishes a `.well-known/protoconsent.json`, a collapsible side panel shows its declared purposes, legal basis, sharing and international transfers
@@ -173,6 +183,12 @@ The domain whitelist is stored separately under a `whitelist` key:
 `whitelist[domain] = { site: purpose, ... }`
 
 where each key is either a hostname (per‑site scope) or `”*”` (global scope), and the value is the purpose category that was originally blocked. This structure allows the same domain to be whitelisted globally on one scope and per‑site on another, though the UI prevents conflicting entries.
+
+The operating mode is stored under a single key:
+
+`operatingMode: “standalone” | “protoconsent”` (default: `”standalone”`)
+
+This drives a capabilities table in `state.js` that gates mode-dependent behaviour via `can(capability)`. Changing the mode triggers an immediate full rebuild.
 
 Three predefined profiles (“Strict”, “Balanced”, “Permissive”) map directly to purpose states and act as templates. When the user selects a profile, its values fill in the purposes; any per‑purpose change after that is tracked as an explicit override.
 
@@ -487,3 +503,98 @@ Three content scripts report CMP activity to the background:
 
 All three Maps are persisted to `chrome.storage.session` and streamed to connected Log ports. In the Log tab, `[banner]` lines (pink) show CSS detection, `[banner-consent]` lines (violet) show consent state comparison with per-purpose conflicts. The Debug panel displays per-tab data for all sources. Historical replay on popup open uses `PROTOCONSENT_GET_CMP_DETECT`.
 
+## 14. Operating modes
+
+ProtoConsent supports two operating modes that share the same consent engine but differ in enforcement strategy.
+
+### 14.1 Mode definition
+
+| Mode | Storage value | Behaviour |
+|---|---|---|
+| **Standalone** (default) | `"standalone"` | ProtoConsent blocks requests directly using its own static and dynamic rulesets |
+| **ProtoConsent Mode** | `"protoconsent"` | ProtoConsent delegates network blocking to an external blocker and focuses on purpose attribution, signaling, and consent automation |
+
+The mode is stored in `chrome.storage.local` under the key `operatingMode` and loaded into `state.js` at rebuild time. The background also exposes it via `config-bridge.js` so the popup can read it synchronously.
+
+### 14.2 Capabilities table
+
+A capabilities table in `state.js` maps each mode to boolean flags. All mode-dependent code paths use `can(capability)` rather than checking the mode string directly.
+
+```js
+const CAPABILITIES = {
+  standalone: {
+    ownBlocking: true,
+    observeExternalBlocks: true,
+    whitelistOverrides: true,
+    enhancedDnr: true,
+  },
+  protoconsent: {
+    ownBlocking: false,
+    observeExternalBlocks: true,
+    whitelistOverrides: false,
+    enhancedDnr: false,
+  }
+};
+```
+
+The same table is duplicated in `config.js` (loaded by popup scripts) so that UI gating does not require a message to the background.
+
+### 14.3 Rebuild gating
+
+The rebuild flow in `rebuild.js` uses `can()` to gate enforcement phases:
+
+- **Static ruleset activation** (`can("ownBlocking")`): in standalone, enables/disables rulesets per the global profile. In ProtoConsent Mode, disables all 10 static rulesets.
+- **Per-site overrides** (`can("ownBlocking")`): skipped entirely in ProtoConsent Mode.
+- **Whitelist allow rules** (`can("whitelistOverrides")`): skipped in ProtoConsent Mode (no blocks to override).
+- **Enhanced DNR block rules** (`can("enhancedDnr")`): skipped in ProtoConsent Mode.
+- **Attribution indexes** (always): reverse hostname indexes are built in both modes. Lists serve as attribution dictionaries regardless of whether they also generate enforcement rules.
+- **GPC, Client Hints, CMP, cosmetic** (always): signaling and consent automation are active in both modes.
+
+### 14.4 Mode transitions
+
+Switching mode (via `PROTOCONSENT_SET_OPERATING_MODE` message) saves the new value to storage, updates the in-memory state, and triggers an immediate full rebuild. The transition is atomic from the user's perspective.
+
+**Standalone to ProtoConsent Mode**: `updateEnabledRulesets` disables all static rulesets, dynamic block rules and whitelist overrides are cleared. Badge counter persists; new events reflect the external blocker's activity.
+
+**ProtoConsent Mode to standalone**: full rebuild reconstructs all DNR rules. During rebuild, if an external blocker is still present it covers the gap.
+
+### 14.5 Coverage metrics
+
+Two per-tab counters track attribution quality in `tabCoverageMetrics` (Map in `state.js`):
+
+- `observed`: total `ERR_BLOCKED_BY_CLIENT` events passing the resource type filter
+- `attributed`: events successfully classified to at least one purpose
+
+The coverage ratio (`attributed / observed`) is displayed in the Proto tab. An `unattributedBuffer` (array in `state.js`) holds recent hostnames that could not be classified, for diagnostic use. Both are persisted to `chrome.storage.session` and cleaned up on tab close/navigation.
+
+### 14.6 Proto tab
+
+The Proto tab is a popup view (`pc-view-proto`) that provides a mode-aware dashboard. It is visible in both modes and auto-refreshes every 3 seconds while active via `setInterval` polling of `PROTOCONSENT_GET_PROTO_DATA`.
+
+Layout (top to bottom):
+
+1. **Status banner**: "ProtoConsent Mode active" (teal) or "Standalone mode" (red)
+2. **Coverage bar**: attributed / observed ratio with visual fill (both modes, but most useful in ProtoConsent Mode)
+3. **Fixed signals** (always visible, no accordion):
+   - **GPC**: domain/request counts with click-through to Log > GPC tab. Uses `getMatchedRules` data (Chrome-persisted) as authoritative fallback when service worker data is stale.
+   - **Cosmetic**: site-specific rule count on current domain
+4. **CMP Detection** (accordion): banner name and state (present/showing) from `cmp-detect.js` CSS detection
+5. **Purpose cards** (accordion): per-purpose blocked domain counts with Consent Commons icons, top 10 domains per purpose, expandable
+6. **CMP Auto-response** (accordion): template count and matched domain from `cmp-inject.js`
+7. **Unattributed hostnames**: collapsible list of hostnames from the unattributed buffer
+
+The "Show/Hide details" footer button toggles all accordion cards. Purpose card expanded state is preserved across auto-refresh cycles.
+
+### 14.7 UI gating
+
+- **Mode indicator**: a semaphore pill in the popup header (inside the reload button wrapper) shows the active mode. Red dot + "Standalone" or green dot + "ProtoConsent" with halo glow. Clicking navigates to the Proto tab.
+- **Whitelist**: the Log tab's Whitelist panel and per-domain Allow buttons are hidden when `can("whitelistOverrides")` is false, with a message explaining that whitelist is not applicable in ProtoConsent Mode.
+- **Settings toggle**: the Purpose Settings page includes an "Operating Mode" section with a toggle between Standalone and ProtoConsent Mode. The toggle sends `PROTOCONSENT_SET_OPERATING_MODE` to the background. The `operatingMode` key is included in export/import with validation.
+
+### 14.8 Message types
+
+| Type | Direction | Description |
+|---|---|---|
+| `PROTOCONSENT_SET_OPERATING_MODE` | popup/settings -> background | Set mode (`"standalone"` or `"protoconsent"`), triggers rebuild, responds `{ ok, mode }` |
+| `PROTOCONSENT_GET_OPERATING_MODE` | popup -> background | Returns `{ mode }` |
+| `PROTOCONSENT_GET_PROTO_DATA` | popup -> background | Returns comprehensive Proto tab data: mode, coverage, blocked domains, GPC domains, CMP, CMP detection, cosmetic, unattributed buffer |

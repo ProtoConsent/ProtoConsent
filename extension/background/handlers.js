@@ -33,8 +33,10 @@ function resolveEnhancedPreset(lists, catalog) {
 
 import {
   PURPOSES_FOR_ENFORCEMENT,
+  operatingMode, setOperatingMode,
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
+  tabCoverageMetrics, unattributedBuffer,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -117,9 +119,53 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         gpcDomains: gpcDomains ? Object.keys(gpcDomains) : [],
         gpcDomainCounts: gpcDomains || {},
         whitelist,
+        operatingMode,
+        coverage: tabCoverageMetrics.get(message.tabId) || null,
       });
     });
     return true;
+  }
+
+  // Set operating mode (standalone / protoconsent)
+  if (message.type === "PROTOCONSENT_SET_OPERATING_MODE") {
+    const mode = message.mode;
+    if (mode !== "standalone" && mode !== "protoconsent") {
+      sendResponse({ ok: false, error: "Invalid mode" }); return;
+    }
+    chrome.storage.local.set({ operatingMode: mode }, () => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ ok: false, error: chrome.runtime.lastError.message }); return;
+      }
+      setOperatingMode(mode);
+      rebuildAllDynamicRules().then(() => {
+        sendResponse({ ok: true, mode });
+      }).catch(() => {
+        sendResponse({ ok: true, mode });
+      });
+    });
+    return true;
+  }
+
+  // Get current operating mode
+  if (message.type === "PROTOCONSENT_GET_OPERATING_MODE") {
+    sendResponse({ mode: operatingMode });
+    return;
+  }
+
+  // Proto tab: comprehensive data for the active tab
+  if (message.type === "PROTOCONSENT_GET_PROTO_DATA") {
+    const tabId = message.tabId;
+    sendResponse({
+      mode: operatingMode,
+      coverage: tabCoverageMetrics.get(tabId) || null,
+      blocked: tabBlockedDomains.get(tabId) || {},
+      gpcDomains: tabGpcDomains.get(tabId) || {},
+      cmp: tabCmpData.get(tabId) || null,
+      cmpDetect: tabCmpDetectData.get(tabId) || null,
+      cosmetic: tabCosmeticData.get(tabId) || null,
+      unattributed: unattributedBuffer.filter(e => e.tabId === tabId),
+    });
+    return;
   }
 
   // Content script forwards an SDK query

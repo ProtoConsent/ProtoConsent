@@ -167,6 +167,25 @@ export function setRebuildRunning(v) { _rebuildRunning = v; }
 export let _rebuildQueued = false;
 export function setRebuildQueued(v) { _rebuildQueued = v; }
 
+// --- Operating mode ---
+
+export let operatingMode = "standalone";
+export function setOperatingMode(v) { operatingMode = v; }
+
+const CAPABILITIES = {
+  standalone:   { ownBlocking: true,  observeExternalBlocks: true, whitelistOverrides: true,  enhancedDnr: true  },
+  protoconsent: { ownBlocking: false, observeExternalBlocks: true, whitelistOverrides: false, enhancedDnr: false },
+};
+export function can(cap) {
+  return !!(CAPABILITIES[operatingMode] || CAPABILITIES.standalone)[cap];
+}
+
+// --- Coverage metrics ---
+
+export const tabCoverageMetrics = new Map();
+export const unattributedBuffer = [];
+export const UNATTRIBUTED_BUFFER_CAP = 50;
+
 // Tab navigation tracking
 export const tabNavigating = new Set();
 export const tabLastUrl = new Map();
