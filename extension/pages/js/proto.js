@@ -2,7 +2,7 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Renders ProtoConsent Mode observability: coverage metrics,
+// Renders Monitoring mode observability: coverage metrics,
 // attributed purpose cards, signaling status, unattributed buffer.
 // Classic script - globals from config.js + popup.js available.
 
@@ -197,12 +197,12 @@ function renderProtoStatus(data) {
   el.appendChild(inner);
 }
 
-// --- Scope summary (mirrors Consent tab protection scope + enhanced scope) ---
+// --- Scope summary (populates text spans inside #proto-scope, mirrors Consent tab) ---
 
 function renderProtoScope() {
-  var el = document.getElementById("proto-scope");
-  if (!el) return;
-  el.textContent = "";
+  var coreEl = document.getElementById("proto-scope-core");
+  var enhEl = document.getElementById("proto-scope-enhanced");
+  if (!coreEl) return;
 
   // Core rules count (same as displayProtectionScope in popup.js)
   var coreRules = 0;
@@ -214,30 +214,26 @@ function renderProtoScope() {
     }
   }
 
-  // Build Core part
-  var row = document.createElement("div");
-  row.className = "proto-signal-row proto-signal-link";
-  row.title = "View Enhanced Protection tab";
-  _makeInteractive(row, function () {
-    if (typeof setActiveMode === "function") setActiveMode("enhanced");
-    if (typeof initEnhancedTab === "function") initEnhancedTab();
-  });
+  coreEl.textContent = "Core \u00b7 " + compactNumber(coreRules) + " rules";
 
-  var coreSpan = document.createElement("span");
-  coreSpan.className = "proto-scope-core";
-  coreSpan.textContent = "Core \u00b7 " + compactNumber(coreRules) + " rules";
-  row.appendChild(coreSpan);
+  // Enhanced part
+  if (!enhEl) return;
+  enhEl.textContent = "";
 
-  // Enhanced part (async via message if epLists not ready)
-  var enhSpan = document.createElement("span");
-  enhSpan.className = "proto-scope-enhanced";
-  row.appendChild(enhSpan);
-  el.appendChild(row);
+  // Make scope text (left side) clickable to Enhanced tab — not the whole row (pills have own handlers)
+  var scopeLeft = document.getElementById("proto-scope");
+  scopeLeft = scopeLeft ? scopeLeft.querySelector(".pc-scope-left") : null;
+  if (scopeLeft && !scopeLeft._boundProtoScope) {
+    _makeInteractive(scopeLeft, function () {
+      if (typeof setActiveMode === "function") setActiveMode("enhanced");
+      if (typeof initEnhancedTab === "function") initEnhancedTab();
+    });
+    scopeLeft._boundProtoScope = true;
+  }
 
-  // Populate enhanced stats
   if (typeof epLists !== "undefined" && epLists && Object.keys(epLists).length > 0) {
     var stats = (typeof getEnhancedStats === "function") ? getEnhancedStats() : null;
-    if (stats) _fillEnhancedScope(enhSpan, stats);
+    if (stats) _fillEnhancedScope(enhEl, stats);
   } else {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, function (resp) {
       if (chrome.runtime.lastError || !resp) return;
@@ -264,7 +260,7 @@ function renderProtoScope() {
           }
         }
       }
-      _fillEnhancedScope(enhSpan, { blockingCount: blockCount, cosmeticCount: 0, cmpCount: 0, totalRules: blockRules, infoCount: infoCount, infoDomains: infoDomains });
+      _fillEnhancedScope(enhEl, { blockingCount: blockCount, cosmeticCount: 0, cmpCount: 0, totalRules: blockRules, infoCount: infoCount, infoDomains: infoDomains });
     });
   }
 }
@@ -336,6 +332,14 @@ function _syncProtoPills() {
   if (gpcPill && !gpcPill._boundProtoGpc && typeof navigateToLog === "function") {
     _makeInteractive(gpcPill, function () { navigateToLog("gpc"); });
     gpcPill._boundProtoGpc = true;
+  }
+  // Bind Proto CH pill to open Settings page
+  var chPill = document.getElementById("proto-ch-pill");
+  if (chPill && !chPill._boundProtoCh) {
+    _makeInteractive(chPill, function () {
+      chrome.tabs.create({ url: chrome.runtime.getURL("pages/purposes-settings.html") });
+    });
+    chPill._boundProtoCh = true;
   }
 }
 

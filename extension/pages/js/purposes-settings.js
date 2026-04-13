@@ -655,20 +655,20 @@ function initModeSection() {
 	chrome.storage.local.get(['operatingMode'], (data) => {
 		const isProto = data.operatingMode === 'protoconsent';
 		toggle.checked = isProto;
-		label.textContent = isProto ? 'ProtoConsent' : 'Standalone';
+		label.textContent = isProto ? 'Monitoring' : 'Blocking';
 		section.classList.remove('ps-hidden');
 	});
 
 	toggle.addEventListener('change', () => {
 		const mode = toggle.checked ? 'protoconsent' : 'standalone';
-		label.textContent = toggle.checked ? 'ProtoConsent' : 'Standalone';
+		label.textContent = toggle.checked ? 'Monitoring' : 'Blocking';
 		chrome.runtime.sendMessage(
 			{ type: 'PROTOCONSENT_SET_OPERATING_MODE', mode },
 			(resp) => {
 				void chrome.runtime.lastError;
 				if (resp && !resp.ok) {
 					toggle.checked = !toggle.checked;
-					label.textContent = toggle.checked ? 'ProtoConsent' : 'Standalone';
+					label.textContent = toggle.checked ? 'Monitoring' : 'Blocking';
 				}
 			}
 		);

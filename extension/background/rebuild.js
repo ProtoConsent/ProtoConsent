@@ -127,7 +127,7 @@ async function _rebuildAllDynamicRulesImpl() {
           if (hasPaths) disableIds.push(rulesetId + "_paths");
         }
       } else {
-        // ProtoConsent Mode: disable all static blocking rulesets
+        // Monitoring mode: disable all static blocking rulesets
         if (hasDomains) disableIds.push(rulesetId);
         if (hasPaths) disableIds.push(rulesetId + "_paths");
       }

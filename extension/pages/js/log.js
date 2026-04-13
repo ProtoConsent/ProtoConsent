@@ -835,9 +835,9 @@ function renderLogWhitelist() {
   if (!container) return;
   container.innerHTML = "";
 
-  // In ProtoConsent Mode, whitelist is not applicable
+  // In Monitoring mode, whitelist is not applicable
   if (typeof can === "function" && !can("whitelistOverrides")) {
-    container.innerHTML = '<div class="pc-log-empty">Whitelist is not applicable in ProtoConsent Mode. Network blocking is handled by your external blocker.</div>';
+    container.innerHTML = '<div class="pc-log-empty">Whitelist is not applicable in Monitoring mode. Network blocking is handled by your external blocker.</div>';
     return;
   }
 

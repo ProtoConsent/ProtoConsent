@@ -31,6 +31,8 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     lines.push("— ProtoConsent v" + manifest.version + " —");
     const source = USE_DNR_DEBUG ? "onRuleMatchedDebug" : "webRequest";
     lines.push("  data source: " + source);
+    var modeLabel = (typeof operatingMode !== "undefined" && operatingMode === "protoconsent") ? "Monitoring" : "Blocking";
+    lines.push("  mode: " + modeLabel);
     lines.push("");
 
     // Site info

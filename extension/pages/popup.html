@@ -36,7 +36,7 @@
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">CONSENT</text>
         </svg>
       </button>
-      <button type="button" class="pc-mode-tab" id="pc-mode-tab-proto" data-mode="proto" role="tab" aria-selected="false" aria-controls="pc-view-proto" aria-label="Proto: Observability for ProtoConsent Mode" title="ProtoConsent Mode observability">
+      <button type="button" class="pc-mode-tab" id="pc-mode-tab-proto" data-mode="proto" role="tab" aria-selected="false" aria-controls="pc-view-proto" aria-label="Proto: Observability for Monitoring mode" title="Monitoring mode observability">
         <span class="pc-mode-tab-dot" aria-hidden="true"></span>
         <svg class="pc-mode-tab-label" xmlns="http://www.w3.org/2000/svg" width="9" height="60" viewBox="0 0 9 60" aria-hidden="true" overflow="visible">
           <text x="4.5" y="30" text-anchor="middle" dominant-baseline="central" transform="rotate(-90, 4.5, 30)" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="9" font-weight="700" letter-spacing="0.36" fill="currentColor">PROTO</text>
@@ -85,7 +85,7 @@
         <div class="pc-reload-wrapper">
           <div id="pc-mode-indicator" class="pc-mode-indicator pc-pill-indicator" title="Operating mode" hidden>
             <span class="pc-mode-dot pc-pill-dot" aria-hidden="true"></span>
-            <span id="pc-mode-label">Standalone</span>
+            <span id="pc-mode-label">Blocking</span>
           </div>
           <button id="pc-reload-btn" class="pc-reload-btn" type="button" title="Reload this page" aria-label="Reload this page">↻</button>
         </div>
@@ -140,32 +140,39 @@
         </section>
 
         <section id="pc-view-proto" class="pc-view" data-mode-view="proto" role="tabpanel" aria-labelledby="pc-mode-tab-proto" hidden aria-hidden="true">
-          <h2 class="visually-hidden">ProtoConsent Mode</h2>
+          <h2 class="visually-hidden">Monitoring Mode</h2>
           <div id="proto-status" class="proto-status"></div>
-          <div id="proto-pills" class="proto-pills">
-            <div id="proto-gpc-pill" class="pc-gpc-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="GPC signal">
-              <span class="pc-gpc-dot pc-pill-dot" aria-hidden="true"></span>
-              <span>GPC</span>
+          <div id="proto-scope" class="pc-protection-scope">
+            <div class="pc-scope-left">
+              <span id="proto-scope-core" class="pc-protection-scope-text"></span>
+              <span id="proto-scope-enhanced" class="pc-enhanced-scope" aria-live="polite"></span>
             </div>
-            <div id="proto-ch-pill" class="pc-ch-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="Client Hints stripping">
-              <span class="pc-ch-dot pc-pill-dot" aria-hidden="true"></span>
-              <span>CH</span>
-            </div>
-            <div id="proto-wk-pill" class="pc-wk-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title=".well-known declaration">
-              <span class="pc-wk-dot pc-pill-dot" aria-hidden="true"></span>
-              <span>WK</span>
-            </div>
-            <div id="proto-tcf-pill" class="pc-tcf-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="TCF CMP detection">
-              <span class="pc-tcf-dot pc-pill-dot" aria-hidden="true"></span>
-              <span>TCF</span>
-            </div>
-            <div id="proto-cname-pill" class="pc-cname-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="CNAME cloaking: domains disguised via DNS aliases to evade blocking">
-              <span class="pc-cname-dot pc-pill-dot" aria-hidden="true"></span>
-              <span>CNAME <span id="proto-cname-count">0</span></span>
+            <div class="proto-pills-wrap">
+              <div id="proto-cname-pill" class="pc-cname-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="CNAME cloaking: domains disguised via DNS aliases to evade blocking">
+                <span class="pc-cname-dot pc-pill-dot" aria-hidden="true"></span>
+                <span>CNAME <span id="proto-cname-count">0</span></span>
+              </div>
+              <div id="proto-pills" class="pc-scope-indicators">
+                <div id="proto-gpc-pill" class="pc-gpc-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="GPC signal">
+                  <span class="pc-gpc-dot pc-pill-dot" aria-hidden="true"></span>
+                  <span>GPC</span>
+                </div>
+                <div id="proto-ch-pill" class="pc-ch-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="Client Hints stripping">
+                  <span class="pc-ch-dot pc-pill-dot" aria-hidden="true"></span>
+                  <span>CH</span>
+                </div>
+                <div id="proto-wk-pill" class="pc-wk-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title=".well-known declaration">
+                  <span class="pc-wk-dot pc-pill-dot" aria-hidden="true"></span>
+                  <span>WK</span>
+                </div>
+                <div id="proto-tcf-pill" class="pc-tcf-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="TCF CMP detection">
+                  <span class="pc-tcf-dot pc-pill-dot" aria-hidden="true"></span>
+                  <span>TCF</span>
+                </div>
+              </div>
             </div>
           </div>
           <div id="proto-declarations" class="proto-declarations"></div>
-          <div id="proto-scope" class="proto-signal-single"></div>
           <div id="proto-coverage" class="proto-coverage"></div>
           <div id="proto-gpc-signal" class="proto-signal-single"></div>
           <div id="proto-tcf-accord" class="proto-tcf-accord"></div>

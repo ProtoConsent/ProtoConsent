@@ -401,6 +401,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === "PROTOCONSENT_GET_DEBUG") {
     const respond = () => {
       const debugData = Object.assign({}, lastRebuildDebug, {
+        operatingMode,
         navigatingTabs: tabNavigating.size,
         logPorts: logPorts.size,
         catalogSource: _catalogSource,

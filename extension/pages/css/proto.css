@@ -11,14 +11,15 @@
   gap: 6px;
 }
 
-/* Status banner */
+/* Status banner — matches .pc-header-stat height/padding */
 .proto-status {
-  padding: 4px;
+  padding: 6px 10px;
   border: 1px solid var(--pc-line);
   border-radius: 10px;
   background: linear-gradient(180deg, #f0fdfa 0%, #ccfbf1 100%);
   display: flex;
   justify-content: center;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .proto-status.is-standalone {
@@ -54,22 +55,15 @@
   color: #6b7280;
 }
 
-/* Proto pills row (mirrors Consent tab indicators) */
-.proto-pills {
+/* Proto pills — CNAME outside 2x2 grid, aligned to bottom-left of WK row */
+.proto-pills-wrap {
   display: flex;
-  gap: 6px;
-  justify-content: center;
-  align-items: center;
-  margin: 2px 0 4px;
-  position: relative;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
-/* CNAME pill - absolutely positioned left, out of flow */
-.pc-cname-indicator {
-  position: absolute;
-  left: 0;
-}
-
+/* CNAME pill - in flow, left of grid */
 .pc-cname-indicator .pc-pill-dot {
   background: #9ca3af;
 }
@@ -109,19 +103,6 @@
 /* Individual signal row containers */
 .proto-signal-single:empty {
   display: none;
-}
-
-/* Scope summary row */
-.proto-scope-core {
-  font-weight: 600;
-  font-size: 11px;
-  color: var(--pc-accent);
-}
-
-.proto-scope-enhanced {
-  font-weight: 600;
-  font-size: 11px;
-  color: #b45309;
 }
 
 /* Mismatch accordion */

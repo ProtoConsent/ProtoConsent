@@ -1447,7 +1447,7 @@ async function loadOperatingMode() {
       const mode = result.operatingMode || "standalone";
       // Update global from config.js
       if (typeof operatingMode !== "undefined") operatingMode = mode;
-      // In ProtoConsent Mode, default to Proto tab
+      // In Monitoring mode, default to Proto tab
       if (mode === "protoconsent") activeMode = "proto";
       updateModeIndicator(mode);
       resolve();
