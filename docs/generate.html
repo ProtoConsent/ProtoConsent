@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generate your .well-known/protoconsent.json</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/logo/protoconsent_logo_bold.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/protoconsent_logo_32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Generate a .well-known/protoconsent.json declaration for your website. Free online tool for the ProtoConsent protocol.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Generate your .well-known/protoconsent.json">
+  <meta property="og:description" content="Build a purpose-based privacy declaration for your website in minutes.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://protoconsent.org/generate.html">
+  <meta property="og:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Generate your .well-known/protoconsent.json">
+  <meta name="twitter:description" content="Build a purpose-based privacy declaration for your website in minutes.">
+  <meta name="twitter:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+  <div class="page">
+    <div class="container">
+      <header>
+        <a href="index.html" class="brand">
+          <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
+          <div class="brand-name">ProtoConsent</div>
+        </a>
+        <nav class="header-links-nav" aria-label="Main">
+          <a class="header-link" href="index.html">Home</a>
+          <a class="header-link" href="why.html">Why ProtoConsent</a>
+          <a class="header-link" href="developers.html">Developers</a>
+          <a class="header-link" href="validate.html">Validate</a>
+          <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        </nav>
+      </header>
+
+      <main id="main-content">
+        <article class="article">
+          <div class="article-header">
+            <a href="developers.html" class="article-back">&larr; Back to developers</a>
+            <h1 class="article-title">Generate your declaration</h1>
+            <p class="article-subtitle">
+              Build a <code>.well-known/protoconsent.json</code> file for your site. Toggle purposes, set optional fields, then copy or download the result.
+              See the <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/spec/protoconsent-well-known.md" target="_blank" rel="noopener noreferrer">specification</a> for full details.
+            </p>
+          </div>
+
+          <!-- Purposes -->
+          <section class="article-section" id="gen-purposes-section">
+            <h2>Purposes</h2>
+            <p>Declare which data purposes your site uses. Toggle each one on or off.</p>
+            <div id="gen-purposes"></div>
+          </section>
+
+          <!-- Data handling -->
+          <section class="article-section">
+            <h2>Data handling <span style="font-weight:normal;font-size:13px;color:var(--pc-muted)">(optional)</span></h2>
+            <div class="gen-section-opt">
+              <div class="gen-field">
+                <label class="gen-field-label" for="gen-region">Storage region</label>
+                <input type="text" id="gen-region" class="gen-input" placeholder="eu" autocomplete="off" spellcheck="false">
+                <span class="gen-hint">ISO code (us, de) or region (eu, eea, international)</span>
+              </div>
+              <div class="gen-field">
+                <label class="gen-field-label" for="gen-intl">International transfers</label>
+                <label class="gen-toggle">
+                  <input type="checkbox" id="gen-intl">
+                  <span class="gen-toggle-track"></span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <!-- Rights URL -->
+          <section class="article-section">
+            <h2>Rights URL <span style="font-weight:normal;font-size:13px;color:var(--pc-muted)">(optional)</span></h2>
+            <div class="gen-section-opt">
+              <input type="url" id="gen-rights" class="gen-input-wide" placeholder="https://example.com/privacy" autocomplete="off" spellcheck="false">
+              <span id="gen-rights-error" class="gen-hint">http:// or https://</span>
+            </div>
+          </section>
+
+          <!-- Preview -->
+          <section class="article-section">
+            <h2>Preview</h2>
+            <p>How the extension would display your declaration.</p>
+            <div id="gen-preview" class="vld-preview-box"></div>
+          </section>
+
+          <!-- Output -->
+          <section class="article-section">
+            <h2>Output</h2>
+            <textarea id="gen-json" class="gen-output" readonly aria-label="Generated JSON output"></textarea>
+            <div class="gen-actions">
+              <button type="button" id="gen-copy-btn" class="btn-primary">Copy JSON</button>
+              <button type="button" id="gen-download-btn" class="btn-primary">Download</button>
+              <a href="validate.html" class="gen-validate-link">Validate after deploying &rarr;</a>
+            </div>
+          </section>
+
+          <!-- Hosting -->
+          <section class="article-section">
+            <h2>How to host it</h2>
+            <ol>
+              <li>Save the file as <code>protoconsent.json</code></li>
+              <li>Place it at <code>https://your-domain.com/.well-known/protoconsent.json</code></li>
+              <li>Serve with <code>Content-Type: application/json</code></li>
+              <li>Ensure CORS allows the browser to read it (default is fine for same-origin)</li>
+            </ol>
+            <p>
+              <a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/spec/protoconsent-well-known.md" target="_blank" rel="noopener noreferrer">Full specification &rarr;</a>
+            </p>
+          </section>
+        </article>
+      </main>
+
+      <footer>
+        <div>
+          ProtoConsent is a browser extension for browser-level, purpose-based consent controls on the open web.
+        </div>
+        <nav class="footer-links" aria-label="Footer">
+          <a href="index.html">Home</a>
+          <a href="why.html">Why ProtoConsent</a>
+          <a href="validate.html">Validate</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">Source code</a>
+          <a href="mailto:contact@protoconsent.org">Contact</a>
+          <a href="privacy.html">Privacy</a>
+        </nav>
+      </footer>
+    </div>
+  </div>
+  <script src="assets/js/generate.js"></script>
+</body>
+</html>
