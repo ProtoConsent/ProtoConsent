@@ -79,7 +79,7 @@
 
           <!-- Data handling -->
           <section class="article-section">
-            <h2>Data handling <span style="font-weight:normal;font-size:13px;color:var(--pc-muted)">(optional)</span></h2>
+            <h2>Data handling <span class="gen-optional-label">(optional)</span></h2>
             <div class="gen-section-opt">
               <div class="gen-field">
                 <label class="gen-field-label" for="gen-region">Storage region</label>
@@ -96,12 +96,20 @@
             </div>
           </section>
 
-          <!-- Rights URL -->
+          <!-- Links -->
           <section class="article-section">
-            <h2>Rights URL <span style="font-weight:normal;font-size:13px;color:var(--pc-muted)">(optional)</span></h2>
+            <h2>Links <span class="gen-optional-label">(optional)</span></h2>
             <div class="gen-section-opt">
-              <input type="url" id="gen-rights" class="gen-input-wide" placeholder="https://example.com/privacy" autocomplete="off" spellcheck="false">
-              <span id="gen-rights-error" class="gen-hint">http:// or https://</span>
+              <div class="gen-field">
+                <label class="gen-field-label" for="gen-policy">Privacy policy URL</label>
+                <input type="url" id="gen-policy" class="gen-input-wide" placeholder="https://example.com/privacy" autocomplete="off" spellcheck="false">
+                <span id="gen-policy-error" class="gen-hint">http:// or https://</span>
+              </div>
+              <div class="gen-field">
+                <label class="gen-field-label" for="gen-rights">Rights URL</label>
+                <input type="url" id="gen-rights" class="gen-input-wide" placeholder="https://example.com/privacy#your-rights" autocomplete="off" spellcheck="false">
+                <span id="gen-rights-error" class="gen-hint">http:// or https://</span>
+              </div>
             </div>
           </section>
 
