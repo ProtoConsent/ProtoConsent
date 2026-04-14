@@ -20,6 +20,7 @@ async function init() {
 		renderPresets(presets, purposes);
 		renderEnhancedPresets();
 		renderDynamicListsToggle(purposes);
+		initModeSection();
 		initCmpSection();
 		initInterExt();
 
@@ -645,6 +646,35 @@ function renderEnhancedPresets() {
 	});
 }
 
+function initModeSection() {
+	const section = document.getElementById('mode-section');
+	const toggle = document.getElementById('ps-mode-toggle');
+	const label = document.getElementById('ps-mode-label');
+	if (!section || !toggle || !label) return;
+
+	chrome.storage.local.get(['operatingMode'], (data) => {
+		const isProto = data.operatingMode === 'protoconsent';
+		toggle.checked = isProto;
+		label.textContent = isProto ? 'Monitoring' : 'Blocking';
+		section.classList.remove('ps-hidden');
+	});
+
+	toggle.addEventListener('change', () => {
+		const mode = toggle.checked ? 'protoconsent' : 'standalone';
+		label.textContent = toggle.checked ? 'Monitoring' : 'Blocking';
+		chrome.runtime.sendMessage(
+			{ type: 'PROTOCONSENT_SET_OPERATING_MODE', mode },
+			(resp) => {
+				void chrome.runtime.lastError;
+				if (resp && !resp.ok) {
+					toggle.checked = !toggle.checked;
+					label.textContent = toggle.checked ? 'Monitoring' : 'Blocking';
+				}
+			}
+		);
+	});
+}
+
 function initCmpSection() {
 	const section = document.getElementById('cmp-section');
 	const toggle = document.getElementById('cmp-auto-toggle');
@@ -831,7 +861,8 @@ document.addEventListener('DOMContentLoaded', init);
 
 const EXPORT_KEYS = [
 	"defaultProfile", "defaultPurposes", "rules", "whitelist",
-	"gpcEnabled", "chStrippingEnabled", "enhancedPreset", "enhancedLists",
+	"gpcEnabled", "chStrippingEnabled", "operatingMode",
+	"enhancedPreset", "enhancedLists",
 	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending",
 	"dynamicListsConsent", "consentEnhancedLink",
 	"celMode", "celCustomPurposes",
@@ -890,6 +921,10 @@ function validateImport(data) {
 	if ("chStrippingEnabled" in data) {
 		if (typeof data.chStrippingEnabled === "boolean") clean.chStrippingEnabled = data.chStrippingEnabled;
 		else errors.push("chStrippingEnabled: must be boolean");
+	}
+	if ("operatingMode" in data) {
+		if (data.operatingMode === "standalone" || data.operatingMode === "protoconsent") clean.operatingMode = data.operatingMode;
+		else errors.push("operatingMode: must be 'standalone' or 'protoconsent'");
 	}
 	if ("enhancedPreset" in data) {
 		if (VALID_ENHANCED_PRESETS.includes(data.enhancedPreset)) clean.enhancedPreset = data.enhancedPreset;

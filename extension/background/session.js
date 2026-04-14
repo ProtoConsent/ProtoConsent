@@ -8,8 +8,13 @@
 import {
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
+  tabCoverageMetrics,
+  blockerDetection, updateBlockerDetection,
+  unattributedBuffer, UNATTRIBUTED_BUFFER_CAP,
+  setOperatingMode,
   _extEventLog,
 } from "./state.js";
+import { restoreWarningBadge } from "./blocker-detection.js";
 
 // Throttled write to chrome.storage.session (max once per 2s)
 let sessionPersistTimer = null;
@@ -48,11 +53,32 @@ export function persistTabDataToSession() {
   for (const [tabId, data] of tabGppData) {
     gpp[tabId] = data;
   }
-  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _tabCmp: cmp, _tabCmpDetect: cmpDetect, _tabGpp: gpp, _extEventLog: _extEventLog });
+  const coverage = {};
+  for (const [tabId, data] of tabCoverageMetrics) {
+    coverage[tabId] = data;
+  }
+  chrome.storage.session.set({
+    _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _tabCmp: cmp,
+    _tabCmpDetect: cmpDetect, _tabGpp: gpp, _tabCoverage: coverage,
+    _extEventLog: _extEventLog,
+    _blockerDetect: {
+      navCount: blockerDetection.navCount,
+      totalObserved: blockerDetection.totalObserved,
+      behavioralSignal: blockerDetection.behavioralSignal,
+      noBlockerWarning: blockerDetection.noBlockerWarning,
+      unattributedHostnames: Array.from(blockerDetection.unattributedHostnames),
+    },
+    _unattributedBuffer: unattributedBuffer.slice(),
+  });
 }
 
 export async function restoreTabDataFromSession() {
   if (!chrome.storage.session) return;
+  // Restore operatingMode early so blocker detection evaluates under the correct mode
+  try {
+    const { operatingMode } = await chrome.storage.local.get("operatingMode");
+    if (operatingMode) setOperatingMode(operatingMode);
+  } catch (_) {}
   try {
     const result = await chrome.storage.session.get(null);
     if (result._tabBlocked) {
@@ -85,10 +111,36 @@ export async function restoreTabDataFromSession() {
         tabGppData.set(Number(tabId), data);
       }
     }
+    if (result._tabCoverage) {
+      for (const [tabId, data] of Object.entries(result._tabCoverage)) {
+        tabCoverageMetrics.set(Number(tabId), data);
+      }
+    }
     // Restore inter-extension event log
     if (Array.isArray(result._extEventLog)) {
       _extEventLog.length = 0;
       for (const evt of result._extEventLog) _extEventLog.push(evt);
+    }
+    // Restore blocker detection state
+    if (result._blockerDetect) {
+      const bd = result._blockerDetect;
+      updateBlockerDetection({
+        navCount: bd.navCount || 0,
+        totalObserved: bd.totalObserved || 0,
+        behavioralSignal: !!bd.behavioralSignal,
+        noBlockerWarning: !!bd.noBlockerWarning,
+      });
+      if (Array.isArray(bd.unattributedHostnames)) {
+        blockerDetection.unattributedHostnames = new Set(bd.unattributedHostnames);
+      }
+      restoreWarningBadge(!!bd.noBlockerWarning);
+    }
+    // Restore unattributed buffer
+    if (Array.isArray(result._unattributedBuffer)) {
+      unattributedBuffer.length = 0;
+      for (const entry of result._unattributedBuffer.slice(-UNATTRIBUTED_BUFFER_CAP)) {
+        unattributedBuffer.push(entry);
+      }
     }
     // Prune orphan tabs from blocked/GPC/cosmetic data
     const existingTabs = new Set();
@@ -114,6 +166,9 @@ export async function restoreTabDataFromSession() {
       }
       for (const tabId of tabGppData.keys()) {
         if (!existingTabs.has(tabId)) tabGppData.delete(tabId);
+      }
+      for (const tabId of tabCoverageMetrics.keys()) {
+        if (!existingTabs.has(tabId)) tabCoverageMetrics.delete(tabId);
       }
     }
     // Restore per-tab TCF detection data (keys: "tcf_<tabId>")

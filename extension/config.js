@@ -13,6 +13,22 @@ let DEBUG_RULES = false;
 // In store builds onRuleMatchedDebug does not exist, so this flag has no effect.
 const USE_DNR_DEBUG = false;
 
+// --- Operating mode ---
+
+// eslint-disable-next-line no-unused-vars
+var operatingMode = "standalone";
+
+// eslint-disable-next-line no-unused-vars
+var CAPABILITIES = {
+  standalone:   { ownBlocking: true,  observeExternalBlocks: true, whitelistOverrides: true,  enhancedDnr: true  },
+  protoconsent: { ownBlocking: false, observeExternalBlocks: true, whitelistOverrides: false, enhancedDnr: false },
+};
+
+// eslint-disable-next-line no-unused-vars
+function can(cap) {
+  return !!(CAPABILITIES[operatingMode] || CAPABILITIES.standalone)[cap];
+}
+
 // Inter-extension protocol version (independent of extension version).
 const INTEREXT_PROTOCOL_VERSION = "0.1";
 

@@ -12,6 +12,7 @@ import {
   dynamicBlockRuleMap, dynamicGpcSetIds, dynamicEnhancedMap,
   gpcGlobalActive, gpcAddDomains, gpcRemoveDomains,
   logPorts, _extEventLog,
+  tabCoverageMetrics, unattributedBuffer, UNATTRIBUTED_BUFFER_CAP,
 } from "./state.js";
 import { resolvePurposesFromHostname } from "./config-loader.js";
 import { scheduleSessionPersist, updateBadgeForTab } from "./session.js";
@@ -91,8 +92,22 @@ if (!useDnrDebug) {
       let hostname;
       try { hostname = new URL(details.url).hostname; } catch (_) { return; }
 
+      // Coverage tracking: count ALL observed blocks
+      if (!tabCoverageMetrics.has(details.tabId)) {
+        tabCoverageMetrics.set(details.tabId, { observed: 0, attributed: 0 });
+      }
+      const metrics = tabCoverageMetrics.get(details.tabId);
+      metrics.observed++;
+
       const purposes = resolvePurposesFromHostname(hostname);
-      if (!purposes.length) return;
+      if (!purposes.length) {
+        // Unattributed block: buffer for debug/Proto tab
+        if (unattributedBuffer.length >= UNATTRIBUTED_BUFFER_CAP) unattributedBuffer.shift();
+        unattributedBuffer.push({ hostname, tabId: details.tabId, ts: Date.now() });
+        return;
+      }
+
+      metrics.attributed++;
 
       if (!tabBlockedDomains.has(details.tabId)) {
         tabBlockedDomains.set(details.tabId, {});

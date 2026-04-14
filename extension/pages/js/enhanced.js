@@ -60,6 +60,7 @@ function getEnhancedStats() {
     enabledCount: activeLists.length - coreExtraEnabled - cmpExtraEnabled,
     blockingCount: blockingLists.length - coreExtraEnabled,
     infoCount: infoLists.length,
+    infoDomains: infoLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
     cosmeticCount: cosmeticLists.length,
     cmpCount: cmpLists.length,
     totalDomains: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
