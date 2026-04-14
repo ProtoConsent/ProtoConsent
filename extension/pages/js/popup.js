@@ -48,6 +48,7 @@ function getActivePurposes() {
 async function initPopup() {
   try {
     await loadDebugFlag();
+    await loadOperatingMode();
     initModeRail();
     await loadConfigs();
     await loadDefaultProfile();
@@ -72,7 +73,7 @@ async function refreshPopupState() {
   renderPurposesList();
   await displayBlockedCount();
   await loadSiteDeclaration();
-  loadTcfInfo();
+  checkBlockerDetectionForConsent();
 }
 
 // Auto-retry initPopup when the active tab finishes loading.
@@ -103,9 +104,11 @@ function initModeRail() {
       setActiveMode(mode);
       if (mode === "log" && typeof initLogTab === "function") initLogTab();
       if (mode === "enhanced" && typeof initEnhancedTab === "function") initEnhancedTab();
+      if (mode === "proto" && typeof initProtoTab === "function") initProtoTab();
     });
   });
   setActiveMode(activeMode);
+  if (activeMode === "proto" && typeof initProtoTab === "function") initProtoTab();
 }
 
 function setActiveMode(mode) {
@@ -593,6 +596,19 @@ document.addEventListener("DOMContentLoaded", () => {
           const header = card.querySelector(".ep-list-header");
           if (header) header.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
         });
+        toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
+        toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
+        return;
+      }
+      if (activeMode === "proto") {
+        // Proto tab: toggle .proto-card is-expanded
+        const cards = document.querySelectorAll("#pc-view-proto .proto-card");
+        let collapsedCount = 0;
+        cards.forEach((card) => {
+          if (!card.classList.contains("is-expanded")) collapsedCount++;
+        });
+        const shouldExpand = collapsedCount > cards.length / 2;
+        if (typeof toggleProtoDetails === "function") toggleProtoDetails(shouldExpand);
         toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
         toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
         return;
@@ -1272,23 +1288,19 @@ function updateTcfIndicator() {
       const tcf = resp.tcf;
       indicatorEl.classList.remove("is-disabled", "is-inactive");
       indicatorEl.classList.add("is-active");
-      // Only make clickable if the side panel has TCF content rendered
-      const tcfContainer = document.getElementById("pc-tcf-declaration");
-      const hasContent = tcfContainer && tcfContainer.children.length > 0;
-      if (hasContent) {
-        indicatorEl.style.cursor = "pointer";
-        if (!indicatorEl._tcfClickBound) {
-          indicatorEl.setAttribute("role", "button");
-          indicatorEl.setAttribute("tabindex", "0");
-          indicatorEl.addEventListener("click", toggleSidePanel);
-          indicatorEl.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              toggleSidePanel();
-            }
-          });
-          indicatorEl._tcfClickBound = true;
-        }
+      // Make clickable - navigate to Proto tab where TCF accordion lives
+      indicatorEl.style.cursor = "pointer";
+      if (!indicatorEl._tcfClickBound) {
+        indicatorEl.setAttribute("role", "button");
+        indicatorEl.setAttribute("tabindex", "0");
+        indicatorEl.addEventListener("click", navigateToProtoTcf);
+        indicatorEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            navigateToProtoTcf();
+          }
+        });
+        indicatorEl._tcfClickBound = true;
       }
       let tip = "Cookie banner detected";
       if (tcf.purposeConsents) {
@@ -1352,6 +1364,10 @@ async function reloadActiveTab() {
     reloadBtn.disabled = true;
     reloadBtn.classList.remove("is-recommended");
     if (countEl) countEl.textContent = "Reloading page...";
+    var protoStatus = document.getElementById("proto-status");
+    if (protoStatus && typeof activeMode !== "undefined" && activeMode === "proto") {
+      protoStatus.textContent = "Reloading page...";
+    }
 
     chrome.tabs.reload(tab.id, {}, async () => {
       // Popup may have closed; guard all DOM access
@@ -1428,4 +1444,73 @@ function showPopupError(message) {
 
   listEl.appendChild(errorEl);
   listEl.appendChild(buttonEl);
+}
+
+// Load operating mode from storage and set default tab + indicator
+async function loadOperatingMode() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["operatingMode"], (result) => {
+      const mode = result.operatingMode || "standalone";
+      // Update global from config.js
+      if (typeof operatingMode !== "undefined") operatingMode = mode;
+      // In Monitoring mode, default to Proto tab
+      if (mode === "protoconsent") activeMode = "proto";
+      updateModeIndicator(mode);
+      resolve();
+    });
+  });
+}
+
+function updateModeIndicator(mode) {
+  const indicator = document.getElementById("pc-mode-indicator");
+  const label = document.getElementById("pc-mode-label");
+  if (!indicator || !label) return;
+
+  const isProto = mode === "protoconsent";
+  indicator.hidden = false;
+  indicator.classList.toggle("is-protoconsent", isProto);
+  label.textContent = isProto ? "Monitoring" : "Blocking";
+  indicator.title = isProto
+    ? "Monitoring: adds privacy signals, banner management and consent control on top of your blocker. Click to switch to Blocking"
+    : "Blocking: enforces your privacy preferences by blocking tracking requests, sending GPC signals and managing consent banners. Click to switch to Monitoring";
+  indicator.style.cursor = "pointer";
+  indicator.setAttribute("role", "button");
+  indicator.setAttribute("tabindex", "0");
+
+  if (!indicator._clickBound) {
+    const toggleMode = () => {
+      const current = (typeof operatingMode !== "undefined") ? operatingMode : "standalone";
+      const newMode = current === "protoconsent" ? "standalone" : "protoconsent";
+      chrome.runtime.sendMessage({ type: "PROTOCONSENT_SET_OPERATING_MODE", mode: newMode }, (resp) => {
+        void chrome.runtime.lastError;
+        if (resp && !resp.ok) return;
+        if (typeof operatingMode !== "undefined") operatingMode = newMode;
+        updateModeIndicator(newMode);
+        // Switch to appropriate tab
+        if (newMode === "protoconsent") {
+          setActiveMode("proto");
+          if (typeof initProtoTab === "function") initProtoTab();
+        } else {
+          setActiveMode("consent");
+        }
+      });
+    };
+    indicator.addEventListener("click", toggleMode);
+    indicator.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleMode(); }
+    });
+    indicator._clickBound = true;
+  }
+}
+
+// Check blocker detection state and show suggest-monitoring banner in Consent tab
+function checkBlockerDetectionForConsent() {
+  var mode = (typeof operatingMode !== "undefined") ? operatingMode : "standalone";
+  if (mode === "protoconsent") return;
+  chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_BLOCKER_DETECTION" }, function (state) {
+    if (chrome.runtime.lastError || !state) return;
+    if (typeof renderBlockerDetectionBanner === "function") {
+      renderBlockerDetectionBanner(state, mode, "consent-blocker-banner");
+    }
+  });
 }

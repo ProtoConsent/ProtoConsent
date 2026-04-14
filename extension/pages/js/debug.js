@@ -31,6 +31,8 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     lines.push("— ProtoConsent v" + manifest.version + " —");
     const source = USE_DNR_DEBUG ? "onRuleMatchedDebug" : "webRequest";
     lines.push("  data source: " + source);
+    var modeLabel = (typeof operatingMode !== "undefined" && operatingMode === "protoconsent") ? "Monitoring" : "Blocking";
+    lines.push("  mode: " + modeLabel);
     lines.push("");
 
     // Site info
@@ -138,6 +140,18 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     if (bg && bg.cmpLists) {
       lines.push("— CMP auto-response —");
       lines.push("  CMP lists: " + (bg.cmpLists.length > 0 ? bg.cmpLists.join(", ") : "(none)"));
+      lines.push("");
+    }
+
+    // Blocker detection diagnostics
+    if (bg && bg.blockerDetect) {
+      var bd = bg.blockerDetect;
+      lines.push("— blocker detection —");
+      lines.push("  navCount: " + bd.navCount + "  totalObserved: " + bd.totalObserved);
+      lines.push("  behavioralSignal: " + bd.behavioralSignal + "  noBlockerWarning: " + bd.noBlockerWarning);
+      lines.push("  unattributedHostnames (accumulated): " + bd.unattributedHostnames);
+      lines.push("  buffer: " + bd.bufferLength + " entries, " + bd.bufferUniqueHostnames + " unique hostnames");
+      lines.push("  live coverage: " + bd.liveCoverageEntries + " tabs, " + bd.liveCoverageObserved + " observed");
       lines.push("");
     }
 

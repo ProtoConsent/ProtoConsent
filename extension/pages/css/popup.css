@@ -504,29 +504,6 @@ body {
   background-color: #9ca3af;
 }
 
-/* TCF declaration in side panel */
-.pc-tcf-declaration:empty {
-  display: none;
-}
-
-.pc-tcf-declaration {
-  margin-top: 0;
-  padding-top: 0;
-}
-
-/* Separator only when both WK and TCF are visible */
-.pc-site-declaration:not(:empty) + .pc-tcf-declaration:not(:empty) {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--pc-line);
-}
-
-.pc-tcf-cmp-row {
-  font-size: 11px;
-  color: #475569;
-  margin: 4px 0 6px;
-}
-
 .pc-tcf-provider {
   font-size: 11px;
   font-weight: 600;
@@ -577,14 +554,13 @@ body {
 }
 
 .pc-reload-btn {
-  width: 30px;
-  height: 26px;
+  width: 22px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  align-self: end;
   flex-shrink: 0;
-  font-size: 15px;
+  font-size: 12px;
   line-height: 1;
   color: var(--pc-accent);
   background: linear-gradient(180deg, #ffffff 0%, #edf5ff 100%);
@@ -1276,4 +1252,49 @@ body {
   text-decoration: underline;
 }
 
+/* Proto tab gradient (teal) */
+.pc-mode-tab[data-mode="proto"] {
+  background: linear-gradient(180deg, #ccfbf1 0%, #5eead4 100%);
+}
 
+.pc-mode-tab.is-active[data-mode="proto"] .pc-mode-tab-dot {
+  background: #134e4a;
+}
+
+/* Mode indicator pill (semaphore) */
+.pc-reload-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pc-mode-indicator {
+  cursor: pointer;
+  font-size: 9px;
+  padding: 2px 7px;
+}
+
+.pc-mode-indicator[hidden] {
+  display: none !important;
+}
+
+.pc-mode-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #dc2626;
+  box-shadow: 0 0 6px 2px rgba(220, 38, 38, 0.5);
+}
+
+.pc-mode-indicator.is-protoconsent {
+  border-color: #99f6e4;
+  background: #f0fdfa;
+  color: #0f766e;
+}
+
+.pc-mode-indicator.is-protoconsent .pc-mode-dot {
+  background: #10b981;
+  box-shadow: 0 0 6px 2px rgba(16, 185, 129, 0.5);
+}

@@ -33,8 +33,10 @@ function resolveEnhancedPreset(lists, catalog) {
 
 import {
   PURPOSES_FOR_ENFORCEMENT,
+  operatingMode, setOperatingMode,
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
+  tabCoverageMetrics, unattributedBuffer, blockerDetection,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -54,6 +56,7 @@ import { rebuildAllDynamicRules } from "./rebuild.js";
 import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
 import { scheduleSessionPersist } from "./session.js";
+import { getBlockerDetectionState, resetBehavioralCounters, dismissBlockerDetection } from "./blocker-detection.js";
 
 // Handle a bridge query from the content script.
 export async function handleBridgeQuery(message) {
@@ -117,6 +120,68 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         gpcDomains: gpcDomains ? Object.keys(gpcDomains) : [],
         gpcDomainCounts: gpcDomains || {},
         whitelist,
+        operatingMode,
+        coverage: tabCoverageMetrics.get(message.tabId) || null,
+      });
+    });
+    return true;
+  }
+
+  // Set operating mode (standalone / protoconsent)
+  if (message.type === "PROTOCONSENT_SET_OPERATING_MODE") {
+    const mode = message.mode;
+    if (mode !== "standalone" && mode !== "protoconsent") {
+      sendResponse({ ok: false, error: "Invalid mode" }); return;
+    }
+    chrome.storage.local.set({ operatingMode: mode }, () => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ ok: false, error: chrome.runtime.lastError.message }); return;
+      }
+      setOperatingMode(mode);
+      resetBehavioralCounters();
+      rebuildAllDynamicRules().then(() => {
+        sendResponse({ ok: true, mode });
+      }).catch(() => {
+        sendResponse({ ok: true, mode });
+      });
+    });
+    return true;
+  }
+
+  // Get current operating mode
+  if (message.type === "PROTOCONSENT_GET_OPERATING_MODE") {
+    sendResponse({ mode: operatingMode });
+    return;
+  }
+
+  // Blocker detection state for popup
+  if (message.type === "PROTOCONSENT_GET_BLOCKER_DETECTION") {
+    getBlockerDetectionState((state) => sendResponse(state));
+    return true;
+  }
+
+  // Dismiss blocker detection suggestion or warning
+  if (message.type === "PROTOCONSENT_DISMISS_BLOCKER_DETECTION") {
+    dismissBlockerDetection(message.target);
+    sendResponse({ ok: true });
+    return;
+  }
+
+  // Proto tab: comprehensive data for the active tab
+  if (message.type === "PROTOCONSENT_GET_PROTO_DATA") {
+    const tabId = message.tabId;
+    chrome.storage.local.get(["operatingMode"], (res) => {
+      const mode = res.operatingMode || "standalone";
+      if (mode !== operatingMode) setOperatingMode(mode);
+      sendResponse({
+        mode,
+        coverage: tabCoverageMetrics.get(tabId) || null,
+        blocked: tabBlockedDomains.get(tabId) || {},
+        gpcDomains: tabGpcDomains.get(tabId) || {},
+        cmp: tabCmpData.get(tabId) || null,
+        cmpDetect: tabCmpDetectData.get(tabId) || null,
+        cosmetic: tabCosmeticData.get(tabId) || null,
+        unattributed: unattributedBuffer.filter(e => e.tabId === tabId),
       });
     });
     return true;
@@ -355,6 +420,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === "PROTOCONSENT_GET_DEBUG") {
     const respond = () => {
       const debugData = Object.assign({}, lastRebuildDebug, {
+        operatingMode,
         navigatingTabs: tabNavigating.size,
         logPorts: logPorts.size,
         catalogSource: _catalogSource,
@@ -391,6 +457,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         debugData.celCustomPurposes = p3Result.celCustomPurposes;
         debugData.consentLinkedListIds = lastConsentLinkedListIds;
         debugData.celPendingDownload = lastCelPendingDownload;
+        // Blocker detection diagnostics
+        debugData.blockerDetect = {
+          navCount: blockerDetection.navCount,
+          totalObserved: blockerDetection.totalObserved,
+          behavioralSignal: blockerDetection.behavioralSignal,
+          noBlockerWarning: blockerDetection.noBlockerWarning,
+          unattributedHostnames: blockerDetection.unattributedHostnames.size,
+          bufferLength: unattributedBuffer.length,
+          bufferUniqueHostnames: new Set(unattributedBuffer.map(e => e.hostname)).size,
+          liveCoverageEntries: tabCoverageMetrics.size,
+          liveCoverageObserved: Array.from(tabCoverageMetrics.values()).reduce((s, m) => s + m.observed, 0),
+        };
         sendResponse(debugData);
       });
     };

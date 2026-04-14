@@ -14,6 +14,11 @@ desktop.ini
 *.suo
 *.user
 
+# Linting and build artifacts
+eslint.config.mjs
+package-lock.json
+package.json
+
 # Node (if a build step is added later)
 node_modules/
 npm-debug.log*

@@ -40,3 +40,9 @@ export function getChStrippingEnabled(callback) {
     callback(r.chStrippingEnabled !== false);
   });
 }
+
+// SYNC: must match config.js CAPABILITIES
+export const CAPABILITIES = {
+  standalone:   { ownBlocking: true,  observeExternalBlocks: true, whitelistOverrides: true,  enhancedDnr: true  },
+  protoconsent: { ownBlocking: false, observeExternalBlocks: true, whitelistOverrides: false, enhancedDnr: false },
+};
