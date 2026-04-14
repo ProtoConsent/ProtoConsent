@@ -9,17 +9,18 @@
 /* Preset bar */
 .ep-preset-bar {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: start;
+  justify-content: space-between;
+  gap: 6px;
   padding: 8px 0 6px;
 }
 
-.ep-preset-label {
+.ep-preset-shields {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1px;
-  flex-shrink: 0;
-  min-width: 14px;
+  min-width: 0;
 }
 
 .ep-preset-shield {
@@ -29,9 +30,9 @@
 }
 
 .ep-preset-buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto;
   gap: 4px;
-  align-items: center;
 }
 
 .ep-preset-btn {
@@ -63,9 +64,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  font-size: 13px;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
   line-height: 1;
   color: #78350f;
   background: linear-gradient(180deg, #fef3c7 0%, #fbbf24 100%);
@@ -77,7 +78,6 @@
 
 /* Contextual action (right side of preset bar) */
 .ep-preset-action {
-  margin-left: auto;
   font-family: inherit;
   font-size: 10px;
   font-weight: 600;
@@ -381,9 +381,17 @@
 /* Sync consent pill */
 .ep-preset-right {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 4px;
-  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.ep-preset-pill-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
 .ep-sync-pill {
