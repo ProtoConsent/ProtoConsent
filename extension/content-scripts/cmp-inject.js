@@ -67,6 +67,12 @@
     ? tcString.replace(/[^A-Za-z0-9_\-.~+/=]/g, '').slice(0, 2000) : '';
 
   // --- Layer 1: Cookie injection ---
+  // Existing cookies: if a CMP (or the user) already set a consent cookie,
+  // do not overwrite it. This prevents clobbering real consent from CMPs
+  // like Didomi whose tokens are site-specific and cannot be templated.
+  const existingCookies = new Set(
+    (document.cookie || '').split(';').map(c => c.split('=')[0].trim()).filter(Boolean)
+  );
   const maxAge = Math.min(Math.max(Number(cmpCookieMaxAge) || CMP_DEFAULT_MAX_AGE, 60), 31536000);
   const injectedCookies = [];
   for (const [cmpId, cmp] of Object.entries(applicableSigs)) {
@@ -76,14 +82,15 @@
     for (const c of cmp.cookie) {
       if (typeof c.template !== 'string' || !c.template) continue;
       if (!c.name || /[;=\s]/.test(c.name)) continue;
+      if (existingCookies.has(c.name)) continue;
 
       let val = c.template
-        .replace('{DATE_ISO}', now.toISOString())
-        .replace('{DATESTAMP_ENCODED}', encodeURIComponent(now.toString()))
-        .replace('{UUID}', uuid)
-        .replace('{TIMESTAMP}', String(now.getTime()))
-        .replace('{STAMP}', String(Math.random()).slice(2, 10))
-        .replace('{TC_STRING}', safeTcString);
+        .replaceAll('{DATE_ISO}', now.toISOString())
+        .replaceAll('{DATESTAMP_ENCODED}', encodeURIComponent(now.toString()))
+        .replaceAll('{UUID}', uuid)
+        .replaceAll('{TIMESTAMP}', String(now.getTime()))
+        .replaceAll('{STAMP}', String(Math.random()).slice(2, 10))
+        .replaceAll('{TC_STRING}', safeTcString);
 
       for (const [purpose, allowed] of Object.entries(prefs)) {
         val = val.replaceAll(`{${purpose}}`, allowed ? fmt.allow : fmt.deny);

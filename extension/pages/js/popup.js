@@ -247,6 +247,16 @@ let lastBlocked = 0;
 let displayRetries = 0;
 const MAX_DISPLAY_RETRIES = 2;
 
+// Compute block provenance from getMatchedRules (own) vs webRequest (observed).
+// Single source of truth — used by proto.js and debug.js.
+function computeBlockProvenance(coverage) {
+  var own = lastBlocked || 0;
+  var observed = (coverage && coverage.observed) || 0;
+  var attributed = (coverage && coverage.attributed) || 0;
+  var external = Math.max(0, observed - own);
+  return { own: own, observed: observed, attributed: attributed, external: external };
+}
+
 async function displayBlockedCount() {
   const countEl = document.getElementById("pc-blocked-count");
   const statRowEl = document.querySelector(".pc-header-stat");

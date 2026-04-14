@@ -7,7 +7,7 @@
 //   but something is blocking) accumulate across navigations.
 // - Monitoring: zero ERR_BLOCKED_BY_CLIENT after several navigations.
 //
-// Dismissals are persisted in chrome.storage.local with a 4-hour TTL.
+// Dismissals are persisted in chrome.storage.local with a 24-hour TTL.
 
 import {
   blockerDetection, updateBlockerDetection,
@@ -20,8 +20,8 @@ import {
 const SUGGEST_UNATTRIBUTED_THRESHOLD = 5;
 // Monitoring: navigations before evaluating absence of blocks
 const WARN_NAV_THRESHOLD = 2;
-// Dismissal TTL in ms (4 hours)
-const DISMISS_TTL = 4 * 60 * 60 * 1000;
+// Dismissal TTL in ms (24 hours)
+const DISMISS_TTL = 24 * 60 * 60 * 1000;
 
 // Storage keys for persistent dismissals
 const STORAGE_KEY_SUGGEST = "_blockerSuggestDismissedAt";
@@ -54,17 +54,22 @@ export function onNavigation(tabId, coverageMap, url) {
 }
 
 
+// In-memory dismiss flags (survive until SW restart; storage check covers restarts)
+let _suggestDismissed = false;
+let _warnDismissed = false;
+
+
 // Evaluate behavioral signals after enough navigations.
 
 function evaluate() {
   if (operatingMode === "standalone") {
-    if (blockerDetection.unattributedHostnames.size >= SUGGEST_UNATTRIBUTED_THRESHOLD) {
+    if (!_suggestDismissed && blockerDetection.unattributedHostnames.size >= SUGGEST_UNATTRIBUTED_THRESHOLD) {
       updateBlockerDetection({ behavioralSignal: true });
     }
   } else {
     // Monitoring: warn if no blocks at all after threshold
     if (blockerDetection.navCount >= WARN_NAV_THRESHOLD) {
-      const warn = blockerDetection.totalObserved === 0;
+      const warn = !_warnDismissed && blockerDetection.totalObserved === 0;
       updateBlockerDetection({ noBlockerWarning: warn });
       _updateWarningBadge(warn);
     }
@@ -119,13 +124,19 @@ export function applyWarningBadgeForTab(tabId, url) {
 
 // Called from session.js on SW restart to restore badge state.
 export function restoreWarningBadge(warn) {
-  if (warn) {
+  if (!warn) return;
+  // Check if user already dismissed the warning (within TTL)
+  chrome.storage.local.get(STORAGE_KEY_WARN, (data) => {
+    const dismissed = data[STORAGE_KEY_WARN] && (Date.now() - data[STORAGE_KEY_WARN] < DISMISS_TTL);
+    if (dismissed) return;
     _warningBadge = false; // Force change detection
     _updateWarningBadge(true);
-  }
+  });
 }
 
 export function resetBehavioralCounters() {
+  _suggestDismissed = false;
+  _warnDismissed = false;
   updateBlockerDetection({
     navCount: 0,
     totalObserved: 0,
@@ -182,8 +193,11 @@ export function getBlockerDetectionState(callback) {
 
 export function dismissBlockerDetection(target) {
   if (target === "suggestion") {
+    _suggestDismissed = true;
     chrome.storage.local.set({ [STORAGE_KEY_SUGGEST]: Date.now() });
   } else if (target === "warning") {
+    _warnDismissed = true;
     chrome.storage.local.set({ [STORAGE_KEY_WARN]: Date.now() });
+    _updateWarningBadge(false);
   }
 }
