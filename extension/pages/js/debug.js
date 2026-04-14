@@ -143,6 +143,17 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // Cosmetic injection stats
+    if (bg && (bg.cosmeticGenericCount || bg.cosmeticDomainCount)) {
+      lines.push("— cosmetic injection —");
+      lines.push("  generic selectors: " + (bg.cosmeticGenericCount || 0) +
+        ", domain-specific: " + (bg.cosmeticDomainCount || 0));
+      if (bg.cosmeticLists && bg.cosmeticLists.length) {
+        lines.push("  lists: " + bg.cosmeticLists.join(", "));
+      }
+      lines.push("");
+    }
+
     // Blocker detection diagnostics
     if (bg && bg.blockerDetect) {
       var bd = bg.blockerDetect;
@@ -389,7 +400,6 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
         if (chrome.runtime.lastError || !proto) return;
         var prov = computeBlockProvenance(proto.coverage);
         var pLines = [];
-        pLines.push("");
         pLines.push("— block provenance (this tab) —");
         pLines.push("  own (getMatchedRules): " + prov.own);
         pLines.push("  observed (ERR_BLOCKED): " + prov.observed);

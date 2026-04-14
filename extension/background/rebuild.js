@@ -744,11 +744,8 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
       allFrames: true,
     }]);
 
-    if (DEBUG_RULES) {
-      console.log("ProtoConsent: cosmetic injection registered (" +
-        allGeneric.length + " generic, " +
-        Object.keys(cosmeticDomains).length + " domains)");
-    }
+    lastRebuildDebug.cosmeticGenericCount = allGeneric.length;
+    lastRebuildDebug.cosmeticDomainCount = Object.keys(cosmeticDomains).length;
 
   } catch (e) {
     console.error("ProtoConsent: failed to update cosmetic injection:", e);
