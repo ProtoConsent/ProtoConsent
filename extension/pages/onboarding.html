@@ -44,8 +44,8 @@
       </div>
     </div>
 
-    <!-- Step 2: Feature overview -->
-    <div id="ob-features" class="ob-screen ob-hidden">
+    <!-- Step 2: Operating mode selection -->
+    <div id="ob-mode" class="ob-screen ob-hidden">
       <div class="ob-dots" aria-hidden="true">
         <span class="ob-dot"></span>
         <span class="ob-dot is-active"></span>
@@ -53,87 +53,46 @@
         <span class="ob-dot"></span>
       </div>
       <header class="ob-header">
-        <h1 class="ob-title">What ProtoConsent does for you</h1>
+        <h1 class="ob-title">Choose your operating mode</h1>
+        <p class="ob-intro">
+          ProtoConsent can protect you on its own or work alongside an existing
+          ad blocker. You can switch at any time from the toolbar icon or Settings.
+        </p>
       </header>
 
-      <div class="ob-features">
-        <div class="ob-feature-card">
-          <div class="ob-feature-icon ob-feature-icon-consent" aria-hidden="true">
-            <img src="../icons/protoconsent_icon_32.png" alt="" width="18" height="18">
+      <div id="ob-modes" class="ob-modes" role="radiogroup" aria-label="Operating mode">
+        <div class="ob-mode-card is-selected" data-mode="standalone" role="radio" aria-checked="true" tabindex="0">
+          <div class="ob-mode-head">
+            <span class="ob-mode-dot ob-mode-dot-blocking" aria-hidden="true"></span>
+            <span class="ob-mode-name">Blocking</span>
+            <span class="ob-profile-badge">Recommended</span>
           </div>
-          <div class="ob-feature-text">
-            <div class="ob-feature-title">Consent Control</div>
-            <div class="ob-feature-desc">Your profile blocks tracking, ads, and more for every site you visit.</div>
-          </div>
+          <div class="ob-mode-desc">Blocks tracking requests directly based on your privacy profile. Full standalone protection.</div>
         </div>
-        <div class="ob-feature-card">
-          <div class="ob-feature-icon ob-feature-icon-enhanced" aria-hidden="true">
-            <img src="../icons/purposes/enhanced.svg" alt="" width="18" height="18">
+        <div class="ob-mode-card" data-mode="protoconsent" role="radio" aria-checked="false" tabindex="0">
+          <div class="ob-mode-head">
+            <span class="ob-mode-dot ob-mode-dot-monitoring" aria-hidden="true"></span>
+            <span class="ob-mode-name">Monitoring</span>
           </div>
-          <div class="ob-feature-text">
-            <div class="ob-feature-title">Enhanced Protection</div>
-            <div class="ob-feature-desc">Optional third-party enhanced lists add up to 1.8M extra tracking rules.</div>
-          </div>
+          <div class="ob-mode-desc">Works alongside your existing blocker (uBlock Origin, AdGuard, Brave Shields). Adds consent and signals without blocking requests itself.</div>
         </div>
-        <div class="ob-feature-card">
-          <div class="ob-feature-icon ob-feature-icon-gpc" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="2"/><path d="M9 5v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </div>
-          <div class="ob-feature-text">
-            <div class="ob-feature-title">GPC Signal</div>
-            <div class="ob-feature-desc">A Global Privacy Control signal is sent to websites when privacy purposes are denied. Recognised as a legal opt-out under California's CCPA/CPRA.</div>
-          </div>
-        </div>
-        <div class="ob-feature-card">
-          <div class="ob-feature-icon ob-feature-icon-log" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M6 7h6M6 10h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </div>
-          <div class="ob-feature-text">
-            <div class="ob-feature-title">Log &amp; Whitelist</div>
-            <div class="ob-feature-desc">Monitor blocked requests and allow specific domains if needed.</div>
-          </div>
-        </div>
-        <div class="ob-feature-card">
-          <div class="ob-feature-icon ob-feature-icon-cmp" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M6 9l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <div class="ob-feature-text">
-            <div class="ob-feature-title">CMP Auto-response</div>
-            <div class="ob-feature-desc">Dismisses cookie consent banners automatically, accepting or rejecting each purpose based on your privacy profile.</div>
-          </div>
-        </div>
-        <div class="ob-feature-card">
-          <div class="ob-feature-icon ob-feature-icon-site" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/><path d="M3 9h12M9 3c-2 2-2 10 0 12M9 3c2 2 2 10 0 12" stroke="currentColor" stroke-width="1.5"/></svg>
-          </div>
-          <div class="ob-feature-text">
-            <div class="ob-feature-title">Per-site Control</div>
-            <div class="ob-feature-desc">Override your default profile for specific websites.</div>
-          </div>
-        </div>
-        <div class="ob-feature-card">
-          <div class="ob-feature-icon ob-feature-icon-ch" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2L3 6v6l6 4 6-4V6L9 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 8v4M9 6.5v0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </div>
-          <div class="ob-feature-text">
-            <div class="ob-feature-title">Fingerprint Protection</div>
-            <div class="ob-feature-desc">Strips high-entropy Client Hints headers that websites use to identify your device.</div>
-          </div>
-        </div>
-        <div class="ob-feature-card">
-          <div class="ob-feature-icon ob-feature-icon-wk" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l5.5 3v6.5L9 16 3.5 11.5V5L9 2z" stroke="currentColor" stroke-width="2"/><path d="M7 9l2 2 3-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <div class="ob-feature-text">
-            <div class="ob-feature-title">Website Transparency</div>
-            <div class="ob-feature-desc">Checks .well-known/protoconsent.json declarations to verify a site's stated data practices.</div>
-          </div>
+      </div>
+
+      <div class="ob-shared-features">
+        <div class="ob-shared-title">Both modes include:</div>
+        <div class="ob-shared-list">
+          <div class="ob-shared-item"><span class="ob-shared-check" aria-hidden="true">&#10003;</span> GPC privacy signal (legal opt-out)</div>
+          <div class="ob-shared-item"><span class="ob-shared-check" aria-hidden="true">&#10003;</span> Cookie banner auto-response</div>
+          <div class="ob-shared-item"><span class="ob-shared-check" aria-hidden="true">&#10003;</span> Client Hints fingerprint protection</div>
+          <div class="ob-shared-item"><span class="ob-shared-check" aria-hidden="true">&#10003;</span> Site transparency (.well-known)</div>
+          <div class="ob-shared-item"><span class="ob-shared-check" aria-hidden="true">&#10003;</span> Per-site control and real-time Log</div>
+          <div class="ob-shared-item"><span class="ob-shared-check" aria-hidden="true">&#10003;</span> Enhanced Protection lists</div>
         </div>
       </div>
 
       <div class="ob-action">
-        <button id="ob-done" class="ob-save-btn" type="button">Done</button>
-        <button id="ob-back" class="ob-skip-link" type="button">Back</button>
+        <button id="ob-continue-mode" class="ob-save-btn" type="button">Continue</button>
+        <button id="ob-back-mode" class="ob-skip-link" type="button">Back</button>
       </div>
     </div>
 
@@ -181,12 +140,23 @@
         </label>
         <div class="ob-opt-card ob-info-card">
           <div class="ob-opt-content">
+            <div class="ob-opt-icon ob-feature-icon-cmp" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M6 9l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="ob-opt-text">
+              <span class="ob-opt-title">Cookie banner auto-response</span>
+              <span class="ob-opt-desc">Automatically accepts or rejects cookie banners based on your privacy profile. Covers 50+ consent providers. Active by default.</span>
+            </div>
+          </div>
+        </div>
+        <div class="ob-opt-card ob-info-card">
+          <div class="ob-opt-content">
             <div class="ob-opt-icon ob-feature-icon-cosmetic" aria-hidden="true">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 3h12v2H3zM3 8h8v2H3zM3 13h5v2H3z" fill="currentColor"/></svg>
             </div>
             <div class="ob-opt-text">
               <span class="ob-opt-title">Cosmetic filtering</span>
-              <span class="ob-opt-desc">Hides ad containers and empty banners left after blocking, using EasyList Cosmetic rules. Active by default - can be disabled in Enhanced Protection.</span>
+              <span class="ob-opt-desc">Hides ad containers and empty banners left after blocking, using EasyList Cosmetic rules. Active by default.</span>
             </div>
           </div>
         </div>
@@ -209,7 +179,8 @@
       <img src="../icons/protoconsent_icon_128.png" alt="" class="ob-logo" width="64" height="64">
       <h1 class="ob-title">You're all set!</h1>
       <p class="ob-intro">
-        Your default profile is <strong id="ob-chosen-profile"></strong>.
+        Your default profile is <strong id="ob-chosen-profile"></strong>
+        in <strong id="ob-chosen-mode"></strong> mode.
         Click the ProtoConsent icon in your toolbar to adjust settings for any site.
       </p>
       <p class="ob-sub">Next steps</p>
@@ -222,9 +193,31 @@
           <span class="ob-next-step-index">2</span>
           <span class="ob-next-step-label">Try Enhanced Protection<br><small>Click the extension icon, then the ENHANCED tab</small></span>
         </div>
-        <div class="ob-next-step ob-next-step-static">
-          <span class="ob-next-step-index">3</span>
-          <span class="ob-next-step-label">Pin ProtoConsent to your toolbar</span>
+      </div>
+
+      <!-- Pin extension visual -->
+      <div class="ob-pin-section">
+        <div class="ob-pin-title">Pin ProtoConsent to your toolbar</div>
+        <div class="ob-pin-desc">Click the puzzle icon in your toolbar, then pin ProtoConsent for quick access.</div>
+        <div class="ob-pin-mockup" aria-hidden="true">
+          <div class="ob-pin-toolbar">
+            <svg class="ob-pin-puzzle" width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M10 2a2 2 0 0 1 2 2h3a1 1 0 0 1 1 1v3a2 2 0 1 1 0 4v3a1 1 0 0 1-1 1h-3a2 2 0 1 1-4 0H5a1 1 0 0 1-1-1v-3a2 2 0 1 1 0-4V5a1 1 0 0 1 1-1h3a2 2 0 0 1 2-2z" stroke="#5f6368" stroke-width="1.5" fill="none"/>
+            </svg>
+            <svg class="ob-pin-arrow" width="16" height="24" viewBox="0 0 16 24" fill="none">
+              <path d="M8 0v18M2 12l6 6 6-6" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="ob-pin-dropdown">
+            <div class="ob-pin-row ob-pin-row-pc">
+              <img src="../icons/protoconsent_icon_32.png" alt="" width="18" height="18" class="ob-pin-ext-icon">
+              <span class="ob-pin-ext-name">ProtoConsent</span>
+              <svg class="ob-pin-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" title="Pin">
+                <path d="M8 1.5L9.8 5.8l4.7.4-3.6 3.1 1.1 4.6L8 11.5 3.9 14l1.1-4.6L1.5 6.2l4.7-.4L8 1.5z" fill="#1e3a8a" stroke="#1e3a8a" stroke-width="1"/>
+              </svg>
+              <span class="ob-pin-label">&#8592; Click to pin</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -243,6 +243,115 @@ body {
   margin-bottom: 24px;
 }
 
+/* Mode selection cards */
+.ob-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.ob-mode-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+  border: 1px solid var(--pc-line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.ob-mode-card:hover {
+  border-color: var(--pc-line-strong);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.ob-mode-card.is-selected {
+  border-color: #9ec5f8;
+  background: linear-gradient(180deg, #f3f8ff 0%, #ebf4ff 100%);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 10px 24px rgba(59, 130, 246, 0.12);
+}
+
+.ob-mode-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.ob-mode-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pc-text);
+}
+
+.ob-mode-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ob-mode-dot-blocking {
+  background: #dc2626;
+}
+
+.ob-mode-dot-monitoring {
+  background: #10b981;
+}
+
+.ob-mode-desc {
+  font-size: 13px;
+  color: var(--pc-text-muted);
+  line-height: 1.4;
+}
+
+/* Shared features list (below mode cards) */
+.ob-shared-features {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--pc-line);
+  border-radius: 12px;
+  background: var(--pc-surface-soft, #f8fafc);
+}
+
+.ob-shared-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.ob-shared-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+}
+
+.ob-shared-item {
+  font-size: 13px;
+  color: var(--pc-text);
+  line-height: 1.5;
+}
+
+.ob-shared-check {
+  color: #059669;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+@media (max-width: 480px) {
+  .ob-shared-list {
+    grid-template-columns: 1fr;
+  }
+  .ob-modes {
+    grid-template-columns: 1fr;
+  }
+}
+
 .ob-feature-card {
   display: flex;
   align-items: flex-start;
@@ -412,7 +521,7 @@ body {
 
 .ob-opt-desc {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--pc-text-muted);
   line-height: 1.4;
 }
@@ -429,7 +538,7 @@ body {
 }
 
 .ob-feature-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--pc-text-muted);
   line-height: 1.4;
 }
@@ -447,6 +556,7 @@ body {
 }
 
 #ob-done-screen .ob-next-step small {
+  font-size: 13px;
   font-weight: 400;
   color: var(--pc-text-muted);
 }
@@ -521,6 +631,114 @@ body {
   font-size: 13px;
   font-weight: 700;
   line-height: 1.2;
+  text-align: left;
+}
+
+/* Pin extension mockup */
+.ob-pin-section {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--pc-line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
+  text-align: center;
+  max-width: 320px;
+}
+
+.ob-pin-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pc-text);
+  margin-bottom: 4px;
+}
+
+.ob-pin-desc {
+  font-size: 13px;
+  color: var(--pc-text-muted);
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+.ob-pin-mockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ob-pin-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f1f5f9;
+}
+
+.ob-pin-puzzle {
+  opacity: 0.7;
+}
+
+.ob-pin-arrow {
+  animation: ob-pin-bounce 1.5s ease-in-out infinite;
+}
+
+@keyframes ob-pin-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+.ob-pin-dropdown {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10);
+  padding: 8px;
+  min-width: 220px;
+}
+
+.ob-pin-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.ob-pin-row-pc {
+  background: #f0f4ff;
+}
+
+.ob-pin-ext-icon {
+  border-radius: 4px;
+}
+
+.ob-pin-ext-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pc-text);
+  flex: 1;
+  text-align: left;
+}
+
+.ob-pin-icon {
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.ob-pin-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e3a8a;
+  white-space: nowrap;
+  animation: ob-pin-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ob-pin-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* Footer */
