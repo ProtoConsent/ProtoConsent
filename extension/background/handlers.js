@@ -37,6 +37,7 @@ import {
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabCoverageMetrics, unattributedBuffer, blockerDetection,
+  pathOnlyUrlFilters,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -468,6 +469,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           bufferUniqueHostnames: new Set(unattributedBuffer.map(e => e.hostname)).size,
           liveCoverageEntries: tabCoverageMetrics.size,
           liveCoverageObserved: Array.from(tabCoverageMetrics.values()).reduce((s, m) => s + m.observed, 0),
+          pathOnlyPatterns: pathOnlyUrlFilters.size,
         };
         sendResponse(debugData);
       });

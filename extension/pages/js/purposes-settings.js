@@ -2,6 +2,18 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+const TAB_NAMES = ['consent', 'protection', 'advanced'];
+const SECTION_TAB_MAP = {
+	'default-profile-section': 'consent',
+	'presets-section': 'consent',
+	'privacy-signals-section': 'consent',
+	'mode-section': 'consent',
+	'enhanced-section': 'protection',
+	'cmp-section': 'protection',
+	'inter-ext-section': 'advanced',
+	'data-section': 'advanced',
+};
+
 async function init() {
 	const statusEl = document.getElementById('status-msg');
 	try {
@@ -23,6 +35,7 @@ async function init() {
 		initModeSection();
 		initCmpSection();
 		initInterExt();
+		initTabs();
 
 		const versionEl = document.getElementById('viewer-version');
 		if (versionEl) {
@@ -114,9 +127,11 @@ function initDefaultProfile(purposes) {
 		pillsEl.replaceChildren();
 		for (const key of purposeKeys) {
 			const allowed = checkboxes[key].checked;
+			const label = purposes[key] ? purposes[key].short : key;
 			const pill = document.createElement('span');
 			pill.className = 'ps-preset-pill ' + (allowed ? 'allowed' : 'denied');
-			pill.textContent = (purposes[key] ? purposes[key].short : key) + (allowed ? ' \u2713' : ' \u2717');
+			pill.textContent = label + (allowed ? ' \u2713' : ' \u2717');
+			pill.setAttribute('aria-label', label + ': ' + (allowed ? 'allowed' : 'denied'));
 			pillsEl.appendChild(pill);
 		}
 	}
@@ -290,9 +305,11 @@ function renderPresets(presets, purposes) {
 			const pills = document.createElement('div');
 			pills.className = 'ps-preset-purposes';
 			for (const [pKey, allowed] of Object.entries(preset.purposes)) {
+				const label = purposes[pKey] ? purposes[pKey].short : pKey;
 				const pill = document.createElement('span');
 				pill.className = 'ps-preset-pill ' + (allowed ? 'allowed' : 'denied');
-				pill.textContent = (purposes[pKey] ? purposes[pKey].short : pKey) + (allowed ? ' \u2713' : ' \u2717');
+				pill.textContent = label + (allowed ? ' \u2713' : ' \u2717');
+				pill.setAttribute('aria-label', label + ': ' + (allowed ? 'allowed' : 'denied'));
 				pills.appendChild(pill);
 			}
 			card.appendChild(pills);
@@ -335,9 +352,11 @@ function renderPresets(presets, purposes) {
 				const presetDef = presets[activeProfile];
 				allowed = presetDef ? (presetDef.purposes[key] !== false) : true;
 			}
+			const label = purposes[key] ? purposes[key].short : key;
 			const pill = document.createElement('span');
 			pill.className = 'ps-preset-pill ' + (allowed ? 'allowed' : 'denied');
-			pill.textContent = (purposes[key] ? purposes[key].short : key) + (allowed ? ' \u2713' : ' \u2717');
+			pill.textContent = label + (allowed ? ' \u2713' : ' \u2717');
+			pill.setAttribute('aria-label', label + ': ' + (allowed ? 'allowed' : 'denied'));
 			customPills.appendChild(pill);
 		}
 
@@ -365,6 +384,7 @@ function renderPrivacySignals(purposes) {
 	const gpcName = document.createElement('span');
 	gpcName.className = 'ps-gpc-info-name';
 	gpcName.textContent = 'GPC (Global Privacy Control)';
+	gpcName.id = 'gpc-name';
 	const gpcDesc = document.createElement('div');
 	gpcDesc.className = 'ps-gpc-info-desc';
 	gpcDesc.textContent = 'Privacy signal (Sec-GPC) sent to websites when any of these purposes are denied. Legally recognised as an opt-out under California CCPA/CPRA.';
@@ -382,7 +402,7 @@ function renderPrivacySignals(purposes) {
 	gpcToggleLabel.setAttribute('for', 'gpc-toggle');
 	gpcToggleLabel.textContent = 'Enabled';
 
-	gpcToggle.setAttribute('aria-label', 'GPC (Global Privacy Control)');
+	gpcToggle.setAttribute('aria-describedby', 'gpc-name');
 	gpcRow.appendChild(gpcLeft);
 	gpcRow.appendChild(gpcToggleLabel);
 	gpcRow.appendChild(gpcToggle);
@@ -424,6 +444,7 @@ function renderPrivacySignals(purposes) {
 	const chName = document.createElement('span');
 	chName.className = 'ps-gpc-info-name';
 	chName.textContent = 'Client Hints Stripping';
+	chName.id = 'ch-name';
 	const chDesc = document.createElement('div');
 	chDesc.className = 'ps-gpc-info-desc';
 	chDesc.textContent = 'Removes high-entropy fingerprinting headers when advanced tracking is denied';
@@ -441,7 +462,7 @@ function renderPrivacySignals(purposes) {
 	chToggleLabel.setAttribute('for', 'ch-toggle');
 	chToggleLabel.textContent = 'Enabled';
 
-	chToggle.setAttribute('aria-label', 'Client Hints Stripping');
+	chToggle.setAttribute('aria-describedby', 'ch-name');
 	chRow.appendChild(chLeft);
 	chRow.appendChild(chToggleLabel);
 	chRow.appendChild(chToggle);
@@ -513,6 +534,7 @@ function renderEnhancedPresets() {
 			for (let i = 0; i < shieldCount; i++) {
 				const img = document.createElement('img');
 				img.src = ENHANCED_ICON;
+				img.alt = '';
 				img.width = 14;
 				img.height = 14;
 				img.className = 'ps-preset-shield';
@@ -546,6 +568,7 @@ function renderEnhancedPresets() {
 					const pill = document.createElement('span');
 					pill.className = 'ps-preset-pill ' + (included ? 'allowed' : 'denied');
 					pill.textContent = 'ProtoConsent Banners' + (included ? ' \u2713' : ' \u2717');
+					pill.setAttribute('aria-label', 'ProtoConsent Banners: ' + (included ? 'included' : 'not included'));
 					pills.appendChild(pill);
 					continue;
 				}
@@ -557,6 +580,7 @@ function renderEnhancedPresets() {
 					const pill = document.createElement('span');
 					pill.className = 'ps-preset-pill ' + (included ? 'allowed' : 'denied');
 					pill.textContent = 'ProtoConsent Core' + (included ? ' \u2713' : ' \u2717');
+					pill.setAttribute('aria-label', 'ProtoConsent Core: ' + (included ? 'included' : 'not included'));
 					pills.appendChild(pill);
 					continue;
 				}
@@ -565,6 +589,7 @@ function renderEnhancedPresets() {
 				const pill = document.createElement('span');
 				pill.className = 'ps-preset-pill ' + (included ? 'allowed' : 'denied');
 				pill.textContent = listDef.name + (included ? ' \u2713' : ' \u2717');
+				pill.setAttribute('aria-label', listDef.name + ': ' + (included ? 'included' : 'not included'));
 				pills.appendChild(pill);
 			}
 			card.appendChild(pills);
@@ -580,6 +605,7 @@ function renderEnhancedPresets() {
 		const pencil = document.createElement('span');
 		pencil.className = 'ps-preset-custom-icon';
 		pencil.textContent = '\u270E';
+		pencil.setAttribute('aria-hidden', 'true');
 		customName.appendChild(pencil);
 		customName.appendChild(document.createTextNode('Custom'));
 		if (currentPreset === 'custom') {
@@ -612,6 +638,7 @@ function renderEnhancedPresets() {
 					const pill = document.createElement('span');
 					pill.className = 'ps-preset-pill ' + (allEnabled ? 'allowed' : 'denied');
 					pill.textContent = 'ProtoConsent Banners' + (allEnabled ? ' \u2713' : ' \u2717');
+					pill.setAttribute('aria-label', 'ProtoConsent Banners: ' + (allEnabled ? 'enabled' : 'disabled'));
 					pills.appendChild(pill);
 					continue;
 				}
@@ -625,6 +652,7 @@ function renderEnhancedPresets() {
 					const pill = document.createElement('span');
 					pill.className = 'ps-preset-pill ' + (allEnabled ? 'allowed' : 'denied');
 					pill.textContent = 'ProtoConsent Core' + (allEnabled ? ' \u2713' : ' \u2717');
+					pill.setAttribute('aria-label', 'ProtoConsent Core: ' + (allEnabled ? 'enabled' : 'disabled'));
 					pills.appendChild(pill);
 					continue;
 				}
@@ -634,6 +662,7 @@ function renderEnhancedPresets() {
 				const pill = document.createElement('span');
 				pill.className = 'ps-preset-pill ' + (enabled ? 'allowed' : 'denied');
 				pill.textContent = listDef.name + (enabled ? ' \u2713' : ' \u2717');
+				pill.setAttribute('aria-label', listDef.name + ': ' + (enabled ? 'enabled' : 'disabled'));
 				pills.appendChild(pill);
 			}
 			customCard.appendChild(pills);
@@ -648,30 +677,59 @@ function renderEnhancedPresets() {
 
 function initModeSection() {
 	const section = document.getElementById('mode-section');
-	const toggle = document.getElementById('ps-mode-toggle');
-	const label = document.getElementById('ps-mode-label');
-	if (!section || !toggle || !label) return;
+	const container = section?.querySelector('.ps-mode-cards');
+	if (!section || !container) return;
+	const cards = container.querySelectorAll('.ps-mode-card');
+
+	function selectCard(mode) {
+		cards.forEach(c => {
+			const active = c.dataset.mode === mode;
+			c.classList.toggle('is-selected', active);
+			c.setAttribute('aria-checked', active ? 'true' : 'false');
+			c.setAttribute('tabindex', active ? '0' : '-1');
+		});
+	}
 
 	chrome.storage.local.get(['operatingMode'], (data) => {
-		const isProto = data.operatingMode === 'protoconsent';
-		toggle.checked = isProto;
-		label.textContent = isProto ? 'Monitoring' : 'Blocking';
+		selectCard(data.operatingMode === 'protoconsent' ? 'protoconsent' : 'standalone');
 		section.classList.remove('ps-hidden');
 	});
 
-	toggle.addEventListener('change', () => {
-		const mode = toggle.checked ? 'protoconsent' : 'standalone';
-		label.textContent = toggle.checked ? 'Monitoring' : 'Blocking';
+	function applyMode(mode) {
+		selectCard(mode);
 		chrome.runtime.sendMessage(
 			{ type: 'PROTOCONSENT_SET_OPERATING_MODE', mode },
 			(resp) => {
 				void chrome.runtime.lastError;
 				if (resp && !resp.ok) {
-					toggle.checked = !toggle.checked;
-					label.textContent = toggle.checked ? 'Monitoring' : 'Blocking';
+					selectCard(mode === 'protoconsent' ? 'standalone' : 'protoconsent');
 				}
 			}
 		);
+	}
+
+	cards.forEach(card => {
+		card.addEventListener('click', () => {
+			if (!card.classList.contains('is-selected')) applyMode(card.dataset.mode);
+		});
+	});
+
+	container.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			const focused = document.activeElement;
+			if (focused?.classList.contains('ps-mode-card') && !focused.classList.contains('is-selected')) {
+				applyMode(focused.dataset.mode);
+			}
+		}
+		if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+			e.preventDefault();
+			const arr = Array.from(cards);
+			const idx = arr.indexOf(document.activeElement);
+			if (idx === -1) return;
+			const next = arr[(idx + 1) % arr.length];
+			next.focus();
+		}
 	});
 }
 
@@ -1083,7 +1141,7 @@ function renderCelModePanel(celEnabled, celMode, celCustomPurposes, purposes) {
 
 	const modeLabel = document.createElement('span');
 	modeLabel.className = 'ps-cel-mode-label';
-	modeLabel.textContent = 'Mode';
+	modeLabel.textContent = 'Consent Link Mode';
 	modeRow.appendChild(modeLabel);
 
 	const modeGroup = document.createElement('div');
@@ -1099,9 +1157,9 @@ function renderCelModePanel(celEnabled, celMode, celCustomPurposes, purposes) {
 		btn.setAttribute('role', 'radio');
 		btn.setAttribute('aria-checked', celMode === mode ? 'true' : 'false');
 		btn.setAttribute('tabindex', celMode === mode ? '0' : '-1');
-		btn.title = mode === 'profile'
+		btn.setAttribute('aria-description', mode === 'profile'
 			? 'Use denied purposes from your default profile'
-			: 'Choose which purposes activate enhanced lists';
+			: 'Choose which purposes activate enhanced lists');
 		btn.addEventListener('click', () => {
 			if (celMode === mode) return;
 			// When switching to custom for the first time, persist defaults (all denied)
@@ -1398,11 +1456,12 @@ function makeExtIdEl(id) {
 	return span;
 }
 
-function makeBtn(text, cls, handler) {
+function makeBtn(text, cls, handler, extId) {
 	const btn = document.createElement('button');
 	btn.className = 'ps-ext-btn ' + cls;
 	btn.type = 'button';
 	btn.textContent = text;
+	if (extId) btn.setAttribute('aria-label', text + ' extension ' + extId);
 	btn.addEventListener('click', () => {
 		btn.disabled = true;
 		handler();
@@ -1475,10 +1534,10 @@ function renderPendingList(pending) {
 		actions.className = 'ps-ext-actions';
 		actions.appendChild(makeBtn('Allow', 'ps-ext-btn-allow', () => {
 			moveExtension('interExtPending', 'interExtAllowlist', entry.id);
-		}));
+		}, entry.id));
 		actions.appendChild(makeBtn('Block', 'ps-ext-btn-deny', () => {
 			moveExtension('interExtPending', 'interExtDenylist', entry.id);
-		}));
+		}, entry.id));
 		row.appendChild(actions);
 		listEl.appendChild(row);
 	}
@@ -1509,10 +1568,10 @@ function renderAllowList(allowlist) {
 		actions.className = 'ps-ext-actions';
 		actions.appendChild(makeBtn('Revoke', 'ps-ext-btn-revoke', () => {
 			removeFromList('interExtAllowlist', id);
-		}));
+		}, id));
 		actions.appendChild(makeBtn('Block', 'ps-ext-btn-deny', () => {
 			moveExtension('interExtAllowlist', 'interExtDenylist', id);
-		}));
+		}, id));
 		row.appendChild(actions);
 		listEl.appendChild(row);
 	}
@@ -1543,8 +1602,95 @@ function renderDenyList(denylist) {
 		actions.className = 'ps-ext-actions';
 		actions.appendChild(makeBtn('Unblock', 'ps-ext-btn-revoke', () => {
 			removeFromList('interExtDenylist', id);
-		}));
+		}, id));
 		row.appendChild(actions);
 		listEl.appendChild(row);
 	}
+}
+
+// --- Tab navigation ---
+
+function switchTab(name) {
+	if (!TAB_NAMES.includes(name)) return;
+
+	document.querySelectorAll('.ps-tab').forEach(tab => {
+		const isActive = tab.dataset.tab === name;
+		tab.classList.toggle('is-active', isActive);
+		tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+		tab.setAttribute('tabindex', isActive ? '0' : '-1');
+	});
+
+	document.querySelectorAll('.ps-panel').forEach(panel => {
+		const isActive = panel.dataset.panel === name;
+		panel.classList.toggle('is-active', isActive);
+		panel.hidden = !isActive;
+	});
+
+	history.replaceState(null, '', '#' + name);
+}
+
+function applyHashRoute() {
+	const hash = location.hash.replace('#', '');
+
+	if (TAB_NAMES.includes(hash)) {
+		switchTab(hash);
+		return;
+	}
+
+	if (hash && SECTION_TAB_MAP[hash]) {
+		switchTab(SECTION_TAB_MAP[hash]);
+		requestAnimationFrame(() => {
+			const el = document.getElementById(hash);
+			if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		});
+		return;
+	}
+
+	switchTab('consent');
+}
+
+function handleCrossTabLink(e) {
+	const link = e.target.closest('a[href^="#"]');
+	if (!link) return;
+
+	const targetId = link.getAttribute('href').slice(1);
+	if (!targetId) return;
+
+	const tabName = SECTION_TAB_MAP[targetId];
+	if (!tabName) return;
+
+	e.preventDefault();
+	switchTab(tabName);
+	requestAnimationFrame(() => {
+		const el = document.getElementById(targetId);
+		if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	});
+}
+
+function initTabs() {
+	const tabs = document.querySelectorAll('.ps-tab');
+	const tablist = document.querySelector('.ps-tabs');
+
+	tabs.forEach(tab => {
+		tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+	});
+
+	if (tablist) {
+		tablist.addEventListener('keydown', (e) => {
+			if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+			const visible = Array.from(tabs);
+			const idx = visible.indexOf(document.activeElement);
+			if (idx === -1) return;
+			e.preventDefault();
+			const next = e.key === 'ArrowRight'
+				? visible[(idx + 1) % visible.length]
+				: visible[(idx - 1 + visible.length) % visible.length];
+			next.focus();
+			next.click();
+		});
+	}
+
+	applyHashRoute();
+	window.addEventListener('hashchange', applyHashRoute);
+	document.addEventListener('click', handleCrossTabLink);
 }

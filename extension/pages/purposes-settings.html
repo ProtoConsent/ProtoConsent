@@ -22,12 +22,20 @@
 			</div>
 			<div class="ps-hero">
 				<h1>Purpose Settings</h1>
-				<p class="ps-subtitle">Manage your default consent profile, purposes, and presets.</p>
+				<p class="ps-subtitle">Consent profiles, protection settings, and advanced configuration.</p>
 			</div>
 		</header>
 
+		<nav class="ps-tabs" role="tablist" aria-label="Settings categories">
+			<button type="button" class="ps-tab is-active" id="ps-tab-consent" data-tab="consent" role="tab" aria-selected="true" aria-controls="ps-panel-consent" tabindex="0">Consent</button>
+			<button type="button" class="ps-tab" id="ps-tab-protection" data-tab="protection" role="tab" aria-selected="false" aria-controls="ps-panel-protection" tabindex="-1">Protection</button>
+			<button type="button" class="ps-tab" id="ps-tab-advanced" data-tab="advanced" role="tab" aria-selected="false" aria-controls="ps-panel-advanced" tabindex="-1">Advanced</button>
+		</nav>
+
 		<main>
 		<div id="status-msg" class="ps-status-msg" role="status">Loading configuration...</div>
+
+		<div class="ps-panel is-active" id="ps-panel-consent" data-panel="consent" role="tabpanel" aria-labelledby="ps-tab-consent">
 
 		<section id="default-profile-section" class="ps-section ps-default-profile-section ps-hidden">
 			<div class="ps-default-profile-row">
@@ -74,18 +82,26 @@
 				<h2>Operating Mode</h2>
 			</div>
 			<p class="ps-enhanced-desc">Choose how ProtoConsent interacts with other privacy tools.</p>
-			<div class="ps-dynamic-grid">
-				<div class="ps-gpc-toggle-row">
-					<div>
-						<span class="ps-gpc-info-name">Monitoring Mode</span>
-						<div class="ps-gpc-info-desc">Complement another blocker with consent, GPC, CMP, and Client Hints. ProtoConsent stops blocking and provides purpose attribution on top of your blocker.</div>
+			<div class="ps-mode-cards" role="radiogroup" aria-label="Operating mode">
+				<div class="ps-mode-card is-selected" data-mode="standalone" role="radio" aria-checked="true" tabindex="0">
+					<div class="ps-mode-head">
+						<span class="ps-mode-dot ps-mode-dot-blocking" aria-hidden="true"></span>
+						<span class="ps-mode-name">Blocking</span>
 					</div>
-					<label class="ps-gpc-toggle-label" for="ps-mode-toggle" id="ps-mode-label">Blocking</label>
-					<input type="checkbox" id="ps-mode-toggle" class="ps-gpc-toggle" aria-label="Monitoring Mode">
+					<div class="ps-mode-desc">Full protection. Blocks tracking requests, sends GPC signals, and manages cookie banners.</div>
+				</div>
+				<div class="ps-mode-card" data-mode="protoconsent" role="radio" aria-checked="false" tabindex="-1">
+					<div class="ps-mode-head">
+						<span class="ps-mode-dot ps-mode-dot-monitoring" aria-hidden="true"></span>
+						<span class="ps-mode-name">Monitoring</span>
+					</div>
+					<div class="ps-mode-desc">Complement another blocker with consent, GPC, banner management, and Client Hints stripping.</div>
 				</div>
 			</div>
 		</section>
+		</div>
 
+		<div class="ps-panel" id="ps-panel-protection" data-panel="protection" role="tabpanel" aria-labelledby="ps-tab-protection" hidden>
 		<section id="enhanced-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
 				<h2>Enhanced Protection</h2>
@@ -112,7 +128,7 @@
 			<div id="ps-cel-note" class="ps-cel-note ps-hidden"></div>
 			<div id="ps-cel-mode-panel" class="ps-cel-mode-panel ps-hidden"></div>
 			<details class="ps-accordion">
-				<summary class="ps-accordion-header">Enhanced presets</summary>
+				<summary class="ps-accordion-header">Enhanced presets <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></summary>
 				<div class="ps-accordion-body">
 					<div id="enhanced-preset-list"></div>
 				</div>
@@ -121,7 +137,7 @@
 
 		<section id="cmp-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
-				<h2>CMP Auto-response</h2>
+				<h2>Cookie Banner Management</h2>
 			</div>
 			<div class="ps-dynamic-grid">
 				<div class="ps-gpc-toggle-row">
@@ -135,7 +151,7 @@
 				<div class="ps-gpc-toggle-row">
 					<div>
 						<span class="ps-gpc-info-name">CMP detection</span>
-						<div class="ps-gpc-info-desc">Detect which consent platforms are present on each page and observe what their cookies say. Results appear in the Log tab. Passive - does not modify anything.</div>
+						<div class="ps-gpc-info-desc">Detect which consent platforms are present on each page and observe what their cookies say. Results appear in the Proto and Log tabs. Passive - does not modify anything.</div>
 					</div>
 					<label class="ps-gpc-toggle-label" for="cmp-detect-toggle" id="cmp-detect-label">Enabled</label>
 					<input type="checkbox" id="cmp-detect-toggle" class="ps-gpc-toggle" aria-label="CMP detection" checked>
@@ -177,7 +193,9 @@
 				</details>
 			</div>
 		</section>
+		</div>
 
+		<div class="ps-panel" id="ps-panel-advanced" data-panel="advanced" role="tabpanel" aria-labelledby="ps-tab-advanced" hidden>
 		<section id="inter-ext-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
 				<h2>Inter-extension API</h2>
@@ -236,6 +254,7 @@
 			</div>
 			<div id="data-status" class="ps-data-status ps-hidden" role="status"></div>
 		</section>
+		</div>
 
 		</main>
 		<footer class="ps-footer">

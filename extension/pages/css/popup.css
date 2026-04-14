@@ -1284,8 +1284,8 @@ body {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #dc2626;
-  box-shadow: 0 0 6px 2px rgba(220, 38, 38, 0.5);
+  background: #991b1b;
+  box-shadow: 0 0 4px 1px rgba(153, 27, 27, 0.4);
 }
 
 .pc-mode-indicator.is-protoconsent {
@@ -1296,5 +1296,5 @@ body {
 
 .pc-mode-indicator.is-protoconsent .pc-mode-dot {
   background: #10b981;
-  box-shadow: 0 0 6px 2px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 4px 1px rgba(16, 185, 129, 0.4);
 }

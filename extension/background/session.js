@@ -206,5 +206,8 @@ export function updateBadgeForTab(tabId) {
       total += count;
     }
   }
-  chrome.action.setBadgeText({ tabId, text: total > 0 ? String(total) : "" }).catch(() => {});
+  var text = "";
+  if (total > 9999) text = "10K+";
+  else if (total > 0) text = String(total);
+  chrome.action.setBadgeText({ tabId, text }).catch(() => {});
 }

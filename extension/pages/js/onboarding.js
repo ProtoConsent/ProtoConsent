@@ -12,6 +12,7 @@ const PROFILE_ORDER = ['strict', 'balanced', 'permissive'];
 const RECOMMENDED = 'balanced';
 
 let selectedProfile = RECOMMENDED;
+let selectedMode = 'standalone';
 let presets = null;
 let purposes = null;
 
@@ -127,19 +128,43 @@ function wireEvents() {
     }
   });
 
-  // Get Started → go to features screen
+  // Get Started → go to mode selection
   document.getElementById('ob-save').addEventListener('click', () => {
-    goToScreen('ob-features');
+    goToScreen('ob-mode');
   });
 
-  // Skip → save balanced and go to done
+  // Skip → save balanced + blocking and go to done
   document.getElementById('ob-skip').addEventListener('click', () => {
     selectedProfile = RECOMMENDED;
+    selectedMode = 'standalone';
     save(() => goToScreen('ob-done-screen'));
   });
 
-  // Done → save selected profile and go to dynamic lists consent
-  document.getElementById('ob-done').addEventListener('click', () => {
+  // Mode cards: click and keyboard
+  const modeContainer = document.getElementById('ob-modes');
+  modeContainer.addEventListener('click', (e) => {
+    const card = e.target.closest('.ob-mode-card');
+    if (card) selectModeCard(card);
+  });
+  modeContainer.addEventListener('keydown', (e) => {
+    const card = e.target.closest('.ob-mode-card');
+    if (!card) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      selectModeCard(card);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = card.nextElementSibling;
+      if (next) next.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = card.previousElementSibling;
+      if (prev) prev.focus();
+    }
+  });
+
+  // Mode Continue → save profile + mode, go to dynamic lists
+  document.getElementById('ob-continue-mode').addEventListener('click', () => {
     save(() => {
       const celProfileEl = document.getElementById('ob-cel-profile-name');
       if (celProfileEl) celProfileEl.textContent = presets[selectedProfile]?.label || selectedProfile;
@@ -147,8 +172,8 @@ function wireEvents() {
     });
   });
 
-  // Back → return to profile selection
-  document.getElementById('ob-back').addEventListener('click', () => {
+  // Mode Back → return to profile selection
+  document.getElementById('ob-back-mode').addEventListener('click', () => {
     goToScreen('ob-setup');
   });
 
@@ -169,9 +194,9 @@ function wireEvents() {
     run(0);
   });
 
-  // Dynamic lists: Back → return to features
+  // Dynamic lists: Back → return to mode selection
   document.getElementById('ob-back-dynamic').addEventListener('click', () => {
-    goToScreen('ob-features');
+    goToScreen('ob-mode');
   });
 
   // Settings link in confirmation screen
@@ -192,6 +217,17 @@ function selectCard(card) {
   selectedProfile = card.dataset.profile;
 }
 
+function selectModeCard(card) {
+  const cards = document.querySelectorAll('.ob-mode-card');
+  cards.forEach((c) => {
+    c.classList.remove('is-selected');
+    c.setAttribute('aria-checked', 'false');
+  });
+  card.classList.add('is-selected');
+  card.setAttribute('aria-checked', 'true');
+  selectedMode = card.dataset.mode;
+}
+
 function goToScreen(screenId) {
   const screens = document.querySelectorAll('.ob-screen');
   screens.forEach((s) => s.classList.add('ob-hidden'));
@@ -209,18 +245,24 @@ function goToScreen(screenId) {
 function save(callback) {
   const data = {
     defaultProfile: selectedProfile,
+    operatingMode: selectedMode,
     onboardingComplete: true
   };
 
   chrome.storage.local.set(data, () => {
-    // Notify background to rebuild rules with new default
+    // Notify background to rebuild rules with new default + mode
+    chrome.runtime.sendMessage({ type: 'PROTOCONSENT_SET_OPERATING_MODE', mode: selectedMode }, () => {
+      void chrome.runtime.lastError;
+    });
     chrome.runtime.sendMessage({ type: 'PROTOCONSENT_RULES_UPDATED' }, () => {
       void chrome.runtime.lastError;
     });
 
-    // Show chosen profile name
+    // Show chosen profile and mode
     document.getElementById('ob-chosen-profile').textContent =
       presets[selectedProfile]?.label || selectedProfile;
+    const modeLabel = selectedMode === 'protoconsent' ? 'Monitoring' : 'Blocking';
+    document.getElementById('ob-chosen-mode').textContent = modeLabel;
 
     if (callback) callback();
   });

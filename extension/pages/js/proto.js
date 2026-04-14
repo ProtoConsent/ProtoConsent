@@ -634,20 +634,24 @@ function renderProtoCoverage(coverage, mode) {
   const ratio = observed > 0 ? Math.round((attributed / observed) * 100) : 0;
   const isMonitoring = mode === "protoconsent";
 
-  // In Monitoring mode, show own vs external blocks explicitly
-  if (isMonitoring) {
-    var ownBlocked = (typeof lastBlocked !== "undefined") ? lastBlocked : 0;
-    var ownEl = document.createElement("div");
-    ownEl.className = "proto-coverage-label";
-    ownEl.textContent = "Blocked by ProtoConsent: " + ownBlocked;
-    el.appendChild(ownEl);
+  // Block provenance: own vs external (both modes)
+  var prov = computeBlockProvenance(coverage);
+
+  var ownEl = document.createElement("div");
+  ownEl.className = "proto-coverage-label";
+  ownEl.textContent = "Blocked by ProtoConsent: " + prov.own;
+  el.appendChild(ownEl);
+
+  if (prov.external > 0) {
+    var extEl = document.createElement("div");
+    extEl.className = "proto-coverage-label";
+    extEl.textContent = "Blocked by external: " + prov.external;
+    el.appendChild(extEl);
   }
 
   const labelEl = document.createElement("div");
   labelEl.className = "proto-coverage-label";
-  labelEl.textContent = isMonitoring
-    ? "External blocks observed: " + observed + " (" + attributed + " attributed)"
-    : "Coverage: " + attributed + " / " + observed + " blocks matched";
+  labelEl.textContent = "Attribution: " + attributed + " / " + observed + " matched to purposes";
 
   const barEl = document.createElement("div");
   barEl.className = "proto-coverage-bar";
