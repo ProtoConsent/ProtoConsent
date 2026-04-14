@@ -94,18 +94,9 @@
   border-color: #bfd0e4;
 }
 
-.proto-status-inner {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 7px;
-  padding: 1px 16px;
-}
-
 .proto-status-badge {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--pc-accent);
   cursor: help;
@@ -387,12 +378,6 @@
   border: 1px solid #a7f3d0;
 }
 
-.proto-decl-not-used {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-}
-
 .proto-decl-mismatch {
   background: #fef3c7;
   color: #92400e;
@@ -426,11 +411,6 @@
 .proto-card-more {
   font-style: italic;
   color: var(--pc-text-muted);
-}
-
-/* CMP card variant */
-.proto-card-cmp .proto-card-header {
-  border-bottom: none;
 }
 
 /* Domain rows inside purpose accordion */

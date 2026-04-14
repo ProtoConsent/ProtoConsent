@@ -172,10 +172,7 @@ export function setRebuildQueued(v) { _rebuildQueued = v; }
 export let operatingMode = "standalone";
 export function setOperatingMode(v) { operatingMode = v; }
 
-const CAPABILITIES = {
-  standalone:   { ownBlocking: true,  observeExternalBlocks: true, whitelistOverrides: true,  enhancedDnr: true  },
-  protoconsent: { ownBlocking: false, observeExternalBlocks: true, whitelistOverrides: false, enhancedDnr: false },
-};
+import { CAPABILITIES } from "./config-bridge.js";
 export function can(cap) {
   return !!(CAPABILITIES[operatingMode] || CAPABILITIES.standalone)[cap];
 }

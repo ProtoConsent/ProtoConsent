@@ -10,6 +10,7 @@ import {
   tabCmpDetectData, tabGppData,
   tabNavigating, tabLastUrl,
   tabCoverageMetrics,
+  unattributedBuffer,
 } from "./state.js";
 import { scheduleSessionPersist } from "./session.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
@@ -29,6 +30,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabCmpDetectData.delete(tabId);
       tabGppData.delete(tabId);
       tabCoverageMetrics.delete(tabId);
+      // Remove stale unattributed entries for this tab
+      for (let i = unattributedBuffer.length - 1; i >= 0; i--) {
+        if (unattributedBuffer[i].tabId === tabId) unattributedBuffer.splice(i, 1);
+      }
       if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
       scheduleSessionPersist();
       chrome.action.setBadgeText({ tabId, text: "" }).catch(() => {});

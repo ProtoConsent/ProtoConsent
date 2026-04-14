@@ -1474,9 +1474,11 @@ function updateModeIndicator(mode) {
     ? "Monitoring: adds privacy signals, banner management and consent control on top of your blocker. Click to switch to Blocking"
     : "Blocking: enforces your privacy preferences by blocking tracking requests, sending GPC signals and managing consent banners. Click to switch to Monitoring";
   indicator.style.cursor = "pointer";
+  indicator.setAttribute("role", "button");
+  indicator.setAttribute("tabindex", "0");
 
   if (!indicator._clickBound) {
-    indicator.addEventListener("click", () => {
+    const toggleMode = () => {
       const current = (typeof operatingMode !== "undefined") ? operatingMode : "standalone";
       const newMode = current === "protoconsent" ? "standalone" : "protoconsent";
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_SET_OPERATING_MODE", mode: newMode }, (resp) => {
@@ -1492,6 +1494,10 @@ function updateModeIndicator(mode) {
           setActiveMode("consent");
         }
       });
+    };
+    indicator.addEventListener("click", toggleMode);
+    indicator.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleMode(); }
     });
     indicator._clickBound = true;
   }

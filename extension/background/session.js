@@ -10,6 +10,8 @@ import {
   tabCmpDetectData, tabGppData,
   tabCoverageMetrics,
   blockerDetection, updateBlockerDetection,
+  unattributedBuffer, UNATTRIBUTED_BUFFER_CAP,
+  setOperatingMode,
   _extEventLog,
 } from "./state.js";
 import { restoreWarningBadge } from "./blocker-detection.js";
@@ -66,11 +68,17 @@ export function persistTabDataToSession() {
       noBlockerWarning: blockerDetection.noBlockerWarning,
       unattributedHostnames: Array.from(blockerDetection.unattributedHostnames),
     },
+    _unattributedBuffer: unattributedBuffer.slice(),
   });
 }
 
 export async function restoreTabDataFromSession() {
   if (!chrome.storage.session) return;
+  // Restore operatingMode early so blocker detection evaluates under the correct mode
+  try {
+    const { operatingMode } = await chrome.storage.local.get("operatingMode");
+    if (operatingMode) setOperatingMode(operatingMode);
+  } catch (_) {}
   try {
     const result = await chrome.storage.session.get(null);
     if (result._tabBlocked) {
@@ -126,6 +134,13 @@ export async function restoreTabDataFromSession() {
         blockerDetection.unattributedHostnames = new Set(bd.unattributedHostnames);
       }
       restoreWarningBadge(!!bd.noBlockerWarning);
+    }
+    // Restore unattributed buffer
+    if (Array.isArray(result._unattributedBuffer)) {
+      unattributedBuffer.length = 0;
+      for (const entry of result._unattributedBuffer.slice(-UNATTRIBUTED_BUFFER_CAP)) {
+        unattributedBuffer.push(entry);
+      }
     }
     // Prune orphan tabs from blocked/GPC/cosmetic data
     const existingTabs = new Set();

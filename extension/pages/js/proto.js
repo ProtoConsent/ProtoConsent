@@ -1245,7 +1245,7 @@ function renderBlockerDetectionBanner(state, mode, targetId) {
   } else if (state.warnNoBlocker && mode === "protoconsent") {
     config = {
       title: "No external blocking observed",
-      detail: "Monitoring mode does not block network requests. It looks like no other blocker is active. Switch to Blocking mode for full protection.",
+      detail: "Monitoring mode does not block network requests. No other blocker appears to be active. Switch to Blocking mode for full protection.",
       primaryLabel: "Switch to Blocking",
       dismissLabel: "Keep Monitoring",
       dismissTarget: "warning",

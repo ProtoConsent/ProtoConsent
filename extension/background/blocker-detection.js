@@ -133,6 +133,7 @@ export function resetBehavioralCounters() {
     noBlockerWarning: false,
   });
   blockerDetection.unattributedHostnames = new Set();
+  unattributedBuffer.length = 0;
   tabCoverageMetrics.clear();
   _updateWarningBadge(false);
 }
