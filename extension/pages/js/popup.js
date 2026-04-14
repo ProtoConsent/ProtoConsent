@@ -73,6 +73,7 @@ async function refreshPopupState() {
   renderPurposesList();
   await displayBlockedCount();
   await loadSiteDeclaration();
+  checkBlockerDetectionForConsent();
 }
 
 // Auto-retry initPopup when the active tab finishes loading.
@@ -107,6 +108,7 @@ function initModeRail() {
     });
   });
   setActiveMode(activeMode);
+  if (activeMode === "proto" && typeof initProtoTab === "function") initProtoTab();
 }
 
 function setActiveMode(mode) {
@@ -1362,6 +1364,10 @@ async function reloadActiveTab() {
     reloadBtn.disabled = true;
     reloadBtn.classList.remove("is-recommended");
     if (countEl) countEl.textContent = "Reloading page...";
+    var protoStatus = document.getElementById("proto-status");
+    if (protoStatus && typeof activeMode !== "undefined" && activeMode === "proto") {
+      protoStatus.textContent = "Reloading page...";
+    }
 
     chrome.tabs.reload(tab.id, {}, async () => {
       // Popup may have closed; guard all DOM access
@@ -1465,15 +1471,40 @@ function updateModeIndicator(mode) {
   indicator.classList.toggle("is-protoconsent", isProto);
   label.textContent = isProto ? "Monitoring" : "Blocking";
   indicator.title = isProto
-    ? "Monitoring mode - complementing external blocker"
-    : "Blocking mode - blocking and monitoring";
+    ? "Monitoring: adds privacy signals, banner management and consent control on top of your blocker. Click to switch to Blocking"
+    : "Blocking mode - click to switch to Monitoring";
+  indicator.style.cursor = "pointer";
 
-  // Click navigates to Proto tab
   if (!indicator._clickBound) {
     indicator.addEventListener("click", () => {
-      setActiveMode("proto");
-      if (typeof initProtoTab === "function") initProtoTab();
+      const current = (typeof operatingMode !== "undefined") ? operatingMode : "standalone";
+      const newMode = current === "protoconsent" ? "standalone" : "protoconsent";
+      chrome.runtime.sendMessage({ type: "PROTOCONSENT_SET_OPERATING_MODE", mode: newMode }, (resp) => {
+        void chrome.runtime.lastError;
+        if (resp && !resp.ok) return;
+        if (typeof operatingMode !== "undefined") operatingMode = newMode;
+        updateModeIndicator(newMode);
+        // Switch to appropriate tab
+        if (newMode === "protoconsent") {
+          setActiveMode("proto");
+          if (typeof initProtoTab === "function") initProtoTab();
+        } else {
+          setActiveMode("consent");
+        }
+      });
     });
     indicator._clickBound = true;
   }
+}
+
+// Check blocker detection state and show suggest-monitoring banner in Consent tab
+function checkBlockerDetectionForConsent() {
+  var mode = (typeof operatingMode !== "undefined") ? operatingMode : "standalone";
+  if (mode === "protoconsent") return;
+  chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_BLOCKER_DETECTION" }, function (state) {
+    if (chrome.runtime.lastError || !state) return;
+    if (typeof renderBlockerDetectionBanner === "function") {
+      renderBlockerDetectionBanner(state, mode, "consent-blocker-banner");
+    }
+  });
 }

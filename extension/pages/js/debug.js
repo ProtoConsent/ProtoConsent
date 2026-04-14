@@ -143,6 +143,18 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // Blocker detection diagnostics
+    if (bg && bg.blockerDetect) {
+      var bd = bg.blockerDetect;
+      lines.push("— blocker detection —");
+      lines.push("  navCount: " + bd.navCount + "  totalObserved: " + bd.totalObserved);
+      lines.push("  behavioralSignal: " + bd.behavioralSignal + "  noBlockerWarning: " + bd.noBlockerWarning);
+      lines.push("  unattributedHostnames (accumulated): " + bd.unattributedHostnames);
+      lines.push("  buffer: " + bd.bufferLength + " entries, " + bd.bufferUniqueHostnames + " unique hostnames");
+      lines.push("  live coverage: " + bd.liveCoverageEntries + " tabs, " + bd.liveCoverageObserved + " observed");
+      lines.push("");
+    }
+
     // Dynamic lists catalog
     if (bg) {
       const consent = bg.dynamicListsConsent ? "on" : "off";

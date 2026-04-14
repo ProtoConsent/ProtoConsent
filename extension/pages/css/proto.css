@@ -11,6 +11,72 @@
   gap: 6px;
 }
 
+/* Blocker detection banner */
+.proto-blocker-banner {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.proto-blocker-banner[hidden] {
+  display: none;
+}
+
+.proto-blocker-banner.is-active {
+  border: 1px solid #f59e0b;
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+  color: #92400e;
+}
+
+.proto-blocker-banner-text {
+  font-weight: 600;
+}
+
+.proto-blocker-banner-detail {
+  font-weight: 400;
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.proto-blocker-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.proto-blocker-banner-btn {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  color: inherit;
+}
+
+.proto-blocker-banner-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.proto-blocker-banner-btn.is-primary {
+  background: currentColor;
+  color: white;
+}
+
+.proto-blocker-banner-btn.is-primary:hover {
+  opacity: 0.9;
+}
+
+.proto-blocker-banner.is-active .proto-blocker-banner-btn.is-primary {
+  background: #d97706;
+  border-color: #d97706;
+  color: white;
+}
+
 /* Status banner — matches .pc-header-stat height/padding */
 .proto-status {
   padding: 6px 10px;
@@ -41,6 +107,7 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--pc-accent);
+  cursor: help;
 }
 
 .proto-status-badge.is-on .proto-status-check {

@@ -122,6 +122,8 @@
             </div>
           </div>
 
+          <div id="consent-blocker-banner" class="proto-blocker-banner" hidden></div>
+
           <main class="pc-main">
             <ul id="pc-purposes-list" class="pc-purposes-list" role="list">
               <!-- Purposes will be injected here by popup.js -->
@@ -141,6 +143,7 @@
 
         <section id="pc-view-proto" class="pc-view" data-mode-view="proto" role="tabpanel" aria-labelledby="pc-mode-tab-proto" hidden aria-hidden="true">
           <h2 class="visually-hidden">Monitoring Mode</h2>
+          <div id="proto-blocker-banner" class="proto-blocker-banner" hidden></div>
           <div id="proto-status" class="proto-status"></div>
           <div id="proto-scope" class="pc-protection-scope">
             <div class="pc-scope-left">
@@ -174,16 +177,16 @@
           </div>
           <div id="proto-declarations" class="proto-declarations"></div>
           <div id="proto-coverage" class="proto-coverage"></div>
+          <details id="proto-unattributed" class="proto-unattributed" hidden>
+            <summary>Unmatched hostnames</summary>
+            <div id="proto-unattributed-list"></div>
+          </details>
           <div id="proto-gpc-signal" class="proto-signal-single"></div>
           <div id="proto-tcf-accord" class="proto-tcf-accord"></div>
           <div id="proto-cmp-detect" class="proto-cmp-detect"></div>
           <div id="proto-cosmetic-signal" class="proto-signal-single"></div>
           <div id="proto-purposes" class="proto-purposes"></div>
           <div id="proto-cmp" class="proto-cmp"></div>
-          <details id="proto-unattributed" class="proto-unattributed" hidden>
-            <summary>Unmatched hostnames</summary>
-            <div id="proto-unattributed-list"></div>
-          </details>
         </section>
 
         <section id="pc-view-log" class="pc-view" data-mode-view="log" role="tabpanel" aria-labelledby="pc-mode-tab-log" hidden aria-hidden="true">

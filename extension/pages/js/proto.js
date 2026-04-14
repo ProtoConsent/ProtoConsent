@@ -47,21 +47,22 @@ function refreshProtoView() {
       (resp) => {
         if (chrome.runtime.lastError || !resp) return;
         renderProtoStatus(resp);
-        _syncProtoPills();
 
-        // Gather .well-known + TCF data, then render declarations, purposes, mismatch
+        // Gather .well-known + TCF + blocker detection data, then render all
         var domain = (typeof currentDomain !== "undefined") ? currentDomain : "";
         var wkKey = domain ? ("wk_" + domain) : "";
-        var pending = 2;
+        var pending = 3;
         var wkData = null;
         var tcfData = null;
+        var blockerState = null;
 
         var finishRender = function () {
           pending--;
           if (pending > 0) return;
+          _syncProtoPills(tcfData);
           renderProtoDeclarations(wkData, resp.blocked);
           renderProtoScope();
-          renderProtoCoverage(resp.coverage);
+          renderProtoCoverage(resp.coverage, resp.mode);
           renderProtoGpcSignal(resp);
           renderProtoTcfAccord(tcfData);
           renderProtoCmpDetect(resp);
@@ -70,6 +71,7 @@ function refreshProtoView() {
           renderProtoCmp(resp);
           renderProtoUnattributed(resp.unattributed);
           _updateCnamePill(resp.blocked);
+          renderBlockerDetectionBanner(blockerState, resp.mode);
         };
 
         // Fetch .well-known cache
@@ -86,6 +88,14 @@ function refreshProtoView() {
         chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_TCF", tabId: tabId }, function (tcfResp) {
           if (!chrome.runtime.lastError && tcfResp && tcfResp.tcf) {
             tcfData = tcfResp.tcf;
+          }
+          finishRender();
+        });
+
+        // Fetch blocker detection state
+        chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_BLOCKER_DETECTION" }, function (bdResp) {
+          if (!chrome.runtime.lastError && bdResp) {
+            blockerState = bdResp;
           }
           finishRender();
         });
@@ -294,26 +304,46 @@ function _fillEnhancedScope(el, stats) {
   }
 }
 
-// --- Proto pills (mirror state from Consent tab indicators) ---
+// --- Proto pills (sync state from Consent tab + own TCF data) ---
 
-var _protoPillMap = [
-  { src: "pc-gpc-indicator", dst: "proto-gpc-pill" },
-  { src: "pc-ch-indicator",  dst: "proto-ch-pill"  },
-  { src: "pc-wk-indicator",  dst: "proto-wk-pill"  },
-  { src: "pc-tcf-indicator", dst: "proto-tcf-pill"  },
-];
-
-function _syncProtoPills() {
-  for (var i = 0; i < _protoPillMap.length; i++) {
-    var srcEl = document.getElementById(_protoPillMap[i].src);
-    var dstEl = document.getElementById(_protoPillMap[i].dst);
+function _syncProtoPills(tcfData) {
+  // Mirror GPC, CH, WK from Consent tab indicators (synchronous sources, always current)
+  var _mirrorPills = [
+    { src: "pc-gpc-indicator", dst: "proto-gpc-pill" },
+    { src: "pc-ch-indicator",  dst: "proto-ch-pill"  },
+    { src: "pc-wk-indicator",  dst: "proto-wk-pill"  },
+  ];
+  for (var i = 0; i < _mirrorPills.length; i++) {
+    var srcEl = document.getElementById(_mirrorPills[i].src);
+    var dstEl = document.getElementById(_mirrorPills[i].dst);
     if (!srcEl || !dstEl) continue;
-    // Mirror the three state classes
     dstEl.classList.toggle("is-active", srcEl.classList.contains("is-active"));
     dstEl.classList.toggle("is-inactive", srcEl.classList.contains("is-inactive"));
     dstEl.classList.toggle("is-disabled", srcEl.classList.contains("is-disabled"));
-    // Mirror tooltip
     dstEl.title = srcEl.title;
+  }
+  // TCF pill: set directly from data (async source, avoid race with Consent tab)
+  var tcfPill = document.getElementById("proto-tcf-pill");
+  if (tcfPill) {
+    if (tcfData && tcfData.detected) {
+      tcfPill.classList.remove("is-disabled", "is-inactive");
+      tcfPill.classList.add("is-active");
+      var tip = "Cookie banner detected";
+      if (tcfData.purposeConsents) {
+        var total = Object.keys(tcfData.purposeConsents).length;
+        if (total > 0) {
+          var accepted = Object.values(tcfData.purposeConsents).filter(function (v) { return v; }).length;
+          tip += " \u00b7 " + accepted + "/" + total + " purposes accepted";
+        } else {
+          tip += " \u00b7 Banner not accepted or rejected";
+        }
+      }
+      tcfPill.title = tip;
+    } else {
+      tcfPill.classList.remove("is-active", "is-inactive");
+      tcfPill.classList.add("is-disabled");
+      tcfPill.title = "TCF CMP not detected";
+    }
   }
   // Bind Proto TCF pill click to expand accordion
   var protoPill = document.getElementById("proto-tcf-pill");
@@ -548,11 +578,11 @@ function _makeMismatchCard(mismatches, wasExpanded) {
 
   var nameSpan = document.createElement("span");
   nameSpan.className = "proto-card-name";
-  nameSpan.textContent = "Consent Mismatch";
+  nameSpan.textContent = "Needs review";
 
   var detailSpan = document.createElement("span");
   detailSpan.className = "proto-card-count proto-mismatch-count";
-  detailSpan.textContent = mismatches.length + " " + (mismatches.length === 1 ? "issue" : "issues");
+  detailSpan.textContent = mismatches.length + " " + (mismatches.length === 1 ? "purpose" : "purposes");
 
   header.appendChild(dot);
   header.appendChild(nameSpan);
@@ -597,7 +627,7 @@ function _makeMismatchCard(mismatches, wasExpanded) {
 
 // --- Coverage bar ---
 
-function renderProtoCoverage(coverage) {
+function renderProtoCoverage(coverage, mode) {
   const el = document.getElementById("proto-coverage");
   if (!el) return;
   el.textContent = "";
@@ -607,10 +637,22 @@ function renderProtoCoverage(coverage) {
   const observed = coverage.observed || 0;
   const attributed = coverage.attributed || 0;
   const ratio = observed > 0 ? Math.round((attributed / observed) * 100) : 0;
+  const isMonitoring = mode === "protoconsent";
+
+  // In Monitoring mode, show own vs external blocks explicitly
+  if (isMonitoring) {
+    var ownBlocked = (typeof lastBlocked !== "undefined") ? lastBlocked : 0;
+    var ownEl = document.createElement("div");
+    ownEl.className = "proto-coverage-label";
+    ownEl.textContent = "Blocked by ProtoConsent: " + ownBlocked;
+    el.appendChild(ownEl);
+  }
 
   const labelEl = document.createElement("div");
   labelEl.className = "proto-coverage-label";
-  labelEl.textContent = "Coverage: " + attributed + " / " + observed + " blocks matched";
+  labelEl.textContent = isMonitoring
+    ? "External blocks observed: " + observed + " (" + attributed + " attributed)"
+    : "Coverage: " + attributed + " / " + observed + " blocks matched";
 
   const barEl = document.createElement("div");
   barEl.className = "proto-coverage-bar";
@@ -627,7 +669,7 @@ function renderProtoCoverage(coverage) {
   const textEl = document.createElement("div");
   textEl.className = "proto-coverage-text";
   const leftSpan = document.createElement("span");
-  leftSpan.textContent = ratio + "% matched";
+  leftSpan.textContent = ratio + "% attributed";
   const rightSpan = document.createElement("span");
   rightSpan.textContent = (observed - attributed) + " unmatched";
   textEl.appendChild(leftSpan);
@@ -636,6 +678,12 @@ function renderProtoCoverage(coverage) {
   el.appendChild(labelEl);
   el.appendChild(barEl);
   el.appendChild(textEl);
+
+  // Link to Log > Domains
+  if (!el._boundCoverageClick && typeof navigateToLog === "function") {
+    _makeInteractive(el, function () { navigateToLog("domains"); });
+    el._boundCoverageClick = true;
+  }
 }
 
 // --- Individual signal rows (GPC and Cosmetic, separated for ordering) ---
@@ -662,7 +710,9 @@ function renderProtoGpcSignal(data) {
     gpcDetail = "No signals";
   }
 
-  el.appendChild(_makeSignalRow("GPC", gpcActive, gpcDetail, _gotoLogGpc));
+  var row = _makeSignalRow("GPC", gpcActive, gpcDetail, _gotoLogGpc);
+  row.title = "GPC is sent on requests that reach the server. Blocked requests never leave your browser.";
+  el.appendChild(row);
 }
 
 function renderProtoCosmeticSignal(data) {
@@ -674,7 +724,10 @@ function renderProtoCosmeticSignal(data) {
   var cosmDetail = cosmActive
     ? (data.cosmetic.siteRules || 0) + " rules on " + data.cosmetic.domain
     : "No filters applied";
-  el.appendChild(_makeSignalRow("Cosmetic", cosmActive, cosmDetail));
+  el.appendChild(_makeSignalRow("Cosmetic", cosmActive, cosmDetail, function () {
+    if (typeof setActiveMode === "function") setActiveMode("enhanced");
+    if (typeof initEnhancedTab === "function") initEnhancedTab();
+  }));
 }
 
 function _makeSignalRow(label, active, detail, onClick) {
@@ -724,10 +777,10 @@ function renderProtoCmpDetect(data) {
   // Count conflicts from observation + storageObservation
   var conflictCount = _countConflicts(cd);
 
-  // Header detail: "1 banner, 2 mismatches" / "1 banner detected" / "No banners detected"
+  // Header detail: "1 banner, 2 conflicts" / "1 banner detected" / "No banners detected"
   var parts = [];
   if (detectCount > 0) parts.push(detectCount + " banner" + (detectCount > 1 ? "s" : ""));
-  if (conflictCount > 0) parts.push(conflictCount + " mismatch" + (conflictCount > 1 ? "es" : ""));
+  if (conflictCount > 0) parts.push(conflictCount + " conflict" + (conflictCount > 1 ? "s" : ""));
   var detectDetail = parts.length > 0 ? parts.join(", ") : "No banners detected";
 
   // Build body content
@@ -986,10 +1039,9 @@ function renderProtoPurposes(blocked, wkData) {
           // Mismatch: site declares used but we're blocking it
           declBadge.title = "Site declares this purpose as used";
         } else if (used === false) {
-          declBadge.textContent = "Declared: not used";
-          declBadge.classList.add("proto-decl-not-used");
-          declBadge.title = "Site declares this purpose as not used, but tracking detected";
+          declBadge.textContent = "Review";
           declBadge.classList.add("proto-decl-mismatch");
+          declBadge.title = "Site declares this purpose as not used, but activity observed";
         } else {
           declBadge.textContent = "Declared";
           declBadge.classList.add("proto-decl-used");
@@ -1163,4 +1215,90 @@ function toggleProtoDetails(shouldExpand) {
     const chevron = card.querySelector(".proto-card-chevron");
     if (chevron) chevron.textContent = shouldExpand ? " \u25BE" : " \u25B8";
   });
+}
+
+// --- Blocker detection banner ---
+
+function renderBlockerDetectionBanner(state, mode, targetId) {
+  var el = document.getElementById(targetId || "proto-blocker-banner");
+  if (!el) return;
+  el.textContent = "";
+  el.hidden = true;
+  el.classList.remove("is-active");
+  if (!state) return;
+
+  // Determine which case applies
+  var config = null;
+  if (state.suggestMonitoring && mode !== "protoconsent") {
+    config = {
+      title: "External blocker detected",
+      detail: "Switch to Monitoring mode to complement your blocker with privacy signals, banner management and consent control.",
+      primaryLabel: "Switch to Monitoring",
+      dismissLabel: "Dismiss",
+      dismissTarget: "suggestion",
+      onPrimary: function () {
+        chrome.runtime.sendMessage({ type: "PROTOCONSENT_SET_OPERATING_MODE", mode: "protoconsent" }, function (resp) {
+          void chrome.runtime.lastError;
+          if (resp && !resp.ok) return;
+          if (typeof operatingMode !== "undefined") operatingMode = "protoconsent";
+          if (typeof updateModeIndicator === "function") updateModeIndicator("protoconsent");
+          if (typeof setActiveMode === "function") setActiveMode("proto");
+          if (typeof initProtoTab === "function") initProtoTab();
+        });
+      },
+    };
+  } else if (state.warnNoBlocker && mode === "protoconsent") {
+    config = {
+      title: "No external blocking observed",
+      detail: "Monitoring mode does not block network requests. It looks like no other blocker is active. Switch to Blocking mode for full protection.",
+      primaryLabel: "Switch to Blocking",
+      dismissLabel: "Keep Monitoring",
+      dismissTarget: "warning",
+      onPrimary: function () {
+        chrome.runtime.sendMessage({ type: "PROTOCONSENT_SET_OPERATING_MODE", mode: "standalone" }, function (resp) {
+          void chrome.runtime.lastError;
+          if (resp && !resp.ok) return;
+          if (typeof operatingMode !== "undefined") operatingMode = "standalone";
+          if (typeof updateModeIndicator === "function") updateModeIndicator("standalone");
+          if (typeof setActiveMode === "function") setActiveMode("consent");
+        });
+      },
+    };
+  }
+  if (!config) return;
+
+  el.hidden = false;
+  el.classList.add("is-active");
+
+  var text = document.createElement("div");
+  text.className = "proto-blocker-banner-text";
+  text.textContent = config.title;
+  el.appendChild(text);
+
+  var detail = document.createElement("div");
+  detail.className = "proto-blocker-banner-detail";
+  detail.textContent = config.detail;
+  el.appendChild(detail);
+
+  var actions = document.createElement("div");
+  actions.className = "proto-blocker-banner-actions";
+
+  var primaryBtn = document.createElement("button");
+  primaryBtn.type = "button";
+  primaryBtn.className = "proto-blocker-banner-btn is-primary";
+  primaryBtn.textContent = config.primaryLabel;
+  primaryBtn.addEventListener("click", config.onPrimary);
+
+  var dismissBtn = document.createElement("button");
+  dismissBtn.type = "button";
+  dismissBtn.className = "proto-blocker-banner-btn";
+  dismissBtn.textContent = config.dismissLabel;
+  dismissBtn.addEventListener("click", function () {
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_DISMISS_BLOCKER_DETECTION", target: config.dismissTarget });
+    el.hidden = true;
+  });
+
+  actions.appendChild(primaryBtn);
+  actions.appendChild(dismissBtn);
+  el.appendChild(actions);
 }

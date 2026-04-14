@@ -9,8 +9,10 @@ import {
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabCoverageMetrics,
+  blockerDetection, updateBlockerDetection,
   _extEventLog,
 } from "./state.js";
+import { restoreWarningBadge } from "./blocker-detection.js";
 
 // Throttled write to chrome.storage.session (max once per 2s)
 let sessionPersistTimer = null;
@@ -53,7 +55,18 @@ export function persistTabDataToSession() {
   for (const [tabId, data] of tabCoverageMetrics) {
     coverage[tabId] = data;
   }
-  chrome.storage.session.set({ _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _tabCmp: cmp, _tabCmpDetect: cmpDetect, _tabGpp: gpp, _tabCoverage: coverage, _extEventLog: _extEventLog });
+  chrome.storage.session.set({
+    _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _tabCmp: cmp,
+    _tabCmpDetect: cmpDetect, _tabGpp: gpp, _tabCoverage: coverage,
+    _extEventLog: _extEventLog,
+    _blockerDetect: {
+      navCount: blockerDetection.navCount,
+      totalObserved: blockerDetection.totalObserved,
+      behavioralSignal: blockerDetection.behavioralSignal,
+      noBlockerWarning: blockerDetection.noBlockerWarning,
+      unattributedHostnames: Array.from(blockerDetection.unattributedHostnames),
+    },
+  });
 }
 
 export async function restoreTabDataFromSession() {
@@ -99,6 +112,20 @@ export async function restoreTabDataFromSession() {
     if (Array.isArray(result._extEventLog)) {
       _extEventLog.length = 0;
       for (const evt of result._extEventLog) _extEventLog.push(evt);
+    }
+    // Restore blocker detection state
+    if (result._blockerDetect) {
+      const bd = result._blockerDetect;
+      updateBlockerDetection({
+        navCount: bd.navCount || 0,
+        totalObserved: bd.totalObserved || 0,
+        behavioralSignal: !!bd.behavioralSignal,
+        noBlockerWarning: !!bd.noBlockerWarning,
+      });
+      if (Array.isArray(bd.unattributedHostnames)) {
+        blockerDetection.unattributedHostnames = new Set(bd.unattributedHostnames);
+      }
+      restoreWarningBadge(!!bd.noBlockerWarning);
     }
     // Prune orphan tabs from blocked/GPC/cosmetic data
     const existingTabs = new Set();

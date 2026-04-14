@@ -190,6 +190,20 @@ export const UNATTRIBUTED_BUFFER_CAP = 50;
 export const tabNavigating = new Set();
 export const tabLastUrl = new Map();
 
+// --- Blocker detection ---
+// Detects external blocker via unattributed blocks (standalone) and
+// absent blocks (monitoring). Persisted dismissals use storage TTL.
+export let blockerDetection = {
+  behavioralSignal: false,    // standalone: unattributed hostnames exceed threshold
+  noBlockerWarning: false,    // monitoring: 0 blocks after N navs
+  navCount: 0,                // navigations since last reset
+  totalObserved: 0,           // cumulative blocks across navs
+  unattributedHostnames: new Set(), // unique unattributed hostnames across navs
+};
+export function updateBlockerDetection(patch) {
+  Object.assign(blockerDetection, patch);
+}
+
 // GPC content script ID
 export const GPC_SCRIPT_ID = "protoconsent-gpc";
 

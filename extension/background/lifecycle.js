@@ -13,12 +13,14 @@ import {
 } from "./state.js";
 import { scheduleSessionPersist } from "./session.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
+import { onNavigation, applyWarningBadgeForTab } from "./blocker-detection.js";
 
 // Clear per-tab tracking on navigation and tab close.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading") {
     if (!tabNavigating.has(tabId)) {
       tabNavigating.add(tabId);
+      onNavigation(tabId, tabCoverageMetrics, changeInfo.url);
       tabBlockedDomains.delete(tabId);
       tabGpcDomains.delete(tabId);
       tabTcfData.delete(tabId);
@@ -30,6 +32,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
       scheduleSessionPersist();
       chrome.action.setBadgeText({ tabId, text: "" }).catch(() => {});
+      applyWarningBadgeForTab(tabId, changeInfo.url);
     }
   } else if (changeInfo.status === "complete") {
     tabNavigating.delete(tabId);

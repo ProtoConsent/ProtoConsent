@@ -36,7 +36,7 @@ import {
   operatingMode, setOperatingMode,
   tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
-  tabCoverageMetrics, unattributedBuffer,
+  tabCoverageMetrics, unattributedBuffer, blockerDetection,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -56,6 +56,7 @@ import { rebuildAllDynamicRules } from "./rebuild.js";
 import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
 import { scheduleSessionPersist } from "./session.js";
+import { getBlockerDetectionState, resetBehavioralCounters, dismissBlockerDetection } from "./blocker-detection.js";
 
 // Handle a bridge query from the content script.
 export async function handleBridgeQuery(message) {
@@ -137,6 +138,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ ok: false, error: chrome.runtime.lastError.message }); return;
       }
       setOperatingMode(mode);
+      resetBehavioralCounters();
       rebuildAllDynamicRules().then(() => {
         sendResponse({ ok: true, mode });
       }).catch(() => {
@@ -152,20 +154,37 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return;
   }
 
+  // Blocker detection state for popup
+  if (message.type === "PROTOCONSENT_GET_BLOCKER_DETECTION") {
+    getBlockerDetectionState((state) => sendResponse(state));
+    return true;
+  }
+
+  // Dismiss blocker detection suggestion or warning
+  if (message.type === "PROTOCONSENT_DISMISS_BLOCKER_DETECTION") {
+    dismissBlockerDetection(message.target);
+    sendResponse({ ok: true });
+    return;
+  }
+
   // Proto tab: comprehensive data for the active tab
   if (message.type === "PROTOCONSENT_GET_PROTO_DATA") {
     const tabId = message.tabId;
-    sendResponse({
-      mode: operatingMode,
-      coverage: tabCoverageMetrics.get(tabId) || null,
-      blocked: tabBlockedDomains.get(tabId) || {},
-      gpcDomains: tabGpcDomains.get(tabId) || {},
-      cmp: tabCmpData.get(tabId) || null,
-      cmpDetect: tabCmpDetectData.get(tabId) || null,
-      cosmetic: tabCosmeticData.get(tabId) || null,
-      unattributed: unattributedBuffer.filter(e => e.tabId === tabId),
+    chrome.storage.local.get(["operatingMode"], (res) => {
+      const mode = res.operatingMode || "standalone";
+      if (mode !== operatingMode) setOperatingMode(mode);
+      sendResponse({
+        mode,
+        coverage: tabCoverageMetrics.get(tabId) || null,
+        blocked: tabBlockedDomains.get(tabId) || {},
+        gpcDomains: tabGpcDomains.get(tabId) || {},
+        cmp: tabCmpData.get(tabId) || null,
+        cmpDetect: tabCmpDetectData.get(tabId) || null,
+        cosmetic: tabCosmeticData.get(tabId) || null,
+        unattributed: unattributedBuffer.filter(e => e.tabId === tabId),
+      });
     });
-    return;
+    return true;
   }
 
   // Content script forwards an SDK query
@@ -438,6 +457,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         debugData.celCustomPurposes = p3Result.celCustomPurposes;
         debugData.consentLinkedListIds = lastConsentLinkedListIds;
         debugData.celPendingDownload = lastCelPendingDownload;
+        // Blocker detection diagnostics
+        debugData.blockerDetect = {
+          navCount: blockerDetection.navCount,
+          totalObserved: blockerDetection.totalObserved,
+          behavioralSignal: blockerDetection.behavioralSignal,
+          noBlockerWarning: blockerDetection.noBlockerWarning,
+          unattributedHostnames: blockerDetection.unattributedHostnames.size,
+          bufferLength: unattributedBuffer.length,
+          bufferUniqueHostnames: new Set(unattributedBuffer.map(e => e.hostname)).size,
+          liveCoverageEntries: tabCoverageMetrics.size,
+          liveCoverageObserved: Array.from(tabCoverageMetrics.values()).reduce((s, m) => s + m.observed, 0),
+        };
         sendResponse(debugData);
       });
     };
