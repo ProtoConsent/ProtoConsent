@@ -670,6 +670,8 @@ function connectLogPort() {
       let detail = "[cosmetic] " + msg.domain;
       if (msg.siteRules > 0) detail += " +" + msg.siteRules + " site rules";
       appendLogLine(detail, "cosmetic");
+    } else if (msg.type === "param_strip") {
+      appendLogLine("[param-strip] " + msg.domain, "param-strip");
     } else if (msg.type === "ext") {
       const sid = msg.sender.length > 16 ? msg.sender.slice(0, 8) + "\u2026" + msg.sender.slice(-6) : msg.sender;
       const action = (msg.action || "").replace("protoconsent:", "");
@@ -725,6 +727,12 @@ function replayHistoricalLog() {
   // Replay GPC domains
   for (const domain of gpcDomains) {
     appendLogLine("[gpc] " + domain, "gpc");
+    hasData = true;
+  }
+
+  // Replay param strip count (no per-domain data in standard mode)
+  if (typeof lastParamStrips !== "undefined" && lastParamStrips > 0) {
+    appendLogLine("[param-strip] " + lastParamStrips + " URL" + (lastParamStrips > 1 ? "s" : "") + " cleaned", "param-strip");
     hasData = true;
   }
 

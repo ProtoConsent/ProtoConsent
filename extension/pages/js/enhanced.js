@@ -21,10 +21,14 @@ function getEnhancedStats() {
   const activeLists = Object.entries(epLists)
     .filter(([id, l]) => l.enabled || epConsentLinkedIds.has(id))
     .map(([, l]) => l);
-  const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp" && l.type !== "cmp_detectors" && l.type !== "cmp_site");
+  const blockingLists = activeLists.filter(l => !l.type);
   const infoLists = activeLists.filter(l => l.type === "informational");
   const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
   const cmpLists = activeLists.filter(l => l.type === "cmp" || l.type === "cmp_detectors" || l.type === "cmp_site");
+  const paramsLists = activeLists.filter(l => l.type === "tracking_params" || l.type === "tracking_params_sites");
+  const paramsTotal = Object.entries(epLists)
+    .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && (l.type === "tracking_params" || l.type === "tracking_params_sites"))
+    .reduce((sum, [id, l]) => sum + (l.paramCount || (epCatalog[id] && epCatalog[id].param_count) || 0), 0);
   let updatesAvailable = 0;
   for (const id of Object.keys(epLists)) {
     if (CORE_IDS.has(id) || CMP_IDS.has(id)) continue;
@@ -63,6 +67,8 @@ function getEnhancedStats() {
     infoDomains: infoLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
     cosmeticCount: cosmeticLists.length,
     cmpCount: cmpLists.length,
+    paramsCount: paramsLists.length,
+    paramsTotal,
     totalDomains: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
     cosmeticRules,
     cmpTemplates,
@@ -457,6 +463,13 @@ function renderEnhancedLists() {
       pill.setAttribute("aria-label", "Banner auto-response");
       pill.textContent = "\u26A1 Banners";
       header.appendChild(pill);
+    } else if (listDef.type === "tracking_params" || listDef.type === "tracking_params_sites") {
+      const pill = document.createElement("span");
+      pill.className = "ep-category-pill ep-params-pill";
+      pill.title = "URL parameter stripping - removes tracking parameters from URLs";
+      pill.setAttribute("aria-label", "URL parameter stripping");
+      pill.textContent = "\u2702 Params";
+      header.appendChild(pill);
     } else if (catInfo) {
       const pill = document.createElement("span");
       pill.className = "ep-category-pill";
@@ -560,6 +573,11 @@ function renderEnhancedLists() {
         if (listData.domainRuleCount) parts.push(listData.domainRuleCount.toLocaleString() + " site rules");
       } else if (listData.type === "cmp") {
         if (listData.cmpCount) parts.push(listData.cmpCount.toLocaleString() + " banner templates");
+      } else if (listData.type === "tracking_params") {
+        if (listData.paramCount) parts.push(listData.paramCount.toLocaleString() + " global params");
+      } else if (listData.type === "tracking_params_sites") {
+        if (listData.paramCount) parts.push(listData.paramCount.toLocaleString() + " params");
+        if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " domains");
       } else {
         if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " tracking rules");
         if (listData.pathRuleCount) parts.push(listData.pathRuleCount.toLocaleString() + " path rules");
@@ -849,7 +867,7 @@ function updateEnhancedStatus() {
   const statusEl = document.getElementById("ep-status");
   if (!statusEl) return;
 
-  const { enabledCount, blockingCount, infoCount, cosmeticCount, cmpCount, totalDomains, cosmeticRules, cmpTemplates, updatesAvailable } = getEnhancedStats();
+  const { enabledCount, blockingCount, infoCount, cosmeticCount, cmpCount, paramsCount, paramsTotal, totalDomains, cosmeticRules, cmpTemplates, updatesAvailable } = getEnhancedStats();
   const infoDomains = Object.entries(epLists)
     .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && l.type === "informational")
     .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
@@ -865,6 +883,10 @@ function updateEnhancedStatus() {
     if (infoCount > 0) {
       parts.push(infoCount + " info " + (infoCount === 1 ? "list" : "lists") +
         " \u00b7 " + infoDomains.toLocaleString() + " entries");
+    }
+    if (paramsCount > 0) {
+      parts.push(paramsCount + " param " + (paramsCount === 1 ? "list" : "lists") +
+        (paramsTotal > 0 ? " \u00b7 " + paramsTotal.toLocaleString() + " params" : ""));
     }
     if (updatesAvailable > 0) {
       parts.push(updatesAvailable + " update" + (updatesAvailable !== 1 ? "s" : "") + " available");

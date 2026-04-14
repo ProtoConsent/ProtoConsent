@@ -28,6 +28,7 @@ let currentPurposesState = {};
 let allRules = {};
 let lastGpcSignalsSent = 0;
 let lastChStripped = 0;
+let lastParamStrips = 0;
 let lastGpcDomains = [];
 let lastGpcDomainCounts = {};
 let lastWhitelist = {};
@@ -36,6 +37,7 @@ let requiredPurposeKeys = new Set();
 let activeMode = "consent";
 let gpcGlobalEnabled = true;
 let chStrippingEnabled = true;
+let paramStrippingEnabled = true;
 
 function getActivePurposes() {
   const core = PURPOSES_TO_SHOW.filter(p => lastPurposeStats[p] || lastBlockedDomains[p]);
@@ -69,6 +71,7 @@ async function refreshPopupState() {
   initStateForDomain();
   updateGpcIndicator();
   updateChIndicator();
+  updateStripIndicator();
   updateTcfIndicator();
   renderPurposesList();
   await displayBlockedCount();
@@ -136,7 +139,7 @@ function setActiveMode(mode) {
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
-  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHitDomains: {} };
+  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHitDomains: {} };
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
       return EMPTY_BLOCKED_RESULT;
@@ -176,6 +179,7 @@ async function getBlockedRulesCount() {
     const dynamicBlockIds = new Set();
     const dynamicGpcIds = new Set();
     const dynamicChIds = new Set();
+    const dynamicParamStripIds = new Set();
     const dynamicWhitelistDomains = {}; // ruleId → requestDomains[]
     for (const rule of dynamicRules) {
       if (rule.action.type === "block") {
@@ -191,12 +195,15 @@ async function getBlockedRulesCount() {
         if (isChStrip) dynamicChIds.add(rule.id);
       } else if (rule.action.type === "allow") {
         dynamicWhitelistDomains[rule.id] = rule.condition?.requestDomains || [];
+      } else if (rule.action.type === "redirect" && rule.action.redirect?.transform?.queryTransform?.removeParams) {
+        dynamicParamStripIds.add(rule.id);
       }
     }
 
     let blocked = 0;
     let gpc = 0;
     let ch = 0;
+    let paramStrips = 0;
     let whitelistHits = 0;
     const whitelistHitDomains = {}; // domain → count
     const domainHitCount = {};
@@ -231,9 +238,17 @@ async function getBlockedRulesCount() {
           whitelistHitDomains[d] = (whitelistHitDomains[d] || 0) + 1;
         }
       }
+      // Static param strip rulesets
+      else if (rulesetId === "strip_tracking_params" || rulesetId === "strip_tracking_params_sites") {
+        paramStrips++;
+      }
+      // Dynamic param strip (CDN redirect rules)
+      else if (rulesetId === "_dynamic" && dynamicParamStripIds.has(info.rule.ruleId)) {
+        paramStrips++;
+      }
     }
 
-    return { blocked, gpc, ch, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains };
+    return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
     return EMPTY_BLOCKED_RESULT;
@@ -262,11 +277,12 @@ async function displayBlockedCount() {
   const statRowEl = document.querySelector(".pc-header-stat");
 
   try {
-    const { blocked, gpc, ch, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains } = await getBlockedRulesCount();
+    const { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains } = await getBlockedRulesCount();
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
     lastGpcSignalsSent = gpc;
     lastChStripped = ch;
+    lastParamStrips = paramStrips;
     lastGpcDomains = gpcDomains;
     lastGpcDomainCounts = gpcDomainCounts;
     lastWhitelistHitDomains = whitelistHitDomains || {};
@@ -362,6 +378,7 @@ async function displayBlockedCount() {
     displayProtectionScope();
     updateGpcIndicator(gpc);
     updateChIndicator();
+    updateStripIndicator();
   updateTcfIndicator();
     // Debug panel (visible only when debug flag is set in storage)
     if (DEBUG_RULES) {
@@ -690,12 +707,13 @@ async function loadDefaultProfile() {
   if (!chrome.storage || !chrome.storage.local) return;
 
   return new Promise((resolve) => {
-    chrome.storage.local.get(["defaultProfile", "defaultPurposes", "gpcEnabled", "chStrippingEnabled"], (result) => {
+    chrome.storage.local.get(["defaultProfile", "defaultPurposes", "gpcEnabled", "chStrippingEnabled", "paramStrippingEnabled"], (result) => {
       defaultProfile = result.defaultProfile || "balanced";
       defaultPurposes = result.defaultPurposes || null;
       currentProfile = defaultProfile;
       gpcGlobalEnabled = result.gpcEnabled !== false;
       chStrippingEnabled = result.chStrippingEnabled !== false;
+      paramStrippingEnabled = result.paramStrippingEnabled !== false;
       resolve();
     });
   });
@@ -1233,6 +1251,7 @@ function updateHeaderControls() {
   }
   updateGpcIndicator();
   updateChIndicator();
+  updateStripIndicator();
   updateTcfIndicator();
 }
 
@@ -1269,6 +1288,41 @@ function updateChIndicator() {
       "\nHigh-entropy fingerprinting headers removed";
   } else {
     indicatorEl.title = "Client Hints: not stripped\nAdvanced tracking allowed for this site";
+  }
+}
+
+// URL param stripping indicator - reflects whether tracking params
+// are being removed from URLs for this site.
+function updateStripIndicator() {
+  const indicatorEl = document.getElementById("pc-strip-indicator");
+  const labelEl = document.getElementById("pc-strip-label");
+  if (!indicatorEl || !labelEl) return;
+
+  labelEl.textContent = "Strip";
+
+  if (!currentDomain) {
+    indicatorEl.classList.remove("is-active", "is-inactive");
+    indicatorEl.classList.add("is-disabled");
+    indicatorEl.title = "URL param stripping unavailable on this page";
+    return;
+  }
+
+  if (!paramStrippingEnabled) {
+    indicatorEl.classList.remove("is-active", "is-inactive");
+    indicatorEl.classList.add("is-disabled");
+    indicatorEl.title = "URL param stripping globally disabled in Purpose Settings";
+    return;
+  }
+
+  const hasStrips = lastParamStrips > 0;
+  indicatorEl.classList.remove("is-disabled");
+  indicatorEl.classList.toggle("is-active", hasStrips);
+  indicatorEl.classList.toggle("is-inactive", !hasStrips);
+  if (hasStrips) {
+    indicatorEl.title = "URL params stripped: " + lastParamStrips + " request" + (lastParamStrips > 1 ? "s" : "") +
+      "\nTracking parameters removed from URLs";
+  } else {
+    indicatorEl.title = "URL param stripping: enabled, no params detected on this page";
   }
 }
 

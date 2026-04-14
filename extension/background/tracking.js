@@ -8,8 +8,8 @@
 
 import {
   useDnrDebug,
-  tabBlockedDomains, tabGpcDomains,
-  dynamicBlockRuleMap, dynamicGpcSetIds, dynamicEnhancedMap,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips,
+  dynamicBlockRuleMap, dynamicGpcSetIds, dynamicParamStripIds, dynamicEnhancedMap,
   gpcGlobalActive, gpcAddDomains, gpcRemoveDomains,
   logPorts, _extEventLog,
   tabCoverageMetrics, unattributedBuffer, UNATTRIBUTED_BUFFER_CAP,
@@ -44,6 +44,21 @@ if (useDnrDebug) {
     }
     else if (rule.rulesetId === "_dynamic" && dynamicEnhancedMap[rule.ruleId]) {
       purpose = "enhanced:" + dynamicEnhancedMap[rule.ruleId];
+    }
+
+    // Param strip detection (static rulesets or dynamic CDN rules)
+    if (rule.rulesetId === "strip_tracking_params" || rule.rulesetId === "strip_tracking_params_sites" ||
+        (rule.rulesetId === "_dynamic" && dynamicParamStripIds.has(rule.ruleId))) {
+      let domain;
+      try { domain = new URL(request.url).hostname; } catch (_) { return; }
+      if (!tabParamStrips.has(request.tabId)) tabParamStrips.set(request.tabId, {});
+      const stripData = tabParamStrips.get(request.tabId);
+      stripData[domain] = (stripData[domain] || 0) + 1;
+      scheduleSessionPersist();
+      for (const port of logPorts) {
+        try { port.postMessage({ type: "param_strip", domain, tabId: request.tabId }); } catch (_) {}
+      }
+      return;
     }
 
     if (!purpose) {

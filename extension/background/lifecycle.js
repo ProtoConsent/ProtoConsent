@@ -6,7 +6,7 @@
 // handler (rebuild + first-install onboarding redirect).
 
 import {
-  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabNavigating, tabLastUrl,
   tabCoverageMetrics,
@@ -24,6 +24,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       onNavigation(tabId, tabCoverageMetrics, changeInfo.url);
       tabBlockedDomains.delete(tabId);
       tabGpcDomains.delete(tabId);
+      tabParamStrips.delete(tabId);
       tabTcfData.delete(tabId);
       tabCosmeticData.delete(tabId);
       tabCmpData.delete(tabId);
@@ -56,6 +57,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabBlockedDomains.delete(tabId);
   tabGpcDomains.delete(tabId);
+  tabParamStrips.delete(tabId);
   tabTcfData.delete(tabId);
   tabCosmeticData.delete(tabId);
   tabCmpData.delete(tabId);

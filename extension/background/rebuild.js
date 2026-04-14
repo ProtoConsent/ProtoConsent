@@ -12,7 +12,7 @@ import {
   PURPOSES_FOR_ENFORCEMENT, gpcPurposes,
   setEnabledBlockRulesets,
   setDynamicBlockRuleMap, setDynamicGpcSetIds, setDynamicChRuleIds,
-  setDynamicWhitelistMap, setDynamicEnhancedMap,
+  setDynamicWhitelistMap, setDynamicEnhancedMap, setDynamicParamStripIds,
   setEnhancedReverseIndex,
   setGpcGlobalActive, setGpcAddDomains, setGpcRemoveDomains,
   setLastRebuildDebug, lastRebuildDebug,
@@ -84,6 +84,14 @@ async function _rebuildAllDynamicRulesImpl() {
       chrome.storage.local.get(["gpcEnabled"], r => resolve(r.gpcEnabled !== false));
     });
 
+    const paramStrippingEnabled = await new Promise(resolve => {
+      chrome.storage.local.get(["paramStrippingEnabled"], r => resolve(r.paramStrippingEnabled !== false));
+    });
+
+    const paramStrippingSitesEnabled = await new Promise(resolve => {
+      chrome.storage.local.get(["paramStrippingSitesEnabled"], r => resolve(r.paramStrippingSitesEnabled !== false));
+    });
+
     const chStrippingEnabled = await new Promise(resolve => {
       getChStrippingEnabled(resolve);
     });
@@ -134,6 +142,13 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     setEnabledBlockRulesets(can("ownBlocking") ? new Set(enableIds) : new Set());
+
+    // URL tracking parameter stripping (static rulesets, independent of mode)
+    if (paramStrippingEnabled) enableIds.push("strip_tracking_params");
+    else disableIds.push("strip_tracking_params");
+
+    if (paramStrippingEnabled && paramStrippingSitesEnabled) enableIds.push("strip_tracking_params_sites");
+    else disableIds.push("strip_tracking_params_sites");
 
     // 3. Per-site overrides (priority 2) - standalone only
     const allowOverrides = {};
@@ -336,9 +351,8 @@ async function _rebuildAllDynamicRulesImpl() {
     if (can("enhancedDnr")) {
     for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
       if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
-      if (listMeta.type === "informational") continue;
-      if (listMeta.type === "cosmetic") continue;
-      if (listMeta.type === "cmp") continue;
+      // Only process blocking lists (no type field); skip special types (cosmetic, cmp, informational, tracking_params, etc.)
+      if (listMeta.type) continue;
       const listData = enhancedData[listId];
       if (!listData) continue;
 
@@ -378,9 +392,89 @@ async function _rebuildAllDynamicRulesImpl() {
     }
     } // end can("enhancedDnr")
 
+    // 5b. URL tracking parameter stripping — dynamic rules from CDN data
+    // When CDN data is available and enabled, build dynamic redirect rules
+    // and disable the corresponding static ruleset (CDN data is fresher).
+    let hasDynamicGlobalParams = false;
+    let hasDynamicSiteParams = false;
+    const paramStripRuleIds = new Set();
+
+    if (paramStrippingEnabled) {
+      // Global params from CDN
+      for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
+        if (listMeta.type !== "tracking_params") continue;
+        if (!listMeta.enabled) continue;
+        const listData = enhancedData[listId];
+        if (!listData?.params?.length) continue;
+        hasDynamicGlobalParams = true;
+        const ruleId = nextRuleId++;
+        paramStripRuleIds.add(ruleId);
+        newRules.push({
+          id: ruleId,
+          priority: 1,
+          action: {
+            type: "redirect",
+            redirect: { transform: { queryTransform: { removeParams: listData.params } } },
+          },
+          condition: { resourceTypes: ["main_frame", "sub_frame"] },
+        });
+      }
+    }
+
+    if (paramStrippingEnabled && paramStrippingSitesEnabled) {
+      // Per-site params from CDN — group domains by identical param set
+      for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
+        if (listMeta.type !== "tracking_params_sites") continue;
+        if (!listMeta.enabled) continue;
+        const listData = enhancedData[listId];
+        if (!listData?.sites || !Object.keys(listData.sites).length) continue;
+        hasDynamicSiteParams = true;
+        const groups = new Map(); // paramKey → { params, domains }
+        for (const [domain, params] of Object.entries(listData.sites)) {
+          const sorted = [...params].sort();
+          const key = sorted.join("\0");
+          if (!groups.has(key)) groups.set(key, { params: sorted, domains: [] });
+          groups.get(key).domains.push(domain);
+        }
+        for (const g of groups.values()) {
+          const ruleId = nextRuleId++;
+          paramStripRuleIds.add(ruleId);
+          newRules.push({
+            id: ruleId,
+            priority: 2,
+            action: {
+              type: "redirect",
+              redirect: { transform: { queryTransform: { removeParams: g.params } } },
+            },
+            condition: {
+              requestDomains: g.domains,
+              resourceTypes: ["main_frame", "sub_frame"],
+            },
+          });
+        }
+      }
+    }
+
+    setDynamicParamStripIds(paramStripRuleIds);
+
+    // Disable static rulesets when CDN data replaces them
+    if (hasDynamicGlobalParams) {
+      disableIds.push("strip_tracking_params");
+      const idx = enableIds.indexOf("strip_tracking_params");
+      if (idx !== -1) enableIds.splice(idx, 1);
+    }
+    if (hasDynamicSiteParams) {
+      disableIds.push("strip_tracking_params_sites");
+      const idx = enableIds.indexOf("strip_tracking_params_sites");
+      if (idx !== -1) enableIds.splice(idx, 1);
+    }
+
     // Build enhanced reverse index for onErrorOccurred attribution (always, both modes)
     const newEnhancedReverseIndex = new Map();
     for (const [listId, listData] of Object.entries(enhancedData)) {
+      // Only index blocking lists (no type field); skip special types (cosmetic, cmp, informational, tracking_params, etc.)
+      const listMeta = enhancedListsMeta[listId];
+      if (listMeta && listMeta.type) continue;
       if (listData.domains?.length) {
         for (const d of listData.domains) {
           newEnhancedReverseIndex.set(d, listId);
@@ -566,6 +660,10 @@ async function _rebuildAllDynamicRulesImpl() {
         chExcluded: chRemoveSites.length,
         chAddSites: chAddSites.length,
         consentEnhancedLink: consentEnhancedLink.cel,
+        paramStripping: paramStrippingEnabled,
+        paramStrippingSites: paramStrippingSitesEnabled,
+        paramStrippingCdn: hasDynamicGlobalParams ? "dynamic" : "static",
+        paramStrippingSitesCdn: hasDynamicSiteParams ? "dynamic" : "static",
         consentLinkedListIds: [...consentLinkedListIds],
         celPendingDownload: celPendingDownload,
         cosmeticLists: Object.entries(enhancedListsMeta)

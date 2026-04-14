@@ -34,10 +34,10 @@ function resolveEnhancedPreset(lists, catalog) {
 import {
   PURPOSES_FOR_ENFORCEMENT,
   operatingMode, setOperatingMode,
-  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabCoverageMetrics, unattributedBuffer, blockerDetection,
-  pathOnlyUrlFilters,
+  pathOnlyUrlFilters, dynamicParamStripIds,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -171,7 +171,27 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   // Proto tab: comprehensive data for the active tab
   if (message.type === "PROTOCONSENT_GET_PROTO_DATA") {
     const tabId = message.tabId;
-    chrome.storage.local.get(["operatingMode"], (res) => {
+    // Gather strip count from getMatchedRules (works in standard mode, not just debug)
+    const stripCountPromise = chrome.declarativeNetRequest.getMatchedRules({ tabId }).then(result => {
+      let count = 0;
+      if (result && result.rulesMatchedInfo) {
+        for (const info of result.rulesMatchedInfo) {
+          const rid = info.rule.rulesetId;
+          if (rid === "strip_tracking_params" || rid === "strip_tracking_params_sites") {
+            count++;
+          } else if (rid === "_dynamic") {
+            // Check if it's a param strip dynamic rule by looking up the Set
+            if (dynamicParamStripIds.has(info.rule.ruleId)) count++;
+          }
+        }
+      }
+      return count;
+    }).catch(() => 0);
+
+    Promise.all([
+      new Promise(resolve => chrome.storage.local.get(["operatingMode"], resolve)),
+      stripCountPromise,
+    ]).then(([res, paramStripCount]) => {
       const mode = res.operatingMode || "standalone";
       if (mode !== operatingMode) setOperatingMode(mode);
       sendResponse({
@@ -179,6 +199,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         coverage: tabCoverageMetrics.get(tabId) || null,
         blocked: tabBlockedDomains.get(tabId) || {},
         gpcDomains: tabGpcDomains.get(tabId) || {},
+        paramStrips: tabParamStrips.get(tabId) || {},
+        paramStripCount,
         cmp: tabCmpData.get(tabId) || null,
         cmpDetect: tabCmpDetectData.get(tabId) || null,
         cosmetic: tabCosmeticData.get(tabId) || null,
@@ -992,6 +1014,129 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                         return;
                       }
                       sendResponse({ ok: true, cmpCount });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
+          if (listDef.type === "tracking_params") {
+            if (!Array.isArray(data.params) || !data.params.length) {
+              throw new Error("Invalid tracking_params format: missing or empty params array");
+            }
+            const params = data.params.filter(p => typeof p === "string" && p.length > 0);
+            if (!params.length) {
+              throw new Error("Invalid tracking_params format: no valid string params");
+            }
+            const paramCount = params.length;
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, paramCount: existing.paramCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeTrackingParams(lists, shouldEnable);
+                  });
+                }
+                return storeTrackingParams(lists, shouldEnable);
+                function storeTrackingParams(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    paramCount,
+                    type: "tracking_params",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { params },
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      rebuildAllDynamicRules();
+                      sendResponse({ ok: true, paramCount });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
+          if (listDef.type === "tracking_params_sites") {
+            if (!data.sites || typeof data.sites !== "object" || Array.isArray(data.sites)) {
+              throw new Error("Invalid tracking_params_sites format: missing sites object");
+            }
+            // Validate and sanitize: each value must be an array of strings
+            const cleanSites = {};
+            for (const [domain, vals] of Object.entries(data.sites)) {
+              if (typeof domain !== "string" || !domain) continue;
+              if (!Array.isArray(vals)) continue;
+              const cleaned = vals.filter(p => typeof p === "string" && p.length > 0);
+              if (cleaned.length) cleanSites[domain] = cleaned;
+            }
+            if (!Object.keys(cleanSites).length) {
+              throw new Error("Invalid tracking_params_sites format: no valid site entries");
+            }
+            const paramCount = new Set(Object.values(cleanSites).flat()).size;
+            const domainCount = Object.keys(cleanSites).length;
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, paramCount: existing.paramCount, domainCount: existing.domainCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeTrackingParamsSites(lists, shouldEnable);
+                  });
+                }
+                return storeTrackingParamsSites(lists, shouldEnable);
+                function storeTrackingParamsSites(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    paramCount,
+                    domainCount,
+                    type: "tracking_params_sites",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { sites: cleanSites },
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      rebuildAllDynamicRules();
+                      sendResponse({ ok: true, paramCount, domainCount });
                       resolve();
                     });
                   });

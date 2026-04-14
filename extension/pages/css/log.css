@@ -291,6 +291,10 @@
   color: var(--pc-warn, #d97706);
 }
 
+.pc-log-line-param-strip {
+  color: #7c3aed;
+}
+
 .pc-log-line-cmp {
   color: #a78bfa;
 }
