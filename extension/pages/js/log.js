@@ -150,29 +150,21 @@ function setActiveLogTab(name) {
 // --- Header: site + profile + purposes ---
 
 function renderLogHeader() {
-  const siteEl = document.getElementById("pc-log-site");
   const siteProfileEl = document.getElementById("pc-log-profile-site");
   const globalProfileEl = document.getElementById("pc-log-profile-global");
   const purposesEl = document.getElementById("pc-log-purposes");
 
-  if (siteEl) siteEl.textContent = currentDomain || "unknown";
-
   const siteProfile = currentProfile || "balanced";
   const globalProfile = defaultProfile || "balanced";
-  const hasSiteOverride = (siteProfile !== globalProfile);
 
   if (siteProfileEl) {
-    siteProfileEl.textContent = (hasSiteOverride ? "Site: " : "") + siteProfile;
-    siteProfileEl.title = hasSiteOverride ? "Profile applied to this site" : "Active profile";
+    siteProfileEl.textContent = "Site: " + siteProfile;
+    siteProfileEl.title = "Profile applied to this site";
   }
   if (globalProfileEl) {
-    if (hasSiteOverride) {
-      globalProfileEl.textContent = "Default: " + globalProfile;
-      globalProfileEl.title = "Default profile for all sites";
-      globalProfileEl.hidden = false;
-    } else {
-      globalProfileEl.hidden = true;
-    }
+    globalProfileEl.textContent = "Global: " + globalProfile;
+    globalProfileEl.title = "Default profile for all sites";
+    globalProfileEl.hidden = false;
   }
 
   if (purposesEl && currentPurposesState) {
