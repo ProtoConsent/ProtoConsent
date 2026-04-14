@@ -188,9 +188,6 @@ function renderProtoStatus(data) {
     { label: "Observe", active: true, tip: "Monitor what trackers do on every page" },
   ];
 
-  var inner = document.createElement("div");
-  inner.className = "proto-status-inner";
-
   for (var i = 0; i < capabilities.length; i++) {
     var cap = capabilities[i];
     var badge = document.createElement("span");
@@ -201,10 +198,8 @@ function renderProtoStatus(data) {
     check.textContent = cap.active ? "\u2713" : "\u2717";
     badge.appendChild(check);
     badge.appendChild(document.createTextNode(" " + cap.label));
-    inner.appendChild(badge);
+    el.appendChild(badge);
   }
-
-  el.appendChild(inner);
 }
 
 // --- Scope summary (populates text spans inside #proto-scope, mirrors Consent tab) ---

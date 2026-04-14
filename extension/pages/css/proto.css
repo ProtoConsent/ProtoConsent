@@ -85,12 +85,13 @@
   background: linear-gradient(180deg, #f0fdfa 0%, #ccfbf1 100%);
   display: flex;
   justify-content: center;
+  gap: 12px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .proto-status.is-standalone {
-  background: linear-gradient(180deg, #fef2f2 0%, #fecaca 100%);
-  border-color: #fca5a5;
+  background: linear-gradient(180deg, #edf4ff 0%, #dfeeff 100%);
+  border-color: #bfd0e4;
 }
 
 .proto-status-inner {
@@ -99,7 +100,7 @@
   justify-content: center;
   background: rgba(255, 255, 255, 0.85);
   border-radius: 7px;
-  padding: 4px 16px;
+  padding: 1px 16px;
 }
 
 .proto-status-badge {
@@ -119,7 +120,7 @@
 }
 
 .proto-status-badge.is-off {
-  color: #6b7280;
+  color: var(--pc-accent);
 }
 
 /* Proto pills — CNAME outside 2x2 grid, aligned to bottom-left of WK row */
