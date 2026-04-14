@@ -212,6 +212,40 @@
   padding: 2px 4px;
 }
 
+.pc-log-table th.is-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.pc-log-table th.is-sortable:hover {
+  color: var(--pc-accent);
+}
+
+.pc-log-table th.is-sorted-asc::after { content: " \25B4"; font-size: 9px; }
+.pc-log-table th.is-sorted-desc::after { content: " \25BE"; font-size: 9px; }
+
+.pc-log-filter {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+  margin-bottom: 2px;
+  border: 1px solid var(--pc-line);
+  border-radius: 6px;
+  background: var(--pc-surface);
+  color: var(--pc-text);
+  outline: none;
+}
+
+.pc-log-filter:focus {
+  border-color: var(--pc-accent);
+}
+
+.pc-log-filter::placeholder {
+  color: var(--pc-text-soft);
+}
+
 .pc-log-table td {
   padding: 1px 4px;
   color: var(--pc-text);
@@ -241,6 +275,13 @@
 
 .pc-log-domains-icon img {
   vertical-align: middle;
+}
+
+.pc-log-purpose-short {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--pc-text-soft);
+  letter-spacing: 0.02em;
 }
 
 /* Log console line colors */

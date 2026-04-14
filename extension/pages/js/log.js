@@ -12,6 +12,14 @@
 let logPort = null;
 let logInitialized = false;
 
+// Sort & filter state (persists across re-renders within session)
+let domainSort = { col: "count", dir: "desc" };
+let gpcSort = { col: "count", dir: "desc" };
+let wlSort = { col: "domain", dir: "asc" };
+let logDomainFilter = "";
+let logGpcFilter = "";
+let logWhitelistFilter = "";
+
 // --- Single entry point: refresh all Log panels ---
 function refreshLogView() {
   renderLogHeader();
@@ -198,7 +206,7 @@ function renderLogDomains(initialVisible) {
     return;
   }
 
-  // Flatten all purposes into sorted rows: purpose order, then count desc
+  // Flatten all purposes into rows
   const rows = [];
   for (const purpose of orderedPurposes) {
     const cfg = purposesConfig[purpose];
@@ -215,6 +223,33 @@ function renderLogDomains(initialVisible) {
     }
   }
 
+  // Sort rows
+  const sd = domainSort;
+  if (sd.col === "domain") {
+    const m = sd.dir === "desc" ? -1 : 1;
+    rows.sort((a, b) => {
+      if (!a.domain) return 1;
+      if (!b.domain) return -1;
+      return m * a.domain.localeCompare(b.domain);
+    });
+  } else if (sd.col === "count") {
+    const m = sd.dir === "desc" ? -1 : 1;
+    rows.sort((a, b) => m * (a.count - b.count));
+  } else if (sd.col === "purpose") {
+    const m = sd.dir === "desc" ? -1 : 1;
+    rows.sort((a, b) => {
+      const cmp = a.purpose.localeCompare(b.purpose);
+      if (cmp !== 0) return m * cmp;
+      return b.count - a.count;
+    });
+  }
+
+  // Filter rows
+  const query = logDomainFilter.toLowerCase();
+  const filtered = query
+    ? rows.filter(r => r.domain && r.domain.includes(query))
+    : rows;
+
   // Use getMatchedRules total (same source as popup) for the header.
   // When the service worker was idle and missed some events, show the gap.
   const tableSum = rows.reduce((sum, r) => sum + r.count, 0);
@@ -230,22 +265,84 @@ function renderLogDomains(initialVisible) {
   header.textContent = headerText;
   container.appendChild(header);
 
+  // Filter input
+  const filterInput = document.createElement("input");
+  filterInput.type = "search";
+  filterInput.className = "pc-log-filter";
+  filterInput.placeholder = "Filter by domain\u2026";
+  filterInput.value = logDomainFilter;
+  filterInput.setAttribute("aria-label", "Filter blocked domains");
+  filterInput.addEventListener("input", () => {
+    logDomainFilter = filterInput.value;
+    renderLogDomains(initialVisible);
+    const newInput = container.querySelector(".pc-log-filter");
+    if (newInput) newInput.focus();
+  });
+  container.appendChild(filterInput);
+
+  if (filtered.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "pc-log-empty";
+    empty.textContent = query ? 'No matches for "' + logDomainFilter + '".' : "No blocked domains captured yet.";
+    container.appendChild(empty);
+    return;
+  }
+
   const table = document.createElement("table");
   table.className = "pc-log-table";
 
   const colgroup = document.createElement("colgroup");
-  colgroup.innerHTML = '<col style="width:34px"><col style="width:auto"><col style="width:50px"><col style="width:48px">';
+  colgroup.innerHTML = '<col style="width:34px"><col style="width:auto"><col style="width:58px"><col style="width:48px">';
   table.appendChild(colgroup);
 
+  // Sortable thead
   const thead = document.createElement("thead");
-  thead.innerHTML = '<tr><th><span class="visually-hidden">Purpose</span></th><th>Domain</th><th style="text-align:right">Blocked</th><th>Whitelist</th></tr>';
+  const headTr = document.createElement("tr");
+  const cols = [
+    { key: "purpose", label: '<span class="visually-hidden">Purpose</span>', style: "" },
+    { key: "domain", label: "Domain", style: "" },
+    { key: "count", label: "Blocked", style: "text-align:right" },
+    { key: null, label: "Whitelist", style: "" },
+  ];
+  for (const col of cols) {
+    const th = document.createElement("th");
+    th.innerHTML = col.label;
+    if (col.style) th.style.cssText = col.style;
+    if (col.key) {
+      const isSorted = sd.col === col.key;
+      th.className = "is-sortable" + (isSorted ? (sd.dir === "asc" ? " is-sorted-asc" : " is-sorted-desc") : "");
+      if (isSorted) th.setAttribute("aria-sort", sd.dir === "asc" ? "ascending" : "descending");
+      th.tabIndex = 0;
+      th.setAttribute("role", "button");
+      const doSort = () => {
+        if (domainSort.col === col.key) {
+          domainSort.dir = domainSort.dir === "asc" ? "desc" : "asc";
+        } else {
+          domainSort.col = col.key;
+          domainSort.dir = col.key === "count" ? "desc" : "asc";
+        }
+        renderLogDomains(initialVisible);
+      };
+      th.addEventListener("click", doSort);
+      th.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); doSort(); }
+      });
+    }
+    headTr.appendChild(th);
+  }
+  thead.appendChild(headTr);
   table.appendChild(thead);
 
   const DOMAIN_PAGE_SIZE = 50;
-  // If caller preserved previous visible count, show at least that many
-  const firstBatch = (initialVisible && initialVisible > DOMAIN_PAGE_SIZE)
-    ? Math.min(initialVisible, rows.length)
-    : DOMAIN_PAGE_SIZE;
+  // When user has actively sorted or filtered, show all rows to avoid hiding groups
+  const isUserSorted = sd.col !== "count" || sd.dir !== "desc";
+  const isUserFiltered = !!query;
+  const showAll = isUserSorted || isUserFiltered;
+  const firstBatch = showAll
+    ? filtered.length
+    : (initialVisible && initialVisible > DOMAIN_PAGE_SIZE)
+      ? Math.min(initialVisible, filtered.length)
+      : DOMAIN_PAGE_SIZE;
   const tbody = document.createElement("tbody");
 
   function buildDomainRow(row) {
@@ -363,7 +460,7 @@ function renderLogDomains(initialVisible) {
 
   // Render first batch into a fragment (single DOM insert)
   const frag = document.createDocumentFragment();
-  const firstPage = rows.slice(0, firstBatch);
+  const firstPage = filtered.slice(0, firstBatch);
   for (const row of firstPage) {
     frag.appendChild(buildDomainRow(row));
   }
@@ -372,25 +469,25 @@ function renderLogDomains(initialVisible) {
   container.appendChild(table);
 
   // "Show more" for remaining rows
-  if (rows.length > firstBatch) {
+  if (filtered.length > firstBatch) {
     let shown = firstBatch;
     const moreBtn = document.createElement("button");
     moreBtn.type = "button";
     moreBtn.className = "pc-log-show-more";
-    moreBtn.textContent = "Show " + (rows.length - shown) + " more domains";
+    moreBtn.textContent = "Show " + (filtered.length - shown) + " more domains";
     container.appendChild(moreBtn);
     moreBtn.addEventListener("click", () => {
-      const nextPage = rows.slice(shown, shown + DOMAIN_PAGE_SIZE);
+      const nextPage = filtered.slice(shown, shown + DOMAIN_PAGE_SIZE);
       const pageFrag = document.createDocumentFragment();
       for (const row of nextPage) {
         pageFrag.appendChild(buildDomainRow(row));
       }
       tbody.appendChild(pageFrag);
       shown += nextPage.length;
-      if (shown >= rows.length) {
+      if (shown >= filtered.length) {
         moreBtn.remove();
       } else {
-        moreBtn.textContent = "Show " + (rows.length - shown) + " more domains";
+        moreBtn.textContent = "Show " + (filtered.length - shown) + " more domains";
       }
     });
   }
@@ -447,6 +544,47 @@ function renderLogGpc() {
   header.textContent = gpcHeaderText;
   container.appendChild(header);
 
+  // Filter input
+  const filterInput = document.createElement("input");
+  filterInput.type = "search";
+  filterInput.className = "pc-log-filter";
+  filterInput.placeholder = "Filter by domain\u2026";
+  filterInput.value = logGpcFilter;
+  filterInput.setAttribute("aria-label", "Filter GPC domains");
+  filterInput.addEventListener("input", () => {
+    logGpcFilter = filterInput.value;
+    renderLogGpc();
+    const newInput = container.querySelector(".pc-log-filter");
+    if (newInput) newInput.focus();
+  });
+  container.appendChild(filterInput);
+
+  // Build, sort, and filter rows
+  const rows = domains.map(d => [d, getCount(d), getTime(d)]);
+  const sg = gpcSort;
+  const gDir = sg.dir === "asc" ? 1 : -1;
+  if (sg.col === "domain") {
+    rows.sort((a, b) => gDir * a[0].localeCompare(b[0]));
+  } else if (sg.col === "time") {
+    rows.sort((a, b) => {
+      const ta = a[2]?.lastSeen || 0;
+      const tb = b[2]?.lastSeen || 0;
+      return gDir * (ta - tb);
+    });
+  } else {
+    rows.sort((a, b) => gDir * (a[1] - b[1]));
+  }
+  const gpcQuery = logGpcFilter.toLowerCase();
+  const filtered = gpcQuery ? rows.filter(r => r[0].includes(gpcQuery)) : rows;
+
+  if (filtered.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "pc-log-empty";
+    empty.textContent = gpcQuery ? 'No matches for "' + logGpcFilter + '".' : "No GPC domains.";
+    container.appendChild(empty);
+    return;
+  }
+
   const table = document.createElement("table");
   table.className = "pc-log-table";
 
@@ -454,14 +592,44 @@ function renderLogGpc() {
   colgroup.innerHTML = '<col style="width:auto"><col style="width:40px"><col style="width:80px">';
   table.appendChild(colgroup);
 
+  // Sortable thead
   const thead = document.createElement("thead");
-  thead.innerHTML = '<tr><th>Domain \u00b7 ' + dateStr + '</th><th style="text-align:right">Reqs</th><th style="text-align:right" title="First -- last seen">Time</th></tr>';
+  const headTr = document.createElement("tr");
+  const gpcCols = [
+    { key: "domain", label: "Domain \u00b7 " + dateStr, style: "" },
+    { key: "count", label: "Reqs", style: "text-align:right" },
+    { key: "time", label: "Time", style: "text-align:right", title: "First -- last seen" },
+  ];
+  for (const col of gpcCols) {
+    const th = document.createElement("th");
+    th.textContent = col.label;
+    if (col.style) th.style.cssText = col.style;
+    if (col.title) th.title = col.title;
+    const isSorted = sg.col === col.key;
+    th.className = "is-sortable" + (isSorted ? (sg.dir === "asc" ? " is-sorted-asc" : " is-sorted-desc") : "");
+    if (isSorted) th.setAttribute("aria-sort", sg.dir === "asc" ? "ascending" : "descending");
+    th.tabIndex = 0;
+    th.setAttribute("role", "button");
+    const doSort = () => {
+      if (gpcSort.col === col.key) {
+        gpcSort.dir = gpcSort.dir === "asc" ? "desc" : "asc";
+      } else {
+        gpcSort.col = col.key;
+        gpcSort.dir = col.key === "domain" ? "asc" : "desc";
+      }
+      renderLogGpc();
+    };
+    th.addEventListener("click", doSort);
+    th.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); doSort(); }
+    });
+    headTr.appendChild(th);
+  }
+  thead.appendChild(headTr);
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
-  // Sort by count descending
-  const sorted = domains.map(d => [d, getCount(d), getTime(d)]).sort((a, b) => b[1] - a[1]);
-  for (const [domain, count, time] of sorted) {
+  for (const [domain, count, time] of filtered) {
     const tr = document.createElement("tr");
     const tdDomain = document.createElement("td");
     tdDomain.className = "pc-log-table-domain";
@@ -856,17 +1024,50 @@ function renderLogWhitelist() {
     return;
   }
 
-  // Sort: global ("*") last, then by domain alphabetically
-  entries.sort((a, b) => {
-    if (a.site === "*" && b.site !== "*") return 1;
-    if (a.site !== "*" && b.site === "*") return -1;
-    return a.domain.localeCompare(b.domain);
-  });
+  // Sort entries
+  const sw = wlSort;
+  const wDir = sw.dir === "asc" ? 1 : -1;
+  if (sw.col === "scope") {
+    entries.sort((a, b) => {
+      if (a.site === "*" && b.site !== "*") return wDir;
+      if (a.site !== "*" && b.site === "*") return -wDir;
+      return a.domain.localeCompare(b.domain);
+    });
+  } else {
+    // domain (default)
+    entries.sort((a, b) => wDir * a.domain.localeCompare(b.domain));
+  }
 
   const header = document.createElement("div");
   header.className = "pc-log-purpose-label";
   header.textContent = pluralize(entries.length, "whitelisted domain");
   container.appendChild(header);
+
+  // Filter input
+  const filterInput = document.createElement("input");
+  filterInput.type = "search";
+  filterInput.className = "pc-log-filter";
+  filterInput.placeholder = "Filter by domain\u2026";
+  filterInput.value = logWhitelistFilter;
+  filterInput.setAttribute("aria-label", "Filter whitelisted domains");
+  filterInput.addEventListener("input", () => {
+    logWhitelistFilter = filterInput.value;
+    renderLogWhitelist();
+    const newInput = container.querySelector(".pc-log-filter");
+    if (newInput) newInput.focus();
+  });
+  container.appendChild(filterInput);
+
+  const wlQuery = logWhitelistFilter.toLowerCase();
+  const filtered = wlQuery ? entries.filter(e => e.domain.includes(wlQuery)) : entries;
+
+  if (filtered.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "pc-log-empty";
+    empty.textContent = wlQuery ? 'No matches for "' + logWhitelistFilter + '".' : "No whitelisted domains.";
+    container.appendChild(empty);
+    return;
+  }
 
   const table = document.createElement("table");
   table.className = "pc-log-table";
@@ -876,12 +1077,46 @@ function renderLogWhitelist() {
   table.appendChild(colgroup);
 
   const thead = document.createElement("thead");
-  thead.innerHTML = '<tr><th><span class="visually-hidden">Purpose</span></th><th>Domain</th><th><span class="visually-hidden">Remove</span></th><th>Scope</th><th><span class="visually-hidden">Change scope</span></th></tr>';
+  const headTr = document.createElement("tr");
+  const wlCols = [
+    { key: null, label: '<span class="visually-hidden">Purpose</span>', style: "" },
+    { key: "domain", label: "Domain", style: "" },
+    { key: null, label: '<span class="visually-hidden">Remove</span>', style: "" },
+    { key: "scope", label: "Scope", style: "" },
+    { key: null, label: '<span class="visually-hidden">Change scope</span>', style: "" },
+  ];
+  for (const col of wlCols) {
+    const th = document.createElement("th");
+    th.innerHTML = col.label;
+    if (col.style) th.style.cssText = col.style;
+    if (col.key) {
+      const isSorted = sw.col === col.key;
+      th.className = "is-sortable" + (isSorted ? (sw.dir === "asc" ? " is-sorted-asc" : " is-sorted-desc") : "");
+      if (isSorted) th.setAttribute("aria-sort", sw.dir === "asc" ? "ascending" : "descending");
+      th.tabIndex = 0;
+      th.setAttribute("role", "button");
+      const doSort = () => {
+        if (wlSort.col === col.key) {
+          wlSort.dir = wlSort.dir === "asc" ? "desc" : "asc";
+        } else {
+          wlSort.col = col.key;
+          wlSort.dir = "asc";
+        }
+        renderLogWhitelist();
+      };
+      th.addEventListener("click", doSort);
+      th.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); doSort(); }
+      });
+    }
+    headTr.appendChild(th);
+  }
+  thead.appendChild(headTr);
   table.appendChild(thead);
 
   const canToggle = !!currentDomain; // Disable scope toggle on chrome:// / new tab
   const tbody = document.createElement("tbody");
-  for (const entry of entries) {
+  for (const entry of filtered) {
     const cfg = purposesConfig[entry.purpose];
     const tr = document.createElement("tr");
     const isGlobal = entry.site === "*";
