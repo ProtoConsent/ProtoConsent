@@ -27,6 +27,7 @@ import {
   _catalogLastRemoteFetch, setCatalogLastRemoteFetch,
   CATALOG_TTL, CATALOG_REMOTE_URL, CATALOG_REMOTE_FALLBACK,
   SUPPORTED_MANIFEST_VERSION,
+  setPathOnlyUrlFilters,
 } from "./state.js";
 
 // Load domain and path-domain lists from static rulesets.
@@ -38,6 +39,7 @@ export async function loadBlocklistsConfig() {
   await loadPurposesConfig();
 
   const config = {};
+  const pathOnlyMap = new Map();
   for (const key of PURPOSES_FOR_ENFORCEMENT) {
     const entry = {};
     try {
@@ -60,9 +62,19 @@ export async function loadBlocklistsConfig() {
       const pathDomains = [];
       for (const rule of rules) {
         const m = rule.condition?.urlFilter?.match(/^\|\|([^/]+)/);
-        if (m && !domainSet.has(m[1])) {
-          pathDomains.push(m[1]);
-          domainSet.add(m[1]);
+        if (!m) continue;
+        const extracted = m[1];
+        if (rule.condition.urlFilter === "||" + extracted) {
+          // Path-only pattern (no path component): e.g. ||matomo.js
+          const existing = pathOnlyMap.get(extracted);
+          if (existing) {
+            if (!existing.includes(key)) existing.push(key);
+          } else {
+            pathOnlyMap.set(extracted, [key]);
+          }
+        } else if (!domainSet.has(extracted)) {
+          pathDomains.push(extracted);
+          domainSet.add(extracted);
         }
       }
       entry.pathDomains = pathDomains;
@@ -74,6 +86,7 @@ export async function loadBlocklistsConfig() {
   }
   setBlocklistsConfig(config);
   setReverseHostIndex(buildReverseHostIndex(config));
+  setPathOnlyUrlFilters(pathOnlyMap);
   return config;
 }
 

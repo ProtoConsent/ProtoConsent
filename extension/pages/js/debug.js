@@ -143,6 +143,17 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // Cosmetic injection stats
+    if (bg && (bg.cosmeticGenericCount || bg.cosmeticDomainCount)) {
+      lines.push("— cosmetic injection —");
+      lines.push("  generic selectors: " + (bg.cosmeticGenericCount || 0) +
+        ", domain-specific: " + (bg.cosmeticDomainCount || 0));
+      if (bg.cosmeticLists && bg.cosmeticLists.length) {
+        lines.push("  lists: " + bg.cosmeticLists.join(", "));
+      }
+      lines.push("");
+    }
+
     // Blocker detection diagnostics
     if (bg && bg.blockerDetect) {
       var bd = bg.blockerDetect;
@@ -151,6 +162,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("  behavioralSignal: " + bd.behavioralSignal + "  noBlockerWarning: " + bd.noBlockerWarning);
       lines.push("  unattributedHostnames (accumulated): " + bd.unattributedHostnames);
       lines.push("  buffer: " + bd.bufferLength + " entries, " + bd.bufferUniqueHostnames + " unique hostnames");
+      lines.push("  pathOnlyPatterns: " + (bd.pathOnlyPatterns || 0));
       lines.push("  live coverage: " + bd.liveCoverageEntries + " tabs, " + bd.liveCoverageObserved + " observed");
       lines.push("");
     }
@@ -380,5 +392,23 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     }
 
     content.textContent = lines.join("\n");
+
+    // Block provenance (async append — uses popup.js globals + PROTO_DATA)
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      if (!tabs || !tabs[0]) return;
+      chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_PROTO_DATA", tabId: tabs[0].id }, function (proto) {
+        if (chrome.runtime.lastError || !proto) return;
+        var prov = computeBlockProvenance(proto.coverage);
+        var pLines = [];
+        pLines.push("— block provenance (this tab) —");
+        pLines.push("  own (getMatchedRules): " + prov.own);
+        pLines.push("  observed (ERR_BLOCKED): " + prov.observed);
+        pLines.push("  attributed (reverse index): " + prov.attributed);
+        pLines.push("  external (observed - own): " + prov.external);
+        pLines.push("  unattributed buffer (this tab): " + (proto.unattributed ? proto.unattributed.length : 0));
+        var pre = document.querySelector("#pc-log-debug");
+        if (pre) pre.textContent += "\n" + pLines.join("\n");
+      });
+    });
   });
 }

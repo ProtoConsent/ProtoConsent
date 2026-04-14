@@ -87,6 +87,10 @@
   justify-content: center;
   gap: 12px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e3a8a;
+  text-align: center;
 }
 
 .proto-status.is-standalone {
@@ -95,10 +99,10 @@
 }
 
 .proto-status-badge {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.02em;
-  color: var(--pc-accent);
+  color: #1e3a8a;
   cursor: help;
 }
 
@@ -111,7 +115,7 @@
 }
 
 .proto-status-badge.is-off {
-  color: var(--pc-accent);
+  color: #64748b;
 }
 
 /* Proto pills — CNAME outside 2x2 grid, aligned to bottom-left of WK row */
@@ -321,6 +325,11 @@
 
 .proto-card-header:hover {
   background: #f8fafc;
+}
+
+.proto-card-header:focus-visible {
+  outline: 2px solid #1e3a8a;
+  outline-offset: -2px;
 }
 
 .proto-card-chevron {

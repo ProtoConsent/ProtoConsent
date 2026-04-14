@@ -13,6 +13,7 @@ import {
   gpcGlobalActive, gpcAddDomains, gpcRemoveDomains,
   logPorts, _extEventLog,
   tabCoverageMetrics, unattributedBuffer, UNATTRIBUTED_BUFFER_CAP,
+  pathOnlyUrlFilters,
 } from "./state.js";
 import { resolvePurposesFromHostname } from "./config-loader.js";
 import { scheduleSessionPersist, updateBadgeForTab } from "./session.js";
@@ -101,9 +102,41 @@ if (!useDnrDebug) {
 
       const purposes = resolvePurposesFromHostname(hostname);
       if (!purposes.length) {
-        // Unattributed block: buffer for debug/Proto tab
-        if (unattributedBuffer.length >= UNATTRIBUTED_BUFFER_CAP) unattributedBuffer.shift();
-        unattributedBuffer.push({ hostname, tabId: details.tabId, ts: Date.now() });
+        // Secondary check: does the URL match a path-only pattern? (e.g. ||matomo.js)
+        let pathPurposes = null;
+        if (pathOnlyUrlFilters.size > 0) {
+          for (const [pattern, purps] of pathOnlyUrlFilters) {
+            if (details.url.includes(pattern)) {
+              pathPurposes = purps;
+              break;
+            }
+          }
+        }
+        if (!pathPurposes) {
+          // Truly unattributed block: buffer for debug/Proto tab
+          if (unattributedBuffer.length >= UNATTRIBUTED_BUFFER_CAP) unattributedBuffer.shift();
+          unattributedBuffer.push({ hostname, tabId: details.tabId, ts: Date.now() });
+          return;
+        }
+        // Path-only match: attribute to the matched purpose(s)
+        metrics.attributed++;
+        if (!tabBlockedDomains.has(details.tabId)) {
+          tabBlockedDomains.set(details.tabId, {});
+        }
+        const tabData = tabBlockedDomains.get(details.tabId);
+        for (const p of pathPurposes) {
+          if (!tabData[p]) tabData[p] = {};
+          tabData[p][hostname] = (tabData[p][hostname] || 0) + 1;
+        }
+        scheduleSessionPersist();
+        updateBadgeForTab(details.tabId);
+        for (const p of pathPurposes) {
+          for (const port of logPorts) {
+            try {
+              port.postMessage({ type: "block", purpose: p, url: details.url, tabId: details.tabId });
+            } catch (_) {}
+          }
+        }
         return;
       }
 

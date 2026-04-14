@@ -83,6 +83,11 @@ export function setReverseHostIndex(v) { reverseHostIndex = v; }
 export let enhancedReverseIndex = null;
 export function setEnhancedReverseIndex(v) { enhancedReverseIndex = v; }
 
+// Path-only URL patterns that lack a real hostname (e.g. "matomo.js" from ||matomo.js).
+// Map<string, string[]>: pattern -> purpose keys. Used by tracking.js for secondary attribution.
+export let pathOnlyUrlFilters = new Map();
+export function setPathOnlyUrlFilters(v) { pathOnlyUrlFilters = v; }
+
 // Set of currently-enabled static blocking rulesets
 export let enabledBlockRulesets = new Set();
 export function setEnabledBlockRulesets(v) { enabledBlockRulesets = v; }

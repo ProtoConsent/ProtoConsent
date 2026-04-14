@@ -147,31 +147,28 @@ function renderEnhancedPresets() {
     container.appendChild(btn);
   }
 
-  // Custom indicator: small pencil icon when preset is custom
+  // Shield level indicator (always rendered as last cell to keep 2x2 grid)
+  const shieldCount = epPreset === "full" ? 3 : epPreset === "basic" ? 2 : epPreset === "custom" ? 1 : 0;
+  const shieldSpan = document.createElement("span");
+  shieldSpan.className = "ep-preset-shields";
+  for (let i = 0; i < shieldCount; i++) {
+    const img = document.createElement("img");
+    img.src = ENHANCED_ICON;
+    img.width = 12;
+    img.height = 12;
+    img.className = "ep-preset-shield";
+    img.alt = "";
+    shieldSpan.appendChild(img);
+  }
   if (epPreset === "custom") {
     const icon = document.createElement("span");
     icon.className = "ep-preset-custom-icon";
     icon.textContent = "\u270E";
     icon.title = "Custom: you have toggled individual lists";
     icon.setAttribute("aria-label", "Custom preset (set by individual list toggles)");
-    container.appendChild(icon);
+    shieldSpan.appendChild(icon);
   }
-
-  // Shield level indicator in the preset label
-  const labelEl = document.getElementById("ep-preset-label");
-  if (labelEl) {
-    const shieldCount = epPreset === "full" ? 3 : epPreset === "basic" ? 2 : epPreset === "custom" ? 1 : 0;
-    labelEl.textContent = "";
-    for (let i = 0; i < shieldCount; i++) {
-      const img = document.createElement("img");
-      img.src = ENHANCED_ICON;
-      img.width = 12;
-      img.height = 12;
-      img.className = "ep-preset-shield";
-      labelEl.appendChild(img);
-    }
-    if (shieldCount === 0) labelEl.textContent = "";
-  }
+  container.appendChild(shieldSpan);
 
   // Contextual action button (right side of preset bar)
   renderPresetAction();
@@ -209,6 +206,8 @@ function renderPresetAction() {
   // Right-side container for sync pill + action button
   const right = document.createElement("span");
   right.className = "ep-preset-right";
+  const pillRow = document.createElement("span");
+  pillRow.className = "ep-preset-pill-row";
 
   const { enabledCount, downloadedCount, catalogCount, notDownloaded, updatesAvailable } = getEnhancedStats();
 
@@ -259,8 +258,8 @@ function renderPresetAction() {
       toggleSync();
     }
   });
-  // Add pill to right container
-  right.appendChild(pill);
+  // Add pill to top row
+  pillRow.appendChild(pill);
 
   // Consent-Enhanced Link pill
   const celPill = document.createElement("span");
@@ -314,7 +313,8 @@ function renderPresetAction() {
       toggleCel();
     }
   });
-  right.appendChild(celPill);
+  pillRow.appendChild(celPill);
+  right.appendChild(pillRow);
 
   if (notDownloaded.length > 0) {
     // Some lists not downloaded: show "↓ Download all"
