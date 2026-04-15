@@ -50,9 +50,11 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
   - [13. Regional lists](#13-regional-lists)
     - [Sources](#sources-1)
     - [Distribution model](#distribution-model-1)
+    - [FETCH handler](#fetch-handler)
+    - [Language selection](#language-selection)
     - [Preset exclusion](#preset-exclusion)
-    - [Locale auto-detect](#locale-auto-detect)
     - [UI presentation](#ui-presentation)
+    - [Constants](#constants)
 
 ## 2. Current state
 
@@ -179,7 +181,7 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 
 ### Current lists (v0.5)
 
-13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), 2 URL parameter stripping lists, 2 CMP detection lists, and 26 regional lists (13 regions x 2 types), organized in two presets. Regional lists are managed separately (see [section 13](#13-regional-lists)).
+13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), 2 URL parameter stripping lists, 2 CMP detection lists, and 2 regional catalog entries (covering 13 regions x 2 types), organized in two presets. Regional lists are managed separately (see [section 13](#13-regional-lists)).
 
 **Balanced preset** (5 lists - enabled by default when user selects Balanced):
 
@@ -429,7 +431,7 @@ The converter script (`convert-tracking-params.js`) in the [ProtoConsent/data](h
 
 ## 13. Regional lists
 
-Regional filter lists provide language/region-specific blocking and cosmetic rules compiled from EasyList regional supplements and AdGuard language-specific filters. Each region produces two files: `regional_<code>_cosmetic.json` (element hiding) and `regional_<code>_blocking.json` (domain and path blocking). 13 regions are supported.
+Regional filter lists provide language/region-specific blocking and cosmetic rules compiled from EasyList regional supplements and AdGuard language-specific filters. Each region produces two files: `regional_<code>_cosmetic.json` (element hiding) and `regional_<code>_blocking.json` (domain and path blocking). 13 regions are supported, managed through 2 catalog entries.
 
 ### Sources
 
@@ -453,32 +455,67 @@ Regions with both EasyList and AdGuard sources (CN, DE, NL, ES) merge rules from
 
 ### Distribution model
 
-Regional lists are present in the bundled catalog (`extension/config/enhanced-lists.json`) so they appear in the UI from day one - the user can see they exist and download them. Only the list data is fetched from CDN on demand. The `region` field in the catalog schema identifies regional entries.
+The bundled catalog (`extension/config/enhanced-lists.json`) contains exactly **2 regional entries**:
 
-CDN path: `enhanced/regional/regional_<code>_<type>.json`.
+| Catalog ID | Type field | Description |
+| --- | --- | --- |
+| `regional_cosmetic` | `regional_cosmetic` | Element-hiding rules for selected regions |
+| `regional_blocking` | `regional_blocking` | Domain and path blocking rules for selected regions |
+
+Each entry has a `fetch_base` field (CDN path prefix, e.g. `enhanced/regional/`) and a `regions` array listing all 13 region codes. There is no individual `fetch_url` per region. Both entries have `preset: null`, excluding them from all Enhanced presets.
+
+CDN path for individual region files: `{fetch_base}regional_{code}_{suffix}.json` (e.g. `enhanced/regional/regional_de_cosmetic.json`).
 
 The same `config/enhanced-lists.json` from the data repo is copied to the extension at release time and served via CDN for runtime updates.
+
+### FETCH handler
+
+When the user triggers a download for a regional catalog entry, the FETCH handler:
+
+1. Reads `regionalLanguages` (a string array of region codes) from `chrome.storage.local`.
+2. For each selected region, fetches `{fetch_base}regional_{code}_{suffix}.json` from CDN.
+3. Merges all fetched files into a single `enhancedData_{id}` storage entry.
+
+Regional cosmetic data is stored with `type: "cosmetic"`, so the cosmetic compile step in `rebuild.js` processes it alongside EasyList cosmetic selectors. Regional blocking data is stored without a `type` field, so `rebuild.js` processes it as standard DNR blocking rules (domains and path rules).
+
+### Language selection
+
+Region selection is managed in Purpose Settings (`purposes-settings.js`) via `initRegionalSection()`:
+
+- Per-region checkboxes allow the user to select which regions to activate.
+- Selections are written to `regionalLanguages` in `chrome.storage.local` as a string array of region codes.
+- The default selection is derived from `chrome.i18n.getUILanguage()` via the language-to-region mappings in `config/regional-languages.json`. Multi-language mappings are supported (e.g. `pt` maps to `es` since Spanish/Portuguese are combined).
+- The storage change listener in `handlers.js` detects changes to `regionalLanguages` and auto-re-fetches regional lists, so the user does not need to manually re-download after changing language selections.
+
+Language detection only happens in Purpose Settings defaults. There is no `suggestedRegion` field in `GET_STATE` responses.
 
 ### Preset exclusion
 
 Regional lists have `preset: null` and are excluded from the Off/Balanced/Full preset logic:
 
-- `resolveEnhancedPreset()` in `handlers.js` filters by `!catalog[id].region` when computing preset state, so regional lists being enabled/disabled does not affect preset detection.
-- The `SET_PRESET` handler skips entries with a `region` field, so changing presets does not touch regional lists.
+- `resolveEnhancedPreset()` in `handlers.js` filters by `REGIONAL_IDS.has(id)` when computing preset state, so regional lists being enabled/disabled does not affect preset detection.
+- The `SET_PRESET` handler skips entries where `REGIONAL_IDS.has(id)` is true, so changing presets does not touch regional lists.
 
-Regional lists are user-managed only, via per-region sub-toggles in the Enhanced tab.
-
-### Locale auto-detect
-
-On `PROTOCONSENT_ENHANCED_GET_STATE`, the background script detects the browser's UI language via `chrome.i18n.getUILanguage()`, extracts the language code, and maps it to a region ID via a `langToRegion` lookup table. Multi-language mappings are supported (e.g. `pt` maps to `es` since Spanish/Portuguese are combined).
-
-If regional lists exist in the catalog but none are downloaded yet, the response includes a `suggestedRegion` field. This is a one-time suggestion, not an auto-download. The UI shows a "Detected" badge on the matching region sub-toggle to guide the user.
+There is no `catalog[id].region` field. Identification relies entirely on the `REGIONAL_IDS` Set defined in `config.js`.
 
 ### UI presentation
 
-Two grouped cards in the Enhanced tab, following the same pattern as ProtoConsent Core (5 sub-lists) and ProtoConsent Banners (3 sub-lists):
+Two simple cards in the Enhanced tab, rendered by `renderRegionalCard()` in `enhanced-core.js`:
 
-- **Regional Cosmetic**: Cosmetic pill, aggregated rule counts across enabled regions
-- **Regional Blocking**: No category pill, aggregated domain counts across enabled regions
+- **Regional Cosmetic**: Cosmetic pill, description shows active region count.
+- **Regional Blocking**: No category pill, description shows active region count.
 
-Each card has per-region sub-toggles allowing individual download, enable, and disable. The group-level toggle and download/remove buttons operate on all regions at once. Sub-toggles show region labels and individual stats when expanded.
+Each card has standard download/toggle/remove buttons. There are no sub-toggles, no expand/collapse, and no per-region controls in the Enhanced tab. Region selection is handled exclusively in Purpose Settings (see [Language selection](#language-selection) above).
+
+### Constants
+
+Regional constants are defined in `config.js`:
+
+| Constant | Type | Description |
+| --- | --- | --- |
+| `REGIONAL_COSMETIC_ID` | `string` | Catalog ID for the regional cosmetic entry |
+| `REGIONAL_BLOCKING_ID` | `string` | Catalog ID for the regional blocking entry |
+| `REGIONAL_IDS` | `Set<string>` | Set containing both regional IDs, used for preset exclusion |
+
+Region labels and language-to-region mappings are loaded at runtime from `config/regional-languages.json` (bundled, and synced via CDN catalog `regions` array for removal control).
+

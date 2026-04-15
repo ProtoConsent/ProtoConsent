@@ -345,6 +345,89 @@
   display: block;
 }
 
+.ep-regional-langs {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 1;
+  overflow: hidden;
+  max-width: 180px;
+  color: var(--pc-text-soft);
+  font-size: 10px;
+}
+
+a.ep-regional-langs {
+  color: var(--pc-accent, #1d4ed8);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a.ep-regional-langs:hover {
+  text-decoration: underline;
+}
+
+.ep-regional-flag {
+  flex-shrink: 0;
+  border-radius: 1px;
+  vertical-align: middle;
+}
+
+.ep-regional-flag-text {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--pc-text-soft);
+  flex-shrink: 0;
+}
+
+/* Regional sub-list (per-region toggles inside grouped card) */
+.ep-list-sub-list {
+  display: none;
+  padding: 4px 0 2px 22px;
+}
+
+.ep-list-card.is-expanded .ep-list-sub-list {
+  display: block;
+}
+
+.ep-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 11px;
+}
+
+.ep-sub-label {
+  color: var(--pc-text-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.ep-sub-toggle {
+  flex-shrink: 0;
+}
+
+.ep-sub-download {
+  font-size: 10px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+.ep-sub-detected {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--pc-accent, #2563eb);
+  background: var(--pc-accent-subtle, #e8f0fe);
+  border-radius: 4px;
+  padding: 0 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 /* Status bar */
 .ep-status {
   font-size: 11px;

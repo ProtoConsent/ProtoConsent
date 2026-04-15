@@ -50,6 +50,17 @@ Icons not from Consent Commons:
       Custom shield with checkmark icon designed for ProtoConsent.
       Used for security-category lists (e.g. Blocklist Project Phishing).
 
+### Flag icons
+
+| Source | Authors | License | Usage |
+|--------|---------|---------|-------|
+| [flag-icons](https://github.com/lipis/flag-icons) | Lipis | MIT | Regional filter language flags |
+
+14 SVG flags (4x3 aspect ratio) used in the Enhanced Protection regional list
+cards to indicate active language regions:
+
+    extension/icons/flags/{cn,de,es,fr,il,it,jp,lt,nl,pl,pt,ru,tr,ua}.svg
+
 ### CMP banner handling (Autoconsent)
 
 | Source | Authors | License | Files |
@@ -161,6 +172,22 @@ The full license text is available at: https://www.mozilla.org/en-US/MPL/2.0/
 ### MIT (AdGuard CNAME Trackers)
 
 > Copyright 2021 Adguard Software Ltd
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+
+### MIT (flag-icons)
+
+> MIT License
+>
+> Copyright (c) 2013 Panayiotis Lipiridis
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal

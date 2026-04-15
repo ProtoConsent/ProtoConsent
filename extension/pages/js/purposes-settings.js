@@ -10,6 +10,7 @@ const SECTION_TAB_MAP = {
 	'mode-section': 'consent',
 	'enhanced-section': 'protection',
 	'cmp-section': 'protection',
+	'regional-filters': 'protection',
 	'inter-ext-section': 'advanced',
 	'data-section': 'advanced',
 };
@@ -34,6 +35,7 @@ async function init() {
 		renderDynamicListsToggle(purposes);
 		initModeSection();
 		initCmpSection();
+		initRegionalSection();
 		initInterExt();
 		initTabs();
 

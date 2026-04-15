@@ -91,6 +91,11 @@ const CMP_IDS = new Set([
   "protoconsent_cmp_signatures_site",
 ]);
 
+// Regional = the 2 aggregated regional lists shown as individual Enhanced cards.
+const REGIONAL_COSMETIC_ID = "regional_cosmetic";
+const REGIONAL_BLOCKING_ID = "regional_blocking";
+const REGIONAL_IDS = new Set([REGIONAL_COSMETIC_ID, REGIONAL_BLOCKING_ID]);
+
 // Non-purpose categories used by enhanced lists (not part of Consent Commons).
 const ENHANCED_EXTRA_CATEGORIES = {
   security: { icon: "../icons/purposes/security.svg", short: "Sec", label: "Security" },
