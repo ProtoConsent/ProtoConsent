@@ -211,6 +211,14 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // URL parameter stripping
+    if (bg) {
+      const paramGlobal = bg.paramStripping ? "on" : "off";
+      const paramSites = bg.paramStrippingSites ? "on" : "off";
+      lines.push("— URL param stripping: global " + paramGlobal + ", per-site " + paramSites + " —");
+      lines.push("");
+    }
+
     // Inter-extension API
     if (bg && typeof bg.interExtEnabled !== "undefined") {
       const status = bg.interExtEnabled ? "on" : "off";

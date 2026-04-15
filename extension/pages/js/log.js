@@ -670,6 +670,10 @@ function connectLogPort() {
       let detail = "[cosmetic] " + msg.domain;
       if (msg.siteRules > 0) detail += " +" + msg.siteRules + " site rules";
       appendLogLine(detail, "cosmetic");
+    } else if (msg.type === "param_strip") {
+      var detail = "[param-strip] " + msg.domain;
+      if (msg.params && msg.params.length > 0) detail += " \u2212 " + msg.params.join(", ");
+      appendLogLine(detail, "param-strip");
     } else if (msg.type === "ext") {
       const sid = msg.sender.length > 16 ? msg.sender.slice(0, 8) + "\u2026" + msg.sender.slice(-6) : msg.sender;
       const action = (msg.action || "").replace("protoconsent:", "");
@@ -731,6 +735,17 @@ function replayHistoricalLog() {
   // Replay cosmetic state for current tab
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (!tabs || !tabs[0]) return;
+    // Replay param strips per domain
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_PROTO_DATA", tabId: tabs[0].id }, (resp) => {
+      if (chrome.runtime.lastError || !resp) return;
+      const strips = resp.paramStrips || {};
+      for (const [domain, info] of Object.entries(strips)) {
+        var detail = "[param-strip] " + domain;
+        if (info && info.params && info.params.length > 0) detail += " \u2212 " + info.params.join(", ");
+        if (info && info.count > 1) detail += " (" + info.count + ")";
+        appendLogLine(detail, "param-strip");
+      }
+    });
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_COSMETIC", tabId: tabs[0].id }, (resp) => {
       if (chrome.runtime.lastError || !resp?.cosmetic) return;
       const c = resp.cosmetic;

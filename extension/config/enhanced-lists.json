@@ -316,5 +316,37 @@
     "domain_count": 0,
     "path_rule_count": 0,
     "cmp_count": 337
+  },
+  "adguard_tracking_params": {
+    "name": "AdGuard Tracking Params",
+    "description": "Global URL tracking parameter stripping (utm_*, fbclid, gclid...)",
+    "source": "https://github.com/AdguardTeam/AdguardFilters",
+    "license": "GPL-3.0",
+    "category": null,
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/adguard_tracking_params.json",
+    "type": "tracking_params",
+    "order": 15,
+    "version": "2026-04-14",
+    "generated": "2026-04-14T00:00:00.000Z",
+    "domain_count": 0,
+    "path_rule_count": 0,
+    "param_count": 304
+  },
+  "dandelion_tracking_params": {
+    "name": "Dandelion Sprout Tracking Params",
+    "description": "Per-site URL tracking parameter stripping (Amazon, Google, Facebook...)",
+    "source": "https://github.com/DandelionSprout/adfilt",
+    "license": "Dandelicence v1.4",
+    "category": null,
+    "preset": "basic",
+    "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/dandelion_tracking_params.json",
+    "type": "tracking_params_sites",
+    "order": 16,
+    "version": "2026-04-14",
+    "generated": "2026-04-14T00:00:00.000Z",
+    "domain_count": 879,
+    "path_rule_count": 0,
+    "param_count": 1814
   }
 }

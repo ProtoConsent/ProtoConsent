@@ -6,7 +6,7 @@
 // handler (rebuild + first-install onboarding redirect).
 
 import {
-  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabNavigating, tabLastUrl,
   tabCoverageMetrics,
@@ -15,6 +15,7 @@ import {
 import { scheduleSessionPersist } from "./session.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
 import { onNavigation, applyWarningBadgeForTab } from "./blocker-detection.js";
+import { clearPendingNavUrl } from "./tracking.js";
 
 // Clear per-tab tracking on navigation and tab close.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
@@ -24,6 +25,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       onNavigation(tabId, tabCoverageMetrics, changeInfo.url);
       tabBlockedDomains.delete(tabId);
       tabGpcDomains.delete(tabId);
+      tabParamStrips.delete(tabId);
       tabTcfData.delete(tabId);
       tabCosmeticData.delete(tabId);
       tabCmpData.delete(tabId);
@@ -56,6 +58,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabBlockedDomains.delete(tabId);
   tabGpcDomains.delete(tabId);
+  tabParamStrips.delete(tabId);
+  clearPendingNavUrl(tabId);
+  tabNavigating.delete(tabId);
   tabTcfData.delete(tabId);
   tabCosmeticData.delete(tabId);
   tabCmpData.delete(tabId);
@@ -63,6 +68,9 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   tabGppData.delete(tabId);
   tabCoverageMetrics.delete(tabId);
   tabLastUrl.delete(tabId);
+  for (let i = unattributedBuffer.length - 1; i >= 0; i--) {
+    if (unattributedBuffer[i].tabId === tabId) unattributedBuffer.splice(i, 1);
+  }
   if (chrome.storage.session) chrome.storage.session.remove("tcf_" + tabId).catch(() => {});
   scheduleSessionPersist();
 });

@@ -292,6 +292,7 @@
 
 /* Accordion cards (purposes + CMP) */
 .proto-cmp-detect,
+.proto-param-strip,
 .proto-purposes,
 .proto-cmp {
   display: flex;
@@ -300,6 +301,7 @@
 }
 
 .proto-cmp-detect:empty,
+.proto-param-strip:empty,
 .proto-purposes:empty,
 .proto-cmp:empty {
   display: none;
