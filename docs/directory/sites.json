@@ -1,0 +1,19 @@
+{
+  "last_updated": "2026-04-15",
+  "sites": [
+    {
+      "domain": "protoconsent.org",
+      "added": "2026-04-15",
+      "version": "0.2",
+      "purposes": 6,
+      "last_checked": "2026-04-15"
+    },
+    {
+      "domain": "demo.protoconsent.org",
+      "added": "2026-04-15",
+      "version": "0.2",
+      "purposes": 6,
+      "last_checked": "2026-04-15"
+    }
+  ]
+}
