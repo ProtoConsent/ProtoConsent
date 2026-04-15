@@ -126,9 +126,14 @@ jobs:
           git add docs/directory/sites.json
           git commit -m "directory: add ${{ steps.parse.outputs.domain }}"
           git push --force origin "$BRANCH"
+          BODY=$(printf 'Adds **%s** to the [site directory](https://protoconsent.org/directory.html).\n\nProtocol version: %s | Purposes: %s\n\nCloses #%s' \
+            "${{ steps.parse.outputs.domain }}" \
+            "${{ steps.validate.outputs.version }}" \
+            "${{ steps.validate.outputs.purposes }}" \
+            "${{ github.event.issue.number }}")
           gh pr create \
             --title "directory: add ${{ steps.parse.outputs.domain }}" \
-            --body "Adds **${{ steps.parse.outputs.domain }}** to the [site directory](https://protoconsent.org/directory.html).\n\nProtocol version: ${{ steps.validate.outputs.version }} | Purposes: ${{ steps.validate.outputs.purposes }}\n\nCloses #${{ github.event.issue.number }}" \
+            --body "$BODY" \
             --base main \
             --head "$BRANCH"
         env:
