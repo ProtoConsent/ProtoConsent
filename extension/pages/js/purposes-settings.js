@@ -490,6 +490,109 @@ function renderPrivacySignals(purposes) {
 		chrome.storage.local.set({ chStrippingEnabled: enabled }, notifyBackground);
 	});
 
+	// URL tracking parameter stripping toggle
+	const paramCard = document.createElement('div');
+	paramCard.className = 'ps-signal-card';
+
+	const paramRow = document.createElement('div');
+	paramRow.className = 'ps-gpc-toggle-row';
+
+	const paramLeft = document.createElement('div');
+	const paramName = document.createElement('span');
+	paramName.className = 'ps-gpc-info-name';
+	paramName.textContent = 'URL Parameter Stripping';
+	paramName.id = 'param-strip-name';
+	const paramDesc = document.createElement('div');
+	paramDesc.className = 'ps-gpc-info-desc';
+	paramDesc.textContent = 'Removes tracking parameters (utm_source, fbclid, gclid, msclkid...) from URLs during navigation';
+	paramLeft.appendChild(paramName);
+	paramLeft.appendChild(paramDesc);
+
+	const paramToggle = document.createElement('input');
+	paramToggle.type = 'checkbox';
+	paramToggle.id = 'param-strip-toggle';
+	paramToggle.className = 'ps-gpc-toggle';
+	paramToggle.checked = true;
+
+	const paramToggleLabel = document.createElement('label');
+	paramToggleLabel.className = 'ps-gpc-toggle-label';
+	paramToggleLabel.setAttribute('for', 'param-strip-toggle');
+	paramToggleLabel.textContent = 'Enabled';
+
+	paramToggle.setAttribute('aria-describedby', 'param-strip-name');
+	paramRow.appendChild(paramLeft);
+	paramRow.appendChild(paramToggleLabel);
+	paramRow.appendChild(paramToggle);
+	paramCard.appendChild(paramRow);
+
+	const paramPills = document.createElement('div');
+	paramPills.className = 'ps-preset-purposes';
+	for (const label of ['utm_*', 'fbclid', 'gclid', 'msclkid', '304 params']) {
+		const pill = document.createElement('span');
+		pill.className = 'ps-preset-pill gpc';
+		pill.textContent = label;
+		paramPills.appendChild(pill);
+	}
+	paramCard.appendChild(paramPills);
+
+	paramToggle.addEventListener('change', () => {
+		const enabled = paramToggle.checked;
+		paramToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+		paramSitesToggle.disabled = !enabled;
+		paramSitesToggleLabel.textContent = (!enabled || !paramSitesToggle.checked) ? 'Disabled' : 'Enabled';
+		chrome.storage.local.set({ paramStrippingEnabled: enabled }, notifyBackground);
+	});
+
+	// Per-site parameter stripping sub-toggle
+	const paramSitesRow = document.createElement('div');
+	paramSitesRow.className = 'ps-gpc-toggle-row';
+	paramSitesRow.style.marginTop = '12px';
+
+	const paramSitesLeft = document.createElement('div');
+	const paramSitesName = document.createElement('span');
+	paramSitesName.className = 'ps-gpc-info-name';
+	paramSitesName.textContent = 'Per-site parameters';
+	paramSitesName.id = 'param-strip-sites-name';
+	const paramSitesDesc = document.createElement('div');
+	paramSitesDesc.className = 'ps-gpc-info-desc';
+	paramSitesDesc.textContent = 'Additional site-specific parameters for 879 domains (Amazon, Google, Facebook...)';
+	paramSitesLeft.appendChild(paramSitesName);
+	paramSitesLeft.appendChild(paramSitesDesc);
+
+	const paramSitesToggle = document.createElement('input');
+	paramSitesToggle.type = 'checkbox';
+	paramSitesToggle.id = 'param-strip-sites-toggle';
+	paramSitesToggle.className = 'ps-gpc-toggle';
+	paramSitesToggle.checked = true;
+
+	const paramSitesToggleLabel = document.createElement('label');
+	paramSitesToggleLabel.className = 'ps-gpc-toggle-label';
+	paramSitesToggleLabel.setAttribute('for', 'param-strip-sites-toggle');
+	paramSitesToggleLabel.textContent = 'Enabled';
+
+	paramSitesToggle.setAttribute('aria-describedby', 'param-strip-sites-name');
+	paramSitesRow.appendChild(paramSitesLeft);
+	paramSitesRow.appendChild(paramSitesToggleLabel);
+	paramSitesRow.appendChild(paramSitesToggle);
+	paramCard.appendChild(paramSitesRow);
+
+	chrome.storage.local.get(['paramStrippingEnabled', 'paramStrippingSitesEnabled'], (r) => {
+		const masterOn = r.paramStrippingEnabled !== false;
+		paramToggle.checked = masterOn;
+		paramToggleLabel.textContent = masterOn ? 'Enabled' : 'Disabled';
+		paramSitesToggle.disabled = !masterOn;
+		paramSitesToggle.checked = r.paramStrippingSitesEnabled !== false;
+		paramSitesToggleLabel.textContent = (masterOn && paramSitesToggle.checked) ? 'Enabled' : 'Disabled';
+	});
+
+	paramSitesToggle.addEventListener('change', () => {
+		const enabled = paramSitesToggle.checked;
+		paramSitesToggleLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+		chrome.storage.local.set({ paramStrippingSitesEnabled: enabled }, notifyBackground);
+	});
+
+	container.appendChild(paramCard);
+
 	section.classList.remove('ps-hidden');
 }
 
@@ -919,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', init);
 
 const EXPORT_KEYS = [
 	"defaultProfile", "defaultPurposes", "rules", "whitelist",
-	"gpcEnabled", "chStrippingEnabled", "operatingMode",
+	"gpcEnabled", "chStrippingEnabled", "paramStrippingEnabled", "paramStrippingSitesEnabled", "operatingMode",
 	"enhancedPreset", "enhancedLists",
 	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending",
 	"dynamicListsConsent", "consentEnhancedLink",
@@ -979,6 +1082,14 @@ function validateImport(data) {
 	if ("chStrippingEnabled" in data) {
 		if (typeof data.chStrippingEnabled === "boolean") clean.chStrippingEnabled = data.chStrippingEnabled;
 		else errors.push("chStrippingEnabled: must be boolean");
+	}
+	if ("paramStrippingEnabled" in data) {
+		if (typeof data.paramStrippingEnabled === "boolean") clean.paramStrippingEnabled = data.paramStrippingEnabled;
+		else errors.push("paramStrippingEnabled: must be boolean");
+	}
+	if ("paramStrippingSitesEnabled" in data) {
+		if (typeof data.paramStrippingSitesEnabled === "boolean") clean.paramStrippingSitesEnabled = data.paramStrippingSitesEnabled;
+		else errors.push("paramStrippingSitesEnabled: must be boolean");
 	}
 	if ("operatingMode" in data) {
 		if (data.operatingMode === "standalone" || data.operatingMode === "protoconsent") clean.operatingMode = data.operatingMode;

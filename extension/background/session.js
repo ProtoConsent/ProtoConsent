@@ -6,7 +6,7 @@
 // chrome.storage.session (survives SW restarts). Badge text updates.
 
 import {
-  tabBlockedDomains, tabGpcDomains, tabTcfData, tabCosmeticData, tabCmpData,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabCoverageMetrics,
   blockerDetection, updateBlockerDetection,
@@ -37,6 +37,10 @@ export function persistTabDataToSession() {
   for (const [tabId, domains] of tabGpcDomains) {
     gpc[tabId] = domains;
   }
+  const paramStrips = {};
+  for (const [tabId, data] of tabParamStrips) {
+    paramStrips[tabId] = data;
+  }
   const cosmetic = {};
   for (const [tabId, data] of tabCosmeticData) {
     cosmetic[tabId] = data;
@@ -58,7 +62,7 @@ export function persistTabDataToSession() {
     coverage[tabId] = data;
   }
   chrome.storage.session.set({
-    _tabBlocked: blocked, _tabGpc: gpc, _tabCosmetic: cosmetic, _tabCmp: cmp,
+    _tabBlocked: blocked, _tabGpc: gpc, _tabParamStrips: paramStrips, _tabCosmetic: cosmetic, _tabCmp: cmp,
     _tabCmpDetect: cmpDetect, _tabGpp: gpp, _tabCoverage: coverage,
     _extEventLog: _extEventLog,
     _blockerDetect: {
@@ -89,6 +93,11 @@ export async function restoreTabDataFromSession() {
     if (result._tabGpc) {
       for (const [tabId, domains] of Object.entries(result._tabGpc)) {
         tabGpcDomains.set(Number(tabId), domains);
+      }
+    }
+    if (result._tabParamStrips) {
+      for (const [tabId, data] of Object.entries(result._tabParamStrips)) {
+        tabParamStrips.set(Number(tabId), data);
       }
     }
     if (result._tabCosmetic) {
@@ -154,6 +163,9 @@ export async function restoreTabDataFromSession() {
       }
       for (const tabId of tabGpcDomains.keys()) {
         if (!existingTabs.has(tabId)) tabGpcDomains.delete(tabId);
+      }
+      for (const tabId of tabParamStrips.keys()) {
+        if (!existingTabs.has(tabId)) tabParamStrips.delete(tabId);
       }
       for (const tabId of tabCosmeticData.keys()) {
         if (!existingTabs.has(tabId)) tabCosmeticData.delete(tabId);

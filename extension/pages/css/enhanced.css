@@ -220,6 +220,12 @@
   padding: 1px 6px;
 }
 
+.ep-params-pill {
+  color: var(--pc-purple, #7c3aed);
+  border-color: var(--pc-purple, #7c3aed);
+  padding: 1px 6px;
+}
+
 .ep-core-pill {
   color: var(--pc-accent, #1d4ed8);
   border-color: var(--pc-accent, #1d4ed8);

@@ -67,6 +67,10 @@ export function setDynamicGpcSetIds(v) { dynamicGpcSetIds = v; }
 export let dynamicChRuleIds = new Set();
 export function setDynamicChRuleIds(v) { dynamicChRuleIds = v; }
 
+// Set of dynamic rule IDs that strip URL tracking parameters (redirect/queryTransform)
+export let dynamicParamStripIds = new Set();
+export function setDynamicParamStripIds(v) { dynamicParamStripIds = v; }
+
 // Maps dynamic whitelist allow rule IDs to their requestDomains array
 export let dynamicWhitelistMap = {};
 export function setDynamicWhitelistMap(v) { dynamicWhitelistMap = v; }
@@ -104,6 +108,9 @@ export function setGpcRemoveDomains(v) { gpcRemoveDomains = v; }
 
 // Per-tab tracking of unique domains that received GPC signals.
 export const tabGpcDomains = new Map();
+
+// Per-tab tracking of domains where URL params were stripped.
+export const tabParamStrips = new Map();
 
 // Session restore promise - handlers must await this before reading tab data.
 export let sessionRestoreReady = Promise.resolve();

@@ -35,6 +35,7 @@
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
     "webRequest",
+    "webNavigation",
     "unlimitedStorage"
   ],
 
@@ -87,7 +88,9 @@
       { "id": "block_ads_paths", "enabled": false, "path": "rules/block_ads_paths.json" },
       { "id": "block_personalization_paths", "enabled": false, "path": "rules/block_personalization_paths.json" },
       { "id": "block_third_parties_paths", "enabled": false, "path": "rules/block_third_parties_paths.json" },
-      { "id": "block_advanced_tracking_paths", "enabled": false, "path": "rules/block_advanced_tracking_paths.json" }
+      { "id": "block_advanced_tracking_paths", "enabled": false, "path": "rules/block_advanced_tracking_paths.json" },
+      { "id": "strip_tracking_params", "enabled": false, "path": "rules/strip_tracking_params.json" },
+      { "id": "strip_tracking_params_sites", "enabled": false, "path": "rules/strip_tracking_params_sites.json" }
     ]
   }
 }

@@ -8,8 +8,8 @@
 
 import {
   useDnrDebug,
-  tabBlockedDomains, tabGpcDomains,
-  dynamicBlockRuleMap, dynamicGpcSetIds, dynamicEnhancedMap,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips,
+  dynamicBlockRuleMap, dynamicGpcSetIds, dynamicParamStripIds, dynamicEnhancedMap,
   gpcGlobalActive, gpcAddDomains, gpcRemoveDomains,
   logPorts, _extEventLog,
   tabCoverageMetrics, unattributedBuffer, UNATTRIBUTED_BUFFER_CAP,
@@ -44,6 +44,22 @@ if (useDnrDebug) {
     }
     else if (rule.rulesetId === "_dynamic" && dynamicEnhancedMap[rule.ruleId]) {
       purpose = "enhanced:" + dynamicEnhancedMap[rule.ruleId];
+    }
+
+    // Param strip detection (static rulesets or dynamic CDN rules)
+    if (rule.rulesetId === "strip_tracking_params" || rule.rulesetId === "strip_tracking_params_sites" ||
+        (rule.rulesetId === "_dynamic" && dynamicParamStripIds.has(rule.ruleId))) {
+      let domain;
+      try { domain = new URL(request.url).hostname; } catch (_) { return; }
+      if (!tabParamStrips.has(request.tabId)) tabParamStrips.set(request.tabId, {});
+      const stripData = tabParamStrips.get(request.tabId);
+      if (typeof stripData[domain] !== "object") stripData[domain] = { count: 0, params: [] };
+      stripData[domain].count++;
+      scheduleSessionPersist();
+      for (const port of logPorts) {
+        try { port.postMessage({ type: "param_strip", domain, tabId: request.tabId }); } catch (_) {}
+      }
+      return;
     }
 
     if (!purpose) {
@@ -224,3 +240,67 @@ if (!useDnrDebug) {
     console.warn("ProtoConsent: onSendHeaders listener not available:", e.message);
   }
 }
+
+// Param strip detection via webNavigation.
+// DNR redirect rules (queryTransform.removeParams) are invisible to webRequest
+// (Chrome processes DNR before webRequest). webNavigation operates at navigation
+// level: onBeforeNavigate has the original URL, onCommitted has the final URL
+// after DNR redirect. Comparing the two detects stripped params.
+const _pendingNavUrls = new Map(); // tabId -> original URL string
+export function clearPendingNavUrl(tabId) { _pendingNavUrls.delete(tabId); }
+
+chrome.webNavigation.onBeforeNavigate.addListener((details) => {
+  if (details.frameId !== 0) return; // main frame only
+  if (details.tabId < 0) return;
+  _pendingNavUrls.set(details.tabId, details.url);
+});
+
+chrome.webNavigation.onCommitted.addListener((details) => {
+  if (details.frameId !== 0) return;
+  if (details.tabId < 0) return;
+  const originalUrl = _pendingNavUrls.get(details.tabId);
+  _pendingNavUrls.delete(details.tabId);
+  if (!originalUrl) return;
+
+  // Server-side redirects also change the committed URL; skip those.
+  const qualifiers = details.transitionQualifiers || [];
+  if (qualifiers.includes("server_redirect")) return;
+
+  let orig, final;
+  try {
+    orig = new URL(originalUrl);
+    final = new URL(details.url);
+  } catch (_) { return; }
+
+  // Only param strips: same origin + path, different query
+  if (orig.origin !== final.origin) return;
+  if (orig.pathname !== final.pathname) return;
+  if (orig.search === final.search) return;
+
+  // Find which params were removed
+  const finalKeys = new Set(final.searchParams.keys());
+  const removed = [];
+  for (const key of orig.searchParams.keys()) {
+    if (!finalKeys.has(key)) removed.push(key);
+  }
+  if (removed.length === 0) return;
+
+  const domain = orig.hostname;
+
+  if (!tabParamStrips.has(details.tabId)) tabParamStrips.set(details.tabId, {});
+  const stripData = tabParamStrips.get(details.tabId);
+  // Backward compat: old session data may have domain -> number
+  if (typeof stripData[domain] !== "object") stripData[domain] = { count: 0, params: [] };
+  // In debug mode onRuleMatchedDebug already incremented count; only add param names here
+  if (!useDnrDebug) stripData[domain].count++;
+  for (const p of removed) {
+    if (!stripData[domain].params.includes(p)) stripData[domain].params.push(p);
+  }
+  scheduleSessionPersist();
+
+  for (const port of logPorts) {
+    try {
+      port.postMessage({ type: "param_strip", domain, params: removed, tabId: details.tabId });
+    } catch (_) {}
+  }
+});
