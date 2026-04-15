@@ -28,7 +28,7 @@ let currentPurposesState = {};
 let allRules = {};
 let lastGpcSignalsSent = 0;
 let lastChStripped = 0;
-let lastParamStrips = 0;
+
 let lastGpcDomains = [];
 let lastGpcDomainCounts = {};
 let lastWhitelist = {};
@@ -37,7 +37,6 @@ let requiredPurposeKeys = new Set();
 let activeMode = "consent";
 let gpcGlobalEnabled = true;
 let chStrippingEnabled = true;
-let paramStrippingEnabled = true;
 
 function getActivePurposes() {
   const core = PURPOSES_TO_SHOW.filter(p => lastPurposeStats[p] || lastBlockedDomains[p]);
@@ -71,7 +70,7 @@ async function refreshPopupState() {
   initStateForDomain();
   updateGpcIndicator();
   updateChIndicator();
-  updateStripIndicator();
+
   updateTcfIndicator();
   renderPurposesList();
   await displayBlockedCount();
@@ -282,7 +281,6 @@ async function displayBlockedCount() {
     lastBlocked = blocked;
     lastGpcSignalsSent = gpc;
     lastChStripped = ch;
-    lastParamStrips = paramStrips;
     lastGpcDomains = gpcDomains;
     lastGpcDomainCounts = gpcDomainCounts;
     lastWhitelistHitDomains = whitelistHitDomains || {};
@@ -378,7 +376,7 @@ async function displayBlockedCount() {
     displayProtectionScope();
     updateGpcIndicator(gpc);
     updateChIndicator();
-    updateStripIndicator();
+  
   updateTcfIndicator();
     // Debug panel (visible only when debug flag is set in storage)
     if (DEBUG_RULES) {
@@ -707,13 +705,12 @@ async function loadDefaultProfile() {
   if (!chrome.storage || !chrome.storage.local) return;
 
   return new Promise((resolve) => {
-    chrome.storage.local.get(["defaultProfile", "defaultPurposes", "gpcEnabled", "chStrippingEnabled", "paramStrippingEnabled"], (result) => {
+    chrome.storage.local.get(["defaultProfile", "defaultPurposes", "gpcEnabled", "chStrippingEnabled"], (result) => {
       defaultProfile = result.defaultProfile || "balanced";
       defaultPurposes = result.defaultPurposes || null;
       currentProfile = defaultProfile;
       gpcGlobalEnabled = result.gpcEnabled !== false;
       chStrippingEnabled = result.chStrippingEnabled !== false;
-      paramStrippingEnabled = result.paramStrippingEnabled !== false;
       resolve();
     });
   });
@@ -1251,7 +1248,7 @@ function updateHeaderControls() {
   }
   updateGpcIndicator();
   updateChIndicator();
-  updateStripIndicator();
+
   updateTcfIndicator();
 }
 
@@ -1291,40 +1288,6 @@ function updateChIndicator() {
   }
 }
 
-// URL param stripping indicator - reflects whether tracking params
-// are being removed from URLs for this site.
-function updateStripIndicator() {
-  const indicatorEl = document.getElementById("pc-strip-indicator");
-  const labelEl = document.getElementById("pc-strip-label");
-  if (!indicatorEl || !labelEl) return;
-
-  labelEl.textContent = "Strip";
-
-  if (!currentDomain) {
-    indicatorEl.classList.remove("is-active", "is-inactive");
-    indicatorEl.classList.add("is-disabled");
-    indicatorEl.title = "URL param stripping unavailable on this page";
-    return;
-  }
-
-  if (!paramStrippingEnabled) {
-    indicatorEl.classList.remove("is-active", "is-inactive");
-    indicatorEl.classList.add("is-disabled");
-    indicatorEl.title = "URL param stripping globally disabled in Purpose Settings";
-    return;
-  }
-
-  const hasStrips = lastParamStrips > 0;
-  indicatorEl.classList.remove("is-disabled");
-  indicatorEl.classList.toggle("is-active", hasStrips);
-  indicatorEl.classList.toggle("is-inactive", !hasStrips);
-  if (hasStrips) {
-    indicatorEl.title = "URL params stripped: " + lastParamStrips + " request" + (lastParamStrips > 1 ? "s" : "") +
-      "\nTracking parameters removed from URLs";
-  } else {
-    indicatorEl.title = "URL param stripping: enabled, no params detected on this page";
-  }
-}
 
 function updateTcfIndicator() {
   const indicatorEl = document.getElementById("pc-tcf-indicator");

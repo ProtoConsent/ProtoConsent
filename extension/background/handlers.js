@@ -37,7 +37,7 @@ import {
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabCoverageMetrics, unattributedBuffer, blockerDetection,
-  pathOnlyUrlFilters, dynamicParamStripIds,
+  pathOnlyUrlFilters,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -171,27 +171,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   // Proto tab: comprehensive data for the active tab
   if (message.type === "PROTOCONSENT_GET_PROTO_DATA") {
     const tabId = message.tabId;
-    // Gather strip count from getMatchedRules (works in standard mode, not just debug)
-    const stripCountPromise = chrome.declarativeNetRequest.getMatchedRules({ tabId }).then(result => {
-      let count = 0;
-      if (result && result.rulesMatchedInfo) {
-        for (const info of result.rulesMatchedInfo) {
-          const rid = info.rule.rulesetId;
-          if (rid === "strip_tracking_params" || rid === "strip_tracking_params_sites") {
-            count++;
-          } else if (rid === "_dynamic") {
-            // Check if it's a param strip dynamic rule by looking up the Set
-            if (dynamicParamStripIds.has(info.rule.ruleId)) count++;
-          }
-        }
-      }
-      return count;
-    }).catch(() => 0);
-
-    Promise.all([
-      new Promise(resolve => chrome.storage.local.get(["operatingMode"], resolve)),
-      stripCountPromise,
-    ]).then(([res, paramStripCount]) => {
+    chrome.storage.local.get(["operatingMode"], (res) => {
       const mode = res.operatingMode || "standalone";
       if (mode !== operatingMode) setOperatingMode(mode);
       sendResponse({
@@ -200,7 +180,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         blocked: tabBlockedDomains.get(tabId) || {},
         gpcDomains: tabGpcDomains.get(tabId) || {},
         paramStrips: tabParamStrips.get(tabId) || {},
-        paramStripCount,
         cmp: tabCmpData.get(tabId) || null,
         cmpDetect: tabCmpDetectData.get(tabId) || null,
         cosmetic: tabCosmeticData.get(tabId) || null,

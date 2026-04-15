@@ -485,25 +485,6 @@ body {
   background-color: #a78bfa;
 }
 
-/* Strip (URL param stripping) */
-.pc-strip-dot {
-  background-color: #9ca3af;
-}
-
-.pc-strip-indicator.is-active {
-  color: #7e22ce;
-  border-color: #d8b4fe;
-  background-color: #faf5ff;
-}
-
-.pc-strip-indicator.is-active .pc-strip-dot {
-  background-color: #9333ea;
-}
-
-.pc-strip-indicator.is-inactive .pc-strip-dot {
-  background-color: #c084fc;
-}
-
 /* TCF-specific */
 .pc-tcf-dot {
   background-color: #9ca3af;

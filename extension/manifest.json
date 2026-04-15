@@ -35,6 +35,7 @@
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
     "webRequest",
+    "webNavigation",
     "unlimitedStorage"
   ],
 

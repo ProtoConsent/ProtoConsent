@@ -307,7 +307,6 @@ function _syncProtoPills(tcfData) {
   var _mirrorPills = [
     { src: "pc-gpc-indicator", dst: "proto-gpc-pill" },
     { src: "pc-ch-indicator",  dst: "proto-ch-pill"  },
-    { src: "pc-strip-indicator", dst: "proto-strip-pill" },
     { src: "pc-wk-indicator",  dst: "proto-wk-pill"  },
   ];
   for (var i = 0; i < _mirrorPills.length; i++) {
@@ -740,22 +739,24 @@ function renderProtoParamStrip(data) {
   var wasExpanded = el.querySelector(".proto-card.is-expanded") !== null;
   el.textContent = "";
 
-  // Two data sources: per-domain map (debug mode) and total count (getMatchedRules, always)
   var strips = data.paramStrips || {};
   var domains = Object.keys(strips);
-  var totalFromDomains = 0;
-  for (var i = 0; i < domains.length; i++) totalFromDomains += strips[domains[i]];
-  var totalCount = Math.max(totalFromDomains, data.paramStripCount || 0);
+  if (domains.length === 0) return;
 
-  if (totalCount === 0) return;
-
-  var headerDetail;
-  if (domains.length > 0) {
-    headerDetail = domains.length + " " + (domains.length === 1 ? "domain" : "domains") +
-      ", " + totalFromDomains + " stripped";
-  } else {
-    headerDetail = totalCount + " URL" + (totalCount > 1 ? "s" : "") + " cleaned";
+  var totalStrips = 0;
+  var allParams = [];
+  for (var i = 0; i < domains.length; i++) {
+    var info = strips[domains[i]];
+    totalStrips += (typeof info === "object" ? info.count : info) || 0;
+    if (typeof info === "object" && info.params) {
+      for (var p = 0; p < info.params.length; p++) {
+        if (allParams.indexOf(info.params[p]) === -1) allParams.push(info.params[p]);
+      }
+    }
   }
+
+  var headerDetail = totalStrips + " stripped" +
+    (allParams.length > 0 ? " (" + allParams.length + " param types)" : "");
 
   var card = document.createElement("div");
   card.className = "proto-card";
@@ -767,6 +768,7 @@ function renderProtoParamStrip(data) {
   header.setAttribute("role", "button");
   header.setAttribute("tabindex", "0");
   header.setAttribute("aria-expanded", wasExpanded ? "true" : "false");
+  header.setAttribute("aria-controls", "proto-param-strip-body");
 
   var chevron = document.createElement("span");
   chevron.className = "proto-card-chevron";
@@ -791,39 +793,52 @@ function renderProtoParamStrip(data) {
 
   var body = document.createElement("div");
   body.className = "proto-card-body";
+  body.id = "proto-param-strip-body";
+  body.setAttribute("role", "region");
+  body.setAttribute("aria-label", "Param Stripping details");
 
-  if (domains.length > 0) {
-    // Per-domain detail (debug mode)
-    var sorted = domains.sort(function (a, b) { return strips[b] - strips[a]; });
-    var shown = sorted.slice(0, 10);
+  var sorted = domains.sort(function (a, b) {
+    var ca = typeof strips[b] === "object" ? strips[b].count : strips[b];
+    var cb = typeof strips[a] === "object" ? strips[a].count : strips[a];
+    return ca - cb;
+  });
+  var shown = sorted.slice(0, 10);
 
-    for (var j = 0; j < shown.length; j++) {
+  for (var j = 0; j < shown.length; j++) {
+    var info = strips[shown[j]];
+    var params = (typeof info === "object" && info.params && info.params.length > 0)
+      ? info.params : [];
+    if (params.length === 0) {
+      // Fallback: just show domain + count
       var row = document.createElement("div");
       row.className = "proto-purpose-domain";
       var dName = document.createElement("span");
       dName.className = "proto-purpose-domain-name";
       dName.textContent = shown[j];
-      dName.title = shown[j];
       var dCount = document.createElement("span");
       dCount.className = "proto-purpose-domain-count";
-      dCount.textContent = strips[shown[j]];
+      dCount.textContent = typeof info === "object" ? info.count : info;
       row.appendChild(dName);
       row.appendChild(dCount);
       body.appendChild(row);
+    } else {
+      for (var k = 0; k < params.length; k++) {
+        var row = document.createElement("div");
+        row.className = "proto-purpose-domain";
+        var dName = document.createElement("span");
+        dName.className = "proto-purpose-domain-name";
+        dName.textContent = params[k];
+        row.appendChild(dName);
+        body.appendChild(row);
+      }
     }
+  }
 
-    if (domains.length > 10) {
-      var moreEl = document.createElement("div");
-      moreEl.className = "proto-card-more";
-      moreEl.textContent = "+" + (domains.length - 10) + " more";
-      body.appendChild(moreEl);
-    }
-  } else {
-    // Count-only (standard mode)
-    var note = document.createElement("div");
-    note.className = "proto-card-note";
-    note.textContent = "Tracking parameters removed from " + totalCount + " navigation" + (totalCount > 1 ? "s" : "");
-    body.appendChild(note);
+  if (domains.length > 10) {
+    var moreEl = document.createElement("div");
+    moreEl.className = "proto-card-more";
+    moreEl.textContent = "+" + (domains.length - 10) + " more";
+    body.appendChild(moreEl);
   }
 
   var toggle = function () {
