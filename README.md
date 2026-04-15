@@ -24,7 +24,7 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 
 **Project website:** <https://protoconsent.org> · **Live demo:** <https://demo.protoconsent.org>
 
-> Pending review in Chrome Web Store, Edge Add-ons, and Opera Addons. In the meantime, install locally in developer mode on any Chromium-based browser. Firefox support planned.
+> Pending review in Chrome Web Store, Edge Add-ons, and Opera Addons. In the meantime, install locally in developer mode on any Chromium-based browser.
 
 ## Key features
 
