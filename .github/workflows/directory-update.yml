@@ -136,29 +136,21 @@ jobs:
             --body "$BODY" \
             --base main \
             --head "$BRANCH"
+          COMMENT=$(printf '**%s** validated successfully.\n\nProtocol version: %s | Purposes: %s\n\nA pull request has been created to add it to the directory. It will appear on [protoconsent.org/directory](https://protoconsent.org/directory.html) once merged.\n\nThank you for supporting open consent on the web!' \
+            "${{ steps.parse.outputs.domain }}" \
+            "${{ steps.validate.outputs.version }}" \
+            "${{ steps.validate.outputs.purposes }}")
+          gh issue comment "${{ github.event.issue.number }}" --body "$COMMENT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Comment on issue
-        if: steps.validate.outputs.version
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const domain = '${{ steps.parse.outputs.domain }}';
-            await github.rest.issues.createComment({
-              ...context.repo,
-              issue_number: context.issue.number,
-              body: `**${domain}** validated successfully.\n\nProtocol version: ${`${{ steps.validate.outputs.version }}`} | Purposes: ${`${{ steps.validate.outputs.purposes }}`}\n\nA pull request has been created to add it to the directory. It will appear on [protoconsent.org/directory](https://protoconsent.org/directory.html) once merged.\n\nThank you for supporting open consent on the web!`
-            });
-
       - name: Comment on failure
         if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const domain = '${{ steps.parse.outputs.domain }}' || '(could not parse)';
-            await github.rest.issues.createComment({
-              ...context.repo,
-              issue_number: context.issue.number,
-              body: `Could not validate **${domain}**.\n\nPlease make sure:\n- The domain serves \`https://${domain}/.well-known/protoconsent.json\` over HTTPS\n- The file contains a valid ProtoConsent declaration (version field + purposes object)\n- You can check your file at [protoconsent.org/validate.html](https://protoconsent.org/validate.html)\n\nFix the issue and open a new submission when ready.`
-            });
+        run: |
+          DOMAIN="${{ steps.parse.outputs.domain }}"
+          DOMAIN="${DOMAIN:-(could not parse)}"
+          COMMENT=$(printf 'Could not validate **%s**.\n\nPlease make sure:\n- The domain serves `https://%s/.well-known/protoconsent.json` over HTTPS\n- The file contains a valid ProtoConsent declaration (version field + purposes object)\n- You can check your file at [protoconsent.org/validate.html](https://protoconsent.org/validate.html)\n\nFix the issue and open a new submission when ready.' \
+            "$DOMAIN" "$DOMAIN")
+          gh issue comment "${{ github.event.issue.number }}" --body "$COMMENT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
