@@ -28,8 +28,34 @@
   if (!sigs || !prefs) return;
 
   // Registrable domain (simple heuristic)
-  // TODO: proper public suffix list for .co.uk, .com.au, etc.
-  const MULTI_TLDS = ['co.uk', 'com.au', 'co.jp', 'com.br', 'co.kr', 'co.in', 'org.uk'];
+  const MULTI_TLDS = [
+    'co.uk', 'org.uk', 'ac.uk', 'gov.uk', 'me.uk', 'net.uk',
+    'com.au', 'org.au', 'net.au', 'edu.au',
+    'co.jp', 'or.jp', 'ne.jp',
+    'com.br', 'org.br', 'net.br',
+    'co.kr', 'or.kr',
+    'co.in', 'org.in', 'net.in',
+    'co.nz', 'org.nz', 'net.nz',
+    'co.za', 'org.za', 'net.za',
+    'com.mx', 'org.mx',
+    'com.ar', 'org.ar',
+    'co.il',
+    'com.tr', 'org.tr',
+    'com.tw', 'org.tw',
+    'com.sg', 'org.sg',
+    'com.hk', 'org.hk',
+    'co.id',
+    'com.ph',
+    'co.th',
+    'com.my',
+    'com.cn', 'org.cn', 'net.cn',
+    'co.ke',
+    'com.ng',
+    'com.eg',
+    'com.ua', 'org.ua',
+    'com.pl', 'org.pl',
+    'co.at',
+  ];
   function getRegistrableDomain(hostname) {
     const h = hostname.replace(/^www\./, '');
     for (const tld of MULTI_TLDS) {

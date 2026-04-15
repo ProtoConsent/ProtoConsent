@@ -249,7 +249,7 @@ async function _rebuildAllDynamicRulesImpl() {
       Object.keys(perSiteWhitelist).length;
 
     if (whitelistRulesNeeded > whitelistBudget) {
-      console.warn("ProtoConsent: whitelist needs " + whitelistRulesNeeded +
+      if (DEBUG_RULES) console.warn("ProtoConsent: whitelist needs " + whitelistRulesNeeded +
         " rules but budget is " + whitelistBudget +
         " (core: " + coreRuleCount + ", reserve: " + DYNAMIC_RULE_RESERVE + "). " +
         "Some per-site whitelist entries will be dropped.");

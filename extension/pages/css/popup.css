@@ -163,58 +163,6 @@ body {
   display: none !important;
 }
 
-.pc-view-placeholder {
-  padding-bottom: 10px;
-}
-
-.pc-placeholder-card {
-  margin-top: 8px;
-  padding: 14px 14px 12px;
-  border: 1px solid var(--pc-line);
-  border-radius: 12px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
-}
-
-.pc-placeholder-eyebrow {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--pc-text-soft);
-  margin-bottom: 8px;
-}
-
-.pc-placeholder-title {
-  margin: 0 0 8px;
-  font-size: 15px;
-  line-height: 1.25;
-  color: var(--pc-text);
-}
-
-.pc-placeholder-copy {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--pc-text-muted);
-}
-
-.pc-placeholder-pills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.pc-placeholder-pill {
-  font-size: 11px;
-  color: var(--pc-accent);
-  background: #eef5ff;
-  border: 1px solid #dbeafe;
-  border-radius: 999px;
-  padding: 4px 8px;
-}
-
 /* Header */
 .pc-header {
   position: relative;

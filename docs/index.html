@@ -113,9 +113,10 @@
           </ul>
           <figure class="screenshot screenshot-pair">
             <img src="assets/screenshots/popup-profile.png" alt="ProtoConsent popup with per-site profile and purpose toggles">
+            <img src="assets/screenshots/popup-proto-monitoring.png" alt="Proto tab observability dashboard">
             <img src="assets/screenshots/popup-enhanced-balanced.png" alt="Enhanced Protection tab with curated blocklists">
             <figcaption>
-              Per-site profiles with purpose toggles, and optional Enhanced Protection with curated blocklists.
+              Per-site profiles with purpose toggles, the Proto observability dashboard, and optional Enhanced Protection.
             </figcaption>
           </figure>
         </section>
@@ -127,6 +128,7 @@
             <h2>Consent you can enforce and verify</h2>
             <ul>
               <li><strong>Per‑site profiles &amp; purpose toggles</strong>: choose what each site may do with your data.</li>
+              <li><strong>Two operating modes</strong>: Standalone mode blocks requests directly. ProtoConsent Mode delegates blocking to your existing tools and adds purpose attribution via the Proto dashboard.</li>
               <li><strong>Browser‑level enforcement</strong>: decisions are applied locally as network rules.</li>
               <li><strong>Enhanced protection</strong>: optional curated blocklists from public sources and ProtoConsent's own core lists, with presets or per‑list control.</li>
               <li><strong>Conditional privacy signal (GPC)</strong>: sent only when your choices justify it, per site.</li>
@@ -134,6 +136,7 @@
               <li><strong>Site declarations</strong>: websites can publish their data practices; the extension shows them alongside your preferences.</li>
               <li><strong>Optional SDK</strong>: sites can read your choices and adapt. MIT licensed, null-safe.</li>
               <li><strong>Anti-fingerprinting</strong>: strips high-entropy Client Hints headers when advanced tracking is denied.</li>
+              <li><strong>URL parameter stripping</strong>: removes known tracking parameters (<code>utm_source</code>, <code>fbclid</code>, etc.) from URLs before the request is sent.</li>
               <li><strong>Inter-extension API</strong>: other privacy extensions can query the user's consent state via the browser messaging protocol.</li>
             </ul>
             <p>

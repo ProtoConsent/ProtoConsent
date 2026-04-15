@@ -264,10 +264,10 @@ const MAX_DISPLAY_RETRIES = 2;
 // Compute block provenance from getMatchedRules (own) vs webRequest (observed).
 // Single source of truth — used by proto.js and debug.js.
 function computeBlockProvenance(coverage) {
-  var own = lastBlocked || 0;
-  var observed = (coverage && coverage.observed) || 0;
-  var attributed = (coverage && coverage.attributed) || 0;
-  var external = Math.max(0, observed - own);
+  let own = lastBlocked || 0;
+  let observed = (coverage && coverage.observed) || 0;
+  let attributed = (coverage && coverage.attributed) || 0;
+  let external = Math.max(0, observed - own);
   return { own: own, observed: observed, attributed: attributed, external: external };
 }
 
@@ -1391,7 +1391,7 @@ async function reloadActiveTab() {
     reloadBtn.disabled = true;
     reloadBtn.classList.remove("is-recommended");
     if (countEl) countEl.textContent = "Reloading page...";
-    var protoStatus = document.getElementById("proto-status");
+    let protoStatus = document.getElementById("proto-status");
     if (protoStatus && typeof activeMode !== "undefined" && activeMode === "proto") {
       protoStatus.textContent = "Reloading page...";
     }
@@ -1532,7 +1532,7 @@ function updateModeIndicator(mode) {
 
 // Check blocker detection state and show suggest-monitoring banner in Consent tab
 function checkBlockerDetectionForConsent() {
-  var mode = (typeof operatingMode !== "undefined") ? operatingMode : "standalone";
+  let mode = (typeof operatingMode !== "undefined") ? operatingMode : "standalone";
   if (mode === "protoconsent") return;
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_BLOCKER_DETECTION" }, function (state) {
     if (chrome.runtime.lastError || !state) return;

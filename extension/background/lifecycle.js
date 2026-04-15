@@ -16,6 +16,7 @@ import { scheduleSessionPersist } from "./session.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
 import { onNavigation, applyWarningBadgeForTab } from "./blocker-detection.js";
 import { clearPendingNavUrl } from "./tracking.js";
+import { DEBUG_RULES } from "./config-bridge.js";
 
 // Clear per-tab tracking on navigation and tab close.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
@@ -151,7 +152,7 @@ async function initBundledCosmeticData() {
       }, resolve);
     });
   } catch (e) {
-    console.warn("ProtoConsent: failed to load bundled cosmetic data:", e);
+    if (DEBUG_RULES) console.warn("ProtoConsent: failed to load bundled cosmetic data:", e);
   }
 }
 
@@ -185,7 +186,7 @@ async function initBundledCmpData() {
       }, resolve);
     });
   } catch (e) {
-    console.warn("ProtoConsent: failed to load bundled CMP data:", e);
+    if (DEBUG_RULES) console.warn("ProtoConsent: failed to load bundled CMP data:", e);
   }
 }
 
@@ -219,7 +220,7 @@ async function initBundledCmpDetectors() {
       }, resolve);
     });
   } catch (e) {
-    console.warn("ProtoConsent: failed to load bundled CMP detectors:", e);
+    if (DEBUG_RULES) console.warn("ProtoConsent: failed to load bundled CMP detectors:", e);
   }
 }
 
@@ -253,6 +254,6 @@ async function initBundledCmpSiteSignatures() {
       }, resolve);
     });
   } catch (e) {
-    console.warn("ProtoConsent: failed to load bundled CMP site signatures:", e);
+    if (DEBUG_RULES) console.warn("ProtoConsent: failed to load bundled CMP site signatures:", e);
   }
 }

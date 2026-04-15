@@ -68,7 +68,7 @@
           <section class="article-section">
             <h2>What data the extension handles</h2>
             <p>
-              ProtoConsent stores your per-site purpose preferences (profile and purpose toggles) and your domain whitelist in your browser's local extension storage (<code>chrome.storage.local</code>). This data never leaves your device.
+              ProtoConsent stores your per-site purpose preferences (profile, purpose toggles, and operating mode) and your domain whitelist in your browser's local extension storage (<code>chrome.storage.local</code>). This data never leaves your device.
             </p>
             <p>
               The extension does <strong>not</strong>:
@@ -94,6 +94,7 @@
               <li>Reads consent cookies set by CMPs to display their consent status in the Log tab (read-only, no modification).</li>
               <li>Reads localStorage entries from known CMPs (e.g. Usercentrics, CCM19) and probes standard consent APIs (TCF, GPP) to detect consent frameworks. This runs in the page context (MAIN world), is strictly read-only, and no data is sent anywhere.</li>
               <li>Removes high-entropy Client Hints headers (<code>Sec-CH-UA-*</code>) when advanced tracking is denied, reducing browser fingerprinting surface. No data is sent; headers are removed before the request leaves your browser.</li>
+              <li>Strips known tracking parameters from URLs (e.g. <code>utm_source</code>, <code>fbclid</code>) using browser redirect rules. The original URL is rewritten locally before the request is sent. No data is collected or transmitted.</li>
               <li>Fetches <code>.well-known/protoconsent.json</code> from sites when you open the side panel in the popup, to display their declared data practices (cached locally, never forwarded)</li>
               <li>Queries matched blocking rules to display request counts in the popup</li>
               <li>Downloads optional third-party enhanced list data from public CDN sources (jsDelivr, GitHub) when you activate Enhanced Protection lists. Remote fetching requires your explicit consent (opt-in during onboarding or in Purpose Settings). Only the list file is fetched - no personal data, cookies, or identifiers are sent. Downloaded lists are stored locally in your browser.</li>
@@ -133,6 +134,10 @@
                 <tr>
                   <td><code>webRequest</code></td>
                   <td>Observe blocked requests and GPC headers in real time for the Log tab (read-only, no modification)</td>
+                </tr>
+                <tr>
+                  <td><code>webNavigation</code></td>
+                  <td>Detect URL parameter stripping by comparing URLs before and after navigation</td>
                 </tr>
                 <tr>
                   <td><code>unlimitedStorage</code></td>
