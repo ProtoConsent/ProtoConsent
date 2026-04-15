@@ -1,11 +1,11 @@
 name: Directory update
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 jobs:
   add-site:
-    if: contains(github.event.issue.labels.*.name, 'url-directory')
+    if: contains(github.event.issue.labels.*.name, 'url-directory') && github.event.issue.state == 'open'
     runs-on: ubuntu-latest
     permissions:
       issues: write
