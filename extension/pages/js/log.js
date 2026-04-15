@@ -671,7 +671,7 @@ function connectLogPort() {
       if (msg.siteRules > 0) detail += " +" + msg.siteRules + " site rules";
       appendLogLine(detail, "cosmetic");
     } else if (msg.type === "param_strip") {
-      var detail = "[param-strip] " + msg.domain;
+      let detail = "[param-strip] " + msg.domain;
       if (msg.params && msg.params.length > 0) detail += " \u2212 " + msg.params.join(", ");
       appendLogLine(detail, "param-strip");
     } else if (msg.type === "ext") {
@@ -740,7 +740,7 @@ function replayHistoricalLog() {
       if (chrome.runtime.lastError || !resp) return;
       const strips = resp.paramStrips || {};
       for (const [domain, info] of Object.entries(strips)) {
-        var detail = "[param-strip] " + domain;
+        let detail = "[param-strip] " + domain;
         if (info && info.params && info.params.length > 0) detail += " \u2212 " + info.params.join(", ");
         if (info && info.count > 1) detail += " (" + info.count + ")";
         appendLogLine(detail, "param-strip");
@@ -790,6 +790,7 @@ function appendLogLine(text, type, ts) {
   else if (type === "ext") line.className = "pc-log-line-ext";
   else if (type === "banner") line.className = "pc-log-line-detect";
   else if (type === "banner-consent") line.className = "pc-log-line-observe";
+  else if (type === "param-strip") line.className = "pc-log-line-param-strip";
 
   const tsSpan = document.createElement("span");
   tsSpan.className = "pc-log-line-ts";
