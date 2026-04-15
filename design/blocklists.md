@@ -42,6 +42,11 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
     - [Always active with Enhanced](#always-active-with-enhanced)
     - [Data format](#data-format)
     - [Source](#source)
+  - [12. URL tracking parameter stripping](#12-url-tracking-parameter-stripping)
+    - [Global parameters](#global-parameters)
+    - [Per-site parameters](#per-site-parameters)
+    - [DNR implementation](#dnr-implementation)
+    - [Observability](#observability)
 
 ## 2. Current state
 
@@ -166,9 +171,9 @@ For **block overrides**, path-extracted domains that overlap with the initiator 
 
 Beyond the core static rulesets shipped with the extension, ProtoConsent supports **enhanced protection** via third-party blocklists converted to DNR-compatible JSON. These lists are optional - the user opts in from the Enhanced tab in the popup.
 
-### Current lists (v0.4)
+### Current lists (v0.5)
 
-13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), organized in two presets.
+13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), 2 URL parameter stripping lists, and 2 CMP detection lists, organized in two presets.
 
 **Balanced preset** (5 lists - enabled by default when user selects Balanced):
 
@@ -285,6 +290,15 @@ For the full signature format, supported CMPs, and three-layer response architec
 | --- | --- | --- | --- |
 | [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | 23 | Global (most), domain-scoped (Bing) |
 
+**CMP detection lists** complement the auto-response signatures by identifying consent banners on the page:
+
+| List | Source | License | Entries | Scope |
+| --- | --- | --- | --- | --- |
+| `protoconsent_cmp_detectors.json` | [Autoconsent](https://github.com/duckduckgo/autoconsent) | MPL-2.0 | ~284 CMPs | Global (some domain-scoped) |
+| `protoconsent_cmp_signatures_site.json` | [Autoconsent](https://github.com/duckduckgo/autoconsent) | MPL-2.0 | ~235 entries | Site-specific (via `domains` field) |
+
+CMP detectors contain CSS selectors for `present` (CMP loaded) and `showing` (banner visible) states, used by the extension's CMP detection content script (`cmp-detect.js`) at `document_idle`. Site-specific signatures contain hiding selectors that are too generic to apply globally but safe when limited to their target domains. Both are filtered through `config/cmp-safelist.json` in the data repo. A bundled snapshot is included in the extension package; updated copies are fetched from CDN. UI shows these as part of "ProtoConsent Banners".
+
 ## 8. ProtoConsent Core lists
 
 The extension ships static rulesets (`block_*.json`) for day-1 blocking. The same domains and path rules are also published as 5 Enhanced-format JSON files in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo, one per purpose:
@@ -365,3 +379,44 @@ The `trackers` array stores destination names once. The `map` values are numeric
 | [AdGuard CNAME Trackers](https://github.com/AdguardTeam/cname-trackers) | MIT | ~229K | ~244 |
 
 The converter script (`convert-cname.js`) in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo fetches, merges, and outputs the indexed JSON.
+
+## 12. URL tracking parameter stripping
+
+ProtoConsent strips tracking parameters from navigation URLs using DNR redirect rules with `queryTransform.removeParams`. Unlike domain blocking, this does not prevent the request - it removes tracking parameters from the URL before the server receives them.
+
+### Global parameters
+
+The global list is compiled from [AdGuard TrackParamFilter](https://github.com/AdguardTeam/AdguardFilters) (GPL-3.0). It contains ~304 literal `$removeparam` parameter names that apply to all sites.
+
+| List | Source | License | Parameters |
+| --- | --- | --- | --- |
+| `adguard_tracking_params.json` | [AdGuard TrackParamFilter](https://github.com/AdguardTeam/AdguardFilters) | GPL-3.0 | ~304 |
+
+Examples: `utm_source`, `utm_medium`, `utm_campaign`, `fbclid`, `gclid`, `msclkid`, `mc_cid`, `mc_eid`, `yclid`, `_openstat`.
+
+### Per-site parameters
+
+The per-site list is compiled from [AdGuard TrackParamFilter](https://github.com/AdguardTeam/AdguardFilters) (GPL-3.0) and [Dandelion Sprout's Legitimate URL Shortener Tool](https://github.com/DandelionSprout/adfilt) (Dandelicence v1.4). It contains site-specific parameters that are only relevant on certain domains.
+
+| List | Source | License | Parameters | Domains |
+| --- | --- | --- | --- | --- |
+| `dandelion_tracking_params.json` | AdGuard + Dandelion Sprout | GPL-3.0 / Dandelicence | ~1,814 | ~879 |
+
+Parameters that already appear in the global list are excluded from the per-site list to avoid redundancy.
+
+### DNR implementation
+
+The extension builds two static DNR rulesets from these lists:
+
+- **`strip_tracking_params`**: a single rule with `removeParams` containing all global parameters. Applies to all navigation URLs.
+- **`strip_tracking_params_sites`**: one rule per domain group, each with `removeParams` scoped by `requestDomains`.
+
+Both use `action.type: "redirect"` with `redirect.transform.queryTransform.removeParams`. Stripping is gated by the `advanced_tracking` purpose: it is active when advanced tracking is denied (all presets block it by default).
+
+Dynamic CDN rules can supplement these static rulesets when Enhanced data includes updated parameter lists. The background script tracks dynamic param strip rule IDs in `dynamicParamStripIds` (state.js) for classification in the popup.
+
+### Observability
+
+Stripped parameters are detected via the `webNavigation` API (§15 in [architecture.md](architecture.md)) and shown in the Proto tab (accordion with parameter names) and Log tab (purple `[param-strip]` lines). The badge counter and blocked request count are not affected.
+
+The converter script (`convert-tracking-params.js`) in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo fetches upstream lists, extracts literal `$removeparam` names (skipping regex patterns), separates global vs. per-site, and outputs the two JSON files.
