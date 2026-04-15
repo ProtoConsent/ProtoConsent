@@ -5,7 +5,7 @@ on:
 
 jobs:
   add-site:
-    if: contains(github.event.issue.labels.*.name, 'directory')
+    if: contains(github.event.issue.labels.*.name, 'url-directory')
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -26,8 +26,8 @@ jobs:
               return;
             }
             let domain = match[1].trim().toLowerCase();
-            // Strip protocol and trailing slashes
-            domain = domain.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+            // Strip protocol, path, and trailing slashes
+            domain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/\/+$/, '');
             // Basic validation
             if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain)) {
               core.setFailed(`Invalid domain: ${domain}`);

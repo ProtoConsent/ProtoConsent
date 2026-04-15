@@ -1,6 +1,6 @@
 name: Add site to directory
 description: Submit your website to the ProtoConsent directory
-labels: ["directory"]
+labels: ["url-directory"]
 body:
   - type: markdown
     attributes:
