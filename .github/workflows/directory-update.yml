@@ -125,7 +125,7 @@ jobs:
           git checkout -b "$BRANCH"
           git add docs/directory/sites.json
           git commit -m "directory: add ${{ steps.parse.outputs.domain }}"
-          git push origin "$BRANCH"
+          git push --force origin "$BRANCH"
           gh pr create \
             --title "directory: add ${{ steps.parse.outputs.domain }}" \
             --body "Adds **${{ steps.parse.outputs.domain }}** to the [site directory](https://protoconsent.org/directory.html).\n\nProtocol version: ${{ steps.validate.outputs.version }} | Purposes: ${{ steps.validate.outputs.purposes }}\n\nCloses #${{ github.event.issue.number }}" \
