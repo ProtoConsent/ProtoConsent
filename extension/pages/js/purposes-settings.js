@@ -846,6 +846,7 @@ function initCmpSection() {
 	const listEl = document.getElementById('cmp-list');
 	const uuidInput = document.getElementById('cmp-uuid-input');
 	const maxageInput = document.getElementById('cmp-maxage-input');
+	let cmpQueue = Promise.resolve();
 	if (!section || !toggle || !detail || !listEl) return;
 
 	chrome.storage.local.get(['_cmpSignatures'], (stored) => {
@@ -879,11 +880,13 @@ function initCmpSection() {
 					cb.id = 'cmp-' + id;
 					cb.checked = enabled[id] !== false;
 					cb.addEventListener('change', () => {
-						chrome.storage.local.get(['cmpEnabled'], (r) => {
-							const cur = r.cmpEnabled || {};
-							cur[id] = cb.checked;
-							chrome.storage.local.set({ cmpEnabled: cur });
-						});
+						cmpQueue = cmpQueue.then(() => new Promise(resolve => {
+							chrome.storage.local.get(['cmpEnabled'], (r) => {
+								const cur = r.cmpEnabled || {};
+								cur[id] = cb.checked;
+								chrome.storage.local.set({ cmpEnabled: cur }, resolve);
+							});
+						}));
 					});
 
 					row.appendChild(label);
@@ -1546,10 +1549,14 @@ function initInterExt() {
 		}
 	});
 
-	// Listen for storage changes to update UI live
+	// Listen for storage changes to update UI live (debounced)
+	let interExtDebounce = null;
 	chrome.storage.onChanged.addListener((changes, area) => {
 		if (area !== 'local') return;
-		if (INTER_EXT_KEYS.some(k => k in changes)) load();
+		if (INTER_EXT_KEYS.some(k => k in changes)) {
+			if (interExtDebounce) clearTimeout(interExtDebounce);
+			interExtDebounce = setTimeout(() => { interExtDebounce = null; load(); }, 100);
+		}
 	});
 
 	section.classList.remove('ps-hidden');

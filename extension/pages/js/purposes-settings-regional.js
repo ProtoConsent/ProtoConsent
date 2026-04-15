@@ -14,6 +14,9 @@
 // Capture hash before applyHashRoute replaces it with the tab name
 var _regionalScrollTarget = location.hash === '#regional-filters' ? 'regional-filters' : null;
 
+// Serialized storage writes — each toggle waits for the previous to finish
+var _regionalLangQueue = Promise.resolve();
+
 function initRegionalSection() {
 	const section = document.getElementById('regional-section');
 	const grid = document.getElementById('regional-language-grid');
@@ -136,15 +139,17 @@ function initRegionalSection() {
 				cb.checked = selected.includes(code);
 				cb.setAttribute('aria-describedby', 'rl-desc-' + code);
 				cb.addEventListener('change', () => {
-					chrome.storage.local.get(['regionalLanguages'], (r) => {
-						let langs = Array.isArray(r.regionalLanguages) ? r.regionalLanguages.slice() : [];
-						if (cb.checked) {
-							if (!langs.includes(code)) langs.push(code);
-						} else {
-							langs = langs.filter(l => l !== code);
-						}
-						chrome.storage.local.set({ regionalLanguages: langs });
-					});
+					_regionalLangQueue = _regionalLangQueue.then(() => new Promise(resolve => {
+						chrome.storage.local.get(['regionalLanguages'], (r) => {
+							let langs = Array.isArray(r.regionalLanguages) ? r.regionalLanguages.slice() : [];
+							if (cb.checked) {
+								if (!langs.includes(code)) langs.push(code);
+							} else {
+								langs = langs.filter(l => l !== code);
+							}
+							chrome.storage.local.set({ regionalLanguages: langs }, resolve);
+						});
+					}));
 				});
 				row.appendChild(cb);
 				grid.appendChild(row);

@@ -155,7 +155,6 @@ export async function loadPresetsConfig() {
     return data;
   } catch (e) {
     console.error("Failed to load presets.json:", e);
-    setPresetsConfig({});
     return {};
   }
 }
@@ -179,7 +178,6 @@ export async function loadPurposesConfig() {
     return data;
   } catch (e) {
     console.error("Failed to load purposes.json:", e);
-    setPurposesConfig({});
     return {};
   }
 }
@@ -198,7 +196,6 @@ export async function loadRegionalLanguagesConfig() {
     return data;
   } catch (e) {
     if (DEBUG_RULES) console.warn("Failed to load regional-languages.json:", e);
-    setRegionalLanguagesConfig({});
     return {};
   }
 }
