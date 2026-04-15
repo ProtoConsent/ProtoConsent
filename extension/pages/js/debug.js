@@ -31,7 +31,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     lines.push("— ProtoConsent v" + manifest.version + " —");
     const source = USE_DNR_DEBUG ? "onRuleMatchedDebug" : "webRequest";
     lines.push("  data source: " + source);
-    var modeLabel = (typeof operatingMode !== "undefined" && operatingMode === "protoconsent") ? "Monitoring" : "Blocking";
+    let modeLabel = (typeof operatingMode !== "undefined" && operatingMode === "protoconsent") ? "Monitoring" : "Blocking";
     lines.push("  mode: " + modeLabel);
     lines.push("");
 
@@ -156,7 +156,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
 
     // Blocker detection diagnostics
     if (bg && bg.blockerDetect) {
-      var bd = bg.blockerDetect;
+      let bd = bg.blockerDetect;
       lines.push("— blocker detection —");
       lines.push("  navCount: " + bd.navCount + "  totalObserved: " + bd.totalObserved);
       lines.push("  behavioralSignal: " + bd.behavioralSignal + "  noBlockerWarning: " + bd.noBlockerWarning);
@@ -406,15 +406,15 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       if (!tabs || !tabs[0]) return;
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_PROTO_DATA", tabId: tabs[0].id }, function (proto) {
         if (chrome.runtime.lastError || !proto) return;
-        var prov = computeBlockProvenance(proto.coverage);
-        var pLines = [];
+        let prov = computeBlockProvenance(proto.coverage);
+        let pLines = [];
         pLines.push("— block provenance (this tab) —");
         pLines.push("  own (getMatchedRules): " + prov.own);
         pLines.push("  observed (ERR_BLOCKED): " + prov.observed);
         pLines.push("  attributed (reverse index): " + prov.attributed);
         pLines.push("  external (observed - own): " + prov.external);
         pLines.push("  unattributed buffer (this tab): " + (proto.unattributed ? proto.unattributed.length : 0));
-        var pre = document.querySelector("#pc-log-debug");
+        let pre = document.querySelector("#pc-log-debug");
         if (pre) pre.textContent += "\n" + pLines.join("\n");
       });
     });

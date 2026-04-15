@@ -41,7 +41,7 @@ function _stopProtoAutoRefresh() {
 function refreshProtoView() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (!tabs || !tabs[0]) return;
-    var tabId = tabs[0].id;
+    let tabId = tabs[0].id;
     chrome.runtime.sendMessage(
       { type: "PROTOCONSENT_GET_PROTO_DATA", tabId: tabId },
       (resp) => {
@@ -49,14 +49,14 @@ function refreshProtoView() {
         renderProtoStatus(resp);
 
         // Gather .well-known + TCF + blocker detection data, then render all
-        var domain = (typeof currentDomain !== "undefined") ? currentDomain : "";
-        var wkKey = domain ? ("wk_" + domain) : "";
-        var pending = 3;
-        var wkData = null;
-        var tcfData = null;
-        var blockerState = null;
+        let domain = (typeof currentDomain !== "undefined") ? currentDomain : "";
+        let wkKey = domain ? ("wk_" + domain) : "";
+        let pending = 3;
+        let wkData = null;
+        let tcfData = null;
+        let blockerState = null;
 
-        var finishRender = function () {
+        let finishRender = function () {
           pending--;
           if (pending > 0) return;
           _syncProtoPills(tcfData);
@@ -119,22 +119,22 @@ function _makeInteractive(el, handler) {
 
 // --- CNAME pill ---
 
-var _cnameDataLoaded = false;
+let _cnameDataLoaded = false;
 
 function _updateCnamePill(blocked) {
-  var pill = document.getElementById("proto-cname-pill");
-  var countEl = document.getElementById("proto-cname-count");
+  let pill = document.getElementById("proto-cname-pill");
+  let countEl = document.getElementById("proto-cname-count");
   if (!pill || !countEl) return;
 
-  var doCount = function (listLoaded) {
-    var count = 0;
+  let doCount = function (listLoaded) {
+    let count = 0;
     if (listLoaded && blocked && typeof lookupCname === "function") {
-      var purposes = Object.keys(blocked);
-      for (var i = 0; i < purposes.length; i++) {
-        var domains = blocked[purposes[i]];
+      let purposes = Object.keys(blocked);
+      for (let i = 0; i < purposes.length; i++) {
+        let domains = blocked[purposes[i]];
         if (!domains) continue;
-        var hosts = Object.keys(domains);
-        for (var j = 0; j < hosts.length; j++) {
+        let hosts = Object.keys(domains);
+        for (let j = 0; j < hosts.length; j++) {
           if (lookupCname(hosts[j])) count++;
         }
       }
@@ -180,21 +180,21 @@ function renderProtoStatus(data) {
   el.textContent = "";
   el.classList.remove("is-standalone");
 
-  var isBlocking = data.mode !== "protoconsent";
+  let isBlocking = data.mode !== "protoconsent";
   if (isBlocking) el.classList.add("is-standalone");
 
-  var capabilities = [
+  let capabilities = [
     { label: "Express", active: true, tip: "Send your privacy preferences to websites" },
     { label: "Enforce", active: isBlocking, tip: "Block tracking requests before they load" },
     { label: "Observe", active: true, tip: "Monitor what trackers do on every page" },
   ];
 
-  for (var i = 0; i < capabilities.length; i++) {
-    var cap = capabilities[i];
-    var badge = document.createElement("span");
+  for (let i = 0; i < capabilities.length; i++) {
+    let cap = capabilities[i];
+    let badge = document.createElement("span");
     badge.className = "proto-status-badge" + (cap.active ? " is-on" : " is-off");
     badge.title = cap.tip;
-    var check = document.createElement("span");
+    let check = document.createElement("span");
     check.className = "proto-status-check";
     check.textContent = cap.active ? "\u2713" : "\u2717";
     badge.appendChild(check);
@@ -206,15 +206,15 @@ function renderProtoStatus(data) {
 // --- Scope summary (populates text spans inside #proto-scope, mirrors Consent tab) ---
 
 function renderProtoScope() {
-  var coreEl = document.getElementById("proto-scope-core");
-  var enhEl = document.getElementById("proto-scope-enhanced");
+  let coreEl = document.getElementById("proto-scope-core");
+  let enhEl = document.getElementById("proto-scope-enhanced");
   if (!coreEl) return;
 
   // Core rules count (same as displayProtectionScope in popup.js)
-  var coreRules = 0;
+  let coreRules = 0;
   if (typeof purposeDomainCounts !== "undefined" && typeof purposePathCounts !== "undefined") {
-    var pkeys = typeof PURPOSES_TO_SHOW !== "undefined" ? PURPOSES_TO_SHOW : [];
-    for (var i = 0; i < pkeys.length; i++) {
+    let pkeys = typeof PURPOSES_TO_SHOW !== "undefined" ? PURPOSES_TO_SHOW : [];
+    for (let i = 0; i < pkeys.length; i++) {
       if (purposeDomainCounts[pkeys[i]]) coreRules += purposeDomainCounts[pkeys[i]];
       if (purposePathCounts[pkeys[i]]) coreRules += purposePathCounts[pkeys[i]];
     }
@@ -227,7 +227,7 @@ function renderProtoScope() {
   enhEl.textContent = "";
 
   // Make scope text (left side) clickable to Enhanced tab — not the whole row (pills have own handlers)
-  var scopeLeft = document.getElementById("proto-scope");
+  let scopeLeft = document.getElementById("proto-scope");
   scopeLeft = scopeLeft ? scopeLeft.querySelector(".pc-scope-left") : null;
   if (scopeLeft && !scopeLeft._boundProtoScope) {
     _makeInteractive(scopeLeft, function () {
@@ -238,19 +238,19 @@ function renderProtoScope() {
   }
 
   if (typeof epLists !== "undefined" && epLists && Object.keys(epLists).length > 0) {
-    var stats = (typeof getEnhancedStats === "function") ? getEnhancedStats() : null;
+    let stats = (typeof getEnhancedStats === "function") ? getEnhancedStats() : null;
     if (stats) _fillEnhancedScope(enhEl, stats);
   } else {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, function (resp) {
       if (chrome.runtime.lastError || !resp) return;
-      var lists = resp.lists || {};
-      var celIds = resp.consentLinkedListIds || [];
-      var celSet = {};
-      for (var c = 0; c < celIds.length; c++) celSet[celIds[c]] = true;
-      var blockCount = 0, blockRules = 0, infoCount = 0, infoDomains = 0;
-      var ids = Object.keys(lists);
-      for (var j = 0; j < ids.length; j++) {
-        var l = lists[ids[j]];
+      let lists = resp.lists || {};
+      let celIds = resp.consentLinkedListIds || [];
+      let celSet = {};
+      for (let c = 0; c < celIds.length; c++) celSet[celIds[c]] = true;
+      let blockCount = 0, blockRules = 0, infoCount = 0, infoDomains = 0;
+      let ids = Object.keys(lists);
+      for (let j = 0; j < ids.length; j++) {
+        let l = lists[ids[j]];
         if (!l.enabled && !celSet[ids[j]]) continue;
         if (l.type === "informational") {
           infoCount++;
@@ -272,11 +272,11 @@ function renderProtoScope() {
 }
 
 function _fillEnhancedScope(el, stats) {
-  var totalLists = (stats.blockingCount || 0) + (stats.cosmeticCount || 0) + (stats.cmpCount || 0) + (stats.infoCount || 0);
+  let totalLists = (stats.blockingCount || 0) + (stats.cosmeticCount || 0) + (stats.cmpCount || 0) + (stats.infoCount || 0);
   if (totalLists === 0) return;
-  var sep = document.createTextNode("  ");
+  let sep = document.createTextNode("  ");
   el.appendChild(sep);
-  var icon = document.createElement("img");
+  let icon = document.createElement("img");
   icon.src = ENHANCED_ICON;
   icon.width = 12;
   icon.height = 12;
@@ -286,14 +286,14 @@ function _fillEnhancedScope(el, stats) {
   icon.style.top = "-1px";
   icon.style.marginRight = "4px";
   el.appendChild(icon);
-  var text = totalLists + (totalLists === 1 ? " list" : " lists") +
+  let text = totalLists + (totalLists === 1 ? " list" : " lists") +
     " \u00b7 " + compactNumber(stats.totalRules || 0) + " rules";
   if (stats.infoCount > 0 && stats.infoDomains > 0) {
     text += " + " + compactNumber(stats.infoDomains);
   }
   el.appendChild(document.createTextNode(text));
   if (stats.infoCount > 0 && stats.infoDomains > 0) {
-    var infoIcon = document.createElement("span");
+    let infoIcon = document.createElement("span");
     infoIcon.textContent = " \u2139";
     infoIcon.title = "Informational entries (not blocking)";
     el.appendChild(infoIcon);
@@ -304,14 +304,14 @@ function _fillEnhancedScope(el, stats) {
 
 function _syncProtoPills(tcfData) {
   // Mirror GPC, CH, WK from Consent tab indicators (synchronous sources, always current)
-  var _mirrorPills = [
+  let _mirrorPills = [
     { src: "pc-gpc-indicator", dst: "proto-gpc-pill" },
     { src: "pc-ch-indicator",  dst: "proto-ch-pill"  },
     { src: "pc-wk-indicator",  dst: "proto-wk-pill"  },
   ];
-  for (var i = 0; i < _mirrorPills.length; i++) {
-    var srcEl = document.getElementById(_mirrorPills[i].src);
-    var dstEl = document.getElementById(_mirrorPills[i].dst);
+  for (let i = 0; i < _mirrorPills.length; i++) {
+    let srcEl = document.getElementById(_mirrorPills[i].src);
+    let dstEl = document.getElementById(_mirrorPills[i].dst);
     if (!srcEl || !dstEl) continue;
     dstEl.classList.toggle("is-active", srcEl.classList.contains("is-active"));
     dstEl.classList.toggle("is-inactive", srcEl.classList.contains("is-inactive"));
@@ -319,16 +319,16 @@ function _syncProtoPills(tcfData) {
     dstEl.title = srcEl.title;
   }
   // TCF pill: set directly from data (async source, avoid race with Consent tab)
-  var tcfPill = document.getElementById("proto-tcf-pill");
+  let tcfPill = document.getElementById("proto-tcf-pill");
   if (tcfPill) {
     if (tcfData && tcfData.detected) {
       tcfPill.classList.remove("is-disabled", "is-inactive");
       tcfPill.classList.add("is-active");
-      var tip = "Cookie banner detected";
+      let tip = "Cookie banner detected";
       if (tcfData.purposeConsents) {
-        var total = Object.keys(tcfData.purposeConsents).length;
+        let total = Object.keys(tcfData.purposeConsents).length;
         if (total > 0) {
-          var accepted = Object.values(tcfData.purposeConsents).filter(function (v) { return v; }).length;
+          let accepted = Object.values(tcfData.purposeConsents).filter(function (v) { return v; }).length;
           tip += " \u00b7 " + accepted + "/" + total + " purposes accepted";
         } else {
           tip += " \u00b7 Banner not accepted or rejected";
@@ -342,25 +342,25 @@ function _syncProtoPills(tcfData) {
     }
   }
   // Bind Proto TCF pill click to expand accordion
-  var protoPill = document.getElementById("proto-tcf-pill");
+  let protoPill = document.getElementById("proto-tcf-pill");
   if (protoPill && !protoPill._boundProtoTcf) {
     _makeInteractive(protoPill, navigateToProtoTcf);
     protoPill._boundProtoTcf = true;
   }
   // Bind Proto WK pill to toggle side panel
-  var wkPill = document.getElementById("proto-wk-pill");
+  let wkPill = document.getElementById("proto-wk-pill");
   if (wkPill && !wkPill._boundProtoWk && typeof toggleSidePanel === "function") {
     _makeInteractive(wkPill, toggleSidePanel);
     wkPill._boundProtoWk = true;
   }
   // Bind Proto GPC pill to navigate to Log > GPC
-  var gpcPill = document.getElementById("proto-gpc-pill");
+  let gpcPill = document.getElementById("proto-gpc-pill");
   if (gpcPill && !gpcPill._boundProtoGpc && typeof navigateToLog === "function") {
     _makeInteractive(gpcPill, function () { navigateToLog("gpc"); });
     gpcPill._boundProtoGpc = true;
   }
   // Bind Proto CH pill to open Settings page
-  var chPill = document.getElementById("proto-ch-pill");
+  let chPill = document.getElementById("proto-ch-pill");
   if (chPill && !chPill._boundProtoCh) {
     _makeInteractive(chPill, function () {
       chrome.tabs.create({ url: chrome.runtime.getURL("pages/purposes-settings.html") });
@@ -376,9 +376,9 @@ function navigateToProtoTcf() {
   if (typeof initProtoTab === "function") initProtoTab();
   // Toggle the tcf-consent card after a short delay for render
   setTimeout(function () {
-    var card = document.querySelector('#proto-tcf-accord .proto-card[data-key="tcf-consent"]');
+    let card = document.querySelector('#proto-tcf-accord .proto-card[data-key="tcf-consent"]');
     if (card) {
-      var header = card.querySelector(".proto-card-header");
+      let header = card.querySelector(".proto-card-header");
       if (header) header.click();
     }
   }, 100);
@@ -387,22 +387,22 @@ function navigateToProtoTcf() {
 // --- Declaration/TCF/Mismatch accordions ---
 
 function renderProtoDeclarations(wkData, blocked) {
-  var el = document.getElementById("proto-declarations");
+  let el = document.getElementById("proto-declarations");
   if (!el) return;
 
   // Preserve expanded state
-  var wasExpanded = new Set();
+  let wasExpanded = new Set();
   el.querySelectorAll(".proto-card.is-expanded").forEach(function (c) {
     if (c.dataset.key) wasExpanded.add(c.dataset.key);
   });
   el.textContent = "";
 
-  var hasWk = !!(wkData && wkData.purposes);
-  var hasBlocked = !!(blocked && Object.keys(blocked).length > 0);
+  let hasWk = !!(wkData && wkData.purposes);
+  let hasBlocked = !!(blocked && Object.keys(blocked).length > 0);
 
   // Mismatch detection (declaration vs observation)
   if (hasWk && hasBlocked) {
-    var mismatches = _detectMismatches(wkData, blocked);
+    let mismatches = _detectMismatches(wkData, blocked);
     if (mismatches.length > 0) {
       el.appendChild(_makeMismatchCard(mismatches, wasExpanded));
     }
@@ -410,14 +410,14 @@ function renderProtoDeclarations(wkData, blocked) {
 }
 
 // Known IAB CMP IDs (mirrors well-known.js CMP_NAMES)
-var _protoCmpNames = {
+const _protoCmpNames = {
   2: "Quantcast", 6: "SourcePoint", 10: "Didomi", 12: "TrustArc",
   28: "OneTrust", 47: "Borlabs", 49: "Uniconsent", 92: "Didomi",
   128: "LiveRamp", 253: "Cookiebot", 300: "Cookie Information",
   407: "Sirdata",
 };
 
-var _iabPurposeNames = {
+const _iabPurposeNames = {
   1: "Store/access device", 2: "Basic ads", 3: "Ad profile",
   4: "Personalized ads", 5: "Content profile", 6: "Personalized content",
   7: "Ad measurement", 8: "Content measurement", 9: "Market research",
@@ -425,47 +425,47 @@ var _iabPurposeNames = {
 };
 
 function renderProtoTcfAccord(tcfData) {
-  var el = document.getElementById("proto-tcf-accord");
+  let el = document.getElementById("proto-tcf-accord");
   if (!el) return;
 
-  var wasExpanded = el.querySelector(".proto-card.is-expanded") !== null;
+  let wasExpanded = el.querySelector(".proto-card.is-expanded") !== null;
   el.textContent = "";
 
   if (!tcfData) return;
 
-  var consents = tcfData.purposeConsents || {};
-  var ids = Object.keys(consents).sort(function (a, b) { return Number(a) - Number(b); });
-  var hasConsents = ids.length > 0;
-  var accepted = hasConsents ? ids.filter(function (id) { return consents[id]; }).length : 0;
+  let consents = tcfData.purposeConsents || {};
+  let ids = Object.keys(consents).sort(function (a, b) { return Number(a) - Number(b); });
+  let hasConsents = ids.length > 0;
+  let accepted = hasConsents ? ids.filter(function (id) { return consents[id]; }).length : 0;
 
-  var headerDetail = hasConsents
+  let headerDetail = hasConsents
     ? accepted + "/" + ids.length + " purposes accepted"
     : "Banner not accepted or rejected";
 
-  var card = document.createElement("div");
+  let card = document.createElement("div");
   card.className = "proto-card";
   card.dataset.key = "tcf-consent";
   if (wasExpanded) card.classList.add("is-expanded");
 
-  var header = document.createElement("div");
+  let header = document.createElement("div");
   header.className = "proto-card-header";
   header.setAttribute("role", "button");
   header.setAttribute("tabindex", "0");
   header.setAttribute("aria-expanded", wasExpanded ? "true" : "false");
 
-  var chevron = document.createElement("span");
+  let chevron = document.createElement("span");
   chevron.className = "proto-card-chevron";
   chevron.textContent = wasExpanded ? " \u25BE" : " \u25B8";
 
-  var dot = document.createElement("span");
+  let dot = document.createElement("span");
   dot.className = "proto-signal-dot is-active";
   dot.style.marginRight = "4px";
 
-  var nameSpan = document.createElement("span");
+  let nameSpan = document.createElement("span");
   nameSpan.className = "proto-card-name";
   nameSpan.textContent = "Consent Status";
 
-  var detailSpan = document.createElement("span");
+  let detailSpan = document.createElement("span");
   detailSpan.className = "proto-card-count";
   detailSpan.textContent = headerDetail;
 
@@ -474,11 +474,11 @@ function renderProtoTcfAccord(tcfData) {
   header.appendChild(chevron);
   header.appendChild(detailSpan);
 
-  var body = document.createElement("div");
+  let body = document.createElement("div");
   body.className = "proto-card-body proto-tcf-body";
 
   // CMP provider (mirrors side panel)
-  var provEl = document.createElement("div");
+  let provEl = document.createElement("div");
   provEl.className = "pc-tcf-provider";
   provEl.textContent = (tcfData.cmpId && _protoCmpNames[tcfData.cmpId])
     ? "Managed by " + _protoCmpNames[tcfData.cmpId]
@@ -487,16 +487,16 @@ function renderProtoTcfAccord(tcfData) {
 
   // Purpose consents grid (mirrors side panel layout)
   if (hasConsents) {
-    var grid = document.createElement("div");
+    let grid = document.createElement("div");
     grid.className = "pc-tcf-purposes";
-    for (var i = 0; i < ids.length; i++) {
-      var id = ids[i];
-      var row = document.createElement("div");
+    for (let i = 0; i < ids.length; i++) {
+      let id = ids[i];
+      let row = document.createElement("div");
       row.className = "pc-tcf-purpose-row";
-      var check = document.createElement("span");
+      let check = document.createElement("span");
       check.className = consents[id] ? "pc-tcf-accepted" : "pc-tcf-denied";
       check.textContent = consents[id] ? "\u2713" : "\u2717";
-      var label = document.createElement("span");
+      let label = document.createElement("span");
       label.textContent = _iabPurposeNames[id] || ("Purpose " + id);
       row.appendChild(check);
       row.appendChild(label);
@@ -504,20 +504,20 @@ function renderProtoTcfAccord(tcfData) {
     }
     body.appendChild(grid);
   } else {
-    var pendingEl = document.createElement("div");
+    let pendingEl = document.createElement("div");
     pendingEl.className = "pc-tcf-pending";
     pendingEl.textContent = "Banner not accepted or rejected";
     body.appendChild(pendingEl);
   }
 
   // Reassurance note (mirrors side panel)
-  var noteEl = document.createElement("div");
+  let noteEl = document.createElement("div");
   noteEl.className = "pc-tcf-note";
   noteEl.textContent = "Your choices are applied by ProtoConsent independently of the site consent status shown above.";
   body.appendChild(noteEl);
 
-  var toggle = function () {
-    var expanded = card.classList.toggle("is-expanded");
+  let toggle = function () {
+    let expanded = card.classList.toggle("is-expanded");
     header.setAttribute("aria-expanded", expanded ? "true" : "false");
     chevron.textContent = expanded ? " \u25BE" : " \u25B8";
   };
@@ -532,13 +532,13 @@ function renderProtoTcfAccord(tcfData) {
 }
 
 function _detectMismatches(wkData, blocked) {
-  var mismatches = [];
-  var purposes = (typeof PURPOSES_TO_SHOW !== "undefined") ? PURPOSES_TO_SHOW : [];
-  for (var i = 0; i < purposes.length; i++) {
-    var pk = purposes[i];
-    var declEntry = wkData.purposes[pk];
-    var hasBlocks = blocked[pk] && Object.keys(blocked[pk]).length > 0;
-    var blockCount = hasBlocks ? Object.values(blocked[pk]).reduce(function (s, c) { return s + c; }, 0) : 0;
+  let mismatches = [];
+  let purposes = (typeof PURPOSES_TO_SHOW !== "undefined") ? PURPOSES_TO_SHOW : [];
+  for (let i = 0; i < purposes.length; i++) {
+    let pk = purposes[i];
+    let declEntry = wkData.purposes[pk];
+    let hasBlocks = blocked[pk] && Object.keys(blocked[pk]).length > 0;
+    let blockCount = hasBlocks ? Object.values(blocked[pk]).reduce(function (s, c) { return s + c; }, 0) : 0;
 
     if (declEntry && declEntry.used === false && blockCount > 0) {
       // Site says "not used" but we're blocking trackers for this purpose
@@ -553,30 +553,30 @@ function _detectMismatches(wkData, blocked) {
 }
 
 function _makeMismatchCard(mismatches, wasExpanded) {
-  var card = document.createElement("div");
+  let card = document.createElement("div");
   card.className = "proto-card proto-card-mismatch";
   card.dataset.key = "mismatch";
   if (wasExpanded.has("mismatch")) card.classList.add("is-expanded");
 
-  var header = document.createElement("div");
+  let header = document.createElement("div");
   header.className = "proto-card-header";
   header.setAttribute("role", "button");
   header.setAttribute("tabindex", "0");
   header.setAttribute("aria-expanded", wasExpanded.has("mismatch") ? "true" : "false");
 
-  var chevron = document.createElement("span");
+  let chevron = document.createElement("span");
   chevron.className = "proto-card-chevron";
   chevron.textContent = wasExpanded.has("mismatch") ? " \u25BE" : " \u25B8";
 
-  var dot = document.createElement("span");
+  let dot = document.createElement("span");
   dot.className = "proto-signal-dot proto-mismatch-dot";
   dot.style.marginRight = "4px";
 
-  var nameSpan = document.createElement("span");
+  let nameSpan = document.createElement("span");
   nameSpan.className = "proto-card-name";
   nameSpan.textContent = "Needs review";
 
-  var detailSpan = document.createElement("span");
+  let detailSpan = document.createElement("span");
   detailSpan.className = "proto-card-count proto-mismatch-count";
   detailSpan.textContent = mismatches.length + " " + (mismatches.length === 1 ? "purpose" : "purposes");
 
@@ -585,19 +585,19 @@ function _makeMismatchCard(mismatches, wasExpanded) {
   header.appendChild(chevron);
   header.appendChild(detailSpan);
 
-  var body = document.createElement("div");
+  let body = document.createElement("div");
   body.className = "proto-card-body";
 
-  for (var i = 0; i < mismatches.length; i++) {
-    var m = mismatches[i];
-    var row = document.createElement("div");
+  for (let i = 0; i < mismatches.length; i++) {
+    let m = mismatches[i];
+    let row = document.createElement("div");
     row.className = "proto-mismatch-row";
 
-    var pName = document.createElement("span");
+    let pName = document.createElement("span");
     pName.className = "proto-mismatch-purpose";
     pName.textContent = (typeof getPurposeLabel === "function") ? getPurposeLabel(m.purpose) : m.purpose;
 
-    var pDetail = document.createElement("span");
+    let pDetail = document.createElement("span");
     pDetail.className = "proto-mismatch-detail";
     pDetail.textContent = m.detail;
 
@@ -606,8 +606,8 @@ function _makeMismatchCard(mismatches, wasExpanded) {
     body.appendChild(row);
   }
 
-  var toggle = function () {
-    var expanded = card.classList.toggle("is-expanded");
+  let toggle = function () {
+    let expanded = card.classList.toggle("is-expanded");
     header.setAttribute("aria-expanded", expanded ? "true" : "false");
     chevron.textContent = expanded ? " \u25BE" : " \u25B8";
   };
@@ -636,15 +636,15 @@ function renderProtoCoverage(coverage, mode) {
   const isMonitoring = mode === "protoconsent";
 
   // Block provenance: own vs external (both modes)
-  var prov = computeBlockProvenance(coverage);
+  let prov = computeBlockProvenance(coverage);
 
-  var ownEl = document.createElement("div");
+  let ownEl = document.createElement("div");
   ownEl.className = "proto-coverage-label";
   ownEl.textContent = "Blocked by ProtoConsent: " + prov.own;
   el.appendChild(ownEl);
 
   if (prov.external > 0) {
-    var extEl = document.createElement("div");
+    let extEl = document.createElement("div");
     extEl.className = "proto-coverage-label";
     extEl.textContent = "Blocked by external: " + prov.external;
     el.appendChild(extEl);
@@ -689,18 +689,18 @@ function renderProtoCoverage(coverage, mode) {
 // --- Individual signal rows (GPC and Cosmetic, separated for ordering) ---
 
 function renderProtoGpcSignal(data) {
-  var el = document.getElementById("proto-gpc-signal");
+  let el = document.getElementById("proto-gpc-signal");
   if (!el) return;
   el.textContent = "";
 
-  var bgGpcDomains = data.gpcDomains ? Object.keys(data.gpcDomains) : [];
-  var popupGpcCount = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
-  var popupGpcDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
-  var gpcDomainCount = bgGpcDomains.length > 0 ? bgGpcDomains.length : popupGpcDomains.length;
-  var gpcRequestCount = popupGpcCount;
-  var gpcActive = gpcDomainCount > 0 || gpcRequestCount > 0;
+  let bgGpcDomains = data.gpcDomains ? Object.keys(data.gpcDomains) : [];
+  let popupGpcCount = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
+  let popupGpcDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
+  let gpcDomainCount = bgGpcDomains.length > 0 ? bgGpcDomains.length : popupGpcDomains.length;
+  let gpcRequestCount = popupGpcCount;
+  let gpcActive = gpcDomainCount > 0 || gpcRequestCount > 0;
 
-  var gpcDetail;
+  let gpcDetail;
   if (gpcDomainCount > 0) {
     gpcDetail = gpcDomainCount + " " + (gpcDomainCount === 1 ? "domain" : "domains");
     if (gpcRequestCount > 0) gpcDetail += " (" + gpcRequestCount + " requests)";
@@ -710,18 +710,18 @@ function renderProtoGpcSignal(data) {
     gpcDetail = "No signals";
   }
 
-  var row = _makeSignalRow("GPC", gpcActive, gpcDetail, _gotoLogGpc);
+  let row = _makeSignalRow("GPC", gpcActive, gpcDetail, _gotoLogGpc);
   row.title = "GPC is sent on requests that reach the server. Blocked requests never leave your browser.";
   el.appendChild(row);
 }
 
 function renderProtoCosmeticSignal(data) {
-  var el = document.getElementById("proto-cosmetic-signal");
+  let el = document.getElementById("proto-cosmetic-signal");
   if (!el) return;
   el.textContent = "";
 
-  var cosmActive = !!(data.cosmetic && data.cosmetic.domain);
-  var cosmDetail = cosmActive
+  let cosmActive = !!(data.cosmetic && data.cosmetic.domain);
+  let cosmDetail = cosmActive
     ? (data.cosmetic.siteRules || 0) + " rules on " + data.cosmetic.domain
     : "No filters applied";
   el.appendChild(_makeSignalRow("Cosmetic", cosmActive, cosmDetail, function () {
@@ -733,56 +733,56 @@ function renderProtoCosmeticSignal(data) {
 // --- Param stripping accordion ---
 
 function renderProtoParamStrip(data) {
-  var el = document.getElementById("proto-param-strip");
+  let el = document.getElementById("proto-param-strip");
   if (!el) return;
 
-  var wasExpanded = el.querySelector(".proto-card.is-expanded") !== null;
+  let wasExpanded = el.querySelector(".proto-card.is-expanded") !== null;
   el.textContent = "";
 
-  var strips = data.paramStrips || {};
-  var domains = Object.keys(strips);
+  let strips = data.paramStrips || {};
+  let domains = Object.keys(strips);
   if (domains.length === 0) return;
 
-  var totalStrips = 0;
-  var allParams = [];
-  for (var i = 0; i < domains.length; i++) {
-    var info = strips[domains[i]];
+  let totalStrips = 0;
+  let allParams = [];
+  for (let i = 0; i < domains.length; i++) {
+    let info = strips[domains[i]];
     totalStrips += (typeof info === "object" ? info.count : info) || 0;
     if (typeof info === "object" && info.params) {
-      for (var p = 0; p < info.params.length; p++) {
+      for (let p = 0; p < info.params.length; p++) {
         if (allParams.indexOf(info.params[p]) === -1) allParams.push(info.params[p]);
       }
     }
   }
 
-  var headerDetail = totalStrips + " stripped" +
+  let headerDetail = totalStrips + " stripped" +
     (allParams.length > 0 ? " (" + allParams.length + " param types)" : "");
 
-  var card = document.createElement("div");
+  let card = document.createElement("div");
   card.className = "proto-card";
   card.dataset.key = "param-strip";
   if (wasExpanded) card.classList.add("is-expanded");
 
-  var header = document.createElement("div");
+  let header = document.createElement("div");
   header.className = "proto-card-header";
   header.setAttribute("role", "button");
   header.setAttribute("tabindex", "0");
   header.setAttribute("aria-expanded", wasExpanded ? "true" : "false");
   header.setAttribute("aria-controls", "proto-param-strip-body");
 
-  var chevron = document.createElement("span");
+  let chevron = document.createElement("span");
   chevron.className = "proto-card-chevron";
   chevron.textContent = wasExpanded ? " \u25BE" : " \u25B8";
 
-  var dot = document.createElement("span");
+  let dot = document.createElement("span");
   dot.className = "proto-signal-dot is-active";
   dot.style.marginRight = "4px";
 
-  var nameSpan = document.createElement("span");
+  let nameSpan = document.createElement("span");
   nameSpan.className = "proto-card-name";
   nameSpan.textContent = "Param Stripping";
 
-  var detailSpan = document.createElement("span");
+  let detailSpan = document.createElement("span");
   detailSpan.className = "proto-card-count";
   detailSpan.textContent = headerDetail;
 
@@ -791,41 +791,41 @@ function renderProtoParamStrip(data) {
   header.appendChild(chevron);
   header.appendChild(detailSpan);
 
-  var body = document.createElement("div");
+  let body = document.createElement("div");
   body.className = "proto-card-body";
   body.id = "proto-param-strip-body";
   body.setAttribute("role", "region");
   body.setAttribute("aria-label", "Param Stripping details");
 
-  var sorted = domains.sort(function (a, b) {
-    var ca = typeof strips[b] === "object" ? strips[b].count : strips[b];
-    var cb = typeof strips[a] === "object" ? strips[a].count : strips[a];
+  let sorted = domains.sort(function (a, b) {
+    let ca = typeof strips[b] === "object" ? strips[b].count : strips[b];
+    let cb = typeof strips[a] === "object" ? strips[a].count : strips[a];
     return ca - cb;
   });
-  var shown = sorted.slice(0, 10);
+  let shown = sorted.slice(0, 10);
 
-  for (var j = 0; j < shown.length; j++) {
-    var info = strips[shown[j]];
-    var params = (typeof info === "object" && info.params && info.params.length > 0)
+  for (let j = 0; j < shown.length; j++) {
+    let info = strips[shown[j]];
+    let params = (typeof info === "object" && info.params && info.params.length > 0)
       ? info.params : [];
     if (params.length === 0) {
       // Fallback: just show domain + count
-      var row = document.createElement("div");
+      let row = document.createElement("div");
       row.className = "proto-purpose-domain";
-      var dName = document.createElement("span");
+      let dName = document.createElement("span");
       dName.className = "proto-purpose-domain-name";
       dName.textContent = shown[j];
-      var dCount = document.createElement("span");
+      let dCount = document.createElement("span");
       dCount.className = "proto-purpose-domain-count";
       dCount.textContent = typeof info === "object" ? info.count : info;
       row.appendChild(dName);
       row.appendChild(dCount);
       body.appendChild(row);
     } else {
-      for (var k = 0; k < params.length; k++) {
-        var row = document.createElement("div");
+      for (let k = 0; k < params.length; k++) {
+        let row = document.createElement("div");
         row.className = "proto-purpose-domain";
-        var dName = document.createElement("span");
+        let dName = document.createElement("span");
         dName.className = "proto-purpose-domain-name";
         dName.textContent = params[k];
         row.appendChild(dName);
@@ -835,14 +835,14 @@ function renderProtoParamStrip(data) {
   }
 
   if (domains.length > 10) {
-    var moreEl = document.createElement("div");
+    let moreEl = document.createElement("div");
     moreEl.className = "proto-card-more";
     moreEl.textContent = "+" + (domains.length - 10) + " more";
     body.appendChild(moreEl);
   }
 
-  var toggle = function () {
-    var expanded = card.classList.toggle("is-expanded");
+  let toggle = function () {
+    let expanded = card.classList.toggle("is-expanded");
     header.setAttribute("aria-expanded", expanded ? "true" : "false");
     chevron.textContent = expanded ? " \u25BE" : " \u25B8";
   };
@@ -896,44 +896,44 @@ function renderProtoCmpDetect(data) {
   const wasExpanded = el.querySelector(".proto-card.is-expanded") !== null;
   el.textContent = "";
 
-  var cd = data.cmpDetect;
-  var detectActive = !!(cd && cd.detected && cd.detected.length > 0);
-  var detectCount = detectActive ? cd.detected.length : 0;
+  let cd = data.cmpDetect;
+  let detectActive = !!(cd && cd.detected && cd.detected.length > 0);
+  let detectCount = detectActive ? cd.detected.length : 0;
 
   // Count conflicts from observation + storageObservation
-  var conflictCount = _countConflicts(cd);
+  let conflictCount = _countConflicts(cd);
 
   // Header detail: "1 banner, 2 conflicts" / "1 banner detected" / "No banners detected"
-  var parts = [];
+  let parts = [];
   if (detectCount > 0) parts.push(detectCount + " banner" + (detectCount > 1 ? "s" : ""));
   if (conflictCount > 0) parts.push(conflictCount + " conflict" + (conflictCount > 1 ? "s" : ""));
-  var detectDetail = parts.length > 0 ? parts.join(", ") : "No banners detected";
+  let detectDetail = parts.length > 0 ? parts.join(", ") : "No banners detected";
 
   // Build body content
-  var card = document.createElement("div");
+  let card = document.createElement("div");
   card.className = "proto-card proto-card-cmp";
   card.dataset.key = "cmp-detect";
   if (wasExpanded) card.classList.add("is-expanded");
 
-  var header = document.createElement("div");
+  let header = document.createElement("div");
   header.className = "proto-card-header";
   header.setAttribute("role", "button");
   header.setAttribute("tabindex", "0");
   header.setAttribute("aria-expanded", wasExpanded ? "true" : "false");
 
-  var chevron = document.createElement("span");
+  let chevron = document.createElement("span");
   chevron.className = "proto-card-chevron";
   chevron.textContent = wasExpanded ? " \u25BE" : " \u25B8";
 
-  var dot = document.createElement("span");
+  let dot = document.createElement("span");
   dot.className = "proto-signal-dot " + (detectActive ? "is-active" : "is-inactive");
   dot.style.marginRight = "4px";
 
-  var nameSpan = document.createElement("span");
+  let nameSpan = document.createElement("span");
   nameSpan.className = "proto-card-name";
   nameSpan.textContent = "CMP Detection";
 
-  var detailSpan = document.createElement("span");
+  let detailSpan = document.createElement("span");
   detailSpan.className = "proto-card-count";
   if (conflictCount > 0) detailSpan.classList.add("proto-mismatch-count");
   detailSpan.textContent = detectDetail;
@@ -943,14 +943,14 @@ function renderProtoCmpDetect(data) {
   header.appendChild(chevron);
   header.appendChild(detailSpan);
 
-  var body = document.createElement("div");
+  let body = document.createElement("div");
   body.className = "proto-card-body";
 
   // Banner lines
   if (detectActive) {
-    for (var i = 0; i < cd.detected.length; i++) {
-      var d = cd.detected[i];
-      var line = document.createElement("div");
+    for (let i = 0; i < cd.detected.length; i++) {
+      let d = cd.detected[i];
+      let line = document.createElement("div");
       line.className = "proto-cmp-line";
       line.textContent = d.cmpId + " (" + (d.showing ? "showing" : "present") + ")";
       body.appendChild(line);
@@ -958,34 +958,34 @@ function renderProtoCmpDetect(data) {
   }
 
   // Full observation: show all decoded consent values per CMP source
-  var allObs = _gatherObservations(cd);
+  let allObs = _gatherObservations(cd);
   if (allObs.length > 0) {
-    for (var oi = 0; oi < allObs.length; oi++) {
-      var obs = allObs[oi];
+    for (let oi = 0; oi < allObs.length; oi++) {
+      let obs = allObs[oi];
       // Source header: "onetrust (OptanonConsent)"
-      var srcLine = document.createElement("div");
+      let srcLine = document.createElement("div");
       srcLine.className = "proto-cmp-source";
       srcLine.textContent = obs.cmpId + (obs.source ? " (" + obs.source + ")" : "");
       body.appendChild(srcLine);
       // Build conflict lookup for this observation
-      var conflictMap = {};
+      let conflictMap = {};
       if (obs.conflicts) {
-        for (var ci = 0; ci < obs.conflicts.length; ci++) {
+        for (let ci = 0; ci < obs.conflicts.length; ci++) {
           conflictMap[obs.conflicts[ci].purpose] = obs.conflicts[ci];
         }
       }
       // Render each decoded purpose
       if (obs.decoded) {
-        var keys = Object.keys(obs.decoded);
-        for (var ki = 0; ki < keys.length; ki++) {
-          var purp = keys[ki];
+        let keys = Object.keys(obs.decoded);
+        for (let ki = 0; ki < keys.length; ki++) {
+          let purp = keys[ki];
           if (purp === "_summary") continue;
-          var cmpVal = obs.decoded[purp];
-          var isConflict = conflictMap.hasOwnProperty(purp);
-          var row = document.createElement("div");
+          let cmpVal = obs.decoded[purp];
+          let isConflict = conflictMap.hasOwnProperty(purp);
+          let row = document.createElement("div");
           row.className = "proto-cmp-purpose-row" + (isConflict ? " is-conflict" : " is-match");
-          var label = (typeof getPurposeLabel === "function") ? getPurposeLabel(purp) : purp;
-          var icon = isConflict ? "\u2717" : "\u2713";
+          let label = (typeof getPurposeLabel === "function") ? getPurposeLabel(purp) : purp;
+          let icon = isConflict ? "\u2717" : "\u2713";
           row.textContent = icon + " " + label + ": " + (cmpVal ? "allow" : "deny");
           body.appendChild(row);
         }
@@ -998,8 +998,8 @@ function renderProtoCmpDetect(data) {
     body.classList.add("proto-card-empty");
   }
 
-  var toggle = function () {
-    var expanded = card.classList.toggle("is-expanded");
+  let toggle = function () {
+    let expanded = card.classList.toggle("is-expanded");
     header.setAttribute("aria-expanded", expanded ? "true" : "false");
     chevron.textContent = expanded ? " \u25BE" : " \u25B8";
   };
@@ -1014,7 +1014,7 @@ function renderProtoCmpDetect(data) {
 }
 
 function _gatherObservations(cd) {
-  var out = [];
+  let out = [];
   if (!cd) return out;
   _pushObservations(cd.observation, "cookie", out);
   _pushObservations(cd.storageObservation, "storage", out);
@@ -1023,8 +1023,8 @@ function _gatherObservations(cd) {
 
 function _pushObservations(arr, kind, out) {
   if (!Array.isArray(arr)) return;
-  for (var i = 0; i < arr.length; i++) {
-    var obs = arr[i];
+  for (let i = 0; i < arr.length; i++) {
+    let obs = arr[i];
     if (!obs) continue;
     if (obs.summary && obs.decoded) continue;
     if (!obs.decoded) continue;
@@ -1038,12 +1038,12 @@ function _pushObservations(arr, kind, out) {
 }
 
 function _countConflicts(cd) {
-  var count = 0;
-  var sources = [cd ? cd.observation : null, cd ? cd.storageObservation : null];
-  for (var s = 0; s < sources.length; s++) {
+  let count = 0;
+  let sources = [cd ? cd.observation : null, cd ? cd.storageObservation : null];
+  for (let s = 0; s < sources.length; s++) {
     if (!Array.isArray(sources[s])) continue;
-    for (var i = 0; i < sources[s].length; i++) {
-      var obs = sources[s][i];
+    for (let i = 0; i < sources[s].length; i++) {
+      let obs = sources[s][i];
       if (obs.summary) continue;
       if (obs.conflicts) count += obs.conflicts.length;
     }
@@ -1067,7 +1067,7 @@ function renderProtoPurposes(blocked, wkData) {
 
   if (!blocked || Object.keys(blocked).length === 0) return;
 
-  var wkPurposes = (wkData && wkData.purposes) ? wkData.purposes : null;
+  let wkPurposes = (wkData && wkData.purposes) ? wkData.purposes : null;
 
   const entries = Object.entries(blocked).sort((a, b) => {
     const totalA = Object.values(a[1]).reduce((s, c) => s + c, 0);
@@ -1096,13 +1096,13 @@ function renderProtoPurposes(blocked, wkData) {
     chevron.textContent = wasExpanded.has(purpose) ? " \u25BE" : " \u25B8";
 
     // Resolve icon and label - handle enhanced:* keys
-    var isEnhanced = purpose.startsWith("enhanced:");
-    var enhListId = isEnhanced ? purpose.split(":")[1] : null;
-    var cfg = (!isEnhanced && typeof purposesConfig !== "undefined" && purposesConfig[purpose]) ? purposesConfig[purpose] : {};
+    let isEnhanced = purpose.startsWith("enhanced:");
+    let enhListId = isEnhanced ? purpose.split(":")[1] : null;
+    let cfg = (!isEnhanced && typeof purposesConfig !== "undefined" && purposesConfig[purpose]) ? purposesConfig[purpose] : {};
 
-    var displayName;
+    let displayName;
     if (isEnhanced) {
-      var catalog = (typeof enhancedCatalogConfig !== "undefined") ? enhancedCatalogConfig : null;
+      let catalog = (typeof enhancedCatalogConfig !== "undefined") ? enhancedCatalogConfig : null;
       displayName = (catalog && catalog[enhListId] && catalog[enhListId].name) ? catalog[enhListId].name : enhListId;
     } else {
       displayName = (typeof getPurposeLabel === "function") ? getPurposeLabel(purpose) : purpose;
@@ -1110,7 +1110,7 @@ function renderProtoPurposes(blocked, wkData) {
 
     // Shield icon for enhanced lists
     if (isEnhanced && typeof ENHANCED_ICON !== "undefined") {
-      var shieldEl = document.createElement("img");
+      let shieldEl = document.createElement("img");
       shieldEl.src = ENHANCED_ICON;
       shieldEl.width = 16;
       shieldEl.height = 16;
@@ -1119,9 +1119,9 @@ function renderProtoPurposes(blocked, wkData) {
       header.appendChild(shieldEl);
       // Category icon (same size as purpose icons)
       if (typeof getEnhancedCategoryInfo === "function") {
-        var catInfo = getEnhancedCategoryInfo(enhListId);
+        let catInfo = getEnhancedCategoryInfo(enhListId);
         if (catInfo && catInfo.icon) {
-          var catEl = document.createElement("img");
+          let catEl = document.createElement("img");
           catEl.src = catInfo.icon;
           catEl.width = 20;
           catEl.height = 20;
@@ -1131,7 +1131,7 @@ function renderProtoPurposes(blocked, wkData) {
         }
       }
     } else if (cfg.icon) {
-      var iconEl = document.createElement("img");
+      let iconEl = document.createElement("img");
       iconEl.src = cfg.icon;
       iconEl.width = 20;
       iconEl.height = 20;
@@ -1154,11 +1154,11 @@ function renderProtoPurposes(blocked, wkData) {
 
     // Declaration badge (from .well-known) - only for core purposes, not enhanced lists
     if (wkPurposes && !isEnhanced) {
-      var declBadge = document.createElement("span");
+      let declBadge = document.createElement("span");
       declBadge.className = "proto-card-decl";
-      var declEntry = wkPurposes[purpose];
+      let declEntry = wkPurposes[purpose];
       if (declEntry) {
-        var used = declEntry.used;
+        let used = declEntry.used;
         if (used === true) {
           declBadge.textContent = "Declared: used";
           declBadge.classList.add("proto-decl-used");
@@ -1346,7 +1346,7 @@ function toggleProtoDetails(shouldExpand) {
 // --- Blocker detection banner ---
 
 function renderBlockerDetectionBanner(state, mode, targetId) {
-  var el = document.getElementById(targetId || "proto-blocker-banner");
+  let el = document.getElementById(targetId || "proto-blocker-banner");
   if (!el) return;
   el.textContent = "";
   el.hidden = true;
@@ -1354,7 +1354,7 @@ function renderBlockerDetectionBanner(state, mode, targetId) {
   if (!state) return;
 
   // Determine which case applies
-  var config = null;
+  let config = null;
   if (state.suggestMonitoring && mode !== "protoconsent") {
     config = {
       title: "External blocker detected",
@@ -1396,26 +1396,26 @@ function renderBlockerDetectionBanner(state, mode, targetId) {
   el.hidden = false;
   el.classList.add("is-active");
 
-  var text = document.createElement("div");
+  let text = document.createElement("div");
   text.className = "proto-blocker-banner-text";
   text.textContent = config.title;
   el.appendChild(text);
 
-  var detail = document.createElement("div");
+  let detail = document.createElement("div");
   detail.className = "proto-blocker-banner-detail";
   detail.textContent = config.detail;
   el.appendChild(detail);
 
-  var actions = document.createElement("div");
+  let actions = document.createElement("div");
   actions.className = "proto-blocker-banner-actions";
 
-  var primaryBtn = document.createElement("button");
+  let primaryBtn = document.createElement("button");
   primaryBtn.type = "button";
   primaryBtn.className = "proto-blocker-banner-btn is-primary";
   primaryBtn.textContent = config.primaryLabel;
   primaryBtn.addEventListener("click", config.onPrimary);
 
-  var dismissBtn = document.createElement("button");
+  let dismissBtn = document.createElement("button");
   dismissBtn.type = "button";
   dismissBtn.className = "proto-blocker-banner-btn";
   dismissBtn.textContent = config.dismissLabel;

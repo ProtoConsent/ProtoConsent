@@ -271,13 +271,6 @@
   vertical-align: middle;
 }
 
-.pc-log-purpose-short {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--pc-text-soft);
-  letter-spacing: 0.02em;
-}
-
 /* Log console line colors */
 .pc-log-line-block {
   color: #fbbf24;

@@ -85,17 +85,19 @@
           <ul>
             <li><strong>Per‑site purpose profiles</strong>: choose how to treat functional, analytics, advertising, personalisation, third‑party services and advanced tracking for each domain.</li>
             <li><strong>Network‑level enforcement</strong>: uses browser extension APIs to block or allow requests related to specific purposes, with observable results.</li>
+            <li><strong>Two operating modes</strong>: Standalone mode blocks requests directly. ProtoConsent Mode delegates blocking to external tools and provides purpose attribution via the Proto tab.</li>
             <li><strong>Optional enhanced protection</strong>: activate curated third‑party blocklists for broader coverage, with presets or individual list control.</li>
             <li><strong>Conditional GPC signal</strong>: sends <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec‑GPC</a> only when privacy‑relevant purposes are denied, per site, not globally.</li>
             <li><strong>Consent banner auto-response</strong>: 22 CMP frameworks answered automatically based on purpose preferences. No DOM interaction, no click simulation. Signatures kept current via CDN.</li>
             <li><strong>Site declarations</strong>: websites can publish a <code>.well-known/protoconsent.json</code> to declare their data practices. No SDK required.</li>
             <li><strong>Inter‑extension messaging</strong>: other browser extensions can query the user's consent state via <code>chrome.runtime.sendMessage</code>, enabling composable privacy tools.</li>
+            <li><strong>URL parameter stripping</strong>: removes tracking parameters from URLs using browser redirect rules, observable in the Proto tab.</li>
             <li><strong>Local‑only, composable</strong>: runs entirely in the browser. Designed to sit alongside existing consent tools.</li>
           </ul>
           <figure class="screenshot">
-            <img src="assets/screenshots/popup-log-domains.png" alt="Log tab showing blocked domains grouped by purpose">
+            <img src="assets/screenshots/popup-proto-monitoring.png" alt="Proto tab observability dashboard">
             <figcaption>
-              Blocked domains grouped by purpose in the Log tab.
+              The Proto tab: real-time purpose attribution, signal indicators, and CMP detection.
             </figcaption>
           </figure>
           </div>

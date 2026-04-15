@@ -42,10 +42,13 @@ export function onNavigation(tabId, coverageMap, url) {
   }
 
   // Collect unique unattributed hostnames (from the global buffer, not per-tab)
+  // Cap at 500 to prevent unbounded growth across long sessions.
   for (let i = 0; i < unattributedBuffer.length; i++) {
     const entry = unattributedBuffer[i];
     if (entry.tabId === tabId && entry.hostname) {
-      blockerDetection.unattributedHostnames.add(entry.hostname);
+      if (blockerDetection.unattributedHostnames.size < 500) {
+        blockerDetection.unattributedHostnames.add(entry.hostname);
+      }
     }
   }
 

@@ -9,7 +9,7 @@
 import { DEBUG_RULES } from "./config-bridge.js";
 import {
   PURPOSES_FOR_ENFORCEMENT, setPurposesForEnforcement,
-  gpcPurposes, setGpcPurposes,
+  setGpcPurposes,
   blocklistsConfig, setBlocklistsConfig,
   reverseHostIndex, setReverseHostIndex,
   enhancedReverseIndex,
@@ -49,7 +49,7 @@ export async function loadBlocklistsConfig() {
       const rules = await res.json();
       entry.domains = rules[0]?.condition?.requestDomains || [];
     } catch (e) {
-      if (key !== "functional") console.warn("loadBlocklistsConfig: block_" + key + ".json:", e.message);
+      if (key !== "functional" && DEBUG_RULES) console.warn("loadBlocklistsConfig: block_" + key + ".json:", e.message);
       entry.domains = [];
     }
     // Extract unique domains from path-based rules
@@ -79,7 +79,7 @@ export async function loadBlocklistsConfig() {
       }
       entry.pathDomains = pathDomains;
     } catch (e) {
-      if (key !== "functional") console.warn("loadBlocklistsConfig: block_" + key + "_paths.json:", e.message);
+      if (key !== "functional" && DEBUG_RULES) console.warn("loadBlocklistsConfig: block_" + key + "_paths.json:", e.message);
       entry.pathDomains = [];
     }
     config[key] = entry;
@@ -220,7 +220,7 @@ export function loadEnhancedListsCatalog(options) {
         clearTimeout(timeoutId);
         if (!manifest || typeof manifest.manifest_version !== "number") return null;
         if (manifest.manifest_version > SUPPORTED_MANIFEST_VERSION) {
-          console.warn("ProtoConsent: remote manifest_version " +
+          if (DEBUG_RULES) console.warn("ProtoConsent: remote manifest_version " +
             manifest.manifest_version + " > supported " +
             SUPPORTED_MANIFEST_VERSION + ", using local catalog");
           return null;

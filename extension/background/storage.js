@@ -135,7 +135,7 @@ export function withEnhancedStorageLock(fn) {
 
 // Serialized whitelist write queue
 export function withWhitelist(fn) {
-  const next = _wlQueue.then(() => getWhitelistFromStorage().then(fn));
+  const next = _wlQueue.then(() => getWhitelistFromStorage().then(fn), () => getWhitelistFromStorage().then(fn));
   setWlQueue(next);
   return next;
 }

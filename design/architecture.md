@@ -60,15 +60,21 @@ The extension provides a popup interface to manage profiles and purposes per sit
     - [14.6 Proto tab](#146-proto-tab)
     - [14.7 UI gating](#147-ui-gating)
     - [14.8 Message types](#148-message-types)
+  - [15. URL parameter stripping](#15-url-parameter-stripping)
+    - [15.1 Detection mechanism](#151-detection-mechanism)
+    - [15.2 Data model](#152-data-model)
+    - [15.3 Session persistence](#153-session-persistence)
+    - [15.4 Observability](#154-observability)
+    - [15.5 DNR debug mode interaction](#155-dnr-debug-mode-interaction)
 
 ## 2. Components
 
 **Popup UI** – The main user-facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. Purpose categories are shown with [Consent Commons](https://consentcommons.com/) icons. The popup does not enforce anything directly; it sends messages to the background component when settings change.
 
 - **Consent view**: purpose toggles and per-purpose blocked stats
-- **Proto view**: operating mode dashboard showing signal status (GPC with link to Log detail, CMP detection, cosmetic filtering), purpose-attributed blocks as accordion cards with Consent Commons icons, CMP auto-response state, and unattributed hostnames. Auto-refreshes every 3 seconds while active.
+- **Proto view**: operating mode dashboard showing signal status (GPC with link to Log detail, CMP detection, cosmetic filtering), purpose-attributed blocks as accordion cards with Consent Commons icons, CMP auto-response state, URL parameter stripping summary, and unattributed hostnames. Auto-refreshes every 3 seconds while active.
 - **Enhanced view**: optional third-party blocklists with preset selection and per-list controls
-- **Log view**: real-time request monitoring, blocked domains grouped by purpose, and GPC signal tracking per domain
+- **Log view**: real-time request monitoring, blocked domains grouped by purpose, GPC signal tracking per domain, and URL parameter strip events
 - **Site declaration panel**: when a site publishes a `.well-known/protoconsent.json`, a collapsible side panel shows its declared purposes, legal basis, sharing and international transfers
 
 **Background script (service worker)** – Central coordination point. Does not render UI; receives messages from popup and content scripts and translates them into enforcement actions.
@@ -78,7 +84,7 @@ The extension provides a popup interface to manage profiles and purposes per sit
 - **Client Hints stripping**: adds/removes `modifyHeaders` rules for high-entropy `Sec-CH-UA-*` headers based on `advanced_tracking` state
 - **Enhanced Protection**: downloads lists on demand, builds dynamic block rules, handles consent-enhanced link overlay, compiles cosmetic CSS and registers the injection content script
 - **Inter-extension API**: responds to `chrome.runtime.onMessageExternal` queries from approved extensions (§12)
-- **Observability**: tracks blocked requests and GPC signals via `webRequest` listeners, maintains per-tab counters, updates badge, pushes real-time events to the Log tab via persistent port
+- **Observability**: tracks blocked requests, GPC signals, and URL parameter strips via `webRequest` and `webNavigation` listeners, maintains per-tab counters, updates badge, pushes real-time events to the Log tab via persistent port
 - **Site declarations**: fetches `.well-known/protoconsent.json` on behalf of the popup and caches results (24h success, 6h failure)
 - **TCF detection**: receives CMP data from the content script bridge, validates and stores it per tab
 - **Onboarding**: opens the welcome page on first install when no default profile exists
@@ -253,6 +259,7 @@ Enforcement is based on built‑in browser APIs (declarativeNetRequest), so Prot
 | `declarativeNetRequest` | Create and manage dynamic blocking rules that enforce the user's purpose choices by blocking third‑party requests associated with denied purposes. Also used for conditional `Sec-GPC: 1` header injection and high‑entropy Client Hints stripping via `modifyHeaders` rules. |
 | `declarativeNetRequestFeedback` | Query which DNR rules matched on the current tab (`getMatchedRules`) so the popup can display how many requests were blocked and how many received the GPC signal. |
 | `webRequest` | Observe network events (`onErrorOccurred`, `onSendHeaders`) to attribute blocked requests to purposes and detect GPC header presence. This is the default data source in all builds; an optional DNR debug mode can be activated for rule‑level diagnostics during development (see `USE_DNR_DEBUG` in `config.js`). |
+| `webNavigation` | Detect URL parameter stripping by DNR redirect rules. `onBeforeNavigate` captures the original URL before DNR processes it; `onCommitted` provides the final URL after `queryTransform.removeParams` has been applied. Comparing the two reveals which tracking parameters were removed. Read-only. |
 | `unlimitedStorage` | Store downloaded Enhanced Protection blocklist data locally. Enhanced lists can be large (hundreds of thousands of domains), so the default 10 MB quota may not suffice. |
 | `host_permissions: <all_urls>` | Required by `declarativeNetRequest` to apply blocking and header rules across all domains, by `scripting` to inject the GPC content script on any site, and by `webRequest` to observe network events on all origins. Without broad host access, per‑site enforcement would not work. |
 
@@ -581,7 +588,8 @@ Layout (top to bottom):
 4. **CMP Detection** (accordion): banner name and state (present/showing) from `cmp-detect.js` CSS detection
 5. **Purpose cards** (accordion): per-purpose blocked domain counts with Consent Commons icons, top 10 domains per purpose, expandable
 6. **CMP Auto-response** (accordion): template count and matched domain from `cmp-inject.js`
-7. **Unattributed hostnames**: collapsible list of hostnames from the unattributed buffer
+7. **Param Stripping** (accordion): stripped parameter names per domain, count summary. Only visible when param strips have been detected (container uses `:empty { display: none }`)
+8. **Unattributed hostnames**: collapsible list of hostnames from the unattributed buffer
 
 The "Show/Hide details" footer button toggles all accordion cards. Purpose card expanded state is preserved across auto-refresh cycles.
 
@@ -597,4 +605,53 @@ The "Show/Hide details" footer button toggles all accordion cards. Purpose card 
 |---|---|---|
 | `PROTOCONSENT_SET_OPERATING_MODE` | popup/settings -> background | Set mode (`"standalone"` or `"protoconsent"`), triggers rebuild, responds `{ ok, mode }` |
 | `PROTOCONSENT_GET_OPERATING_MODE` | popup -> background | Returns `{ mode }` |
-| `PROTOCONSENT_GET_PROTO_DATA` | popup -> background | Returns comprehensive Proto tab data: mode, coverage, blocked domains, GPC domains, CMP, CMP detection, cosmetic, unattributed buffer |
+| `PROTOCONSENT_GET_PROTO_DATA` | popup -> background | Returns comprehensive Proto tab data: mode, coverage, blocked domains, GPC domains, param strips, CMP, CMP detection, cosmetic, unattributed buffer |
+
+## 15. URL parameter stripping
+
+ProtoConsent can strip tracking parameters from URLs using DNR redirect rules with `queryTransform.removeParams`. This section documents how the extension detects and surfaces these strip events.
+
+### 15.1 Detection mechanism
+
+DNR redirect rules are structurally invisible to `webRequest`: Chrome processes DNR redirects before `webRequest` events fire, so `onBeforeRedirect` never triggers. The extension uses the `webNavigation` API instead:
+
+1. **`webNavigation.onBeforeNavigate`** captures the original URL (with tracking params) before DNR processes it.
+2. **`webNavigation.onCommitted`** provides the final URL after DNR has stripped params via its redirect action.
+3. The extension compares the two URLs. If the origin and path are identical but the query differs, it extracts the removed parameter names by comparing `searchParams` keys.
+
+Server-side redirects are filtered out via `transitionQualifiers.includes("server_redirect")`. Only main-frame navigations (`frameId === 0`) are tracked. Internal tabs (`tabId < 0`) are ignored.
+
+The listener code lives in `tracking.js`. A Map (`_pendingNavUrls`) holds the original URL between `onBeforeNavigate` and `onCommitted`. The entry is deleted on commit or when the tab is closed (`clearPendingNavUrl` called from `lifecycle.js`).
+
+### 15.2 Data model
+
+Per-tab strip data is stored in `tabParamStrips` (Map in `state.js`):
+
+```
+tabParamStrips: Map<tabId, {
+  [domain: string]: { count: number, params: string[] }
+}>
+```
+
+- `count`: number of strip events for this domain on this tab
+- `params`: unique parameter names that were removed (e.g. `["utm_source", "utm_medium", "fbclid"]`)
+
+The `PROTOCONSENT_GET_PROTO_DATA` response includes `paramStrips: tabParamStrips.get(tabId) || {}`.
+
+Dynamic param strip rule IDs are tracked in `dynamicParamStripIds` (Set in `state.js`), populated during rebuild by identifying dynamic rules with `action.type === "redirect"` and `action.redirect.transform.queryTransform.removeParams`. This Set is used by `popup.js` to classify strip matches from `getMatchedRules`.
+
+### 15.3 Session persistence
+
+`tabParamStrips` is serialized to `chrome.storage.session` alongside `tabBlockedDomains` and `tabGpcDomains`, using the same `scheduleSessionPersist` mechanism in `session.js`. This survives service worker restarts. Data is cleaned up on tab close (`tabParamStrips.delete(tabId)` in `lifecycle.js`) and on main-frame navigation (session reset).
+
+### 15.4 Observability
+
+**Proto tab**: the `renderProtoParamStrip()` function renders an accordion card. The header shows total strip count and number of unique parameter types. The body lists individual parameter names as rows (one per line), grouped by domain. Top 10 domains shown, with "+N more" overflow. The container uses `:empty { display: none }` to avoid blank space when no strips are detected.
+
+**Log tab**: strip events are streamed via `logPorts` as `{ type: "param_strip", domain, params, tabId }` messages. The Log tab renders these as purple lines: `[param-strip] domain - param1, param2`. On historical replay (popup opened after the event), the Log tab queries `PROTOCONSENT_GET_PROTO_DATA` and reconstructs entries from `paramStrips`.
+
+**Popup Consent tab**: `getBlockedRulesCount()` classifies strip matches from static rulesets (`strip_tracking_params`, `strip_tracking_params_sites`) and dynamic rules (via `dynamicParamStripIds`). The `paramStrips` count is included in the return value but does not increment the badge counter or blocked count.
+
+### 15.5 DNR debug mode interaction
+
+When `USE_DNR_DEBUG` is enabled, `onRuleMatchedDebug` also fires for param strip rules. The `onRuleMatchedDebug` handler in `tracking.js` detects strip rules by rulesetId and increments `tabParamStrips[domain].count`. To avoid double-counting, the `webNavigation.onCommitted` handler skips the count increment when `useDnrDebug` is true (it still records param names, since `onRuleMatchedDebug` does not provide them). The backward-compatibility guard (`typeof stripData[domain] !== "object"`) handles old session data that stored `domain: number` instead of `domain: { count, params }`.

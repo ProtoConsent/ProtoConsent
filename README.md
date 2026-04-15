@@ -14,6 +14,8 @@
 
 ProtoConsent is a browser extension that lets you control how websites may use your data, expressed in terms of purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking) rather than specific trackers or domains. Not a full ad blocker, not a CMP: a personal consent control panel that lives in the browser and can coexist with existing blockers and consent tools.
 
+It works in two operating modes: **Standalone** (default) enforces purpose-based blocking directly via declarativeNetRequest. **ProtoConsent Mode** delegates blocking to an external ad blocker while ProtoConsent provides purpose attribution, coverage metrics, and signal observability - turning any blocker into a purpose-aware system.
+
 No central server, no tracking, no sharing of personal data. Everything stays in your browser.
 
 **Project website:** <https://protoconsent.org> · **Live demo:** <https://demo.protoconsent.org>
@@ -22,11 +24,13 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 
 ## Key features
 
+- **Two operating modes:** Standalone (full blocking) or ProtoConsent Mode (monitoring and attribution with an external blocker). Switch from Purpose Settings. The Proto tab dashboard shows mode status, coverage metrics, signal indicators, purpose-attributed blocks, CMP detection, and parameter stripping - all in one view.
 - **Per‑site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking).
 - **Network‑level enforcement** of purpose‑based decisions via curated blocklists organised by purpose, with visible results (blocked counts, domain detail). See [blocklists.md](design/blocklists.md).
+- **URL parameter stripping:** removes tracking parameters (utm_source, fbclid, gclid, msclkid, and ~300 more) from URLs before they reach the server, plus ~1,800 site-specific parameters across ~880 domains. Stripped parameters are shown in the Proto tab and Log tab.
 - **Optional enhanced protection** with 19 curated enhanced lists (5 ProtoConsent Core purpose-based lists plus EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project, AdGuard CNAME Trackers) including cosmetic filtering (element-hiding CSS). Three presets (Off, Balanced, Full) or individual list selection. Remote fetch gated behind an explicit consent toggle. Consent-enhanced link optionally auto-activates lists matching denied purposes.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.
-- **Consent banner auto-response:** cookie consent popups from 23 CMP frameworks (OneTrust, Cookiebot, Quantcast, IAB TCF v2.2, CookieYes, Complianz, Fides, Usercentrics, Microsoft/Bing, and others) are answered automatically based on your purpose preferences. No DOM interaction, no click simulation, no waiting for the banner to render. Signatures updated via CDN alongside Enhanced lists. See [cmp-auto-response.md](design/cmp-auto-response.md).
+- **Consent banner auto-response:** cookie consent popups from 23 CMP frameworks (including IAB TCF v2.2) are answered automatically based on your purpose preferences. No DOM interaction, no click simulation, no waiting for the banner to render. Signatures updated via CDN alongside Enhanced lists. See [cmp-auto-response.md](design/cmp-auto-response.md).
 - **Banner detection and observation:** CSS-based detection of 285+ CMP banners (via Autoconsent data), site-specific hiding rules for 235+ sites, cookie consent state decoding and comparison against your preferences. CMP activity is visible in the Log tab as banner and consent lines.
 - **Visibility:** real‑time log monitoring, blocked domains grouped by purpose with [Consent Commons](https://consentcommons.com/) icons, GPC signal tracking, Client Hints status, cookie consent detection, CNAME trackers and domain whitelist management.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` to declare their data practices. No SDK or code changes required.
@@ -54,16 +58,16 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 
 <table>
 <tr>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-profile.png" alt="ProtoConsent popup" height="520"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-enhanced-balanced.png" alt="Enhanced Protection tab" height="520"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-profile.png" alt="ProtoConsent popup" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-proto-monitoring.png" alt="Proto tab dashboard" width="400" height="560"></td>
 </tr>
 <tr>
-<td align="center"><img src="design/assets/screenshots/popup-log-domains.png" alt="Log tab with blocked domains" height="520"></td>
-<td align="center"><img src="design/assets/screenshots/popup-log-gpc.png" alt="GPC signal tracking" height="520"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-enhanced-balanced.png" alt="Enhanced Protection tab" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-domains.png" alt="Log tab with blocked domains" width="400" height="560"></td>
 </tr>
 <tr>
-<td align="center"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Domain whitelist management" height="520"></td>
-<td align="center"><img src="design/assets/screenshots/popup-log-requests.png" alt="Request log with inter-extension API and GPC signals" height="520"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Domain whitelist management" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-requests.png" alt="Request log with inter-extension API and GPC signals" width="400" height="560"></td>
 </tr>
 </table>
 
@@ -73,7 +77,7 @@ Websites can publish a `.well-known/protoconsent.json` to declare their data pra
 
 <table>
 <tr>
-<td align="center"><img src="design/assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel" height="520"></td>
+<td align="center"><img src="design/assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel"></td>
 </tr>
 </table>
 
@@ -113,7 +117,7 @@ See [architecture.md](design/architecture.md) for the full technical description
 ## What's next
 
 - SDK `onchange` API for real-time site adaptation
-- Popup refactor with dedicated protocol tab
+- Firefox compatibility
 - Ecosystem outreach and pilot sites
 
 See [product-overview.md](design/product-overview.md) for the full roadmap.

@@ -79,6 +79,26 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [16.5 Domain-scoped signatures (Bing/Microsoft)](#165-domain-scoped-signatures-bingmicrosoft)
     - [16.6 Verifying CMP injection data from the service worker console](#166-verifying-cmp-injection-data-from-the-service-worker-console)
     - [16.7 Verifying CMP observability in the Log and Debug tabs](#167-verifying-cmp-observability-in-the-log-and-debug-tabs)
+      - [Log tab - Requests stream](#log-tab---requests-stream)
+      - [Debug panel - CMP sections](#debug-panel---cmp-sections)
+      - [Session persistence](#session-persistence)
+  - [17. Testing the Proto tab](#17-testing-the-proto-tab)
+    - [17.1 Viewing signal indicators](#171-viewing-signal-indicators)
+    - [17.2 Purpose accordion cards](#172-purpose-accordion-cards)
+    - [17.3 CMP detection and auto-response cards](#173-cmp-detection-and-auto-response-cards)
+    - [17.4 Auto-refresh behaviour](#174-auto-refresh-behaviour)
+  - [18. Testing URL parameter stripping](#18-testing-url-parameter-stripping)
+    - [18.1 Verifying param strip detection](#181-verifying-param-strip-detection)
+    - [18.2 Proto tab - Param Stripping accordion](#182-proto-tab---param-stripping-accordion)
+    - [18.3 Log tab - Param strip events](#183-log-tab---param-strip-events)
+    - [18.4 Session persistence](#184-session-persistence)
+    - [18.5 Verifying param strip state from the service worker console](#185-verifying-param-strip-state-from-the-service-worker-console)
+  - [19. Testing operating mode switching](#19-testing-operating-mode-switching)
+    - [19.1 Switching to ProtoConsent Mode](#191-switching-to-protoconsent-mode)
+    - [19.2 Verifying monitoring behaviour](#192-verifying-monitoring-behaviour)
+    - [19.3 Switching back to Standalone](#193-switching-back-to-standalone)
+    - [19.4 Verifying mode persistence](#194-verifying-mode-persistence)
+    - [19.5 Import/export with operating mode](#195-importexport-with-operating-mode)
 
 ## 1. Requirements
 
@@ -607,7 +627,7 @@ The AdGuard CNAME Trackers list is an informational list that identifies domains
 4. Open the ProtoConsent popup → **Log** tab → **Domains** panel.
 5. Domains that match the CNAME list show a `⇉` icon before the domain name, with a tooltip showing the cloaked domain and the tracker destination (for example, `nmetrics.samsung.com → adjust.com`).
 
-![CNAME cloaking indicators in the Log tab](assets/screenshots/popup-log-cname.png)
+![CNAME cloaking indicators in the Log tab](assets/screenshots/popup-log-domains.png)
 
 To verify the CNAME data is loaded in storage:
 
@@ -903,3 +923,118 @@ CMP auto-response reports its activity to the background service worker. This da
 2. Kill the service worker (via `chrome://serviceworker-internals/` → Stop/Unregister, then navigate to trigger restart).
 3. Open the popup again. The `[cmp]` line should still appear via historical replay from `chrome.storage.session`.
 4. Navigate to a different site. The CMP data for the previous tab should be cleared.
+
+## 17. Testing the Proto tab
+
+The Proto tab provides a mode-aware dashboard showing signal status, purpose-attributed blocks, CMP detection, and parameter stripping. It auto-refreshes every 3 seconds.
+
+### 17.1 Viewing signal indicators
+
+1. Visit a site with a profile assigned (e.g. Balanced on a news site).
+2. Open the ProtoConsent popup and click the **Proto** tab in the mode rail.
+3. The Proto tab should show:
+   - A mode banner ("Standalone mode" in red, or "ProtoConsent Mode active" in teal if an external blocker is present).
+   - A coverage bar showing attributed / observed ratio.
+   - GPC signal count (if GPC-relevant purposes are denied).
+   - Cosmetic filtering count (if the current domain has cosmetic rules applied).
+4. The pill indicators (GPC, TCF, CH, WK) should mirror their state from the Consent tab header.
+
+### 17.2 Purpose accordion cards
+
+1. On a site where requests are being blocked (e.g. a news site with Balanced profile), open the Proto tab.
+2. Purpose cards should appear as accordion items with Consent Commons icons and blocked domain counts.
+3. Click a purpose card header to expand it. The body shows top 10 blocked domains with counts.
+4. Click again to collapse. Expanded state should be preserved across auto-refresh cycles (3s polling).
+5. Use the "Show/Hide details" footer button to toggle all accordion cards at once.
+
+### 17.3 CMP detection and auto-response cards
+
+1. Visit a site with a known CMP (e.g. a site using OneTrust or Cookiebot).
+2. Open the Proto tab. The "CMP Detection" accordion should show the detected banner name.
+3. If CMP auto-response is active, the "CMP Auto-response" accordion should show matched template count.
+
+### 17.4 Auto-refresh behaviour
+
+1. Open the Proto tab on a site.
+2. In another tab or window, navigate the test site to generate new blocking events.
+3. Return to the popup. The Proto tab data should update automatically within 3 seconds without manual reload.
+4. Navigate to a different site. Proto tab data should reset and show the new domain's data.
+
+## 18. Testing URL parameter stripping
+
+Parameter stripping removes tracking parameters (e.g. `utm_source`, `fbclid`) from URLs using DNR redirect rules with `queryTransform.removeParams`. Detection uses `webNavigation` to compare URLs before and after DNR processing.
+
+### 18.1 Verifying param strip detection
+
+1. Confirm that param stripping is enabled (it is gated by the `advanced_tracking` purpose being denied, which is the case for all presets).
+2. Navigate to a URL with known tracking parameters. For example: `https://example.com/?utm_source=test&utm_medium=campaign&fbclid=abc123`.
+3. After the page loads, check the address bar. The tracking parameters should be removed (the URL should be `https://example.com/` or retain only non-tracking parameters).
+
+### 18.2 Proto tab - Param Stripping accordion
+
+1. After visiting a URL with tracking parameters (as in §18.1), open the ProtoConsent popup and go to the **Proto** tab.
+2. A "Param Stripping" accordion card should appear at the bottom of the accordion list.
+3. The header shows the total strip count and number of unique parameter types (e.g. "3 stripped (3 param types)").
+4. Expand the card. Individual parameter names should appear as rows (one per line, e.g. `utm_source`, `utm_medium`, `fbclid`).
+5. If no stripping has occurred on the current tab, the Param Stripping section should not be visible (no empty space).
+
+### 18.3 Log tab - Param strip events
+
+1. Open the ProtoConsent popup and go to the **Log** tab → **Requests** panel.
+2. Navigate to a URL with tracking parameters.
+3. A purple `[param-strip]` line should appear in the request stream, showing: `[param-strip] domain - param1, param2`.
+4. If the popup was closed during the navigation, open it after. The param strip entry should appear via historical replay from `PROTOCONSENT_GET_PROTO_DATA`.
+
+### 18.4 Session persistence
+
+1. Visit a URL with tracking parameters and verify the param strip appears in the Proto tab.
+2. Kill the service worker (via `chrome://serviceworker-internals/` → Stop/Unregister, then navigate to trigger restart).
+3. Open the popup. The param strip data should still be present (restored from `chrome.storage.session`).
+4. Navigate to a new page. The param strip data for the previous tab should be cleared.
+
+### 18.5 Verifying param strip state from the service worker console
+
+Open the service worker console for the extension and run:
+
+```js
+chrome.storage.session.get("_tabParamStrips", r => console.log(r))
+```
+
+Each entry is keyed by tab ID, with domain objects containing `count` and `params` array.
+
+## 19. Testing operating mode switching
+
+ProtoConsent supports two operating modes: Standalone (default, full blocking) and ProtoConsent Mode (monitoring only, delegates blocking to an external blocker).
+
+### 19.1 Switching to ProtoConsent Mode
+
+1. Open Purpose Settings (click the gear icon in the popup or navigate to the options page).
+2. Scroll to the "Operating Mode" section.
+3. Toggle from Standalone to ProtoConsent Mode.
+4. Open the ProtoConsent popup. The mode banner in the Proto tab should show "ProtoConsent Mode active" (teal).
+5. The mode indicator pill in the popup header should show a green dot with "ProtoConsent".
+
+### 19.2 Verifying monitoring behaviour
+
+1. In ProtoConsent Mode, visit a news site.
+2. Open DevTools → Network tab. Third-party requests that would normally be blocked by ProtoConsent should now go through (since DNR block rules are disabled).
+3. Open the ProtoConsent popup. The blocked request counter still shows activity if an external ad blocker is installed (ProtoConsent detects blocks via `ERR_BLOCKED_BY_CLIENT` even when it is not the source).
+4. The Proto tab should show the coverage bar and purpose attribution.
+
+### 19.3 Switching back to Standalone
+
+1. Open Purpose Settings and toggle back to Standalone.
+2. Reload a test page. Blocked requests should reappear (DNR rules are reconstructed on mode switch).
+3. The mode indicator pill should show a red dot with "Standalone".
+
+### 19.4 Verifying mode persistence
+
+1. Switch to ProtoConsent Mode.
+2. Close and reopen the browser (or kill and restart the service worker).
+3. Open the popup. The mode should still be ProtoConsent Mode (persisted in `chrome.storage.local` under `operatingMode`).
+
+### 19.5 Import/export with operating mode
+
+1. In ProtoConsent Mode, export the configuration (Purpose Settings → Import/Export → Export).
+2. Open the exported JSON file and verify it contains `"operatingMode": "protoconsent"`.
+3. Switch to Standalone, then import the file. The mode should switch back to ProtoConsent Mode after import.
