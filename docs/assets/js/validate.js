@@ -801,4 +801,12 @@
     // Reset so same file can be re-loaded
     fileInput.value = "";
   });
+
+  // Auto-validate from ?domain= query param (e.g. from directory page)
+  var params = new URLSearchParams(window.location.search);
+  var paramDomain = params.get("domain");
+  if (paramDomain) {
+    domainInput.value = paramDomain;
+    fetchAndValidate();
+  }
 })();

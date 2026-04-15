@@ -1088,3 +1088,74 @@ footer {
   .gen-validate-link { margin-left: 0; margin-top: 4px; }
   .gen-template-select { max-width: 100%; }
 }
+
+/* ── Directory page ────────────────────────────────────── */
+
+.dir-count {
+  font-size: 13px;
+  color: var(--pc-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.dir-card {
+  border: 1px solid var(--pc-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: var(--pc-white);
+}
+
+.dir-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dir-card-domain {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pc-blue);
+  text-decoration: none;
+}
+
+.dir-card-domain:hover {
+  text-decoration: underline;
+}
+
+.dir-card-version {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pc-accent);
+  background: var(--pc-bg-light);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.dir-card-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--pc-muted);
+  margin-bottom: 10px;
+}
+
+.dir-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dir-empty,
+.dir-error {
+  font-size: 14px;
+  color: var(--pc-muted);
+  text-align: center;
+  padding: 32px 0;
+}
+
+.dir-error {
+  color: #991b1b;
+}

@@ -1,0 +1,17 @@
+name: Add site to directory
+description: Submit your website to the ProtoConsent directory
+labels: ["directory"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submit your website to the [ProtoConsent directory](https://protoconsent.org/directory.html).
+        Your site must serve a valid `.well-known/protoconsent.json` file over HTTPS.
+  - type: input
+    id: domain
+    attributes:
+      label: Domain
+      description: "The domain where your .well-known/protoconsent.json is hosted"
+      placeholder: "example.com"
+    validations:
+      required: true
