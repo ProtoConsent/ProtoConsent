@@ -73,7 +73,7 @@ Files containing Autoconsent-derived data:
 
     extension/rules/protoconsent_cmp_signatures.json
       Prehide selectors from Autoconsent are merged into the selector field
-      of hand-maintained CMP signatures. The 23 hand-maintained signatures
+      of hand-maintained CMP signatures. The 31 hand-maintained signatures
       (with cookie injection templates, purpose maps, and format definitions)
       are original to ProtoConsent.
 
@@ -108,6 +108,17 @@ in the extension but are compiled from upstream open-source projects.
 |--------|---------|---------|-------|
 | [AdGuard TrackParamFilter](https://github.com/AdguardTeam/AdguardFilters) | AdGuard Team | GPL-3.0 | `adguard_tracking_params.json`, `dandelion_tracking_params.json` (per-site entries) |
 | [Legitimate URL Shortener Tool](https://github.com/DandelionSprout/adfilt) | Dandelion Sprout | Dandelicence v1.4 | `dandelion_tracking_params.json` (per-site entries) |
+
+### Regional lists
+
+| Source | Authors | License | Files |
+|--------|---------|---------|-------|
+| [EasyList regional supplements](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `regional/regional_{cn,de,nl,es,he,it,lt,pl}_*.json` |
+| [AdGuard language filters](https://github.com/AdguardTeam/AdguardFilters) | AdGuard Team | GPL-3.0 | `regional/regional_{cn,de,nl,es,fr,ja,ru,tr,uk}_*.json` |
+
+13 regions: Chinese, German, Dutch, Spanish/Portuguese, French, Hebrew, Italian, Japanese,
+Lithuanian, Polish, Russian, Turkish, Ukrainian. Each region produces two files (cosmetic +
+blocking). Regional lists are remote-catalog only and not bundled in the extension.
 
 AdGuard's TrackParamFilter general section provides the global parameter list (~304 params).
 Per-site parameters in `dandelion_tracking_params.json` are merged from AdGuard's specific

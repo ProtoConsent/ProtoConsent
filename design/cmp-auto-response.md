@@ -77,7 +77,7 @@ Signatures are defined in `rules/protoconsent_cmp_signatures.json` (bundled wrap
 | `domains` | string[] | No | If present, signature only applies to these domains/brands. Matched against the registrable domain and its brand (first label). Signatures without `domains` apply globally. |
 | `note` | string | No | Internal documentation about the CMP's behaviour or limitations. |
 
-### Supported CMPs (23)
+### Supported CMPs (31)
 
 | CMP | Cookie(s) | Format | Scope |
 |-----|-----------|--------|-------|
@@ -104,6 +104,14 @@ Signatures are defined in `rules/protoconsent_cmp_signatures.json` (bundled wrap
 | Wix | `consent-policy` | URL-encoded JSON with ess/func/anl/adv/dt3 | Global |
 | Fides | `fides_consent` | URL-encoded JSON with consent/identity/meta | Global |
 | Bing/Microsoft | `BCP` | `AD={ads}&AL={analytics}&SM={personalization}`, 1/0 | bing, microsoft, outlook, live, msn |
+| Amazon | (cosmetic only) | Server-side consent (POST) | amazon |
+| TikTok | `cookie-consent` | URL-encoded JSON, per-partner booleans | tiktok.com |
+| eBay | (cosmetic only) | Server-side consent (POST) | ebay |
+| LinkedIn | (cosmetic only) | Server-signed cookie (HMAC) | linkedin.com |
+| Twitter/X | `d_prefs` | Base64-encoded static reject value | twitter.com, x.com |
+| Reddit | `eu_cookie` | URL-encoded JSON, opted + nonessential | reddit.com |
+| Facebook | (cosmetic only) | Server-side consent | facebook.com |
+| Yahoo | `EuConsent`, `cmp` | IAB TC String + static cmp cookie | yahoo |
 
 ### Signature types
 
@@ -287,7 +295,7 @@ The MAIN world script is read-only and observational. It does not write to `loca
 CMP auto-response and CMP observation are complementary systems:
 
 - **Auto-response** (`cmp-inject.js`, ISOLATED world, `document_start`): Injects consent cookies before any CMP script loads. Preventive.
-- **Banner detection** (`cmp-detect.js`, ISOLATED world, `document_idle`): Detects CMP presence via CSS selectors from `_cmpDetectors` (285 CMPs). Reports `[banner]` lines in the Log. Includes a 4-second delayed recheck for async-loaded CMPs (e.g., Usercentrics via GTM).
+- **Banner detection** (`cmp-detect.js`, ISOLATED world, `document_idle`): Detects CMP presence via CSS selectors from `_cmpDetectors` (~290 CMPs). Reports `[banner]` lines in the Log. Includes a 4-second delayed recheck for async-loaded CMPs (e.g., Usercentrics via GTM).
 - **Cookie observation** (`cmp-detect.js`, delayed 6s): Reads cookies by name from `_cmpSignatures`. Background decodes cookie values (OneTrust, Cookiebot, CookieYes, Complianz, Wix) and compares against user purposes. Reports `[banner-consent]` lines with conflicts or matches.
 - **localStorage observation** (`tcf-detect.js`, MAIN world, `document_idle`): Reads `uc_settings` and `ccm_consent` from `localStorage`. Background decodes compact JSON (Usercentrics history actions, CCM19 category booleans) and compares against user purposes. Reports `[banner-consent]` lines.
 - **TCF/GPP detection** (`tcf-detect.js`, MAIN world): Calls `__tcfapi` and `__gpp` APIs. The TCF pill in the popup shows the site's own consent status as reported by its CMP.
@@ -298,8 +306,8 @@ The `[banner]` and `[banner-consent]` tags in the Log distinguish detection (CSS
 
 | File | Role |
 |------|------|
-| `rules/protoconsent_cmp_signatures.json` | Bundled CMP signatures (23 entries, wrapped with version/type metadata) |
-| `rules/protoconsent_cmp_detectors.json` | Bundled CMP CSS detectors (285 entries, from Consent-O-Matic + hand-maintained) |
+| `rules/protoconsent_cmp_signatures.json` | Bundled CMP signatures (31 entries, wrapped with version/type metadata) |
+| `rules/protoconsent_cmp_detectors.json` | Bundled CMP CSS detectors (~290 entries, from Autoconsent + hand-maintained) |
 | `rules/protoconsent_cmp_signatures_site.json` | Bundled site-specific CMP hiding rules |
 | `background/cmp-injection.js` | TC String generator + storage writer + `_cmpSignatures` cache |
 | `background/cmp-cookie-decode.js` | Cookie and localStorage decoders: OneTrust, Cookiebot, CookieYes, Complianz, Wix (cookies), Usercentrics, CCM19 (localStorage). Conflict detection vs user purposes |

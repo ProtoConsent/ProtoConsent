@@ -47,6 +47,12 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
     - [Per-site parameters](#per-site-parameters)
     - [DNR implementation](#dnr-implementation)
     - [Observability](#observability)
+  - [13. Regional lists](#13-regional-lists)
+    - [Sources](#sources-1)
+    - [Distribution model](#distribution-model-1)
+    - [Preset exclusion](#preset-exclusion)
+    - [Locale auto-detect](#locale-auto-detect)
+    - [UI presentation](#ui-presentation)
 
 ## 2. Current state
 
@@ -173,7 +179,7 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 
 ### Current lists (v0.5)
 
-13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), 2 URL parameter stripping lists, and 2 CMP detection lists, organized in two presets.
+13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), 2 URL parameter stripping lists, 2 CMP detection lists, and 26 regional lists (13 regions x 2 types), organized in two presets. Regional lists are managed separately (see [section 13](#13-regional-lists)).
 
 **Balanced preset** (5 lists - enabled by default when user selects Balanced):
 
@@ -231,7 +237,7 @@ This keeps the extension package small, avoids bundling third-party list content
 | Full | Enables all 13 lists on download |
 | Custom | User has toggled individual lists manually |
 
-When a user downloads lists with the preset set to Off, the extension auto-switches to Balanced.
+When a user downloads lists with the preset set to Off, the extension auto-switches to Balanced. Regional lists are excluded from all presets (`preset: null`) and managed independently by the user (see [section 13](#13-regional-lists)).
 
 ### Consent-enhanced link
 
@@ -288,7 +294,7 @@ For the full signature format, supported CMPs, and three-layer response architec
 
 | List | License | Templates | Scope |
 | --- | --- | --- | --- |
-| [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | 23 | Global (most), domain-scoped (Bing) |
+| [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | 31 | Global (most), domain-scoped (Bing) |
 
 **CMP detection lists** complement the auto-response signatures by identifying consent banners on the page:
 
@@ -335,7 +341,7 @@ A GitHub Actions workflow in the data repo refreshes all Enhanced lists weekly:
 
 - **Schedule:** Tuesdays at 04:42 UTC (cron: `42 4 * * 2`)
 - **Manual trigger:** `workflow_dispatch` with optional `list` parameter for single-list refresh
-- **Steps:** `convert.js` (blocklists) → `convert-cname.js` (CNAME trackers) → `convert-cosmetic.js` (cosmetic rules) → `generate-manifest.js` (rebuild `config/enhanced-lists.json`) → commit and push if changes detected
+- **Steps:** `convert.js` (blocklists) → `convert-cname.js` (CNAME trackers) → `convert-cosmetic.js` (cosmetic rules) → `convert-regional.js` (regional lists) → `generate-manifest.js` (rebuild `config/enhanced-lists.json`) → commit and push if changes detected
 - **Workflow file:** `.github/workflows/refresh-lists.yml`
 
 The extension picks up updated lists on the next sync check (controlled by `dynamicListsConsent`). jsDelivr CDN caching may delay propagation by a few minutes after the commit.
@@ -420,3 +426,59 @@ Dynamic CDN rules can supplement these static rulesets when Enhanced data includ
 Stripped parameters are detected via the `webNavigation` API (§15 in [architecture.md](architecture.md)) and shown in the Proto tab (accordion with parameter names) and Log tab (purple `[param-strip]` lines). The badge counter and blocked request count are not affected.
 
 The converter script (`convert-tracking-params.js`) in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo fetches upstream lists, extracts literal `$removeparam` names (skipping regex patterns), separates global vs. per-site, and outputs the two JSON files.
+
+## 13. Regional lists
+
+Regional filter lists provide language/region-specific blocking and cosmetic rules compiled from EasyList regional supplements and AdGuard language-specific filters. Each region produces two files: `regional_<code>_cosmetic.json` (element hiding) and `regional_<code>_blocking.json` (domain and path blocking). 13 regions are supported.
+
+### Sources
+
+| Region | Code | Sources |
+| --- | --- | --- |
+| Chinese | `cn` | EasyList China + AdGuard Chinese |
+| German | `de` | EasyList Germany + AdGuard German |
+| Dutch | `nl` | EasyList Dutch + AdGuard Dutch |
+| Spanish/Portuguese | `es` | EasyList Spanish + EasyList Portuguese + AdGuard Spanish/Portuguese |
+| French | `fr` | AdGuard French |
+| Hebrew | `he` | EasyList Hebrew |
+| Italian | `it` | EasyList Italy |
+| Japanese | `ja` | AdGuard Japanese |
+| Lithuanian | `lt` | EasyList Lithuania |
+| Polish | `pl` | EasyList Polish |
+| Russian | `ru` | AdGuard Russian |
+| Turkish | `tr` | AdGuard Turkish |
+| Ukrainian | `uk` | AdGuard Ukrainian |
+
+Regions with both EasyList and AdGuard sources (CN, DE, NL, ES) merge rules from all sources per type, deduplicating domains and selectors. The converter script (`convert-regional.js`) reuses the same ABP blocking parser as `convert.js` and the same cosmetic parser as `convert-cosmetic.js`.
+
+### Distribution model
+
+Regional lists are present in the bundled catalog (`extension/config/enhanced-lists.json`) so they appear in the UI from day one - the user can see they exist and download them. Only the list data is fetched from CDN on demand. The `region` field in the catalog schema identifies regional entries.
+
+CDN path: `enhanced/regional/regional_<code>_<type>.json`.
+
+The same `config/enhanced-lists.json` from the data repo is copied to the extension at release time and served via CDN for runtime updates.
+
+### Preset exclusion
+
+Regional lists have `preset: null` and are excluded from the Off/Balanced/Full preset logic:
+
+- `resolveEnhancedPreset()` in `handlers.js` filters by `!catalog[id].region` when computing preset state, so regional lists being enabled/disabled does not affect preset detection.
+- The `SET_PRESET` handler skips entries with a `region` field, so changing presets does not touch regional lists.
+
+Regional lists are user-managed only, via per-region sub-toggles in the Enhanced tab.
+
+### Locale auto-detect
+
+On `PROTOCONSENT_ENHANCED_GET_STATE`, the background script detects the browser's UI language via `chrome.i18n.getUILanguage()`, extracts the language code, and maps it to a region ID via a `langToRegion` lookup table. Multi-language mappings are supported (e.g. `pt` maps to `es` since Spanish/Portuguese are combined).
+
+If regional lists exist in the catalog but none are downloaded yet, the response includes a `suggestedRegion` field. This is a one-time suggestion, not an auto-download. The UI shows a "Detected" badge on the matching region sub-toggle to guide the user.
+
+### UI presentation
+
+Two grouped cards in the Enhanced tab, following the same pattern as ProtoConsent Core (5 sub-lists) and ProtoConsent Banners (3 sub-lists):
+
+- **Regional Cosmetic**: Cosmetic pill, aggregated rule counts across enabled regions
+- **Regional Blocking**: No category pill, aggregated domain counts across enabled regions
+
+Each card has per-region sub-toggles allowing individual download, enable, and disable. The group-level toggle and download/remove buttons operate on all regions at once. Sub-toggles show region labels and individual stats when expanded.
