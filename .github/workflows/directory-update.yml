@@ -47,7 +47,7 @@ jobs:
             const url = `https://${domain}/.well-known/protoconsent.json`;
 
             const body = await new Promise((resolve, reject) => {
-              const req = https.get(url, { timeout: 10000 }, (res) => {
+              const req = https.get(url, { timeout: 10000, headers: { 'User-Agent': 'ProtoConsent-Directory/1.0' } }, (res) => {
                 if (res.statusCode !== 200) {
                   reject(new Error(`HTTP ${res.statusCode}`));
                   return;
