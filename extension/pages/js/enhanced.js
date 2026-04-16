@@ -75,7 +75,7 @@ function getEnhancedStats() {
     totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules + cmpTemplates,
     downloadedCount: Object.keys(epLists).length - coreExtraDownloaded - cmpExtraDownloaded,
     catalogCount: Object.keys(epCatalog).length - coreExtraCatalog - cmpExtraCatalog,
-    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id))
+    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id) && !REGIONAL_IDS.has(id))
       .concat(coreCatalogIds.length > 0 && !coreDownloadedIds.length ? [coreCatalogIds[0]] : [])
       .concat(cmpCatalogIds.length > 0 && !cmpDownloadedIds.length ? [cmpCatalogIds[0]] : []),
     updatesAvailable,
@@ -361,18 +361,25 @@ function setEnhancedPreset(preset) {
     epPreset = preset;
     // If switching to basic or full, auto-download missing lists
     if (preset === "basic" || preset === "full") {
-      const missing = Object.keys(epCatalog).filter(id => {
-        if (epLists[id]) return false;
-        if (preset === "basic") return epCatalog[id].preset === "basic";
-        return true;
+      chrome.storage.local.get(["regionalLanguages"], (rl) => {
+        const hasLangs = Array.isArray(rl.regionalLanguages) && rl.regionalLanguages.length > 0;
+        const missing = Object.keys(epCatalog).filter(id => {
+          if (epLists[id]) return false;
+          // Skip regional lists if no languages selected
+          if (REGIONAL_IDS.has(id) && !hasLangs) return false;
+          if (preset === "basic") return epCatalog[id].preset === "basic";
+          return true;
+        });
+        if (missing.length > 0) {
+          const dlBtn = document.querySelector(".ep-preset-action-download");
+          downloadAllEnhancedLists(dlBtn, missing);
+          return;
+        }
+        refreshEnhancedState();
       });
-      if (missing.length > 0) {
-        const dlBtn = document.querySelector(".ep-preset-action-download");
-        downloadAllEnhancedLists(dlBtn, missing);
-        return;
-      }
+    } else {
+      refreshEnhancedState();
     }
-    refreshEnhancedState();
   });
 }
 
@@ -402,6 +409,12 @@ function renderEnhancedLists() {
 
   for (const [listId, listDef] of catalogEntries) {
     if (CORE_IDS.has(listId) || CMP_IDS.has(listId)) continue;
+    // Regional cards use their own renderer but are sorted by order
+    if (REGIONAL_IDS.has(listId)) {
+      const card = renderRegionalCard(listId);
+      if (card) container.appendChild(card);
+      continue;
+    }
     const listData = epLists[listId];
     const card = document.createElement("div");
     card.className = "ep-list-card";
@@ -677,7 +690,7 @@ function removeEnhancedList(listId) {
 }
 
 function downloadAllEnhancedLists(btnEl, filterIds) {
-  const notDownloaded = filterIds || Object.keys(epCatalog).filter(id => !epLists[id]);
+  const notDownloaded = filterIds || Object.keys(epCatalog).filter(id => !epLists[id] && !REGIONAL_IDS.has(id));
   if (notDownloaded.length === 0) return;
 
   const startDownloads = () => {
