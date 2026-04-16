@@ -27,7 +27,7 @@
 		</header>
 
 		<nav class="ps-tabs" role="tablist" aria-label="Settings categories">
-			<button type="button" class="ps-tab is-active" id="ps-tab-consent" data-tab="consent" role="tab" aria-selected="true" aria-controls="ps-panel-consent" tabindex="0">Consent</button>
+			<button type="button" class="ps-tab is-active" id="ps-tab-consent" data-tab="consent" role="tab" aria-selected="true" aria-controls="ps-panel-consent" tabindex="0">Purposes</button>
 			<button type="button" class="ps-tab" id="ps-tab-protection" data-tab="protection" role="tab" aria-selected="false" aria-controls="ps-panel-protection" tabindex="-1">Protection</button>
 			<button type="button" class="ps-tab" id="ps-tab-advanced" data-tab="advanced" role="tab" aria-selected="false" aria-controls="ps-panel-advanced" tabindex="-1">Advanced</button>
 		</nav>
@@ -60,7 +60,7 @@
 
 		<section id="presets-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
-				<h2>Consent <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
+				<h2>Purposes <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></h2>
 			</div>
 			<div id="preset-list"></div>
 			<details class="ps-accordion">
@@ -106,29 +106,29 @@
 			<div class="ps-section-head">
 				<h2>Enhanced Protection</h2>
 			</div>
-			<p class="ps-enhanced-desc">Optional third-party blocklists for additional protection. These are independent of your consent profile.</p>
+			<p class="ps-enhanced-desc">Optional third-party blocklists for additional protection. These are independent of your purpose profile.</p>
 			<div class="ps-dynamic-grid">
 				<div class="ps-gpc-toggle-row">
 					<div>
 						<span class="ps-gpc-info-name"><img src="../icons/purposes/enhanced.svg" alt="" width="14" height="14" class="ps-cel-icon"> Sync</span>
-						<div class="ps-gpc-info-desc">Check for enhanced list updates from the ProtoConsent/data repository on GitHub. No data is sent.</div>
+						<div class="ps-gpc-info-desc">Check for protection list updates from the ProtoConsent/data repository on GitHub. No data is sent.</div>
 					</div>
 					<label class="ps-gpc-toggle-label" for="ps-dynamic-toggle" id="ps-dynamic-label">Disabled</label>
-					<input type="checkbox" id="ps-dynamic-toggle" class="ps-gpc-toggle" aria-label="Enhanced list sync">
+					<input type="checkbox" id="ps-dynamic-toggle" class="ps-gpc-toggle" aria-label="Protection list sync">
 				</div>
 				<div class="ps-gpc-toggle-row">
 					<div>
 						<span class="ps-gpc-info-name"><img src="../icons/protoconsent_icon_32.png" alt="" width="14" height="14" class="ps-cel-icon"> Consent link</span>
-						<div class="ps-gpc-info-desc">Automatically enable Enhanced lists that match purposes you deny in your <a href="#default-profile-section" class="ps-cel-note-link">default profile</a>. Takes priority over the Enhanced "Off" preset.</div>
+						<div class="ps-gpc-info-desc">Automatically enable protection lists that match purposes you deny in your <a href="#default-profile-section" class="ps-cel-note-link">default profile</a>. Takes priority over the Protection "Off" preset.</div>
 					</div>
 					<label class="ps-gpc-toggle-label" for="ps-cel-toggle" id="ps-cel-label">Disabled</label>
-					<input type="checkbox" id="ps-cel-toggle" class="ps-gpc-toggle" aria-label="Consent-Enhanced link">
+					<input type="checkbox" id="ps-cel-toggle" class="ps-gpc-toggle" aria-label="Consent-Protection link">
 				</div>
 			</div>
 			<div id="ps-cel-note" class="ps-cel-note ps-hidden"></div>
 			<div id="ps-cel-mode-panel" class="ps-cel-mode-panel ps-hidden"></div>
 			<details class="ps-accordion">
-				<summary class="ps-accordion-header">Enhanced presets <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></summary>
+				<summary class="ps-accordion-header">Protection presets <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></summary>
 				<div class="ps-accordion-body">
 					<div id="enhanced-preset-list"></div>
 				</div>
@@ -151,7 +151,7 @@
 				<div class="ps-gpc-toggle-row">
 					<div>
 						<span class="ps-gpc-info-name">CMP detection</span>
-						<div class="ps-gpc-info-desc">Detect which consent platforms are present on each page and observe what their cookies say. Results appear in the Proto and Log tabs. Passive - does not modify anything.</div>
+						<div class="ps-gpc-info-desc">Detect which consent platforms are present on each page and observe what their cookies say. Results appear in the Overview and Log tabs. Passive - does not modify anything.</div>
 					</div>
 					<label class="ps-gpc-toggle-label" for="cmp-detect-toggle" id="cmp-detect-label">Enabled</label>
 					<input type="checkbox" id="cmp-detect-toggle" class="ps-gpc-toggle" aria-label="CMP detection" checked>
@@ -269,7 +269,6 @@
 			<span id="viewer-version">ProtoConsent</span>
 			<div class="ps-footer-links">
 				<a href="onboarding.html" class="ps-footer-link" id="ps-welcome-link">Welcome guide</a>
-				<a href="https://consentcommons.com" class="ps-footer-link" target="_blank" rel="noopener noreferrer">Icons: Consent Commons</a>
 				<a href="https://github.com/ProtoConsent/ProtoConsent" class="ps-footer-link" target="_blank" rel="noopener noreferrer">GitHub</a>
 				<a href="https://protoconsent.org" class="ps-footer-link" target="_blank" rel="noopener noreferrer">Website</a>
 			</div>

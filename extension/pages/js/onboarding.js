@@ -321,7 +321,9 @@ function detectRegionalLanguage() {
       } else {
         // No detection: show all available flags so user knows languages are supported
         container.setAttribute('aria-label', '13 languages available');
-        for (const [, entry] of Object.entries(rlConfig)) {
+        const sortedCodes = Object.keys(rlConfig).sort();
+        for (const code of sortedCodes) {
+          const entry = rlConfig[code];
           const flagCodes = entry.flag
             ? (Array.isArray(entry.flag) ? entry.flag : [entry.flag])
             : [];
