@@ -264,7 +264,7 @@
 .proto-card-body {
   display: none;
   padding: 0 10px 6px 26px;
-  font-size: var(--pc-font-sm);
+  font-size: var(--pc-font);
   color: var(--pc-text-muted);
   line-height: 1.5;
   max-height: 200px;
@@ -301,4 +301,33 @@
 .proto-purpose-domain-count {
   flex-shrink: 0;
   color: var(--pc-text-soft);
+}
+
+/* Source sub-headers inside multi-source category accordions */
+.proto-source-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+  padding: 4px 0 2px;
+  margin-top: 4px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.proto-source-header:first-child {
+  border-top: none;
+  margin-top: 0;
+}
+
+.proto-source-header img {
+  width: 14px;
+  height: 14px;
+}
+
+.proto-source-count {
+  margin-left: auto;
+  color: #6b7280;
+  font-weight: 400;
 }

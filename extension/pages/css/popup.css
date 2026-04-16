@@ -1291,6 +1291,7 @@ body {
   font-size: var(--pc-font-sm);
   color: var(--pc-text-muted);
   border-top: 1px solid var(--pc-line);
+  background: #ffffff;
 }
 
 .pc-bar.is-expanded .pc-bar-body { display: block; }
@@ -1428,7 +1429,7 @@ body {
   display: none;
   grid-column: 1 / -1;
   padding: 6px 10px 10px;
-  font-size: var(--pc-font-sm);
+  font-size: var(--pc-font);
   color: var(--pc-text-muted);
   line-height: 1.5;
   border-top: 1px solid var(--pc-line);
