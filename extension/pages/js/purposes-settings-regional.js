@@ -90,6 +90,7 @@ function initRegionalSection() {
 			}
 
 			grid.replaceChildren();
+			regionCodes.sort();
 			for (const code of regionCodes) {
 				const row = document.createElement('div');
 				row.className = 'ps-gpc-toggle-row';
