@@ -147,40 +147,75 @@ function setActiveLogTab(name) {
   });
 }
 
-// --- Header: site + profile + purposes ---
+// --- Header: dot strip showing purpose states for site + global ---
 
 function renderLogHeader() {
-  const siteProfileEl = document.getElementById("pc-log-profile-site");
-  const globalProfileEl = document.getElementById("pc-log-profile-global");
-  const purposesEl = document.getElementById("pc-log-purposes");
+  var strip = document.getElementById("pc-log-dot-strip");
+  if (!strip) return;
+  strip.innerHTML = "";
 
-  const siteProfile = currentProfile || "balanced";
-  const globalProfile = defaultProfile || "balanced";
+  // Single row: SITE dots · ALL dots
+  var row = document.createElement("div");
+  row.className = "pc-log-dot-row";
 
-  if (siteProfileEl) {
-    siteProfileEl.textContent = "Site: " + siteProfile;
-    siteProfileEl.title = "Profile applied to this site";
-  }
-  if (globalProfileEl) {
-    globalProfileEl.textContent = "Global: " + globalProfile;
-    globalProfileEl.title = "Default profile for all sites";
-    globalProfileEl.hidden = false;
+  var siteLabel = document.createElement("span");
+  siteLabel.className = "pc-log-dot-label";
+  siteLabel.textContent = "SITE";
+  siteLabel.title = "Profile: " + (currentProfile || "balanced");
+  row.appendChild(siteLabel);
+  for (var i = 0; i < PURPOSES_TO_SHOW.length; i++) {
+    var key = PURPOSES_TO_SHOW[i];
+    var state = currentPurposesState[key];
+    var isReq = requiredPurposeKeys.has(key);
+    row.appendChild(_logDot(key, state, isReq));
   }
 
-  if (purposesEl && currentPurposesState) {
-    purposesEl.innerHTML = "";
-    for (const [key, val] of Object.entries(currentPurposesState)) {
-      const label = getPurposeLabel(key, "short");
-      const cell = document.createElement("span");
-      cell.className = "pc-log-purpose-cell";
-      cell.textContent = label + ": ";
-      const icon = document.createElement("span");
-      icon.className = val ? "pc-log-purpose-on" : "pc-log-purpose-off";
-      icon.textContent = val ? "\u2713" : "\u2717";
-      cell.appendChild(icon);
-      purposesEl.appendChild(cell);
-    }
+  var sep = document.createElement("span");
+  sep.className = "pc-log-dot-sep";
+  sep.textContent = "\u2014";
+  row.appendChild(sep);
+
+  var globalLabel = document.createElement("span");
+  globalLabel.className = "pc-log-dot-label";
+  globalLabel.textContent = "ALL";
+  globalLabel.title = "Default profile: " + (defaultProfile || "balanced");
+  row.appendChild(globalLabel);
+  for (var i = 0; i < PURPOSES_TO_SHOW.length; i++) {
+    var key = PURPOSES_TO_SHOW[i];
+    var state = defaultPurposes ? defaultPurposes[key] : null;
+    var isReq = requiredPurposeKeys.has(key);
+    row.appendChild(_logDot(key, state, isReq));
   }
+
+  // Regional language flags (right-aligned, links to settings)
+  var flagsLink = document.createElement("a");
+  flagsLink.href = "purposes-settings.html#regional-filters";
+  flagsLink.target = "_blank";
+  flagsLink.className = "pc-log-dot-flags";
+  flagsLink.hidden = true;
+  if (typeof buildRegionalFlags === "function") {
+    buildRegionalFlags(flagsLink, { maxFlags: 2 });
+  }
+  strip.appendChild(flagsLink);
+
+  strip.appendChild(row);
+}
+
+function _logDot(purposeKey, allowed, isRequired) {
+  var dot = document.createElement("span");
+  dot.className = "pc-log-dot";
+  if (isRequired) {
+    dot.classList.add("is-required");
+  } else if (allowed) {
+    dot.classList.add("is-allowed");
+  } else if (allowed === false) {
+    dot.classList.add("is-blocked");
+  }
+  // else null/undefined = unknown, no extra class (gray)
+  var label = getPurposeLabel(purposeKey, "short");
+  dot.title = label + (isRequired ? " (required)" : allowed ? " (allowed)" : allowed === false ? " (blocked)" : " (unknown)");
+  dot.setAttribute("aria-label", dot.title);
+  return dot;
 }
 
 // --- Domains panel ---
@@ -284,7 +319,7 @@ function renderLogDomains(initialVisible) {
   table.className = "pc-log-table";
 
   const colgroup = document.createElement("colgroup");
-  colgroup.innerHTML = '<col style="width:34px"><col style="width:auto"><col style="width:58px"><col style="width:48px">';
+  colgroup.innerHTML = '<col style="width:34px"><col style="width:auto"><col style="width:66px"><col style="width:48px">';
   table.appendChild(colgroup);
 
   // Sortable thead

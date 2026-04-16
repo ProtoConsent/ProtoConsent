@@ -177,7 +177,7 @@ For **block overrides**, path-extracted domains that overlap with the initiator 
 
 ## 7. Enhanced protection lists (third-party)
 
-Beyond the core static rulesets shipped with the extension, ProtoConsent supports **enhanced protection** via third-party blocklists converted to DNR-compatible JSON. These lists are optional - the user opts in from the Enhanced tab in the popup.
+Beyond the core static rulesets shipped with the extension, ProtoConsent supports **enhanced protection** via third-party blocklists converted to DNR-compatible JSON. These lists are optional - the user opts in from the Protection tab in the popup.
 
 ### Current lists (v0.5)
 
@@ -228,7 +228,7 @@ Enhanced lists are **not** shipped inside the extension package. Instead:
 
 1. A converter script (`scripts/convert.js`) in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo fetches upstream lists, parses them (ABP, hosts, and plain domain formats), deduplicates, and outputs DNR-compatible JSON.
 2. The JSON files are hosted on GitHub and served via **jsDelivr CDN** (primary) with **raw.githubusercontent.com** as fallback.
-3. The extension fetches the JSON when the user downloads a list from the Enhanced tab. Lists are stored in `chrome.storage.local` with a split architecture: metadata in `enhancedLists`, heavy data in `enhancedData_{listId}`.
+3. The extension fetches the JSON when the user downloads a list from the Protection tab. Lists are stored in `chrome.storage.local` with a split architecture: metadata in `enhancedLists`, heavy data in `enhancedData_{listId}`.
 
 Remote fetching is gated behind a consent flag (`dynamicListsConsent` in storage). The user opts in during onboarding or from Purpose Settings. When disabled, the extension only uses bundled list data shipped with the package and does not contact any CDN. The cosmetic list (`easylist_cosmetic.json`) and the CMP signatures list (`protoconsent_cmp_signatures.json`) are bundled in `extension/rules/` and loaded into storage on first install, ensuring cosmetic filtering and CMP auto-response work out of the box without remote fetching.
 
@@ -251,7 +251,7 @@ When the user enables the consent-enhanced link (`consentEnhancedLink` in storag
 
 The link uses the default profile only, not per-site overrides. Enhanced lists are global (they block across all sites), so tying them to the user's general privacy posture prevents unexpected cross-site effects. The Settings page links the consent-link description to the default profile selector so the connection is clear.
 
-This is a runtime overlay: the background script computes the linked list set on each `rebuildAllDynamicRules()` call based on the default profile's resolved purposes and the catalog's category mapping. It does not modify the stored `enabled` state of any list. Consent-linked lists are included in the rule build alongside manually enabled lists, and appear in the Enhanced tab with a ProtoConsent icon indicator and a disabled (checked) toggle. The link takes priority over the Enhanced "Off" preset - even with Off selected, consent-linked lists are enforced when the feature is active.
+This is a runtime overlay: the background script computes the linked list set on each `rebuildAllDynamicRules()` call based on the default profile's resolved purposes and the catalog's category mapping. It does not modify the stored `enabled` state of any list. Consent-linked lists are included in the rule build alongside manually enabled lists, and appear in the Protection tab with a ProtoConsent icon indicator and a disabled (checked) toggle. The link takes priority over the Enhanced "Off" preset - even with Off selected, consent-linked lists are enforced when the feature is active.
 
 Only downloaded lists participate in DNR rule generation. When the Enhanced tab is open and the popup detects consent-linked lists that are not yet downloaded, it triggers an automatic download via the same mechanism as "Download all", provided Sync (`dynamicListsConsent`) is enabled. Without Sync, the consent link still activates already-downloaded lists but will not fetch new ones. Lists without a `fetch_url` in the catalog are skipped.
 
@@ -276,7 +276,7 @@ The cosmetic list is a separate enhanced list (`type: "cosmetic"` in `enhanced-l
 5. Selectors are validated at three levels: the converter rejects selectors containing `{` or `}` (to prevent CSS injection), the background re-filters at compile time, and the content script re-filters at runtime.
 6. Procedural selectors (`:has(`, `:-abp-`, `:contains(` etc.) are discarded by the converter as they cannot be expressed in plain CSS.
 
-Cosmetic filtering is purely visual cleanup - it does not block network requests or affect privacy. It is active by default (Balanced preset) and can be disabled independently in the Enhanced tab.
+Cosmetic filtering is purely visual cleanup - it does not block network requests or affect privacy. It is active by default (Balanced preset) and can be disabled independently in the Protection tab.
 
 ### CMP auto-response signatures
 
@@ -323,7 +323,7 @@ The extension ships static rulesets (`block_*.json`) for day-1 blocking. The sam
 | `protoconsent_third_parties` | `third_parties` | ~171 | 73 |
 | `protoconsent_advanced_tracking` | `advanced_tracking` | ~11,234 | 28 |
 
-Each list has its own `category` so the reverse hostname index maps domains to the correct purpose icon. In the UI, the 5 lists appear as a single grouped card ("ProtoConsent Core") in the Enhanced tab. Download, toggle and remove operate on all 5 as a group.
+Each list has its own `category` so the reverse hostname index maps domains to the correct purpose icon. In the UI, the 5 lists appear as a single grouped card ("ProtoConsent Core") in the Protection tab. Download, toggle and remove operate on all 5 as a group.
 
 All 5 are preset `Balanced`. They do not add new blocking beyond what static rulesets already cover - their purpose is to receive weekly updates via CDN independently of extension version releases.
 
@@ -429,7 +429,7 @@ Dynamic CDN rules can supplement these static rulesets when Enhanced data includ
 
 ### Observability
 
-Stripped parameters are detected via the `webNavigation` API (§15 in [architecture.md](architecture.md)) and shown in the Proto tab (accordion with parameter names) and Log tab (purple `[param-strip]` lines). The badge counter and blocked request count are not affected.
+Stripped parameters are detected via the `webNavigation` API (§15 in [architecture.md](architecture.md)) and shown in the Overview tab (accordion with parameter names) and Log tab (purple `[param-strip]` lines). The badge counter and blocked request count are not affected.
 
 The converter script (`convert-tracking-params.js`) in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo fetches upstream lists, extracts literal `$removeparam` names (skipping regex patterns), separates global vs. per-site, and outputs the two JSON files.
 
@@ -505,12 +505,12 @@ There is no `catalog[id].region` field. Identification relies entirely on the `R
 
 ### UI presentation
 
-Two cards in the Enhanced tab, rendered by `renderRegionalCard()` in `enhanced-regional.js`:
+Two cards in the Protection tab, rendered by `renderRegionalCard()` in `enhanced-regional.js`:
 
 - **Regional Cosmetic**: Cosmetic pill, catalog description, expand/collapse with chevron.
 - **Regional Blocking**: No category pill, catalog description, expand/collapse with chevron.
 
-Card headers show flag icons (SVG images from bundled `icons/flags/`, max 2 flags with "+N" overflow) linking to Purpose Settings regional section, followed by a language count badge. Expanded state shows source, license, and last-updated date. Each card has standard download/toggle/remove buttons. There are no per-region controls in the Enhanced tab. Region selection is handled exclusively in Purpose Settings (see [Language selection](#language-selection) above).
+Card headers show flag icons (SVG images from bundled `icons/flags/`, max 2 flags with "+N" overflow) linking to Purpose Settings regional section, followed by a language count badge. Expanded state shows source, license, and last-updated date. Each card has standard download/toggle/remove buttons. There are no per-region controls in the Protection tab. Region selection is handled exclusively in Purpose Settings (see [Language selection](#language-selection) above).
 
 Flag icons are from the [flag-icons](https://github.com/lipis/flag-icons) library (MIT license, Panayiotis Lipiridis). 14 SVGs are bundled in `extension/icons/flags/`. An `onerror` fallback renders a two-letter text abbreviation if the SVG fails to load (e.g. for new regions added via CDN before the extension bundles their flag).
 

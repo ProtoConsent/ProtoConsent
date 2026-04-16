@@ -57,7 +57,7 @@ The extension provides a popup interface to manage profiles and purposes per sit
     - [14.3 Rebuild gating](#143-rebuild-gating)
     - [14.4 Mode transitions](#144-mode-transitions)
     - [14.5 Coverage metrics](#145-coverage-metrics)
-    - [14.6 Proto tab](#146-proto-tab)
+    - [14.6 Overview tab](#146-overview-tab)
     - [14.7 UI gating](#147-ui-gating)
     - [14.8 Message types](#148-message-types)
   - [15. URL parameter stripping](#15-url-parameter-stripping)
@@ -71,9 +71,9 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 **Popup UI** – The main user-facing element. When opened on a site, it shows the active profile and purpose states for that domain, and lets the user switch profiles or toggle purposes. Purpose categories are shown with [Consent Commons](https://consentcommons.com/) icons. The popup does not enforce anything directly; it sends messages to the background component when settings change.
 
-- **Consent view**: purpose toggles and per-purpose blocked stats
-- **Proto view**: operating mode dashboard showing signal status (GPC with link to Log detail, CMP detection, cosmetic filtering), purpose-attributed blocks as accordion cards with Consent Commons icons, CMP auto-response state, URL parameter stripping summary, and unattributed hostnames. Auto-refreshes every 3 seconds while active.
-- **Enhanced view**: optional third-party blocklists with preset selection and per-list controls
+- **Purposes view**: purpose toggles and per-purpose blocked stats
+- **Overview view**: operating mode dashboard showing signal status (GPC with link to Log detail, CMP detection, cosmetic filtering), purpose-attributed blocks as accordion cards with Consent Commons icons, CMP auto-response state, URL parameter stripping summary, and unattributed hostnames. Auto-refreshes every 3 seconds while active.
+- **Protection view**: optional third-party blocklists with preset selection and per-list controls
 - **Log view**: real-time request monitoring, blocked domains grouped by purpose, GPC signal tracking per domain, and URL parameter strip events
 - **Site declaration panel**: when a site publishes a `.well-known/protoconsent.json`, a collapsible side panel shows its declared purposes, legal basis, sharing and international transfers
 
@@ -572,11 +572,11 @@ Two per-tab counters track attribution quality in `tabCoverageMetrics` (Map in `
 - `observed`: total `ERR_BLOCKED_BY_CLIENT` events passing the resource type filter
 - `attributed`: events successfully classified to at least one purpose
 
-The coverage ratio (`attributed / observed`) is displayed in the Proto tab. An `unattributedBuffer` (array in `state.js`) holds recent hostnames that could not be classified, for diagnostic use. Both are persisted to `chrome.storage.session` and cleaned up on tab close/navigation.
+The coverage ratio (`attributed / observed`) is displayed in the Overview tab. An `unattributedBuffer` (array in `state.js`) holds recent hostnames that could not be classified, for diagnostic use. Both are persisted to `chrome.storage.session` and cleaned up on tab close/navigation.
 
-### 14.6 Proto tab
+### 14.6 Overview tab
 
-The Proto tab is a popup view (`pc-view-proto`) that provides a mode-aware dashboard. It is visible in both modes and auto-refreshes every 3 seconds while active via `setInterval` polling of `PROTOCONSENT_GET_PROTO_DATA`.
+The Overview tab is a popup view (`pc-view-proto`) that provides a mode-aware dashboard. It is visible in both modes and auto-refreshes every 3 seconds while active via `setInterval` polling of `PROTOCONSENT_GET_PROTO_DATA`.
 
 Layout (top to bottom):
 
@@ -595,7 +595,7 @@ The "Show/Hide details" footer button toggles all accordion cards. Purpose card 
 
 ### 14.7 UI gating
 
-- **Mode indicator**: a semaphore pill in the popup header (inside the reload button wrapper) shows the active mode. Red dot + "Standalone" or green dot + "ProtoConsent" with halo glow. Clicking navigates to the Proto tab.
+- **Mode indicator**: a semaphore pill in the popup header (inside the reload button wrapper) shows the active mode. Red dot + "Standalone" or green dot + "ProtoConsent" with halo glow. Clicking navigates to the Overview tab.
 - **Whitelist**: the Log tab's Whitelist panel and per-domain Allow buttons are hidden when `can("whitelistOverrides")` is false, with a message explaining that whitelist is not applicable in ProtoConsent Mode.
 - **Settings toggle**: the Purpose Settings page includes an "Operating Mode" section with a toggle between Standalone and ProtoConsent Mode. The toggle sends `PROTOCONSENT_SET_OPERATING_MODE` to the background. The `operatingMode` key is included in export/import with validation.
 
@@ -605,7 +605,7 @@ The "Show/Hide details" footer button toggles all accordion cards. Purpose card 
 |---|---|---|
 | `PROTOCONSENT_SET_OPERATING_MODE` | popup/settings -> background | Set mode (`"standalone"` or `"protoconsent"`), triggers rebuild, responds `{ ok, mode }` |
 | `PROTOCONSENT_GET_OPERATING_MODE` | popup -> background | Returns `{ mode }` |
-| `PROTOCONSENT_GET_PROTO_DATA` | popup -> background | Returns comprehensive Proto tab data: mode, coverage, blocked domains, GPC domains, param strips, CMP, CMP detection, cosmetic, unattributed buffer |
+| `PROTOCONSENT_GET_PROTO_DATA` | popup -> background | Returns comprehensive Overview tab data: mode, coverage, blocked domains, GPC domains, param strips, CMP, CMP detection, cosmetic, unattributed buffer |
 
 ## 15. URL parameter stripping
 
@@ -646,11 +646,11 @@ Dynamic param strip rule IDs are tracked in `dynamicParamStripIds` (Set in `stat
 
 ### 15.4 Observability
 
-**Proto tab**: the `renderProtoParamStrip()` function renders an accordion card. The header shows total strip count and number of unique parameter types. The body lists individual parameter names as rows (one per line), grouped by domain. Top 10 domains shown, with "+N more" overflow. The container uses `:empty { display: none }` to avoid blank space when no strips are detected.
+**Overview tab**: the `renderProtoParamStrip()` function renders an accordion card. The header shows total strip count and number of unique parameter types. The body lists individual parameter names as rows (one per line), grouped by domain. Top 10 domains shown, with "+N more" overflow. The container uses `:empty { display: none }` to avoid blank space when no strips are detected.
 
 **Log tab**: strip events are streamed via `logPorts` as `{ type: "param_strip", domain, params, tabId }` messages. The Log tab renders these as purple lines: `[param-strip] domain - param1, param2`. On historical replay (popup opened after the event), the Log tab queries `PROTOCONSENT_GET_PROTO_DATA` and reconstructs entries from `paramStrips`.
 
-**Popup Consent tab**: `getBlockedRulesCount()` classifies strip matches from static rulesets (`strip_tracking_params`, `strip_tracking_params_sites`) and dynamic rules (via `dynamicParamStripIds`). The `paramStrips` count is included in the return value but does not increment the badge counter or blocked count.
+**Popup Purposes tab**: `getBlockedRulesCount()` classifies strip matches from static rulesets (`strip_tracking_params`, `strip_tracking_params_sites`) and dynamic rules (via `dynamicParamStripIds`). The `paramStrips` count is included in the return value but does not increment the badge counter or blocked count.
 
 ### 15.5 DNR debug mode interaction
 

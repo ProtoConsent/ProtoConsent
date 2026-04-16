@@ -9,7 +9,7 @@
 <p align="center"><em>User‑side, purpose‑based consent for the web</em></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.0-blue" alt="version 0.5.0">
+  <img src="https://img.shields.io/badge/version-0.5.1-blue" alt="version 0.5.1">
   <img src="https://img.shields.io/github/license/ProtoConsent/ProtoConsent" alt="GPL-3.0+">
   <img src="https://img.shields.io/badge/manifest-v3-green" alt="Manifest V3">
   <img src="https://img.shields.io/badge/chromium-supported-brightgreen?logo=googlechrome&logoColor=white" alt="Chromium">
@@ -28,18 +28,18 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 
 ## Key features
 
-- **Two operating modes:** Standalone (full blocking) or ProtoConsent Mode (monitoring and attribution with an external blocker). Switch from Purpose Settings. The Proto tab dashboard shows mode status, coverage metrics, signal indicators, purpose-attributed blocks, CMP detection, and parameter stripping - all in one view.
-- **Per‑site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking).
-- **Network‑level enforcement** of purpose‑based decisions via curated blocklists organised by purpose, with visible results (blocked counts, domain detail). See [blocklists.md](design/blocklists.md).
-- **URL parameter stripping:** removes tracking parameters (utm_source, fbclid, gclid, msclkid, and ~300 more) from URLs before they reach the server, plus ~1,800 site-specific parameters across ~880 domains. Stripped parameters are shown in the Proto tab and Log tab.
-- **Optional enhanced protection** with 19 curated enhanced lists (5 ProtoConsent Core purpose-based lists plus EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project, AdGuard CNAME Trackers) plus regional filter lists for 13 languages, including cosmetic filtering (element-hiding CSS). Three presets (Off, Balanced, Full) or individual list selection. Remote fetch gated behind an explicit consent toggle. Consent-enhanced link optionally auto-activates lists matching denied purposes.
-- **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.
 - **Consent banner auto-response:** cookie consent popups from 31 CMP frameworks (including IAB TCF v2.2) are answered automatically based on your purpose preferences. No DOM interaction, no click simulation, no waiting for the banner to render. Signatures updated via CDN alongside Enhanced lists. See [cmp-auto-response.md](design/cmp-auto-response.md).
+- **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.
+- **Network‑level enforcement** of purpose‑based decisions via curated blocklists organised by purpose, with visible results (blocked counts, domain detail). See [blocklists.md](design/blocklists.md).
+- **Optional enhanced protection** with 19 curated enhanced lists (5 ProtoConsent Core purpose-based lists plus EasyList, EasyPrivacy, AdGuard, HaGeZi, Steven Black, OISD, 1Hosts, Blocklist Project, AdGuard CNAME Trackers) plus regional filter lists for 13 languages, including cosmetic filtering (element-hiding CSS). Three presets (Off, Balanced, Full) or individual list selection. Remote fetch gated behind an explicit consent toggle. Consent-enhanced link optionally auto-activates lists matching denied purposes.
+- **Per‑site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking).
+- **Two operating modes:** Standalone (full blocking) or ProtoConsent Mode (monitoring and attribution with an external blocker). Switch from Purpose Settings. The Overview tab dashboard shows mode status, coverage metrics, signal indicators, purpose-attributed blocks, CMP detection, and parameter stripping - all in one view.
+- **Inter-extension API:** other browser extensions can query the user's consent state via `chrome.runtime.sendMessage`, with TOFU trust model and rate limiting. See the [protocol spec](design/spec/inter-extension-protocol.md).
 - **Banner detection and observation:** CSS-based detection of 290+ CMP banners (via Autoconsent data), site-specific hiding rules for 237+ sites, cookie consent state decoding and comparison against your preferences. CMP activity is visible in the Log tab as banner and consent lines.
+- **URL parameter stripping:** removes tracking parameters (utm_source, fbclid, gclid, msclkid, and ~300 more) from URLs before they reach the server, plus ~1,800 site-specific parameters across ~880 domains. Stripped parameters are shown in the Overview tab and Log tab.
 - **Visibility:** real‑time log monitoring, blocked domains grouped by purpose with [Consent Commons](https://consentcommons.com/) icons, GPC signal tracking, Client Hints status, cookie consent detection, CNAME trackers and domain whitelist management.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` to declare their data practices. No SDK or code changes required.
 - **JavaScript SDK** (MIT licensed) for web pages to query user preferences. TypeScript declarations included.
-- **Inter-extension API:** other browser extensions can query the user's consent state via `chrome.runtime.sendMessage`, with TOFU trust model and rate limiting.
 
 For a detailed feature breakdown, see [product-overview.md](design/product-overview.md).
 
@@ -63,10 +63,10 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 <table>
 <tr>
 <td align="center" width="50%"><img src="design/assets/screenshots/popup-profile.png" alt="ProtoConsent popup" width="400" height="560"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-proto-monitoring.png" alt="Proto tab dashboard" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-overview-monitoring.png" alt="Overview tab dashboard" width="400" height="560"></td>
 </tr>
 <tr>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-enhanced-balanced.png" alt="Enhanced Protection tab" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-protection-balanced.png" alt="Enhanced Protection tab" width="400" height="560"></td>
 <td align="center" width="50%"><img src="design/assets/screenshots/popup-log-domains.png" alt="Log tab with blocked domains" width="400" height="560"></td>
 </tr>
 <tr>

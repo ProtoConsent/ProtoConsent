@@ -136,6 +136,19 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // Regional lists
+    if (bg && bg.regionalLanguages) {
+      lines.push("— regional lists —");
+      if (bg.regionalLanguages.length > 0) {
+        lines.push("  languages: " + bg.regionalLanguages.join(", "));
+        var regLists = (bg.enhancedListIds || []).filter(function (id) { return id.startsWith("regional_"); });
+        lines.push("  active lists: " + (regLists.length > 0 ? regLists.join(", ") : "(none)"));
+      } else {
+        lines.push("  languages: (none selected)");
+      }
+      lines.push("");
+    }
+
     // CMP auto-response lists
     if (bg && bg.cmpLists) {
       lines.push("— CMP auto-response —");
