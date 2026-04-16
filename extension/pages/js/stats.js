@@ -373,7 +373,7 @@ function buildEnhancedScopeLine(el) {
     var infoDomains = Object.entries(epLists)
       .filter(function (e) { return (e[1].enabled || celIds.has(e[0])) && e[1].type === "informational"; })
       .reduce(function (sum, e) { return sum + (e[1].domainCount || 0); }, 0);
-    renderEnhancedScopeLine(el, stats.blockingCount + stats.cosmeticCount + stats.cmpCount, stats.totalRules, stats.infoCount, infoDomains);
+    renderEnhancedScopeLine(el, stats.enabledCount - stats.infoCount, stats.totalRules, stats.infoCount, infoDomains);
   } else {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, function (resp) {
       if (chrome.runtime.lastError || !resp) return;

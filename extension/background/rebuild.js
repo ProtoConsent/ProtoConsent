@@ -470,21 +470,29 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     // Build enhanced reverse index for onErrorOccurred attribution (always, both modes)
+    // Prefer lists with a category (purpose) over uncategorized ones.
     const newEnhancedReverseIndex = new Map();
+    const indexedHasCategory = new Set();
     for (const [listId, listData] of Object.entries(enhancedData)) {
       // Only index blocking lists (no type field); skip special types (cosmetic, cmp, informational, tracking_params, etc.)
       const listMeta = enhancedListsMeta[listId];
       if (listMeta && listMeta.type) continue;
+      const hasCategory = !!(listMeta && listMeta.category);
       if (listData.domains?.length) {
         for (const d of listData.domains) {
+          if (indexedHasCategory.has(d) && !hasCategory) continue;
           newEnhancedReverseIndex.set(d, listId);
+          if (hasCategory) indexedHasCategory.add(d);
         }
       }
       if (listData.pathRules?.length) {
         for (const pr of listData.pathRules) {
           const m = pr.urlFilter?.match(/^\|\|([^/]+)/);
-          if (m && !newEnhancedReverseIndex.has(m[1])) {
+          if (!m) continue;
+          if (indexedHasCategory.has(m[1]) && !hasCategory) continue;
+          if (!newEnhancedReverseIndex.has(m[1]) || hasCategory) {
             newEnhancedReverseIndex.set(m[1], listId);
+            if (hasCategory) indexedHasCategory.add(m[1]);
           }
         }
       }
