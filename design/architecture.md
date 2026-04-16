@@ -93,7 +93,7 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 - **Site rules**: mapping from domains to rules (profile plus purpose overrides) and predefined profiles
 - **Domain whitelist**: per-site and global allow entries
-- **Enhanced Protection**: list metadata in `enhancedLists`, domain/path data in `enhancedData_{listId}` keys, active preset in `enhancedPreset`. 19 lists: 5 ProtoConsent Core (one per blocking purpose, maintained by the project) and 14 third-party from open-source projects. Core lists are bundled for first-install availability and updated weekly via CDN from the [data repository](https://github.com/ProtoConsent/data), where a GitHub Actions workflow refreshes all sources every Tuesday.
+- **Enhanced Protection**: list metadata in `enhancedLists`, domain/path data in `enhancedData_{listId}` keys, active preset in `enhancedPreset`, selected regional languages in `regionalLanguages`. 19 non-regional lists: 5 ProtoConsent Core (one per blocking purpose, maintained by the project) and 14 third-party from open-source projects, plus 2 regional catalog entries (13 regions x 2 types, language-gated). Core lists are bundled for first-install availability and updated weekly via CDN from the [data repository](https://github.com/ProtoConsent/data), where a GitHub Actions workflow refreshes all sources every Tuesday.
 - **Cosmetic filtering**: compiled CSS in `_cosmeticCSS` (generic selectors) and `_cosmeticDomains` (per-domain selectors)
 - **Opt-in flags**: `dynamicListsConsent` (remote sync) and `consentEnhancedLink` (consent-enhanced link)
 

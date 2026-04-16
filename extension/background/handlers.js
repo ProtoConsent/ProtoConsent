@@ -10,12 +10,15 @@
  // @param {Object} catalog - enhanced-lists.json catalog
  // @returns {string} "off" | "basic" | "full" | "custom"
  
+import { REGIONAL_IDS } from "./config-bridge.js";
+
 function resolveEnhancedPreset(lists, catalog) {
   const downloaded = Object.keys(lists);
   if (downloaded.length === 0) return "off";
   const allDisabled = downloaded.every(id => !lists[id]?.enabled);
   if (allDisabled) return "off";
-  const catalogIds = Object.keys(catalog);
+  // Exclude regional lists from preset resolution (they are user-managed)
+  const catalogIds = Object.keys(catalog).filter(id => !REGIONAL_IDS.has(id));
   if (catalogIds.length === 0) return "custom";
   const allDownloaded = catalogIds.every(id => !!lists[id]);
   const allEnabled = allDownloaded && catalogIds.every(id => !!lists[id]?.enabled);
@@ -53,6 +56,7 @@ import {
   loadBlocklistsConfig, loadPresetsConfig, loadPurposesConfig,
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
+import { handleRegionalFetch, initRegionalStorageListener } from "./handlers-regional.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
 import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
@@ -633,10 +637,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     loadEnhancedListsCatalog().then(catalog => {
       withEnhancedStorageLock(() => {
         return getEnhancedListsFromStorage().then(lists => {
+          return new Promise(resolveRL => {
+            chrome.storage.local.get(["regionalLanguages"], (rl) => {
+              resolveRL(Array.isArray(rl.regionalLanguages) && rl.regionalLanguages.length > 0);
+            });
+          }).then(hasRegionalLangs => {
           for (const [listId, listDef] of Object.entries(catalog)) {
             if (!lists[listId]) continue;
             if (preset === "off") {
               lists[listId].enabled = false;
+            } else if (REGIONAL_IDS.has(listId)) {
+              // Regional lists follow preset only if languages are selected
+              if (hasRegionalLangs) {
+                if (preset === "basic") {
+                  lists[listId].enabled = listDef.preset === "basic";
+                } else if (preset === "full") {
+                  lists[listId].enabled = true;
+                }
+              }
             } else if (preset === "basic") {
               lists[listId].enabled = listDef.preset === "basic";
             } else if (preset === "full") {
@@ -655,6 +673,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               resolve();
             });
           });
+          }); // end hasRegionalLangs then
         });
       });
     });
@@ -702,9 +721,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (!listId) { sendResponse({ ok: false }); return; }
     Promise.all([
       loadEnhancedListsCatalog(),
-    ]).then(([catalog]) => {
+    ]).then(async ([catalog]) => {
       const listDef = catalog[listId];
-      if (!listDef || !listDef.fetch_url) {
+      if (!listDef || (!listDef.fetch_url && !listDef.fetch_base)) {
+        sendResponse({ ok: false, error: "Unknown list or no fetch URL" }); return;
+      }
+      // Regional lists: delegated to handlers-regional.js
+      if (listDef.type === "regional_cosmetic" || listDef.type === "regional_blocking") {
+        await handleRegionalFetch(listId, listDef, sendResponse);
+        return;
+      }
+      if (!listDef.fetch_url) {
         sendResponse({ ok: false, error: "Unknown list or no fetch URL" }); return;
       }
       const fetchUrl = listDef.fetch_url.startsWith("http")
@@ -1254,3 +1281,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 });
+
+// Initialize regional language change listener
+initRegionalStorageListener();

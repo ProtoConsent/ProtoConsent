@@ -47,6 +47,14 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
     - [Per-site parameters](#per-site-parameters)
     - [DNR implementation](#dnr-implementation)
     - [Observability](#observability)
+  - [13. Regional lists](#13-regional-lists)
+    - [Sources](#sources-1)
+    - [Distribution model](#distribution-model-1)
+    - [FETCH handler](#fetch-handler)
+    - [Language selection](#language-selection)
+    - [Preset exclusion](#preset-exclusion)
+    - [UI presentation](#ui-presentation)
+    - [Constants](#constants)
 
 ## 2. Current state
 
@@ -173,23 +181,27 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 
 ### Current lists (v0.5)
 
-13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), 2 URL parameter stripping lists, and 2 CMP detection lists, organized in two presets.
+13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), 2 URL parameter stripping lists, 2 CMP detection lists, and 2 regional catalog entries (covering 13 regions x 2 types), organized in two presets. Regional lists are managed separately (see [section 13](#13-regional-lists)).
 
-**Balanced preset** (5 lists - enabled by default when user selects Balanced):
+**Balanced preset** (5 lists + regional if languages selected):
 
 | List | License | Domains | Path rules | Category |
 | --- | --- | --- | --- | --- |
 | [EasyPrivacy](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~46K | ~4K | `analytics` |
 | [EasyList](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~58K | ~1.6K | `ads` |
 | [AdGuard DNS Filter](https://github.com/AdguardTeam/AdGuardSDNSFilter) | GPL-3.0 | ~165K | - | - |
-| [Steven Black Unified](https://github.com/StevenBlack/hosts) | MIT | ~49K | - | - |
 | [EasyList Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | - | - | `ads` |
 | [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | - | - | - |
+| Regional Cosmetic* | GPL-3.0+ | - | - | - |
+| Regional Blocking* | GPL-3.0+ | varies | varies | - |
 
-**Full preset** (adds 8 lists):
+*Regional lists are only enabled when the user has selected at least one language in Purpose Settings (see [section 13](#13-regional-lists)).
+
+**Full preset** (adds 9 lists):
 
 | List | License | Domains | Path rules | Category |
 | --- | --- | --- | --- | --- |
+| [Steven Black Unified](https://github.com/StevenBlack/hosts) | MIT | ~49K | - | - |
 | [OISD Small](https://oisd.nl/) | GPL-3.0 | ~56K | - | - |
 | [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~190K | - | - |
 | [HaGeZi TIF](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~966K | - | `advanced_tracking` |
@@ -227,11 +239,11 @@ This keeps the extension package small, avoids bundling third-party list content
 | Preset | Behavior |
 | --- | --- |
 | Off | No enhanced lists active (core ProtoConsent only) |
-| Balanced | Enables the 5 Balanced lists on download |
-| Full | Enables all 13 lists on download |
+| Balanced | Enables the 5 Balanced lists on download; also enables regional lists if languages are selected |
+| Full | Enables all 14 lists on download; also enables regional lists if languages are selected |
 | Custom | User has toggled individual lists manually |
 
-When a user downloads lists with the preset set to Off, the extension auto-switches to Balanced.
+When a user downloads lists with the preset set to Off, the extension auto-switches to Balanced. Regional lists have `preset: "basic"` and are included in Balanced/Full presets, but only enabled when the user has selected at least one language in Purpose Settings (see [section 13](#13-regional-lists)).
 
 ### Consent-enhanced link
 
@@ -288,7 +300,7 @@ For the full signature format, supported CMPs, and three-layer response architec
 
 | List | License | Templates | Scope |
 | --- | --- | --- | --- |
-| [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | 23 | Global (most), domain-scoped (Bing) |
+| [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | 31 | Global (most), domain-scoped (Bing) |
 
 **CMP detection lists** complement the auto-response signatures by identifying consent banners on the page:
 
@@ -335,7 +347,7 @@ A GitHub Actions workflow in the data repo refreshes all Enhanced lists weekly:
 
 - **Schedule:** Tuesdays at 04:42 UTC (cron: `42 4 * * 2`)
 - **Manual trigger:** `workflow_dispatch` with optional `list` parameter for single-list refresh
-- **Steps:** `convert.js` (blocklists) → `convert-cname.js` (CNAME trackers) → `convert-cosmetic.js` (cosmetic rules) → `generate-manifest.js` (rebuild `config/enhanced-lists.json`) → commit and push if changes detected
+- **Steps:** `convert.js` (blocklists) → `convert-cname.js` (CNAME trackers) → `convert-cosmetic.js` (cosmetic rules) → `convert-regional.js` (regional lists) → `generate-manifest.js` (rebuild `config/enhanced-lists.json`) → commit and push if changes detected
 - **Workflow file:** `.github/workflows/refresh-lists.yml`
 
 The extension picks up updated lists on the next sync check (controlled by `dynamicListsConsent`). jsDelivr CDN caching may delay propagation by a few minutes after the commit.
@@ -420,3 +432,97 @@ Dynamic CDN rules can supplement these static rulesets when Enhanced data includ
 Stripped parameters are detected via the `webNavigation` API (§15 in [architecture.md](architecture.md)) and shown in the Proto tab (accordion with parameter names) and Log tab (purple `[param-strip]` lines). The badge counter and blocked request count are not affected.
 
 The converter script (`convert-tracking-params.js`) in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo fetches upstream lists, extracts literal `$removeparam` names (skipping regex patterns), separates global vs. per-site, and outputs the two JSON files.
+
+## 13. Regional lists
+
+Regional filter lists provide language/region-specific blocking and cosmetic rules compiled from EasyList regional supplements and AdGuard language-specific filters. Each region produces two files: `regional_<code>_cosmetic.json` (element hiding) and `regional_<code>_blocking.json` (domain and path blocking). 13 regions are supported, managed through 2 catalog entries.
+
+### Sources
+
+| Region | Code | Sources |
+| --- | --- | --- |
+| Chinese | `cn` | EasyList China + AdGuard Chinese |
+| German | `de` | EasyList Germany + AdGuard German |
+| Dutch | `nl` | EasyList Dutch + AdGuard Dutch |
+| Spanish/Portuguese | `es` | EasyList Spanish + EasyList Portuguese + AdGuard Spanish/Portuguese |
+| French | `fr` | AdGuard French |
+| Hebrew | `he` | EasyList Hebrew |
+| Italian | `it` | EasyList Italy |
+| Japanese | `ja` | AdGuard Japanese |
+| Lithuanian | `lt` | EasyList Lithuania |
+| Polish | `pl` | EasyList Polish |
+| Russian | `ru` | AdGuard Russian |
+| Turkish | `tr` | AdGuard Turkish |
+| Ukrainian | `uk` | AdGuard Ukrainian |
+
+Regions with both EasyList and AdGuard sources (CN, DE, NL, ES) merge rules from all sources per type, deduplicating domains and selectors. The converter script (`convert-regional.js`) reuses the same ABP blocking parser as `convert.js` and the same cosmetic parser as `convert-cosmetic.js`.
+
+### Distribution model
+
+The extension's bundled catalog (`extension/config/enhanced-lists.json`) contains exactly **2 regional entries**:
+
+| Catalog ID | Type field | Description |
+| --- | --- | --- |
+| `regional_cosmetic` | `regional_cosmetic` | Element-hiding rules for selected regions |
+| `regional_blocking` | `regional_blocking` | Domain and path blocking rules for selected regions |
+
+Each entry has a `fetch_base` field (CDN path prefix, e.g. `enhanced/regional/`) and a `regions` array listing all 13 region codes. There is no individual `fetch_url` per region. Both entries have `preset: "basic"`, so they are included in the Balanced and Full presets when the user has at least one language selected.
+
+CDN path for individual region files: `{fetch_base}regional_{code}_{suffix}.json` (e.g. `enhanced/regional/regional_de_cosmetic.json`).
+
+**CDN backward compatibility**: The data repo's `generate-manifest.js` **skips regional entries** from CDN output. Old extension versions (<=v0.5.0) have no regional code and would show phantom cards and break preset resolution if they encountered unknown regional entries in the CDN catalog. The extension's bundled copy provides the correct regional definitions; since the CDN merge cannot overwrite entries it does not contain, the bundled values survive intact. This skip should be removed once the minimum supported extension version includes regional support. 
+
+### FETCH handler
+
+When the user triggers a download for a regional catalog entry, the FETCH handler:
+
+1. Reads `regionalLanguages` (a string array of region codes) from `chrome.storage.local`.
+2. For each selected region, fetches `{fetch_base}regional_{code}_{suffix}.json` from CDN.
+3. Merges all fetched files into a single `enhancedData_{id}` storage entry.
+
+Regional cosmetic data is stored with `type: "cosmetic"`, so the cosmetic compile step in `rebuild.js` processes it alongside EasyList cosmetic selectors. Regional blocking data is stored without a `type` field, so `rebuild.js` processes it as standard DNR blocking rules (domains and path rules).
+
+### Language selection
+
+Region selection is managed in Purpose Settings (`purposes-settings-regional.js`) via `initRegionalSection()`:
+
+- Per-region checkboxes allow the user to select which regions to activate. Each checkbox shows the region's flag icon (SVG from bundled `icons/flags/`) followed by the label.
+- Selections are written to `regionalLanguages` in `chrome.storage.local` as a string array of region codes. Writes are serialized via a promise chain to prevent read-modify-write race conditions when toggling checkboxes rapidly.
+- The default selection is derived from `chrome.i18n.getUILanguage()` via the language-to-region mappings in `config/regional-languages.json`. Multi-language mappings are supported (e.g. `pt` maps to `es` since Spanish/Portuguese are combined). The `flag` field in `regional-languages.json` supports strings (`"DE"`) or arrays (`["ES", "PT"]`) for dual-flag display.
+- The storage change listener in `handlers-regional.js` detects changes to `regionalLanguages` and auto-re-fetches regional lists, so the user does not need to manually re-download after changing language selections. The listener is debounced (100ms) and automatically disables regional lists when all languages are removed.
+
+Language detection only happens in Purpose Settings defaults. There is no `suggestedRegion` field in `GET_STATE` responses.
+
+### Preset integration
+
+Regional lists have `preset: "basic"` and participate in the Balanced/Full preset logic, gated by language selection:
+
+- `resolveEnhancedPreset()` in `handlers.js` filters out `REGIONAL_IDS` when computing preset state, so regional lists being enabled/disabled does not affect preset detection.
+- The `SET_PRESET` handler reads `regionalLanguages` from storage. If languages are selected, regional lists follow the preset (enabled for Balanced if `preset === "basic"`, always enabled for Full). If no languages are selected, regional lists are skipped. The Off preset always disables regional lists regardless of language selection.
+- `setEnhancedPreset()` in the popup similarly checks `regionalLanguages` before including regionals in auto-download.
+
+There is no `catalog[id].region` field. Identification relies entirely on the `REGIONAL_IDS` Set defined in `config.js`.
+
+### UI presentation
+
+Two cards in the Enhanced tab, rendered by `renderRegionalCard()` in `enhanced-regional.js`:
+
+- **Regional Cosmetic**: Cosmetic pill, catalog description, expand/collapse with chevron.
+- **Regional Blocking**: No category pill, catalog description, expand/collapse with chevron.
+
+Card headers show flag icons (SVG images from bundled `icons/flags/`, max 2 flags with "+N" overflow) linking to Purpose Settings regional section, followed by a language count badge. Expanded state shows source, license, and last-updated date. Each card has standard download/toggle/remove buttons. There are no per-region controls in the Enhanced tab. Region selection is handled exclusively in Purpose Settings (see [Language selection](#language-selection) above).
+
+Flag icons are from the [flag-icons](https://github.com/lipis/flag-icons) library (MIT license, Panayiotis Lipiridis). 14 SVGs are bundled in `extension/icons/flags/`. An `onerror` fallback renders a two-letter text abbreviation if the SVG fails to load (e.g. for new regions added via CDN before the extension bundles their flag).
+
+### Constants
+
+Regional constants are defined in `config.js`:
+
+| Constant | Type | Description |
+| --- | --- | --- |
+| `REGIONAL_COSMETIC_ID` | `string` | Catalog ID for the regional cosmetic entry |
+| `REGIONAL_BLOCKING_ID` | `string` | Catalog ID for the regional blocking entry |
+| `REGIONAL_IDS` | `Set<string>` | Set containing both regional IDs, used for preset exclusion |
+
+Region labels, flag codes, and language-to-region mappings are loaded at runtime from `config/regional-languages.json` (bundled, and synced via CDN catalog `regions` array for removal control).
+

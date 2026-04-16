@@ -46,3 +46,6 @@ export const CAPABILITIES = {
   standalone:   { ownBlocking: true,  observeExternalBlocks: true, whitelistOverrides: true,  enhancedDnr: true  },
   protoconsent: { ownBlocking: false, observeExternalBlocks: true, whitelistOverrides: false, enhancedDnr: false },
 };
+
+// SYNC: must match config.js REGIONAL_IDS
+export const REGIONAL_IDS = new Set(["regional_cosmetic", "regional_blocking"]);

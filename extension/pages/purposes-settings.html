@@ -72,11 +72,6 @@
 			</details>
 		</section>
 
-		<section id="privacy-signals-section" class="ps-section ps-hidden">
-			<h2>Privacy Signals</h2>
-			<div id="privacy-signals-list" class="ps-dynamic-grid"></div>
-		</section>
-
 		<section id="mode-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
 				<h2>Operating Mode</h2>
@@ -98,6 +93,11 @@
 					<div class="ps-mode-desc">Complement another blocker with consent, GPC, banner management, and Client Hints stripping.</div>
 				</div>
 			</div>
+		</section>
+
+		<section id="privacy-signals-section" class="ps-section ps-hidden">
+			<h2>Privacy Signals</h2>
+			<div id="privacy-signals-list" class="ps-dynamic-grid"></div>
 		</section>
 		</div>
 
@@ -193,6 +193,14 @@
 				</details>
 			</div>
 		</section>
+
+		<section id="regional-section" class="ps-section ps-hidden">
+			<div class="ps-section-head">
+				<h2 id="regional-filters">Regional Filters</h2>
+			</div>
+			<p class="ps-enhanced-desc">Select which regional filter lists to include when downloading Regional Cosmetic and Regional Blocking. Changes take effect on the next download or update.</p>
+			<div id="regional-language-grid" class="ps-dynamic-grid"></div>
+		</section>
 		</div>
 
 		<div class="ps-panel" id="ps-panel-advanced" data-panel="advanced" role="tabpanel" aria-labelledby="ps-tab-advanced" hidden>
@@ -270,5 +278,6 @@
 
 	<script src="../config.js"></script>
 	<script src="js/purposes-settings.js"></script>
+	<script src="js/purposes-settings-regional.js"></script>
 </body>
 </html>

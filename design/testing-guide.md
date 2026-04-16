@@ -58,6 +58,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [13.7 Enhanced lists consent gate (sync)](#137-enhanced-lists-consent-gate-sync)
     - [13.8 Consent-enhanced link](#138-consent-enhanced-link)
     - [13.9 ProtoConsent Core lists](#139-protoconsent-core-lists)
+    - [13.10 Regional filter lists](#1310-regional-filter-lists)
   - [14. Testing the inter-extension API](#14-testing-the-inter-extension-api)
     - [14.1 Enabling the API](#141-enabling-the-api)
     - [14.2 Sending a test query](#142-sending-a-test-query)
@@ -576,9 +577,9 @@ Enhanced Protection adds optional third‑party blocklists that are fetched on d
 
 1. Open the ProtoConsent popup and click the **Enhanced** tab in the mode rail.
 2. The preset bar shows four options: **Off**, **Balanced**, **Full**, and **Custom** (disabled until you toggle individual lists).
-3. Select **Balanced**. The extension will prompt you to download the four Balanced lists (EasyPrivacy, EasyList, AdGuard DNS, Steven Black).
+3. Select **Balanced**. The extension will prompt you to download the Balanced lists (EasyPrivacy, EasyList, AdGuard DNS, cosmetic, banners). If you have regional languages selected in Purpose Settings, Regional Cosmetic and Regional Blocking are also included.
 4. Wait for all downloads to complete - each card shows a progress indicator, then switches to an enabled state with a domain count.
-5. Select **Full** to enable all 12 lists. Lists not yet downloaded will start downloading automatically.
+5. Select **Full** to enable all lists including Steven Black. Lists not yet downloaded will start downloading automatically.
 
 Enhanced Protection tab with the Balanced preset active:
 
@@ -740,6 +741,18 @@ chrome.storage.local.get(["enhancedLists", "enhancedData_protoconsent_core"], r 
   console.log('Domains:', data?.domains?.length, '| Path rules:', data?.pathRules?.length);
 })
 ```
+
+### 13.10 Regional filter lists
+
+1. Open Purpose Settings and scroll to **Regional Filters** (or click the language badge on a regional card in the Enhanced popup tab).
+2. Check one or more region checkboxes (e.g. Spanish/Portuguese). Flag icons should appear next to labels.
+3. Return to the Enhanced popup tab. Regional Cosmetic and Regional Blocking cards should show the selected flag(s) in the header.
+4. Download both regional lists. Verify domain/selector counts update in the card stats.
+5. **Cosmetic test**: visit a regional site (e.g. meneame.net for ES). With Regional Cosmetic enabled, ad containers should be hidden. Toggle off and refresh to confirm they reappear.
+6. **Blocking test**: visit a regional site (e.g. elpais.com for ES). Open the Log tab; blocked domains should show `enhanced: regional_blocking` attribution.
+7. **Preset integration**: select Balanced. Both regional lists should be enabled (if languages are selected). Select Off. Both should disable.
+8. **Language removal**: uncheck all regional languages in Purpose Settings. Regional lists should auto-disable (storage listener). The regional cards should show no flags.
+9. **Rapid toggle**: check and uncheck several languages quickly. Verify no language selections are lost (serialized writes prevent race conditions).
 
 ## 14. Testing the inter-extension API
 

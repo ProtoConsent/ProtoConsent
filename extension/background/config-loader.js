@@ -28,6 +28,7 @@ import {
   CATALOG_TTL, CATALOG_REMOTE_URL, CATALOG_REMOTE_FALLBACK,
   SUPPORTED_MANIFEST_VERSION,
   setPathOnlyUrlFilters,
+  regionalLanguagesConfig, setRegionalLanguagesConfig,
 } from "./state.js";
 
 // Load domain and path-domain lists from static rulesets.
@@ -154,7 +155,6 @@ export async function loadPresetsConfig() {
     return data;
   } catch (e) {
     console.error("Failed to load presets.json:", e);
-    setPresetsConfig({});
     return {};
   }
 }
@@ -178,7 +178,24 @@ export async function loadPurposesConfig() {
     return data;
   } catch (e) {
     console.error("Failed to load purposes.json:", e);
-    setPurposesConfig({});
+    return {};
+  }
+}
+
+// Load regional-languages.json once when the service worker starts.
+// Returns { cn: { label, languages }, de: { ... }, ... }
+export async function loadRegionalLanguagesConfig() {
+  if (regionalLanguagesConfig) return regionalLanguagesConfig;
+
+  try {
+    const url = chrome.runtime.getURL("config/regional-languages.json");
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    setRegionalLanguagesConfig(data);
+    return data;
+  } catch (e) {
+    if (DEBUG_RULES) console.warn("Failed to load regional-languages.json:", e);
     return {};
   }
 }
@@ -196,6 +213,7 @@ export function loadEnhancedListsCatalog(options) {
 
   const localPromise = fetch(chrome.runtime.getURL("config/enhanced-lists.json"))
     .then(r => r.json())
+    .then(data => data.lists || data)
     .catch(() => ({}));
 
   const consentPromise = new Promise(r =>

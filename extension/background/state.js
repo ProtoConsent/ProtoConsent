@@ -164,6 +164,10 @@ export const CATALOG_REMOTE_URL = "https://cdn.jsdelivr.net/gh/ProtoConsent/data
 export const CATALOG_REMOTE_FALLBACK = "https://raw.githubusercontent.com/ProtoConsent/data/main/config/enhanced-lists.json";
 export const SUPPORTED_MANIFEST_VERSION = 1;
 
+// Regional languages config (loaded from config/regional-languages.json)
+export let regionalLanguagesConfig = null;
+export function setRegionalLanguagesConfig(v) { regionalLanguagesConfig = v; }
+
 // Serialized whitelist write queue
 export let _wlQueue = Promise.resolve();
 export function setWlQueue(v) { _wlQueue = v; }

@@ -50,6 +50,17 @@ Icons not from Consent Commons:
       Custom shield with checkmark icon designed for ProtoConsent.
       Used for security-category lists (e.g. Blocklist Project Phishing).
 
+### Flag icons
+
+| Source | Authors | License | Usage |
+|--------|---------|---------|-------|
+| [flag-icons](https://github.com/lipis/flag-icons) | Lipis | MIT | Regional filter language flags |
+
+14 SVG flags (4x3 aspect ratio) used in the Enhanced Protection regional list
+cards to indicate active language regions:
+
+    extension/icons/flags/{cn,de,es,fr,il,it,jp,lt,nl,pl,pt,ru,tr,ua}.svg
+
 ### CMP banner handling (Autoconsent)
 
 | Source | Authors | License | Files |
@@ -73,7 +84,7 @@ Files containing Autoconsent-derived data:
 
     extension/rules/protoconsent_cmp_signatures.json
       Prehide selectors from Autoconsent are merged into the selector field
-      of hand-maintained CMP signatures. The 23 hand-maintained signatures
+      of hand-maintained CMP signatures. The 31 hand-maintained signatures
       (with cookie injection templates, purpose maps, and format definitions)
       are original to ProtoConsent.
 
@@ -108,6 +119,17 @@ in the extension but are compiled from upstream open-source projects.
 |--------|---------|---------|-------|
 | [AdGuard TrackParamFilter](https://github.com/AdguardTeam/AdguardFilters) | AdGuard Team | GPL-3.0 | `adguard_tracking_params.json`, `dandelion_tracking_params.json` (per-site entries) |
 | [Legitimate URL Shortener Tool](https://github.com/DandelionSprout/adfilt) | Dandelion Sprout | Dandelicence v1.4 | `dandelion_tracking_params.json` (per-site entries) |
+
+### Regional lists
+
+| Source | Authors | License | Files |
+|--------|---------|---------|-------|
+| [EasyList regional supplements](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `regional/regional_{cn,de,nl,es,he,it,lt,pl}_*.json` |
+| [AdGuard language filters](https://github.com/AdguardTeam/AdguardFilters) | AdGuard Team | GPL-3.0 | `regional/regional_{cn,de,nl,es,fr,ja,ru,tr,uk}_*.json` |
+
+13 regions: Chinese, German, Dutch, Spanish/Portuguese, French, Hebrew, Italian, Japanese,
+Lithuanian, Polish, Russian, Turkish, Ukrainian. Each region produces two files (cosmetic +
+blocking). Regional lists are remote-catalog only and not bundled in the extension.
 
 AdGuard's TrackParamFilter general section provides the global parameter list (~304 params).
 Per-site parameters in `dandelion_tracking_params.json` are merged from AdGuard's specific
@@ -150,6 +172,22 @@ The full license text is available at: https://www.mozilla.org/en-US/MPL/2.0/
 ### MIT (AdGuard CNAME Trackers)
 
 > Copyright 2021 Adguard Software Ltd
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+
+### MIT (flag-icons)
+
+> MIT License
+>
+> Copyright (c) 2013 Panayiotis Lipiridis
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
