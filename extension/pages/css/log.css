@@ -12,50 +12,93 @@
 }
 
 .pc-log-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  display: none;
 }
 
 .pc-log-profile-badge {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--pc-accent);
-  background: #eef5ff;
-  border: 1px solid #dbeafe;
-  border-radius: 999px;
-  padding: 2px 7px;
+  display: none;
 }
 
 .pc-log-profile-global {
-  color: var(--pc-text-muted);
-  background: var(--pc-surface);
-  border-color: var(--pc-line);
+  display: none;
+}
+
+/* Dot strip: 2 rows of colored dots for purpose states */
+.pc-log-dot-strip {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  position: relative;
+}
+
+.pc-log-dot-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  padding: 0 40px;
+}
+
+.pc-log-dot-label {
+  font-size: var(--pc-font-sm);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--pc-text-soft);
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.pc-log-dot-sep {
+  color: var(--pc-text-soft);
+  margin: 0 4px;
+}
+
+.pc-log-dot-flags {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.pc-log-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.pc-log-dot.is-required {
+  background: #3b82f6;
+}
+
+.pc-log-dot.is-allowed {
+  background: #22c55e;
+}
+
+.pc-log-dot.is-blocked {
+  background: #ef4444;
 }
 
 .pc-log-purposes {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px 8px;
-  font-size: 12px;
-  color: var(--pc-text-muted);
-  margin-bottom: 6px;
-  line-height: 1.4;
+  display: none;
 }
 
 .pc-log-purpose-cell {
-  white-space: nowrap;
+  display: none;
 }
 
 .pc-log-purpose-on {
-  color: #16a34a;
+  display: none;
 }
 
 .pc-log-purpose-off {
-  color: #dc2626;
+  display: none;
 }
 
 .pc-log-tabs {
@@ -66,10 +109,10 @@
 }
 
 .pc-log-tab {
-  font-size: 12px;
+  font-size: var(--pc-font);
   font-weight: 600;
   letter-spacing: 0.02em;
-  padding: 5px 8px 4px;
+  padding: 7px 8px 6px;
   border: none;
   border-bottom: 2px solid transparent;
   background: none;
@@ -102,12 +145,13 @@
 
 .pc-log-copy {
   margin-left: auto;
-  font-size: 10px;
+  font-size: var(--pc-font-sm);
   font-weight: 600;
   letter-spacing: 0.02em;
-  padding: 3px 8px;
-  border: 1px solid var(--pc-line);
-  border-radius: 4px;
+  padding: 2px 6px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   background: none;
   color: var(--pc-text-muted);
   cursor: pointer;
@@ -121,7 +165,7 @@
 
 .pc-log-content {
   padding: 6px 8px;
-  font-size: 11px;
+  font-size: var(--pc-font-sm);
   line-height: 1.5;
   color: var(--pc-text);
   min-height: 280px;
@@ -135,7 +179,7 @@
   margin: 0;
   padding: 6px 8px;
   font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
-  font-size: 10px;
+  font-size: var(--pc-font-sm);
   line-height: 1.55;
   color: #e2e8f0;
   background: #1e293b;
@@ -164,7 +208,7 @@
   margin: 6px 0 2px;
   padding: 5px 0;
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--pc-font-sm);
   font-weight: 600;
   color: var(--pc-accent);
   background: var(--pc-surface);
@@ -181,7 +225,7 @@
 /* Domains table */
 .pc-log-purpose-label {
   font-weight: 600;
-  font-size: 10px;
+  font-size: var(--pc-font-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--pc-text-soft);
@@ -193,13 +237,13 @@
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: var(--pc-font);
   margin-top: 4px;
 }
 
 .pc-log-table th {
   text-align: left;
-  font-size: 10px;
+  font-size: var(--pc-font-sm);
   font-weight: 600;
   color: var(--pc-text-soft);
   border-bottom: 1px solid var(--pc-line);
@@ -215,14 +259,14 @@
   color: var(--pc-accent);
 }
 
-.pc-log-table th.is-sorted-asc::after { content: " \25B4"; font-size: 9px; }
-.pc-log-table th.is-sorted-desc::after { content: " \25BE"; font-size: 9px; }
+.pc-log-table th.is-sorted-asc::after { content: " \25B4"; font-size: var(--pc-font-sm); }
+.pc-log-table th.is-sorted-desc::after { content: " \25BE"; font-size: var(--pc-font-sm); }
 
 .pc-log-filter {
   width: 100%;
   box-sizing: border-box;
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--pc-font-sm);
   padding: 4px 8px;
   margin-bottom: 2px;
   border: 1px solid var(--pc-line);
@@ -325,12 +369,12 @@
 .pc-log-cname-icon {
   color: var(--pc-warn, #d97706);
   margin-left: 3px;
-  font-size: 12px;
+  font-size: var(--pc-font);
 }
 
 .pc-log-allow-btn {
   font-family: inherit;
-  font-size: 10px;
+  font-size: var(--pc-font-sm);
   font-weight: 600;
   padding: 1px 6px;
   border: 1px solid var(--pc-line);
@@ -361,7 +405,7 @@
 
 .pc-log-remove-btn {
   font-family: inherit;
-  font-size: 10px;
+  font-size: var(--pc-font-sm);
   font-weight: 600;
   padding: 1px 6px;
   border: 1px solid #efcaca;
@@ -378,7 +422,7 @@
 
 /* Scope label + toggle in whitelist tab */
 .pc-log-scope-label {
-  font-size: 10px;
+  font-size: var(--pc-font-sm);
   font-weight: 600;
   color: var(--pc-accent);
 }
@@ -389,7 +433,7 @@
 
 .pc-log-scope-toggle-btn {
   font-family: inherit;
-  font-size: 10px;
+  font-size: var(--pc-font-sm);
   font-weight: 600;
   padding: 1px 6px;
   border: 1px solid var(--pc-line);

@@ -24,6 +24,8 @@
   --pc-danger: #b91c1c;
   --pc-danger-soft: #fee2e2;
   --pc-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+  --pc-font: 12px;
+  --pc-font-sm: 11px;
 }
 
 /* Visually hidden but accessible to screen readers */

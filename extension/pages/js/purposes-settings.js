@@ -722,7 +722,7 @@ function renderEnhancedPresets() {
 		customCard.appendChild(customName);
 		const customDesc = document.createElement('p');
 		customDesc.className = 'ps-purpose-desc';
-		customDesc.textContent = 'Individual lists toggled from the Enhanced tab in the popup.';
+		customDesc.textContent = 'Individual lists toggled from the Protection tab in the popup.';
 		customCard.appendChild(customDesc);
 
 		// Pills showing per-list enabled/disabled state (only if any downloaded)
@@ -1380,7 +1380,7 @@ function updateCelNote(celEnabled) {
 		noteLabel.textContent = 'Consent Link:';
 		note.appendChild(noteLabel);
 		if (!hasDownloadedWithCategory) {
-			note.appendChild(document.createTextNode(' No enhanced lists with a category are downloaded yet. Download lists from the Enhanced tab in the popup for consent link to take effect.'));
+			note.appendChild(document.createTextNode(' No enhanced lists with a category are downloaded yet. Download lists from the Protection tab in the popup for consent link to take effect.'));
 			note.classList.remove('ps-hidden');
 		} else {
 			const linked = resp.consentLinkedListIds || [];

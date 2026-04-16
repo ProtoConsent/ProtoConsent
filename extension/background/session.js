@@ -222,4 +222,5 @@ export function updateBadgeForTab(tabId) {
   if (total > 9999) text = "10K+";
   else if (total > 0) text = String(total);
   chrome.action.setBadgeText({ tabId, text }).catch(() => {});
+  chrome.action.setBadgeBackgroundColor({ tabId, color: "#1e3a8a" }).catch(() => {});
 }

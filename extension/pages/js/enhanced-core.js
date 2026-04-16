@@ -35,6 +35,12 @@ function renderCoreCard(coreIds) {
   const header = document.createElement("div");
   header.className = "ep-list-header";
 
+  const chevron = document.createElement("span");
+  chevron.className = "ep-list-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.textContent = "\u25BE";
+  header.appendChild(chevron);
+
   const icon = document.createElement("img");
   icon.src = ENHANCED_ICON;
   icon.width = 16;
@@ -47,13 +53,7 @@ function renderCoreCard(coreIds) {
   const nameEl = document.createElement("span");
   nameEl.className = "ep-list-name";
   nameEl.title = "ProtoConsent Core";
-  const nameTxt = document.createTextNode("ProtoConsent Core");
-  const chevron = document.createElement("span");
-  chevron.className = "ep-list-chevron";
-  chevron.setAttribute("aria-hidden", "true");
-  chevron.textContent = " \u25BE";
-  nameEl.appendChild(nameTxt);
-  nameEl.appendChild(chevron);
+  nameEl.textContent = "ProtoConsent Core";
   header.appendChild(nameEl);
 
   // CEL icon when any core sub-list is consent-linked
@@ -252,6 +252,12 @@ function renderCmpCard(cmpIds) {
   const header = document.createElement("div");
   header.className = "ep-list-header";
 
+  const chevron = document.createElement("span");
+  chevron.className = "ep-list-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.textContent = "\u25BE";
+  header.appendChild(chevron);
+
   const icon = document.createElement("img");
   icon.src = ENHANCED_ICON;
   icon.width = 16;
@@ -264,13 +270,7 @@ function renderCmpCard(cmpIds) {
   const nameEl = document.createElement("span");
   nameEl.className = "ep-list-name";
   nameEl.title = "ProtoConsent Banners";
-  const nameTxt = document.createTextNode("ProtoConsent Banners");
-  const chevron = document.createElement("span");
-  chevron.className = "ep-list-chevron";
-  chevron.setAttribute("aria-hidden", "true");
-  chevron.textContent = " \u25BE";
-  nameEl.appendChild(nameTxt);
-  nameEl.appendChild(chevron);
+  nameEl.textContent = "ProtoConsent Banners";
   header.appendChild(nameEl);
 
   const pill = document.createElement("span");

@@ -83,14 +83,14 @@ This document is part of the ProtoConsent project and is licensed under the Crea
       - [Log tab - Requests stream](#log-tab---requests-stream)
       - [Debug panel - CMP sections](#debug-panel---cmp-sections)
       - [Session persistence](#session-persistence)
-  - [17. Testing the Proto tab](#17-testing-the-proto-tab)
+  - [17. Testing the Overview tab](#17-testing-the-overview-tab)
     - [17.1 Viewing signal indicators](#171-viewing-signal-indicators)
     - [17.2 Purpose accordion cards](#172-purpose-accordion-cards)
     - [17.3 CMP detection and auto-response cards](#173-cmp-detection-and-auto-response-cards)
     - [17.4 Auto-refresh behaviour](#174-auto-refresh-behaviour)
   - [18. Testing URL parameter stripping](#18-testing-url-parameter-stripping)
     - [18.1 Verifying param strip detection](#181-verifying-param-strip-detection)
-    - [18.2 Proto tab - Param Stripping accordion](#182-proto-tab---param-stripping-accordion)
+    - [18.2 Overview tab - Param Stripping accordion](#182-overview-tab---param-stripping-accordion)
     - [18.3 Log tab - Param strip events](#183-log-tab---param-strip-events)
     - [18.4 Session persistence](#184-session-persistence)
     - [18.5 Verifying param strip state from the service worker console](#185-verifying-param-strip-state-from-the-service-worker-console)
@@ -571,7 +571,7 @@ chrome.declarativeNetRequest.getDynamicRules().then(r => {
 
 ## 13. Testing Enhanced Protection
 
-Enhanced Protection adds optional third‑party blocklists that are fetched on demand. These lists are enforced via dynamic DNR rules, and the Enhanced tab in the popup manages presets and individual lists.
+Enhanced Protection adds optional third‑party blocklists that are fetched on demand. These lists are enforced via dynamic DNR rules, and the Protection tab in the popup manages presets and individual lists.
 
 ### 13.1 Activating a preset
 
@@ -598,7 +598,7 @@ Enhanced Protection tab with the Balanced preset active:
 2. Open the ProtoConsent popup → **Log** tab → **Domains** panel.
 3. Enhanced blocks appear with a shield icon (🛡) alongside the domain name, distinct from core purpose icons.
 4. Lists with a category mapping (for example, EasyPrivacy → analytics, Blocklist Project Phishing → security) also show the corresponding category icon next to the shield.
-5. The blocked count in the Consent tab header includes an enhanced count indicator (shield + number) when enhanced blocks are present.
+5. The blocked count in the Purposes tab header includes an enhanced count indicator (shield + number) when enhanced blocks are present.
 
 ### 13.4 Checking enhanced rules from the service worker console
 
@@ -623,7 +623,7 @@ chrome.storage.local.get(["enhancedLists", "enhancedPreset"], r => console.log(r
 The AdGuard CNAME Trackers list is an informational list that identifies domains using CNAME cloaking to disguise trackers as first-party subdomains. It does **not** block requests - it only annotates them with a `⇉` icon in the Log tab.
 
 1. Enable the **Balanced** preset (or any preset that includes CNAME Trackers).
-2. Verify the list appears in the Enhanced tab with an **ℹ Info** pill and an entry count (currently ~229K entries).
+2. Verify the list appears in the Protection tab with an **ℹ Info** pill and an entry count (currently ~229K entries).
 3. Visit a site that uses CNAME-cloaked trackers (for example, Samsung domains like `nmetrics.samsung.com` or `smetrics.samsung.com` are known CNAME cloaks).
 4. Open the ProtoConsent popup → **Log** tab → **Domains** panel.
 5. Domains that match the CNAME list show a `⇉` icon before the domain name, with a tooltip showing the cloaked domain and the tracker destination (for example, `nmetrics.samsung.com → adjust.com`).
@@ -643,14 +643,14 @@ Note: CNAME cloaking is always active when the CNAME Trackers list is enabled - 
 
 ### 13.6 Cosmetic filtering (element hiding)
 
-The EasyList Cosmetic list hides ad containers and empty banners left after network-level blocking. It uses CSS injection rather than DNR rules, so it appears in the Enhanced tab with a "Cosmetic" pill instead of a domain count.
+The EasyList Cosmetic list hides ad containers and empty banners left after network-level blocking. It uses CSS injection rather than DNR rules, so it appears in the Protection tab with a "Cosmetic" pill instead of a domain count.
 
 1. On a fresh install, cosmetic filtering is active from the bundled snapshot (no remote fetch needed).
-2. Open the Enhanced tab. The **EasyList Cosmetic** card should show a "Cosmetic" pill and be enabled by default (Balanced preset).
+2. Open the Protection tab. The **EasyList Cosmetic** card should show a "Cosmetic" pill and be enabled by default (Balanced preset).
 3. Visit a news site with ads (e.g. a major newspaper). Ad containers should be hidden (no empty gaps where ads were blocked by DNR).
 4. Open the Log > Requests tab. A line similar to this shall appear:
    `[cosmetic] nytimes.com +11 site rules`
-5. Toggle off EasyList Cosmetic in the Enhanced tab. Reload the news site - empty ad containers or placeholder divs may become visible where ads were blocked.
+5. Toggle off EasyList Cosmetic in the Protection tab. Reload the news site - empty ad containers or placeholder divs may become visible where ads were blocked.
 6. Toggle it back on and reload - the containers should be hidden again.
 
 To verify cosmetic data in storage:
@@ -680,10 +680,10 @@ Remote fetching of enhanced lists requires the user's explicit consent, stored a
 
 1. Fresh install: open onboarding and proceed to step 3 ("Enhanced lists"). The **Sync list updates** checkbox is unchecked by default.
 2. Complete onboarding **without** checking the Sync box.
-3. Open the Enhanced tab in the popup. The Sync pill should show "Sync: off" and clicking Download or a preset should have no effect on remote fetch (only bundled data is available).
+3. Open the Protection tab in the popup. The Sync pill should show "Sync: off" and clicking Download or a preset should have no effect on remote fetch (only bundled data is available).
 4. Open Purpose Settings → **Enhanced Lists** section. The **Sync** toggle should be off.
 5. Enable the Sync toggle. The label should change to "Enabled".
-6. Return to the Enhanced tab. The Sync pill should show "Sync: on". Downloading lists should now fetch from the CDN.
+6. Return to the Protection tab. The Sync pill should show "Sync: on". Downloading lists should now fetch from the CDN.
 
 To verify via the service worker console:
 
@@ -697,9 +697,9 @@ The consent-enhanced link automatically activates Enhanced lists whose category 
 
 1. Download at least the EasyList and EasyPrivacy lists (Balanced preset).
 2. Open Purpose Settings → **Enhanced Lists** section. Enable the **Consent link** toggle.
-3. Set the Enhanced preset to **Off** in the Enhanced tab (all lists disabled).
+3. Set the Enhanced preset to **Off** in the Protection tab (all lists disabled).
 4. Set the default consent profile to **Strict** (denies ads, analytics, advanced_tracking, third_parties).
-5. Open the Enhanced tab. Lists with matching categories (EasyList for ads, EasyPrivacy for analytics) should appear as enabled with a "Consent-linked" indicator, even though the preset is Off.
+5. Open the Protection tab. Lists with matching categories (EasyList for ads, EasyPrivacy for analytics) should appear as enabled with a "Consent-linked" indicator, even though the preset is Off.
 6. In the Log tab, verify that domains from those lists are blocked.
 7. Switch the consent profile to **Permissive** (allows ads, analytics). The consent-linked lists should deactivate (only manually enabled lists remain).
 8. Disable the **Consent link** toggle in Purpose Settings. All lists should follow their manual enabled state only.
@@ -725,7 +725,7 @@ The debug panel (Log → Debug tab) shows "consent-enhanced link: on/off" and li
 ProtoConsent Core is a set of 5 purpose-based Enhanced lists maintained by the project itself. They mirror the static rulesets but can be updated weekly via CDN without a new extension release.
 
 1. On a fresh install, the ProtoConsent Core list is loaded from the bundled snapshot (`extension/rules/protoconsent_core.json`) and enabled by default.
-2. Open the Enhanced tab. The **ProtoConsent Core** card should appear first, showing an enabled state and a domain count (~40K domains + ~1,200 path rules).
+2. Open the Protection tab. The **ProtoConsent Core** card should appear first, showing an enabled state and a domain count (~40K domains + ~1,200 path rules).
 3. With Sync enabled, click **Download** (or wait for auto-refresh). The remote version replaces the bundled snapshot.
 4. Toggle the list off. Reload a page with known ad/analytics domains - only the static rulesets should block (no enhanced shield icons in the Log).
 5. Toggle it back on and reload - enhanced blocks with shield icons should reappear alongside core purpose icons.
@@ -744,9 +744,9 @@ chrome.storage.local.get(["enhancedLists", "enhancedData_protoconsent_core"], r 
 
 ### 13.10 Regional filter lists
 
-1. Open Purpose Settings and scroll to **Regional Filters** (or click the language badge on a regional card in the Enhanced popup tab).
+1. Open Purpose Settings and scroll to **Regional Filters** (or click the language badge on a regional card in the Protection popup tab).
 2. Check one or more region checkboxes (e.g. Spanish/Portuguese). Flag icons should appear next to labels.
-3. Return to the Enhanced popup tab. Regional Cosmetic and Regional Blocking cards should show the selected flag(s) in the header.
+3. Return to the Protection popup tab. Regional Cosmetic and Regional Blocking cards should show the selected flag(s) in the header.
 4. Download both regional lists. Verify domain/selector counts update in the card stats.
 5. **Cosmetic test**: visit a regional site (e.g. meneame.net for ES). With Regional Cosmetic enabled, ad containers should be hidden. Toggle off and refresh to confirm they reappear.
 6. **Blocking test**: visit a regional site (e.g. elpais.com for ES). Open the Log tab; blocked domains should show `enhanced: regional_blocking` attribution.
@@ -937,24 +937,24 @@ CMP auto-response reports its activity to the background service worker. This da
 3. Open the popup again. The `[cmp]` line should still appear via historical replay from `chrome.storage.session`.
 4. Navigate to a different site. The CMP data for the previous tab should be cleared.
 
-## 17. Testing the Proto tab
+## 17. Testing the Overview tab
 
-The Proto tab provides a mode-aware dashboard showing signal status, purpose-attributed blocks, CMP detection, and parameter stripping. It auto-refreshes every 3 seconds.
+The Overview tab provides a mode-aware dashboard showing signal status, purpose-attributed blocks, CMP detection, and parameter stripping. It auto-refreshes every 3 seconds.
 
 ### 17.1 Viewing signal indicators
 
 1. Visit a site with a profile assigned (e.g. Balanced on a news site).
 2. Open the ProtoConsent popup and click the **Proto** tab in the mode rail.
-3. The Proto tab should show:
+3. The Overview tab should show:
    - A mode banner ("Standalone mode" in red, or "ProtoConsent Mode active" in teal if an external blocker is present).
    - A coverage bar showing attributed / observed ratio.
    - GPC signal count (if GPC-relevant purposes are denied).
    - Cosmetic filtering count (if the current domain has cosmetic rules applied).
-4. The pill indicators (GPC, TCF, CH, WK) should mirror their state from the Consent tab header.
+4. The pill indicators (GPC, TCF, CH, WK) should mirror their state from the Purposes tab header.
 
 ### 17.2 Purpose accordion cards
 
-1. On a site where requests are being blocked (e.g. a news site with Balanced profile), open the Proto tab.
+1. On a site where requests are being blocked (e.g. a news site with Balanced profile), open the Overview tab.
 2. Purpose cards should appear as accordion items with Consent Commons icons and blocked domain counts.
 3. Click a purpose card header to expand it. The body shows top 10 blocked domains with counts.
 4. Click again to collapse. Expanded state should be preserved across auto-refresh cycles (3s polling).
@@ -963,15 +963,15 @@ The Proto tab provides a mode-aware dashboard showing signal status, purpose-att
 ### 17.3 CMP detection and auto-response cards
 
 1. Visit a site with a known CMP (e.g. a site using OneTrust or Cookiebot).
-2. Open the Proto tab. The "CMP Detection" accordion should show the detected banner name.
+2. Open the Overview tab. The "CMP Detection" accordion should show the detected banner name.
 3. If CMP auto-response is active, the "CMP Auto-response" accordion should show matched template count.
 
 ### 17.4 Auto-refresh behaviour
 
-1. Open the Proto tab on a site.
+1. Open the Overview tab on a site.
 2. In another tab or window, navigate the test site to generate new blocking events.
-3. Return to the popup. The Proto tab data should update automatically within 3 seconds without manual reload.
-4. Navigate to a different site. Proto tab data should reset and show the new domain's data.
+3. Return to the popup. The Overview tab data should update automatically within 3 seconds without manual reload.
+4. Navigate to a different site. Overview tab data should reset and show the new domain's data.
 
 ## 18. Testing URL parameter stripping
 
@@ -983,7 +983,7 @@ Parameter stripping removes tracking parameters (e.g. `utm_source`, `fbclid`) fr
 2. Navigate to a URL with known tracking parameters. For example: `https://example.com/?utm_source=test&utm_medium=campaign&fbclid=abc123`.
 3. After the page loads, check the address bar. The tracking parameters should be removed (the URL should be `https://example.com/` or retain only non-tracking parameters).
 
-### 18.2 Proto tab - Param Stripping accordion
+### 18.2 Overview tab - Param Stripping accordion
 
 1. After visiting a URL with tracking parameters (as in §18.1), open the ProtoConsent popup and go to the **Proto** tab.
 2. A "Param Stripping" accordion card should appear at the bottom of the accordion list.
@@ -1000,7 +1000,7 @@ Parameter stripping removes tracking parameters (e.g. `utm_source`, `fbclid`) fr
 
 ### 18.4 Session persistence
 
-1. Visit a URL with tracking parameters and verify the param strip appears in the Proto tab.
+1. Visit a URL with tracking parameters and verify the param strip appears in the Overview tab.
 2. Kill the service worker (via `chrome://serviceworker-internals/` → Stop/Unregister, then navigate to trigger restart).
 3. Open the popup. The param strip data should still be present (restored from `chrome.storage.session`).
 4. Navigate to a new page. The param strip data for the previous tab should be cleared.
@@ -1024,7 +1024,7 @@ ProtoConsent supports two operating modes: Standalone (default, full blocking) a
 1. Open Purpose Settings (click the gear icon in the popup or navigate to the options page).
 2. Scroll to the "Operating Mode" section.
 3. Toggle from Standalone to ProtoConsent Mode.
-4. Open the ProtoConsent popup. The mode banner in the Proto tab should show "ProtoConsent Mode active" (teal).
+4. Open the ProtoConsent popup. The mode banner in the Overview tab should show "ProtoConsent Mode active" (teal).
 5. The mode indicator pill in the popup header should show a green dot with "ProtoConsent".
 
 ### 19.2 Verifying monitoring behaviour
@@ -1032,7 +1032,7 @@ ProtoConsent supports two operating modes: Standalone (default, full blocking) a
 1. In ProtoConsent Mode, visit a news site.
 2. Open DevTools → Network tab. Third-party requests that would normally be blocked by ProtoConsent should now go through (since DNR block rules are disabled).
 3. Open the ProtoConsent popup. The blocked request counter still shows activity if an external ad blocker is installed (ProtoConsent detects blocks via `ERR_BLOCKED_BY_CLIENT` even when it is not the source).
-4. The Proto tab should show the coverage bar and purpose attribution.
+4. The Overview tab should show the coverage bar and purpose attribution.
 
 ### 19.3 Switching back to Standalone
 

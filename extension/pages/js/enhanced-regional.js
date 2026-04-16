@@ -28,6 +28,12 @@ function renderRegionalCard(listId) {
   const header = document.createElement("div");
   header.className = "ep-list-header";
 
+  const chevron = document.createElement("span");
+  chevron.className = "ep-list-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.textContent = "\u25BE";
+  header.appendChild(chevron);
+
   const icon = document.createElement("img");
   icon.src = ENHANCED_ICON;
   icon.width = 16;
@@ -40,13 +46,7 @@ function renderRegionalCard(listId) {
   const nameEl = document.createElement("span");
   nameEl.className = "ep-list-name";
   nameEl.title = def.name;
-  const nameTxt = document.createTextNode(def.name);
-  const chevron = document.createElement("span");
-  chevron.className = "ep-list-chevron";
-  chevron.setAttribute("aria-hidden", "true");
-  chevron.textContent = " \u25BE";
-  nameEl.appendChild(nameTxt);
-  nameEl.appendChild(chevron);
+  nameEl.textContent = def.name;
   header.appendChild(nameEl);
 
   // Active languages indicator (shown in header, visible when collapsed)
@@ -137,63 +137,9 @@ function renderRegionalCard(listId) {
   });
 
   // Load active languages async - update badge with flag images (max 2 + overflow)
-  chrome.storage.local.get(["regionalLanguages"], function(stored) {
-    var codes = Array.isArray(stored.regionalLanguages) ? stored.regionalLanguages : [];
-    if (codes.length === 0) {
-      langBadge.textContent = isDownloaded ? "No regions" : "Select regions";
-      return;
-    }
-    fetch(chrome.runtime.getURL("config/regional-languages.json"))
-      .then(function(r) { return r.ok ? r.json() : null; })
-      .then(function(rlConfig) {
-        var labels = [];
-        var MAX_FLAGS = 2;
-        var shown = Math.min(codes.length, MAX_FLAGS);
-        for (var i = 0; i < shown; i++) {
-          var c = codes[i];
-          var entry = rlConfig && rlConfig[c];
-          var flagCodes = entry && entry.flag
-            ? (Array.isArray(entry.flag) ? entry.flag : [entry.flag])
-            : [];
-          if (flagCodes.length > 0) {
-            for (var f = 0; f < flagCodes.length; f++) {
-              var img = document.createElement("img");
-              img.src = chrome.runtime.getURL("icons/flags/" + flagCodes[f].toLowerCase() + ".svg");
-              img.width = 16;
-              img.height = 12;
-              img.alt = entry ? entry.label : c.toUpperCase();
-              img.className = "ep-regional-flag";
-              img.dataset.fc = flagCodes[f];
-              img.onerror = function() {
-                var abbr = document.createElement("span");
-                abbr.className = "ep-regional-flag-text";
-                abbr.textContent = this.dataset.fc || this.alt.substring(0, 2).toUpperCase();
-                this.replaceWith(abbr);
-              };
-              langBadge.appendChild(img);
-            }
-          } else {
-            var abbr = document.createElement("span");
-            abbr.className = "ep-regional-flag-text";
-            abbr.textContent = c.toUpperCase();
-            langBadge.appendChild(abbr);
-          }
-        }
-        if (codes.length > MAX_FLAGS) {
-          var more = document.createElement("span");
-          more.className = "ep-regional-flag-text";
-          more.textContent = "+" + (codes.length - MAX_FLAGS);
-          langBadge.appendChild(more);
-        }
-        for (var j = 0; j < codes.length; j++) {
-          var entry2 = rlConfig && rlConfig[codes[j]];
-          labels.push(entry2 ? entry2.label : codes[j].toUpperCase());
-        }
-        langBadge.title = labels.join(", ");
-      })
-      .catch(function() {
-        langBadge.textContent = codes.map(function(c) { return c.toUpperCase(); }).join(" ");
-      });
+  buildRegionalFlags(langBadge, {
+    maxFlags: 2,
+    emptyText: isDownloaded ? "No regions" : "Select regions",
   });
 
   // Info row: description + stats

@@ -80,8 +80,13 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
 
   await withEnhancedStorageLock(() => {
     return getEnhancedListsFromStorage().then(lists => {
+      const existing = lists[listId];
+      if (existing && latestVersion && existing.version === latestVersion) {
+        sendResponse({ ok: true, skipped: true, genericCount: existing.genericCount, domainCount: existing.domainCount });
+        return;
+      }
       lists[listId] = {
-        enabled: true,
+        enabled: existing?.enabled !== undefined ? existing.enabled : true,
         version: latestVersion,
         lastFetched: Date.now(),
         genericCount: totalGenericCount,
@@ -145,8 +150,13 @@ async function fetchRegionalBlocking(listId, langs, fetchBase, suffix, sendRespo
 
   await withEnhancedStorageLock(() => {
     return getEnhancedListsFromStorage().then(lists => {
+      const existing = lists[listId];
+      if (existing && latestVersion && existing.version === latestVersion) {
+        sendResponse({ ok: true, skipped: true, domainCount: existing.domainCount });
+        return;
+      }
       lists[listId] = {
-        enabled: true,
+        enabled: existing?.enabled !== undefined ? existing.enabled : true,
         version: latestVersion,
         lastFetched: Date.now(),
         domainCount: allDomains.length,
