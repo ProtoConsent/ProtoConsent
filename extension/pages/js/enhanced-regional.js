@@ -163,10 +163,11 @@ function renderRegionalCard(listId) {
               img.height = 12;
               img.alt = entry ? entry.label : c.toUpperCase();
               img.className = "ep-regional-flag";
+              img.dataset.fc = flagCodes[f];
               img.onerror = function() {
                 var abbr = document.createElement("span");
                 abbr.className = "ep-regional-flag-text";
-                abbr.textContent = this.alt.substring(0, 2).toUpperCase();
+                abbr.textContent = this.dataset.fc || this.alt.substring(0, 2).toUpperCase();
                 this.replaceWith(abbr);
               };
               langBadge.appendChild(img);

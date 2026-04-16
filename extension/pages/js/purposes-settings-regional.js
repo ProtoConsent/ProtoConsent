@@ -128,7 +128,9 @@ function initRegionalSection() {
 				const descEl = document.createElement('div');
 				descEl.className = 'ps-gpc-info-desc';
 				descEl.id = 'rl-desc-' + code;
-				descEl.textContent = code.toUpperCase();
+				descEl.textContent = flagCodes.length > 0
+					? flagCodes.join('/')
+					: code.toUpperCase();
 				info.appendChild(descEl);
 				row.appendChild(info);
 
