@@ -32,6 +32,7 @@ async function init() {
 
   renderProfiles();
   wireEvents();
+  detectRegionalLanguage();
 
   // Version in footer
   const manifest = chrome.runtime.getManifest();
@@ -266,6 +267,81 @@ function save(callback) {
 
     if (callback) callback();
   });
+}
+
+function detectRegionalLanguage() {
+  const card = document.getElementById('ob-regional-card');
+  const container = document.getElementById('ob-regional-flags');
+  if (!card || !container) return;
+
+  fetch(chrome.runtime.getURL('config/regional-languages.json'))
+    .then(r => r.ok ? r.json() : null)
+    .then(rlConfig => {
+      if (!rlConfig) { card.hidden = true; return; }
+
+      // Build language -> region map
+      const langToRegion = {};
+      for (const [code, entry] of Object.entries(rlConfig)) {
+        for (const lang of entry.languages) {
+          langToRegion[lang] = code;
+        }
+      }
+
+      // Detect from browser locale
+      const uiLang = chrome.i18n.getUILanguage();
+      const baseLang = (uiLang || '').split('-')[0].toLowerCase();
+      const detected = langToRegion[uiLang] || langToRegion[baseLang] || null;
+
+      if (detected) {
+        // Save to storage if not already set
+        chrome.storage.local.get(['regionalLanguages'], (stored) => {
+          if (!Array.isArray(stored.regionalLanguages)) {
+            chrome.storage.local.set({ regionalLanguages: [detected] });
+          }
+        });
+
+        // Render detected flag(s)
+        const entry = rlConfig[detected];
+        container.setAttribute('aria-label', entry.label + ' detected');
+        const flagCodes = entry.flag
+          ? (Array.isArray(entry.flag) ? entry.flag : [entry.flag])
+          : [];
+        for (const fc of flagCodes) {
+          const img = document.createElement('img');
+          img.src = chrome.runtime.getURL('icons/flags/' + fc.toLowerCase() + '.svg');
+          img.width = 20;
+          img.height = 15;
+          img.alt = '';
+          img.setAttribute('aria-hidden', 'true');
+          img.style.verticalAlign = 'middle';
+          img.style.marginLeft = '4px';
+          img.onerror = function () { this.style.display = 'none'; };
+          container.appendChild(img);
+        }
+      } else {
+        // No detection: show all available flags so user knows languages are supported
+        container.setAttribute('aria-label', '13 languages available');
+        for (const [, entry] of Object.entries(rlConfig)) {
+          const flagCodes = entry.flag
+            ? (Array.isArray(entry.flag) ? entry.flag : [entry.flag])
+            : [];
+          for (const fc of flagCodes) {
+            const img = document.createElement('img');
+            img.src = chrome.runtime.getURL('icons/flags/' + fc.toLowerCase() + '.svg');
+            img.width = 16;
+            img.height = 12;
+            img.alt = '';
+            img.setAttribute('aria-hidden', 'true');
+            img.title = entry.label;
+            img.style.verticalAlign = 'middle';
+            img.style.marginLeft = '2px';
+            img.onerror = function () { this.style.display = 'none'; };
+            container.appendChild(img);
+          }
+        }
+      }
+    })
+    .catch(() => { if (card) card.hidden = true; });
 }
 
 document.addEventListener('DOMContentLoaded', init);
