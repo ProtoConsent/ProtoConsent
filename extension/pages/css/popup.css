@@ -137,8 +137,10 @@ body {
 
 .pc-mode-tab-label {
   display: block;
-  overflow: visible;
   flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 #popup-root {
