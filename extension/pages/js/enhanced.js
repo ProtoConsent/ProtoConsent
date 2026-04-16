@@ -926,7 +926,22 @@ function removeEnhancedList(listId) {
 }
 
 function downloadAllEnhancedLists(btnEl, filterIds) {
-  const notDownloaded = filterIds || Object.keys(epCatalog).filter(id => !epLists[id] && !REGIONAL_IDS.has(id));
+  if (filterIds) {
+    _downloadEnhancedBatch(btnEl, filterIds);
+  } else {
+    chrome.storage.local.get(["regionalLanguages"], (rl) => {
+      const hasLangs = Array.isArray(rl.regionalLanguages) && rl.regionalLanguages.length > 0;
+      const notDownloaded = Object.keys(epCatalog).filter(id => {
+        if (epLists[id]) return false;
+        if (REGIONAL_IDS.has(id) && !hasLangs) return false;
+        return true;
+      });
+      _downloadEnhancedBatch(btnEl, notDownloaded);
+    });
+  }
+}
+
+function _downloadEnhancedBatch(btnEl, notDownloaded) {
   if (notDownloaded.length === 0) return;
 
   const startDownloads = () => {

@@ -127,7 +127,7 @@ function _renderProtoBars(resp, tcfData) {
   if (statsContainer) {
     statsContainer.textContent = "";
     var bar = createCollapsibleBar("proto-stats-bar", { ariaLabel: "Blocking stats" });
-    var prov = computeBlockProvenance(resp.coverage);
+    var prov = computeBlockProvenance(resp.coverage, resp.mode);
     var isMonitoring = resp.mode === "protoconsent";
     var collapsed;
     if (isMonitoring) {
@@ -320,7 +320,7 @@ function _countCname(blocked) {
 function _fillCoverageBody(body, resp, wkData) {
   var coverage = resp.coverage || {};
   if (!coverage.observed) { body.textContent = "No data yet"; return; }
-  var prov = computeBlockProvenance(coverage);
+  var prov = computeBlockProvenance(coverage, resp.mode);
   var ratio = coverage.observed > 0 ? Math.round((coverage.attributed / coverage.observed) * 100) : 0;
 
   // Attribution bar
