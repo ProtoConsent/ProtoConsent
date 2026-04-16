@@ -422,7 +422,7 @@ function _fillCosmeticBody(body, resp) {
 }
 
 function _fillTrackersBody(body, resp) {
-  if (typeof lookupCname !== "function") { body.textContent = "Enable CNAME list in Enhanced"; return; }
+  if (typeof lookupCname !== "function") { body.textContent = "Enable CNAME list in Protection"; return; }
   var blocked = resp.blocked || {};
   var found = [];
   var purposes = Object.keys(blocked);

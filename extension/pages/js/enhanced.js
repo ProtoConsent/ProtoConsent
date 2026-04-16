@@ -471,43 +471,28 @@ function renderEnhancedLists() {
 
   // 1. Overview card (full-width)
   var stats = getEnhancedStats();
-  var overviewMetric = stats.enabledCount > 0
-    ? stats.enabledCount + " active \u00b7 " + stats.totalRules.toLocaleString() + " rules"
-    : "Off";
+  var overviewMetric;
+  if (stats.enabledCount > 0) {
+    overviewMetric = stats.enabledCount + " active \u00b7 " + stats.totalRules.toLocaleString() + " rules";
+    if (stats.infoDomains > 0) {
+      overviewMetric += " + " + stats.infoDomains.toLocaleString() + " \u2139";
+    }
+  } else {
+    overviewMetric = "Off";
+  }
   var GRID_ICONS = "../icons/grid/";
   var ov = createGridCard({ id: "ep-card-overview", iconSrc: GRID_ICONS + "overview.svg", title: "Overview", metric: overviewMetric, full: true });
   var ovBody = ov.body;
-  // Overview body: summary stats
-  var ovLines = document.createElement("div");
-  ovLines.className = "ep-overview-lines";
-  var ovStats = [
-    { icon: GRID_ICONS + "blocking.svg", count: stats.blockingCount, label: "blocking", detail: stats.totalDomains.toLocaleString() + " domains" },
-    { icon: GRID_ICONS + "cosmetic.svg", count: stats.cosmeticCount, label: "cosmetic", detail: stats.cosmeticRules.toLocaleString() + " rules" },
-    { icon: GRID_ICONS + "banners.svg", count: stats.cmpCount, label: "banner", detail: stats.cmpTemplates.toLocaleString() + " templates" },
-    { icon: GRID_ICONS + "detection.svg", count: stats.paramsCount + stats.infoCount, label: "detection", detail: stats.paramsTotal.toLocaleString() + " params \u00b7 " + stats.infoDomains.toLocaleString() + " entries" },
-  ];
-  for (var s = 0; s < ovStats.length; s++) {
-    if (ovStats[s].count === 0) continue;
-    var row = document.createElement("div");
-    row.className = "ep-overview-stat";
-    row.innerHTML = '<img src="' + ovStats[s].icon + '" width="16" height="16" alt="">' +
-      '<strong>' + ovStats[s].count + ' ' + ovStats[s].label + '</strong>' +
-      '<span class="ep-overview-detail">' + ovStats[s].detail + '</span>';
-    ovLines.appendChild(row);
-  }
   if (stats.updatesAvailable > 0) {
+    var ovLines = document.createElement("div");
+    ovLines.className = "ep-overview-lines";
     var updRow = document.createElement("div");
     updRow.className = "ep-overview-stat ep-overview-stat-update";
     updRow.innerHTML = '<strong>' + stats.updatesAvailable + ' update' + (stats.updatesAvailable !== 1 ? 's' : '') + '</strong>' +
       '<span class="ep-overview-detail">available</span>';
     ovLines.appendChild(updRow);
+    ovBody.appendChild(ovLines);
   }
-  var dlRow = document.createElement("div");
-  dlRow.className = "ep-overview-stat ep-overview-stat-dl";
-  dlRow.innerHTML = '<strong>' + stats.downloadedCount + '/' + stats.catalogCount + '</strong>' +
-    '<span class="ep-overview-detail">downloaded</span>';
-  ovLines.appendChild(dlRow);
-  ovBody.appendChild(ovLines);
 
   // Active lists: proto-card style accordions by type
   if (stats.enabledCount > 0) {
@@ -517,7 +502,7 @@ function renderEnhancedLists() {
     var activeTitle = document.createElement("div");
     activeTitle.className = "ep-overview-active-title";
     var activeTitleText = document.createElement("span");
-    activeTitleText.textContent = "Active lists";
+    activeTitleText.textContent = "Active lists \u00b7 " + stats.downloadedCount + "/" + stats.catalogCount + " downloaded";
     activeTitle.appendChild(activeTitleText);
     var activeTitleFlags = document.createElement("a");
     activeTitleFlags.href = "purposes-settings.html#regional-filters";
@@ -541,7 +526,7 @@ function renderEnhancedLists() {
       { label: "Blocking", icon: GRID_ICONS + "blocking.svg", grouped: coreActive ? ["ProtoConsent Core"] : [], ids: blockingLists, detail: stats.totalDomains.toLocaleString() + " domains" },
       { label: "Cosmetic", icon: GRID_ICONS + "cosmetic.svg", grouped: [], ids: cosmeticLists, detail: stats.cosmeticRules.toLocaleString() + " rules" },
       { label: "Banners", icon: GRID_ICONS + "banners.svg", grouped: cmpActive ? ["ProtoConsent Banners"] : [], ids: bannerLists, detail: stats.cmpTemplates.toLocaleString() + " templates" },
-      { label: "Detection", icon: GRID_ICONS + "detection.svg", grouped: [], ids: detectionLists, detail: stats.paramsTotal.toLocaleString() + " params" },
+      { label: "Detection", icon: GRID_ICONS + "detection.svg", grouped: [], ids: detectionLists, detail: stats.paramsTotal.toLocaleString() + " params \u00b7 " + stats.infoDomains.toLocaleString() + " entries" },
     ];
     for (var g = 0; g < typeGroups.length; g++) {
       var group = typeGroups[g];

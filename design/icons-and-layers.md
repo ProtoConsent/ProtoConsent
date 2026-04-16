@@ -66,3 +66,30 @@ Enhanced Protection uses two additional SVG icons that are not part of the Conse
 | `security` | <img src="../extension/icons/purposes/security.png" width="60"> | B&W shield with checkmark | `icons/purposes/security.png` | ProtoConsent‑specific (not Consent Commons). Used for lists like Blocklist Project Phishing |
 
 Icons are PNG files at 125×125 (matching purposes icons in §1) and SVG originals at 18×18. The `enhanced` shield appears as primary icon for all enhanced blocks; category icons (from §1 or `security`) appear next to it as a category marker.
+
+## 7. Grid card icons (Overview and Protection tabs)
+
+The Overview and Protection tabs use a shared set of SVG icons for their metric grid cards. All icons are 20×20 outline SVGs using `stroke="currentColor"`, stored in `icons/grid/`.
+
+### Overview tab grid cards
+
+| Card | Icon | Description | File | Metric shown |
+|------|------|-------------|------|-------------|
+| Coverage | <img src="../extension/icons/grid/coverage.svg" width="60"> | Pie chart (circle with filled quarter) | `icons/grid/coverage.svg` | Purpose coverage % |
+| GPC | <img src="../extension/icons/grid/gpc.svg" width="60"> | Padlock | `icons/grid/gpc.svg` | Domains with GPC signal |
+| Banners | <img src="../extension/icons/grid/banners.svg" width="60"> | Monitor with horizontal divider and stand | `icons/grid/banners.svg` | CMP banners detected |
+| Cosmetic | <img src="../extension/icons/grid/cosmetic.svg" width="60"> | Sun (circle with 8 rays) | `icons/grid/cosmetic.svg` | Cosmetic filter rules active |
+| Trackers | <img src="../extension/icons/grid/trackers.svg" width="60"> | Magnifying glass | `icons/grid/trackers.svg` | CNAME-cloaked trackers |
+| Clean Links | <img src="../extension/icons/grid/cleanlinks.svg" width="60"> | Angle brackets with dashed line | `icons/grid/cleanlinks.svg` | URL parameters stripped |
+
+### Protection tab grid cards
+
+| Card | Icon | Description | File | Metric shown |
+|------|------|-------------|------|-------------|
+| Overview | <img src="../extension/icons/grid/overview.svg" width="60"> | Dashboard panel (rectangle with grid lines and highlighted cell) | `icons/grid/overview.svg` | Active lists and total rules |
+| Blocking | <img src="../extension/icons/grid/blocking.svg" width="60"> | Shield | `icons/grid/blocking.svg` | Blocking lists summary |
+| Cosmetic | <img src="../extension/icons/grid/cosmetic.svg" width="60"> | Sun (circle with 8 rays) | `icons/grid/cosmetic.svg` | Cosmetic lists summary |
+| Banners | <img src="../extension/icons/grid/banners.svg" width="60"> | Monitor with horizontal divider and stand | `icons/grid/banners.svg` | Banner/CMP lists summary |
+| Detection | <img src="../extension/icons/grid/detection.svg" width="60"> | Crosshair (concentric circles with dashed outer ring and cardinal ticks) | `icons/grid/detection.svg` | Detection lists summary |
+
+Cosmetic and Banners icons are shared between both tabs. All icons inherit text color via `currentColor` and scale cleanly at 20×20 and smaller sizes.
