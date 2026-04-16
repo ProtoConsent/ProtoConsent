@@ -198,11 +198,12 @@ async function getBlockedRulesCount() {
 
 // Compute block provenance from getMatchedRules (own) vs webRequest (observed).
 // Single source of truth - used by proto.js and debug.js.
-function computeBlockProvenance(coverage) {
-  let own = lastBlocked || 0;
+// In monitoring mode, own is always 0 (ProtoConsent does not block).
+function computeBlockProvenance(coverage, mode) {
+  let own = (mode === "protoconsent") ? 0 : (lastBlocked || 0);
   let observed = (coverage && coverage.observed) || 0;
   let attributed = (coverage && coverage.attributed) || 0;
-  let external = Math.max(0, observed - own);
+  let external = (mode === "protoconsent") ? observed : Math.max(0, observed - own);
   return { own: own, observed: observed, attributed: attributed, external: external };
 }
 

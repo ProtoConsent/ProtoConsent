@@ -419,7 +419,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       if (!tabs || !tabs[0]) return;
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_PROTO_DATA", tabId: tabs[0].id }, function (proto) {
         if (chrome.runtime.lastError || !proto) return;
-        let prov = computeBlockProvenance(proto.coverage);
+        let prov = computeBlockProvenance(proto.coverage, proto.mode);
         let pLines = [];
         pLines.push("— block provenance (this tab) —");
         pLines.push("  own (getMatchedRules): " + prov.own);
