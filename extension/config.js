@@ -2,6 +2,10 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+// =============================================================================
+// Debug & diagnostics
+// =============================================================================
+
 // Debug panel in popup + verbose logging in background.
 // Activate at runtime: chrome.storage.local.set({ debug: true })
 // Deactivate:          chrome.storage.local.remove("debug")
@@ -13,7 +17,16 @@ let DEBUG_RULES = false;
 // In store builds onRuleMatchedDebug does not exist, so this flag has no effect.
 const USE_DNR_DEBUG = false;
 
-// --- Operating mode ---
+async function loadDebugFlag() {
+  try {
+    const { debug } = await chrome.storage.local.get("debug");
+    DEBUG_RULES = debug === true;
+  } catch (_) { /* keep default */ }
+}
+
+// =============================================================================
+// Operating mode & capabilities
+// =============================================================================
 
 var operatingMode = "standalone";
 
@@ -26,17 +39,65 @@ function can(cap) {
   return !!(CAPABILITIES[operatingMode] || CAPABILITIES.standalone)[cap];
 }
 
+// =============================================================================
+// Extension-wide constants
+// =============================================================================
+
 // Inter-extension protocol version (independent of extension version).
 const INTEREXT_PROTOCOL_VERSION = "0.1";
 
-async function loadDebugFlag() {
-  try {
-    const { debug } = await chrome.storage.local.get("debug");
-    DEBUG_RULES = debug === true;
-  } catch (_) { /* keep default */ }
-}
+// Enhanced Protection shield icon path (used by popup, log, enhanced tab).
+const ENHANCED_ICON = "../icons/purposes/enhanced.svg";
 
-// --- Shared helpers (used by popup.js, log.js, etc.) ---
+// Explicit IDs for grouped Enhanced cards.
+// Core = the 5 purpose-based blocking lists shown as one "ProtoConsent Core" card.
+const CORE_IDS = new Set([
+  "protoconsent_analytics",
+  "protoconsent_ads",
+  "protoconsent_personalization",
+  "protoconsent_third_parties",
+  "protoconsent_advanced_tracking",
+]);
+
+// CMP = the 3 banner-related lists shown as one "ProtoConsent Banners" card.
+const CMP_IDS = new Set([
+  "protoconsent_cmp_signatures",
+  "protoconsent_cmp_detectors",
+  "protoconsent_cmp_signatures_site",
+]);
+
+// Regional = the 2 aggregated regional lists shown as individual Enhanced cards.
+const REGIONAL_COSMETIC_ID = "regional_cosmetic";
+const REGIONAL_BLOCKING_ID = "regional_blocking";
+const REGIONAL_IDS = new Set([REGIONAL_COSMETIC_ID, REGIONAL_BLOCKING_ID]);
+
+// Non-purpose categories used by enhanced lists (not part of Consent Commons).
+const ENHANCED_EXTRA_CATEGORIES = {
+  security: { icon: "../icons/purposes/security.svg", short: "Sec", label: "Security" },
+};
+
+// High-entropy Client Hints headers stripped when advanced_tracking is denied.
+// Lowercase for DNR modifyHeaders; UI can derive display names from these.
+const HIGH_ENTROPY_CH = [
+  "sec-ch-ua-full-version-list",
+  "sec-ch-ua-platform-version",
+  "sec-ch-ua-arch",
+  "sec-ch-ua-bitness",
+  "sec-ch-ua-model",
+  "sec-ch-ua-wow64",
+  "sec-ch-ua-form-factors",
+];
+
+// Display-friendly names for the CH headers (same order as HIGH_ENTROPY_CH).
+const HIGH_ENTROPY_CH_LABELS = HIGH_ENTROPY_CH.map(h =>
+  "Sec-CH-UA-" + h.replace("sec-ch-ua-", "").split("-").map(
+    w => w.charAt(0).toUpperCase() + w.slice(1)
+  ).join("-")
+);
+
+// =============================================================================
+// Formatting helpers (used by popup.js, log.js, etc.)
+// =============================================================================
 
 function pluralize(n, singular) {
   return n + " " + singular + (n !== 1 ? "s" : "");
@@ -69,36 +130,34 @@ function formatHHMMSS(ts) {
   return formatHHMM(ts) + ":" + String(d.getSeconds()).padStart(2, "0");
 }
 
-// Enhanced Protection shield icon path (used by popup, log, enhanced tab).
-const ENHANCED_ICON = "../icons/purposes/enhanced.svg";
+// =============================================================================
+// Storage helpers
+// =============================================================================
 
-// Explicit IDs for grouped Enhanced cards.
-// Core = the 5 purpose-based blocking lists shown as one "ProtoConsent Core" card.
-// CMP = the 3 banner-related lists shown as one "ProtoConsent Banners" card.
-const CORE_IDS = new Set([
-  "protoconsent_analytics",
-  "protoconsent_ads",
-  "protoconsent_personalization",
-  "protoconsent_third_parties",
-  "protoconsent_advanced_tracking",
-]);
-const CMP_IDS = new Set([
-  "protoconsent_cmp_signatures",
-  "protoconsent_cmp_detectors",
-  "protoconsent_cmp_signatures_site",
-]);
+// Read chStrippingEnabled from storage (defaults to true).
+function getChStrippingEnabled(callback) {
+  chrome.storage.local.get(["chStrippingEnabled"], (r) => {
+    callback(r.chStrippingEnabled !== false);
+  });
+}
 
-// Regional = the 2 aggregated regional lists shown as individual Enhanced cards.
-const REGIONAL_COSMETIC_ID = "regional_cosmetic";
-const REGIONAL_BLOCKING_ID = "regional_blocking";
-const REGIONAL_IDS = new Set([REGIONAL_COSMETIC_ID, REGIONAL_BLOCKING_ID]);
+// Toggle dynamic lists consent (blocklist sync from remote catalog).
+function setDynamicListsConsent(enabled, callback) {
+  chrome.storage.local.set({ dynamicListsConsent: enabled }, () => {
+    if (callback) callback();
+  });
+}
 
-// Non-purpose categories used by enhanced lists (not part of Consent Commons).
-const ENHANCED_EXTRA_CATEGORIES = {
-  security: { icon: "../icons/purposes/security.svg", short: "Sec", label: "Security" },
-};
+// Toggle consent-enhanced link (denied purposes auto-activate Enhanced lists).
+function setConsentEnhancedLink(enabled, callback) {
+  chrome.storage.local.set({ consentEnhancedLink: enabled }, () => {
+    if (callback) callback();
+  });
+}
 
-// --- CNAME cloaking shared state and helpers ---
+// =============================================================================
+// CNAME cloaking
+// =============================================================================
 
 let cnameMap = null;       // { disguised_domain: trackerIndex }
 let cnameTrackers = null;  // trackers[index] = "real-tracker.com"
@@ -142,71 +201,36 @@ function loadCnameData(callback) {
   });
 }
 
-// --- Client Hints stripping shared constants ---
+// =============================================================================
+// Enhanced list helpers
+// =============================================================================
 
-// High-entropy Client Hints headers stripped when advanced_tracking is denied.
-// Lowercase for DNR modifyHeaders; UI can derive display names from these.
-const HIGH_ENTROPY_CH = [
-  "sec-ch-ua-full-version-list",
-  "sec-ch-ua-platform-version",
-  "sec-ch-ua-arch",
-  "sec-ch-ua-bitness",
-  "sec-ch-ua-model",
-  "sec-ch-ua-wow64",
-  "sec-ch-ua-form-factors",
-];
-
-// Display-friendly names for the CH headers (same order as HIGH_ENTROPY_CH).
-const HIGH_ENTROPY_CH_LABELS = HIGH_ENTROPY_CH.map(h =>
-  "Sec-CH-UA-" + h.replace("sec-ch-ua-", "").split("-").map(
-    w => w.charAt(0).toUpperCase() + w.slice(1)
-  ).join("-")
-);
-
-// Read chStrippingEnabled from storage (defaults to true).
-function getChStrippingEnabled(callback) {
-  chrome.storage.local.get(["chStrippingEnabled"], (r) => {
-    callback(r.chStrippingEnabled !== false);
-  });
-}
-
-// Toggle dynamic lists consent (blocklist sync from remote catalog).
-function setDynamicListsConsent(enabled, callback) {
-  chrome.storage.local.set({ dynamicListsConsent: enabled }, () => {
-    if (callback) callback();
-  });
-}
-
-// Toggle consent-enhanced link (denied purposes auto-activate Enhanced lists).
-function setConsentEnhancedLink(enabled, callback) {
-  chrome.storage.local.set({ consentEnhancedLink: enabled }, () => {
-    if (callback) callback();
-  });
-}
-
-// Resolve enhanced list category → icon/label info.
+// Resolve enhanced list category -> icon/label info.
 // Returns { icon, short, label } from purposesConfig or ENHANCED_EXTRA_CATEGORIES,
 // or null if no category. Depends on globals: enhancedCatalogConfig (popup.js),
 // epCatalog (enhanced.js), purposesConfig (popup.js).
 function getEnhancedCategoryInfo(listId) {
-  // Prefer the always-loaded catalog; fall back to epCatalog (enhanced tab)
   const catalog = (typeof enhancedCatalogConfig !== "undefined" && Object.keys(enhancedCatalogConfig).length > 0)
     ? enhancedCatalogConfig
     : (typeof epCatalog !== "undefined" ? epCatalog : null);
   if (!catalog) return null;
   const def = catalog[listId];
   if (!def || !def.category) return null;
-  // Try purposes first, then extra categories
   const cfg = (typeof purposesConfig !== "undefined" ? purposesConfig[def.category] : null)
     || ENHANCED_EXTRA_CATEGORIES[def.category];
   if (!cfg) return null;
   return { icon: cfg.icon, short: cfg.short || "", label: cfg.label || def.category };
 }
 
+// =============================================================================
+// Regional language flags (shared UI builder)
+// =============================================================================
+
 // Build regional language flags into a container element.
 // container: DOM element to append flags to
-// opts: { maxFlags, linkHref, emptyText }
-// Async: reads chrome.storage + fetches regional-languages.json
+// opts: { maxFlags, emptyText }
+// Async: reads chrome.storage + fetches regional-languages.json.
+// If container.hidden is true, it will be set to false once flags are rendered.
 function buildRegionalFlags(container, opts) {
   opts = opts || {};
   var maxFlags = opts.maxFlags || 2;
@@ -262,7 +286,6 @@ function buildRegionalFlags(container, opts) {
           labels.push(entry2 ? entry2.label : codes[j].toUpperCase());
         }
         container.title = labels.join(", ");
-        // Unhide container if it was hidden pending async content
         if (container.hidden) container.hidden = false;
       })
       .catch(function () {
