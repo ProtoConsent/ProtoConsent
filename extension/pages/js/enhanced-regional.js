@@ -28,6 +28,12 @@ function renderRegionalCard(listId) {
   const header = document.createElement("div");
   header.className = "ep-list-header";
 
+  const chevron = document.createElement("span");
+  chevron.className = "ep-list-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.textContent = "\u25BE";
+  header.appendChild(chevron);
+
   const icon = document.createElement("img");
   icon.src = ENHANCED_ICON;
   icon.width = 16;
@@ -40,13 +46,7 @@ function renderRegionalCard(listId) {
   const nameEl = document.createElement("span");
   nameEl.className = "ep-list-name";
   nameEl.title = def.name;
-  const nameTxt = document.createTextNode(def.name);
-  const chevron = document.createElement("span");
-  chevron.className = "ep-list-chevron";
-  chevron.setAttribute("aria-hidden", "true");
-  chevron.textContent = " \u25BE";
-  nameEl.appendChild(nameTxt);
-  nameEl.appendChild(chevron);
+  nameEl.textContent = def.name;
   header.appendChild(nameEl);
 
   // Active languages indicator (shown in header, visible when collapsed)

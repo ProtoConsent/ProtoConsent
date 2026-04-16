@@ -66,7 +66,7 @@ function getEnhancedStats() {
     infoCount: infoLists.length,
     infoDomains: infoLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
     cosmeticCount: cosmeticLists.length,
-    cmpCount: cmpLists.length,
+    cmpCount: cmpLists.length - cmpExtraEnabled,
     paramsCount: paramsLists.length,
     paramsTotal,
     totalDomains: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0),
@@ -117,7 +117,6 @@ function refreshEnhancedState() {
     renderEnhancedPresets();
     renderEnhancedLists();
     updateEnhancedStatus();
-    if (typeof displayEnhancedScope === "function") displayEnhancedScope();
     // Auto-download consent-linked lists not yet downloaded
     const celPending = resp.celPendingDownload || [];
     if (celPending.length > 0 && !_celAutoFetchInProgress) {
@@ -136,24 +135,91 @@ function renderEnhancedPresets() {
   if (!container) return;
   container.innerHTML = "";
 
-  const allPresets = EP_PRESETS;
+  // --- Bottom row: preset dropdown + shields ---
+  const bottom = document.createElement("div");
+  bottom.className = "ep-preset-bottom";
 
-  for (let i = 0; i < allPresets.length; i++) {
-    const preset = allPresets[i];
-    const isActive = epPreset === preset.id;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "ep-preset-btn" + (isActive ? " is-active" : "");
-    btn.textContent = preset.label;
-    btn.title = preset.description;
-    btn.setAttribute("role", "radio");
-    btn.setAttribute("aria-checked", isActive ? "true" : "false");
-    btn.setAttribute("tabindex", isActive ? "0" : "-1");
-    btn.addEventListener("click", () => setEnhancedPreset(preset.id));
-    container.appendChild(btn);
+  // Dropdown
+  const dropdown = document.createElement("div");
+  dropdown.className = "ep-preset-dropdown";
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "ep-preset-btn";
+  btn.title = "Enhanced Protection preset";
+  btn.setAttribute("aria-haspopup", "listbox");
+  btn.setAttribute("aria-expanded", "false");
+  const activePreset = EP_PRESETS.find(p => p.id === epPreset);
+  const btnText = document.createElement("span");
+  btnText.id = "ep-preset-btn-text";
+  btnText.textContent = activePreset ? activePreset.label : (epPreset === "custom" ? "Custom" : "Off");
+  btn.appendChild(btnText);
+  const chevron = document.createElement("span");
+  chevron.className = "ep-preset-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.textContent = "\u25BE";
+  btn.appendChild(chevron);
+  dropdown.appendChild(btn);
+
+  const menu = document.createElement("div");
+  menu.className = "ep-preset-menu";
+  menu.setAttribute("role", "listbox");
+  menu.setAttribute("aria-label", "Enhanced protection preset");
+  menu.hidden = true;
+
+  const allOptions = EP_PRESETS.slice();
+  if (epPreset === "custom") {
+    allOptions.push({ id: "custom", label: "Custom", description: "Custom: you have toggled individual lists" });
   }
+  for (const preset of allOptions) {
+    const opt = document.createElement("button");
+    opt.type = "button";
+    opt.className = "ep-preset-option" + (epPreset === preset.id ? " is-active" : "");
+    opt.dataset.value = preset.id;
+    opt.setAttribute("role", "option");
+    opt.setAttribute("aria-selected", epPreset === preset.id ? "true" : "false");
+    opt.textContent = preset.label;
+    opt.title = preset.description || "";
+    menu.appendChild(opt);
+  }
+  dropdown.appendChild(menu);
 
-  // Shield level indicator (always rendered as last cell to keep 2x2 grid)
+  // Toggle menu
+  btn.addEventListener("click", () => {
+    menu.hidden = !menu.hidden;
+    btn.setAttribute("aria-expanded", menu.hidden ? "false" : "true");
+  });
+  // Select option
+  menu.addEventListener("click", (e) => {
+    const opt = e.target.closest(".ep-preset-option");
+    if (!opt) return;
+    menu.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+    setEnhancedPreset(opt.dataset.value);
+  });
+  // Close on outside click (use capture to avoid accumulating listeners)
+  if (!renderEnhancedPresets._outsideClick) {
+    renderEnhancedPresets._outsideClick = (e) => {
+      var openMenu = document.querySelector(".ep-preset-menu:not([hidden])");
+      var openBtn = document.querySelector(".ep-preset-btn");
+      if (openMenu && openBtn && !openBtn.contains(e.target) && !openMenu.contains(e.target)) {
+        openMenu.hidden = true;
+        openBtn.setAttribute("aria-expanded", "false");
+      }
+    };
+    document.addEventListener("click", renderEnhancedPresets._outsideClick);
+  }
+  // Escape closes and returns focus
+  dropdown.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      menu.hidden = true;
+      btn.setAttribute("aria-expanded", "false");
+      btn.focus();
+    }
+  });
+
+  bottom.appendChild(dropdown);
+
+  // Shield level indicator
   const shieldCount = epPreset === "full" ? 3 : epPreset === "basic" ? 2 : epPreset === "custom" ? 1 : 0;
   const shieldSpan = document.createElement("span");
   shieldSpan.className = "ep-preset-shields";
@@ -174,46 +240,26 @@ function renderEnhancedPresets() {
     icon.setAttribute("aria-label", "Custom preset (set by individual list toggles)");
     shieldSpan.appendChild(icon);
   }
-  container.appendChild(shieldSpan);
+  bottom.appendChild(shieldSpan);
+
+  container.appendChild(bottom);
 
   // Contextual action button (right side of preset bar)
   renderPresetAction();
 }
 
-// Arrow-key navigation for radiogroup (roving tabindex).
-// Attached once - queries children dynamically so it works after re-renders.
-(function() {
-  const container = document.getElementById("ep-preset-buttons");
-  if (!container) return;
-  container.addEventListener("keydown", (e) => {
-    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
-    e.preventDefault();
-    const radios = [...container.querySelectorAll('[role="radio"]:not(:disabled)')];
-    const current = radios.indexOf(document.activeElement);
-    if (current < 0) return;
-    const next = (e.key === "ArrowRight" || e.key === "ArrowDown")
-      ? (current + 1) % radios.length
-      : (current - 1 + radios.length) % radios.length;
-    radios[current].setAttribute("tabindex", "-1");
-    radios[next].setAttribute("tabindex", "0");
-    radios[next].focus();
-    radios[next].click();
-  });
-})();
 
 function renderPresetAction() {
   const bar = document.getElementById("ep-preset-bar");
   if (!bar) return;
 
-  // Remove previous right group if any
-  const prevRight = bar.querySelector(".ep-preset-right");
-  if (prevRight) prevRight.remove();
+  // Remove previous top row if any
+  const prevTop = bar.querySelector(".ep-preset-top");
+  if (prevTop) prevTop.remove();
 
-  // Right-side container for sync pill + action button
-  const right = document.createElement("span");
-  right.className = "ep-preset-right";
-  const pillRow = document.createElement("span");
-  pillRow.className = "ep-preset-pill-row";
+  // Single row: Sync + CEL + action button
+  const top = document.createElement("div");
+  top.className = "ep-preset-top";
 
   const { enabledCount, downloadedCount, catalogCount, notDownloaded, updatesAvailable } = getEnhancedStats();
 
@@ -265,7 +311,7 @@ function renderPresetAction() {
     }
   });
   // Add pill to top row
-  pillRow.appendChild(pill);
+  top.appendChild(pill);
 
   // Consent-Enhanced Link pill
   const celPill = document.createElement("span");
@@ -319,20 +365,17 @@ function renderPresetAction() {
       toggleCel();
     }
   });
-  pillRow.appendChild(celPill);
-  right.appendChild(pillRow);
+  top.appendChild(celPill);
 
   if (notDownloaded.length > 0) {
-    // Some lists not downloaded: show "↓ Download all"
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ep-preset-action ep-preset-action-download";
     btn.textContent = "↓ Download all";
     btn.title = "Download " + notDownloaded.length + " remaining lists";
     btn.addEventListener("click", () => downloadAllEnhancedLists(btn));
-    right.appendChild(btn);
+    top.appendChild(btn);
   } else if (enabledCount > 0 && notDownloaded.length === 0) {
-    // All downloaded, some enabled: show "↻ Update all" with count if updates available
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ep-preset-action ep-preset-action-update";
@@ -343,16 +386,16 @@ function renderPresetAction() {
       ? updatesAvailable + " update(s) available"
       : "Refresh all downloaded lists";
     btn.addEventListener("click", () => updateAllEnhancedLists(btn));
-    right.appendChild(btn);
+    top.appendChild(btn);
   } else if (downloadedCount > 0) {
-    // Downloaded but none enabled (preset off or custom): summary
     const span = document.createElement("span");
     span.className = "ep-preset-action ep-preset-action-summary";
     span.textContent = downloadedCount + "/" + catalogCount + " downloaded";
-    right.appendChild(span);
+    top.appendChild(span);
   }
 
-  bar.appendChild(right);
+  // Insert top row after the preset-buttons container (same line, right side)
+  bar.appendChild(top);
 }
 
 function setEnhancedPreset(preset) {
@@ -386,6 +429,11 @@ function setEnhancedPreset(preset) {
 function renderEnhancedLists() {
   const container = document.getElementById("ep-lists");
   if (!container) return;
+
+  // Preserve which grid card was expanded
+  var prevExpanded = null;
+  var prev = container.querySelector(".pc-grid-card.is-expanded");
+  if (prev) prevExpanded = prev.id;
   container.innerHTML = "";
 
   const catalogEntries = Object.entries(epCatalog)
@@ -395,233 +443,127 @@ function renderEnhancedLists() {
     return;
   }
 
-  // Render grouped ProtoConsent Core card first
+  // Categorize lists
   const coreIds = getCoreIds();
-  if (coreIds.length > 0) {
-    container.appendChild(renderCoreCard(coreIds));
-  }
-
-  // Render grouped ProtoConsent Banners (CMP) card
   const cmpIds = getCmpIds();
-  if (cmpIds.length > 0) {
-    container.appendChild(renderCmpCard(cmpIds));
-  }
+  const blockingLists = [];   // non-core domain/path blocking + regional blocking
+  const cosmeticLists = [];   // cosmetic + regional cosmetic
+  const bannerLists = [];     // non-grouped CMP
+  const detectionLists = [];  // informational + tracking_params
 
   for (const [listId, listDef] of catalogEntries) {
     if (CORE_IDS.has(listId) || CMP_IDS.has(listId)) continue;
-    // Regional cards use their own renderer but are sorted by order
-    if (REGIONAL_IDS.has(listId)) {
-      const card = renderRegionalCard(listId);
-      if (card) container.appendChild(card);
-      continue;
-    }
-    const listData = epLists[listId];
-    const card = document.createElement("div");
-    card.className = "ep-list-card";
-    card.dataset.listId = listId;
-    const isConsentLinked = epConsentLinkedIds.has(listId);
-    if (listData?.enabled || isConsentLinked) card.classList.add("is-enabled");
-
-    // Header row: icon + name + actions
-    const header = document.createElement("div");
-    header.className = "ep-list-header";
-
-    const icon = document.createElement("img");
-    icon.src = ENHANCED_ICON;
-    icon.width = 16;
-    icon.height = 16;
-    icon.alt = "";
-    icon.className = "ep-list-icon";
-    icon.onerror = function() {
-      this.style.display = "none";
-    };
-    header.appendChild(icon);
-
-    const nameEl = document.createElement("span");
-    nameEl.className = "ep-list-name";
-    nameEl.title = listDef.name;
-    const nameTxt = document.createTextNode(listDef.name);
-    const chevron = document.createElement("span");
-    chevron.className = "ep-list-chevron";
-    chevron.setAttribute("aria-hidden", "true");
-    chevron.textContent = " ▾";
-    nameEl.appendChild(nameTxt);
-    nameEl.appendChild(chevron);
-    header.appendChild(nameEl);
-
-    // Category pill (CC icon + label) for lists with a mapped purpose
-    // Consent-linked icon placed before category pill when active
-    const catInfo = typeof getEnhancedCategoryInfo === "function" ? getEnhancedCategoryInfo(listId) : null;
-    if (isConsentLinked) {
-      const celIcon = document.createElement("img");
-      celIcon.src = "../icons/protoconsent_icon_32.png";
-      celIcon.width = 14;
-      celIcon.height = 14;
-      celIcon.alt = "";
-      celIcon.className = "ep-cel-icon";
-      celIcon.title = "Consent-linked: activated by denied " + (catInfo ? catInfo.label : "purpose");
-      header.appendChild(celIcon);
-    }
-    if (listDef.type === "cosmetic") {
-      const pill = document.createElement("span");
-      pill.className = "ep-category-pill ep-cosmetic-pill";
-      pill.title = "Cosmetic filtering - hides ad elements on pages";
-      pill.setAttribute("aria-label", "Cosmetic filtering");
-      pill.textContent = "\u25D0 Cosmetic";
-      header.appendChild(pill);
+    if (listDef.type === "cosmetic" || listDef.type === "regional_cosmetic") {
+      cosmeticLists.push(listId);
     } else if (listDef.type === "cmp") {
-      const pill = document.createElement("span");
-      pill.className = "ep-category-pill ep-cmp-pill";
-      pill.title = "CMP auto-response - handles cookie consent banners";
-      pill.setAttribute("aria-label", "Banner auto-response");
-      pill.textContent = "\u26A1 Banners";
-      header.appendChild(pill);
-    } else if (listDef.type === "tracking_params" || listDef.type === "tracking_params_sites") {
-      const pill = document.createElement("span");
-      pill.className = "ep-category-pill ep-params-pill";
-      pill.title = "URL parameter stripping - removes tracking parameters from URLs";
-      pill.setAttribute("aria-label", "URL parameter stripping");
-      pill.textContent = "\u2702 Params";
-      header.appendChild(pill);
-    } else if (catInfo) {
-      const pill = document.createElement("span");
-      pill.className = "ep-category-pill";
-      pill.title = catInfo.label;
-      const catIcon = document.createElement("img");
-      catIcon.src = catInfo.icon;
-      catIcon.width = 12;
-      catIcon.height = 12;
-      catIcon.alt = "";
-      catIcon.onerror = function() { this.style.display = "none"; };
-      pill.appendChild(catIcon);
-      const catLabel = document.createElement("span");
-      catLabel.textContent = catInfo.label;
-      pill.appendChild(catLabel);
-      header.appendChild(pill);
-    } else if (listDef.type === "informational") {
-      const pill = document.createElement("span");
-      pill.className = "ep-category-pill ep-info-pill";
-      pill.title = "Informational only, does not block requests";
-      pill.textContent = "\u2139 Info";
-      header.appendChild(pill);
-    }
-
-    if (listData) {
-      // Remove button (delete downloaded data)
-      const removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className = "ep-list-remove-btn";
-      removeBtn.textContent = "×";
-      removeBtn.title = "Remove downloaded data for " + listDef.name;
-      removeBtn.setAttribute("aria-label", "Remove " + listDef.name);
-      removeBtn.addEventListener("click", () => removeEnhancedList(listId));
-      header.appendChild(removeBtn);
-
-      // Toggle
-      const toggle = document.createElement("input");
-      toggle.type = "checkbox";
-      toggle.className = "ep-list-toggle";
-      const isActive = !!listData.enabled || isConsentLinked;
-      toggle.checked = isActive;
-      if (isConsentLinked) {
-        toggle.disabled = true;
-        toggle.title = listDef.name + " - activated by consent link";
-      } else {
-        toggle.title = listData.enabled ? "Disable " + listDef.name : "Enable " + listDef.name;
-      }
-      toggle.setAttribute("aria-label", (isActive ? "Disable " : "Enable ") + listDef.name);
-      toggle.addEventListener("change", () => {
-        toggleEnhancedList(listId, toggle.checked);
-      });
-      header.appendChild(toggle);
+      bannerLists.push(listId);
+    } else if (listDef.type === "informational" || listDef.type === "tracking_params" || listDef.type === "tracking_params_sites") {
+      detectionLists.push(listId);
     } else {
-      const dlBtn = document.createElement("button");
-      dlBtn.type = "button";
-      dlBtn.className = "ep-list-download-btn";
-      dlBtn.textContent = "Download";
-      dlBtn.title = "Download " + listDef.name;
-      dlBtn.setAttribute("aria-label", "Download " + listDef.name);
-      dlBtn.dataset.listId = listId;
-      dlBtn.addEventListener("click", () => fetchEnhancedList(listId, dlBtn));
-      header.appendChild(dlBtn);
+      // default blocking + regional_blocking
+      blockingLists.push(listId);
     }
+  }
 
-    card.appendChild(header);
+  // Build 2-column grid
+  var grid = document.createElement("div");
+  grid.className = "pc-grid-2col ep-grid";
 
-    // Expand/collapse: click on header toggles info + meta visibility
-    header.setAttribute("tabindex", "0");
-    header.setAttribute("role", "button");
-    header.setAttribute("aria-expanded", "false");
-    header.addEventListener("click", (e) => {
-      // Don't toggle when clicking on interactive elements (toggle, buttons)
-      if (e.target.closest("input, button")) return;
-      const expanded = card.classList.toggle("is-expanded");
-      header.setAttribute("aria-expanded", expanded ? "true" : "false");
-    });
-    header.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        const expanded = card.classList.toggle("is-expanded");
-        header.setAttribute("aria-expanded", expanded ? "true" : "false");
-      }
-    });
+  // 1. Overview card (full-width)
+  var stats = getEnhancedStats();
+  var overviewMetric = stats.enabledCount > 0
+    ? stats.enabledCount + " active \u00b7 " + stats.totalRules.toLocaleString() + " rules"
+    : "Off";
+  var GRID_ICONS = "../icons/grid/";
+  var ov = createGridCard({ id: "ep-card-overview", iconSrc: GRID_ICONS + "overview.svg", title: "Overview", metric: overviewMetric, full: true });
+  var ovBody = ov.body;
+  // Overview body: summary lines
+  var ovLines = document.createElement("div");
+  ovLines.className = "ep-overview-lines";
+  if (stats.blockingCount > 0) {
+    _epLine(ovLines, "\u25C9 " + stats.blockingCount + " blocking \u00b7 " + stats.totalDomains.toLocaleString() + " domains");
+  }
+  if (stats.cosmeticCount > 0) {
+    _epLine(ovLines, "\u25D0 " + stats.cosmeticCount + " cosmetic \u00b7 " + stats.cosmeticRules.toLocaleString() + " rules");
+  }
+  if (stats.cmpCount > 0) {
+    _epLine(ovLines, "\u26A1 " + stats.cmpCount + " banner \u00b7 " + stats.cmpTemplates.toLocaleString() + " templates");
+  }
+  if (stats.paramsCount > 0) {
+    _epLine(ovLines, "\u2702 " + stats.paramsCount + " param \u00b7 " + stats.paramsTotal.toLocaleString() + " params");
+  }
+  if (stats.infoCount > 0) {
+    _epLine(ovLines, "\u2139 " + stats.infoCount + " info \u00b7 " + stats.infoDomains.toLocaleString() + " entries");
+  }
+  if (stats.updatesAvailable > 0) {
+    _epLine(ovLines, "\u2191 " + stats.updatesAvailable + " update" + (stats.updatesAvailable !== 1 ? "s" : "") + " available");
+  }
+  _epLine(ovLines, stats.downloadedCount + "/" + stats.catalogCount + " downloaded");
+  ovBody.appendChild(ovLines);
+  grid.appendChild(ov.card);
+  grid.appendChild(ov.body);
 
-    // Info row: description + stats
-    const info = document.createElement("div");
-    info.className = "ep-list-info";
-
-    const desc = document.createElement("span");
-    desc.className = "ep-list-desc";
-    desc.textContent = listDef.description;
-    info.appendChild(desc);
-
-    if (listData) {
-      const stats = document.createElement("span");
-      stats.className = "ep-list-stats";
-      const parts = [];
-      if (listData.type === "informational") {
-        if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " entries");
-      } else if (listData.type === "cosmetic") {
-        if (listData.genericCount) parts.push(listData.genericCount.toLocaleString() + " generic rules");
-        if (listData.domainRuleCount) parts.push(listData.domainRuleCount.toLocaleString() + " site rules");
-      } else if (listData.type === "cmp") {
-        if (listData.cmpCount) parts.push(listData.cmpCount.toLocaleString() + " banner templates");
-      } else if (listData.type === "tracking_params") {
-        if (listData.paramCount) parts.push(listData.paramCount.toLocaleString() + " global params");
-      } else if (listData.type === "tracking_params_sites") {
-        if (listData.paramCount) parts.push(listData.paramCount.toLocaleString() + " params");
-        if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " domains");
-      } else {
-        if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " tracking rules");
-        if (listData.pathRuleCount) parts.push(listData.pathRuleCount.toLocaleString() + " path rules");
-      }
-      if (listData.version) parts.push("v" + listData.version);
-      stats.textContent = parts.join(" · ");
-      info.appendChild(stats);
-
-      // "Update available" indicator when remote catalog has a newer version
-      if (listData.version && listDef.version && listDef.version > listData.version) {
-        const updateBadge = document.createElement("span");
-        updateBadge.className = "ep-update-badge";
-        updateBadge.textContent = "Update available";
-        updateBadge.title = "Remote version: " + listDef.version +
-          " (installed: " + listData.version + ")";
-        info.appendChild(updateBadge);
-      }
+  // 2. Blocking card
+  var blockTotal = coreIds.length > 0 ? 1 : 0;
+  blockTotal += blockingLists.length;
+  var bk = createGridCard({ id: "ep-card-blocking", iconSrc: GRID_ICONS + "blocking.svg", title: "Blocking", metric: stats.blockingCount + " lists \u00b7 " + stats.totalDomains.toLocaleString() + " domains" });
+  var bkBody = bk.body;
+  if (coreIds.length > 0) bkBody.appendChild(renderCoreCard(coreIds));
+  for (var i = 0; i < blockingLists.length; i++) {
+    var lid = blockingLists[i];
+    if (REGIONAL_IDS.has(lid) && typeof renderRegionalCard === "function") {
+      var rc = renderRegionalCard(lid);
+      if (rc) bkBody.appendChild(rc);
+    } else {
+      bkBody.appendChild(_renderEpListCard(lid));
     }
+  }
+  grid.appendChild(bk.card);
+  grid.appendChild(bk.body);
 
-    card.appendChild(info);
-
-    // Meta row: license + last fetched
-    const meta = document.createElement("div");
-    meta.className = "ep-list-meta";
-    meta.textContent = listDef.license;
-    if (listData?.lastFetched) {
-      meta.textContent += " · Updated " + formatRelativeTime(listData.lastFetched);
+  // 3. Cosmetic card
+  var cm = createGridCard({ id: "ep-card-cosmetic", iconSrc: GRID_ICONS + "cosmetic.svg", title: "Cosmetic", metric: stats.cosmeticRules.toLocaleString() + " rules" });
+  var cmBody = cm.body;
+  for (var i = 0; i < cosmeticLists.length; i++) {
+    var lid = cosmeticLists[i];
+    if (REGIONAL_IDS.has(lid) && typeof renderRegionalCard === "function") {
+      var rc = renderRegionalCard(lid);
+      if (rc) cmBody.appendChild(rc);
+    } else {
+      cmBody.appendChild(_renderEpListCard(lid));
     }
-    card.appendChild(meta);
+  }
+  grid.appendChild(cm.card);
+  grid.appendChild(cm.body);
 
-    container.appendChild(card);
+  // 4. Banners card
+  var bn = createGridCard({ id: "ep-card-banners", iconSrc: GRID_ICONS + "banners.svg", title: "Banners", metric: stats.cmpTemplates.toLocaleString() + " templates" });
+  var bnBody = bn.body;
+  if (cmpIds.length > 0) bnBody.appendChild(renderCmpCard(cmpIds));
+  for (var i = 0; i < bannerLists.length; i++) {
+    bnBody.appendChild(_renderEpListCard(bannerLists[i]));
+  }
+  grid.appendChild(bn.card);
+  grid.appendChild(bn.body);
+
+  // 5. Detection card
+  var dt = createGridCard({ id: "ep-card-detection", iconSrc: GRID_ICONS + "detection.svg", title: "Detection", metric: stats.infoCount + " info \u00b7 " + stats.paramsTotal + " params" });
+  var dtBody = dt.body;
+  for (var i = 0; i < detectionLists.length; i++) {
+    dtBody.appendChild(_renderEpListCard(detectionLists[i]));
+  }
+  grid.appendChild(dt.card);
+  grid.appendChild(dt.body);
+
+  container.appendChild(grid);
+
+  // Restore expanded card
+  if (prevExpanded) {
+    var card = document.getElementById(prevExpanded);
+    if (card) {
+      var toggle = card.querySelector(".pc-grid-card-toggle");
+      if (toggle) toggle.click();
+    }
   }
 
   // Restore focus to the control of the list that was just acted on
@@ -633,6 +575,212 @@ function renderEnhancedLists() {
     }
     _epFocusListId = null;
   }
+}
+
+// Helper: add a line to the overview body
+function _epLine(parent, text) {
+  var el = document.createElement("div");
+  el.className = "ep-overview-line";
+  el.textContent = text;
+  parent.appendChild(el);
+}
+
+// Render a single non-grouped ep-list-card for use inside grid card bodies
+function _renderEpListCard(listId) {
+  const listDef = epCatalog[listId];
+  const listData = epLists[listId];
+  const isConsentLinked = epConsentLinkedIds.has(listId);
+
+  const card = document.createElement("div");
+  card.className = "ep-list-card";
+  card.dataset.listId = listId;
+  if (listData?.enabled || isConsentLinked) card.classList.add("is-enabled");
+
+  const header = document.createElement("div");
+  header.className = "ep-list-header";
+
+  const chevron = document.createElement("span");
+  chevron.className = "ep-list-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.textContent = "\u25BE";
+  header.appendChild(chevron);
+
+  const icon = document.createElement("img");
+  icon.src = ENHANCED_ICON;
+  icon.width = 16;
+  icon.height = 16;
+  icon.alt = "";
+  icon.className = "ep-list-icon";
+  icon.onerror = function() { this.style.display = "none"; };
+  header.appendChild(icon);
+
+  const nameEl = document.createElement("span");
+  nameEl.className = "ep-list-name";
+  nameEl.title = listDef.name;
+  nameEl.textContent = listDef.name;
+  header.appendChild(nameEl);
+
+  // Category pill + consent-linked icon
+  const catInfo = typeof getEnhancedCategoryInfo === "function" ? getEnhancedCategoryInfo(listId) : null;
+  if (isConsentLinked) {
+    const celIcon = document.createElement("img");
+    celIcon.src = "../icons/protoconsent_icon_32.png";
+    celIcon.width = 14;
+    celIcon.height = 14;
+    celIcon.alt = "";
+    celIcon.className = "ep-cel-icon";
+    celIcon.title = "Consent-linked: activated by denied " + (catInfo ? catInfo.label : "purpose");
+    header.appendChild(celIcon);
+  }
+  if (listDef.type === "cosmetic" || listDef.type === "regional_cosmetic") {
+    const pill = document.createElement("span");
+    pill.className = "ep-category-pill ep-cosmetic-pill";
+    pill.title = "Cosmetic filtering - hides ad elements on pages";
+    pill.setAttribute("aria-label", "Cosmetic filtering");
+    pill.textContent = "\u25D0 Cosmetic";
+    header.appendChild(pill);
+  } else if (listDef.type === "cmp") {
+    const pill = document.createElement("span");
+    pill.className = "ep-category-pill ep-cmp-pill";
+    pill.title = "CMP auto-response - handles cookie consent banners";
+    pill.setAttribute("aria-label", "Banner auto-response");
+    pill.textContent = "\u26A1 Banners";
+    header.appendChild(pill);
+  } else if (listDef.type === "tracking_params" || listDef.type === "tracking_params_sites") {
+    const pill = document.createElement("span");
+    pill.className = "ep-category-pill ep-params-pill";
+    pill.title = "URL parameter stripping - removes tracking parameters from URLs";
+    pill.setAttribute("aria-label", "URL parameter stripping");
+    pill.textContent = "\u2702 Params";
+    header.appendChild(pill);
+  } else if (catInfo) {
+    const pill = document.createElement("span");
+    pill.className = "ep-category-pill";
+    pill.title = catInfo.label;
+    const catIcon = document.createElement("img");
+    catIcon.src = catInfo.icon;
+    catIcon.width = 12;
+    catIcon.height = 12;
+    catIcon.alt = "";
+    catIcon.onerror = function() { this.style.display = "none"; };
+    pill.appendChild(catIcon);
+    const catLabel = document.createElement("span");
+    catLabel.textContent = catInfo.label;
+    pill.appendChild(catLabel);
+    header.appendChild(pill);
+  } else if (listDef.type === "informational") {
+    const pill = document.createElement("span");
+    pill.className = "ep-category-pill ep-info-pill";
+    pill.title = "Informational only, does not block requests";
+    pill.textContent = "\u2139 Info";
+    header.appendChild(pill);
+  }
+
+  if (listData) {
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "ep-list-remove-btn";
+    removeBtn.textContent = "\u00D7";
+    removeBtn.title = "Remove downloaded data for " + listDef.name;
+    removeBtn.setAttribute("aria-label", "Remove " + listDef.name);
+    removeBtn.addEventListener("click", () => removeEnhancedList(listId));
+    header.appendChild(removeBtn);
+
+    const toggle = document.createElement("input");
+    toggle.type = "checkbox";
+    toggle.className = "ep-list-toggle";
+    const isActive = !!listData.enabled || isConsentLinked;
+    toggle.checked = isActive;
+    if (isConsentLinked) {
+      toggle.disabled = true;
+      toggle.title = listDef.name + " - activated by consent link";
+    } else {
+      toggle.title = listData.enabled ? "Disable " + listDef.name : "Enable " + listDef.name;
+    }
+    toggle.setAttribute("aria-label", (isActive ? "Disable " : "Enable ") + listDef.name);
+    toggle.addEventListener("change", () => toggleEnhancedList(listId, toggle.checked));
+    header.appendChild(toggle);
+  } else {
+    const dlBtn = document.createElement("button");
+    dlBtn.type = "button";
+    dlBtn.className = "ep-list-download-btn";
+    dlBtn.textContent = "Download";
+    dlBtn.title = "Download " + listDef.name;
+    dlBtn.setAttribute("aria-label", "Download " + listDef.name);
+    dlBtn.dataset.listId = listId;
+    dlBtn.addEventListener("click", () => fetchEnhancedList(listId, dlBtn));
+    header.appendChild(dlBtn);
+  }
+
+  card.appendChild(header);
+
+  header.setAttribute("tabindex", "0");
+  header.setAttribute("role", "button");
+  header.setAttribute("aria-expanded", "false");
+  header.addEventListener("click", (e) => {
+    if (e.target.closest("input, button")) return;
+    const expanded = card.classList.toggle("is-expanded");
+    header.setAttribute("aria-expanded", expanded ? "true" : "false");
+  });
+  header.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const expanded = card.classList.toggle("is-expanded");
+      header.setAttribute("aria-expanded", expanded ? "true" : "false");
+    }
+  });
+
+  const info = document.createElement("div");
+  info.className = "ep-list-info";
+  const desc = document.createElement("span");
+  desc.className = "ep-list-desc";
+  desc.textContent = listDef.description;
+  info.appendChild(desc);
+
+  if (listData) {
+    const stats = document.createElement("span");
+    stats.className = "ep-list-stats";
+    const parts = [];
+    if (listData.type === "informational") {
+      if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " entries");
+    } else if (listData.type === "cosmetic") {
+      if (listData.genericCount) parts.push(listData.genericCount.toLocaleString() + " generic rules");
+      if (listData.domainRuleCount) parts.push(listData.domainRuleCount.toLocaleString() + " site rules");
+    } else if (listData.type === "cmp") {
+      if (listData.cmpCount) parts.push(listData.cmpCount.toLocaleString() + " banner templates");
+    } else if (listData.type === "tracking_params") {
+      if (listData.paramCount) parts.push(listData.paramCount.toLocaleString() + " global params");
+    } else if (listData.type === "tracking_params_sites") {
+      if (listData.paramCount) parts.push(listData.paramCount.toLocaleString() + " params");
+      if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " domains");
+    } else {
+      if (listData.domainCount) parts.push(listData.domainCount.toLocaleString() + " tracking rules");
+      if (listData.pathRuleCount) parts.push(listData.pathRuleCount.toLocaleString() + " path rules");
+    }
+    if (listData.version) parts.push("v" + listData.version);
+    stats.textContent = parts.join(" \u00b7 ");
+    info.appendChild(stats);
+
+    if (listData.version && listDef.version && listDef.version > listData.version) {
+      const updateBadge = document.createElement("span");
+      updateBadge.className = "ep-update-badge";
+      updateBadge.textContent = "Update available";
+      updateBadge.title = "Remote version: " + listDef.version + " (installed: " + listData.version + ")";
+      info.appendChild(updateBadge);
+    }
+  }
+
+  card.appendChild(info);
+
+  const meta = document.createElement("div");
+  meta.className = "ep-list-meta";
+  meta.textContent = listDef.license;
+  if (listData?.lastFetched) {
+    meta.textContent += " \u00b7 Updated " + formatRelativeTime(listData.lastFetched);
+  }
+  card.appendChild(meta);
+
+  return card;
 }
 
 function toggleEnhancedList(listId, enabled) {
@@ -802,6 +950,7 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
               ? "Downloaded " + (total - failed) + " of " + total + " lists, " + failed + " failed"
               : "All " + total + " lists downloaded";
             statusEl.className = "ep-status" + (failed > 0 ? " ep-status-warn" : " ep-status-active");
+            _protectEpStatus(6000);
           }
           // Re-enable preset buttons
           const btns = document.querySelectorAll(".ep-preset-btn");
@@ -868,6 +1017,7 @@ function updateAllEnhancedLists(btnEl) {
               statusEl.textContent = (total - skipped) + " of " + total + " lists updated" + (skipped > 0 ? ", " + skipped + " already current" : "");
               statusEl.className = "ep-status ep-status-active";
             }
+            _protectEpStatus(6000);
           }
           setTimeout(() => refreshEnhancedState(), 500);
         }
@@ -876,40 +1026,22 @@ function updateAllEnhancedLists(btnEl) {
   });
 }
 
+let _epStatusProtectedUntil = 0;
+let _epStatusClearTimer = null;
+
 function updateEnhancedStatus() {
+  if (Date.now() < _epStatusProtectedUntil) return;
   const statusEl = document.getElementById("ep-status");
-  if (!statusEl) return;
+  if (statusEl) statusEl.textContent = "";
+}
 
-  const { enabledCount, blockingCount, infoCount, cosmeticCount, cmpCount, paramsCount, paramsTotal, totalDomains, cosmeticRules, cmpTemplates, updatesAvailable } = getEnhancedStats();
-  const infoDomains = Object.entries(epLists)
-    .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && l.type === "informational")
-    .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
-
-  if (enabledCount > 0) {
-    const parts = [];
-    if (blockingCount > 0 || cosmeticCount > 0 || cmpCount > 0) {
-      const listCount = blockingCount + cosmeticCount + cmpCount;
-      const ruleCount = totalDomains + cosmeticRules + cmpTemplates;
-      parts.push(listCount + " " + (listCount === 1 ? "list" : "lists") +
-        " \u00b7 " + ruleCount.toLocaleString() + " rules");
-    }
-    if (infoCount > 0) {
-      parts.push(infoCount + " info " + (infoCount === 1 ? "list" : "lists") +
-        " \u00b7 " + infoDomains.toLocaleString() + " entries");
-    }
-    if (paramsCount > 0) {
-      parts.push(paramsCount + " param " + (paramsCount === 1 ? "list" : "lists") +
-        (paramsTotal > 0 ? " \u00b7 " + paramsTotal.toLocaleString() + " params" : ""));
-    }
-    if (updatesAvailable > 0) {
-      parts.push(updatesAvailable + " update" + (updatesAvailable !== 1 ? "s" : "") + " available");
-    }
-    statusEl.textContent = parts.join(" \u00b7 ");
-    statusEl.className = "ep-status ep-status-active";
-  } else {
-    statusEl.textContent = "No enhanced lists active - using ProtoConsent core lists only";
-    statusEl.className = "ep-status";
-  }
+function _protectEpStatus(ms) {
+  _epStatusProtectedUntil = Date.now() + ms;
+  if (_epStatusClearTimer) clearTimeout(_epStatusClearTimer);
+  _epStatusClearTimer = setTimeout(() => {
+    _epStatusProtectedUntil = 0;
+    updateEnhancedStatus();
+  }, ms);
 }
 
 function formatRelativeTime(ts) {

@@ -94,33 +94,8 @@
       <div id="pc-mode-content" class="pc-mode-content">
         <section id="pc-view-consent" class="pc-view" data-mode-view="consent" role="tabpanel" aria-labelledby="pc-mode-tab-consent">
           <h2 class="visually-hidden">Consent settings</h2>
-          <div class="pc-header-stat">
-            <button id="pc-blocked-count" class="pc-blocked-count" type="button" aria-live="polite" aria-controls="pc-view-log">loading...</button>
-          </div>
-          <div id="pc-protection-scope" class="pc-protection-scope">
-            <div class="pc-scope-left">
-              <span id="pc-protection-scope-text" class="pc-protection-scope-text"></span>
-              <span id="pc-enhanced-scope" class="pc-enhanced-scope" aria-live="polite"></span>
-            </div>
-            <div class="pc-scope-indicators">
-              <div id="pc-gpc-indicator" class="pc-gpc-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="GPC unavailable on this page">
-                <span class="pc-gpc-dot pc-pill-dot" aria-hidden="true"></span>
-                <span id="pc-gpc-label">GPC</span>
-              </div>
-              <div id="pc-ch-indicator" class="pc-ch-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="Client Hints stripping unavailable">
-                <span class="pc-ch-dot pc-pill-dot" aria-hidden="true"></span>
-                <span id="pc-ch-label">CH</span>
-              </div>
-              <div id="pc-wk-indicator" class="pc-wk-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title=".well-known status unavailable">
-                <span class="pc-wk-dot pc-pill-dot" aria-hidden="true"></span>
-                <span id="pc-wk-label">WK</span>
-              </div>
-              <div id="pc-tcf-indicator" class="pc-tcf-indicator pc-pill-indicator is-disabled" role="status" aria-live="polite" title="TCF CMP not detected">
-                <span class="pc-tcf-dot pc-pill-dot" aria-hidden="true"></span>
-                <span id="pc-tcf-label">TCF</span>
-              </div>
-            </div>
-          </div>
+          <div id="pc-bar-stats"></div>
+          <div id="pc-bar-signals"></div>
 
           <div id="consent-blocker-banner" class="proto-blocker-banner" hidden></div>
 
@@ -143,58 +118,15 @@
         <section id="pc-view-proto" class="pc-view" data-mode-view="proto" role="tabpanel" aria-labelledby="pc-mode-tab-proto" hidden aria-hidden="true">
           <h2 class="visually-hidden">Monitoring Mode</h2>
           <div id="proto-blocker-banner" class="proto-blocker-banner" hidden></div>
-          <div id="proto-status" class="proto-status"></div>
-          <div id="proto-scope" class="pc-protection-scope">
-            <div class="pc-scope-left">
-              <span id="proto-scope-core" class="pc-protection-scope-text"></span>
-              <span id="proto-scope-enhanced" class="pc-enhanced-scope" aria-live="polite"></span>
-            </div>
-            <div class="proto-pills-wrap">
-              <div id="proto-cname-pill" class="pc-cname-indicator pc-pill-indicator is-disabled" aria-live="polite" title="CNAME cloaking: domains disguised via DNS aliases to evade blocking">
-                <span class="pc-cname-dot pc-pill-dot" aria-hidden="true"></span>
-                <span>CNAME <span id="proto-cname-count">0</span></span>
-              </div>
-              <div id="proto-pills" class="pc-scope-indicators">
-                <div id="proto-gpc-pill" class="pc-gpc-indicator pc-pill-indicator is-disabled" aria-live="polite" title="GPC signal">
-                  <span class="pc-gpc-dot pc-pill-dot" aria-hidden="true"></span>
-                  <span>GPC</span>
-                </div>
-                <div id="proto-ch-pill" class="pc-ch-indicator pc-pill-indicator is-disabled" aria-live="polite" title="Client Hints stripping">
-                  <span class="pc-ch-dot pc-pill-dot" aria-hidden="true"></span>
-                  <span>CH</span>
-                </div>
-                <div id="proto-wk-pill" class="pc-wk-indicator pc-pill-indicator is-disabled" aria-live="polite" title=".well-known declaration">
-                  <span class="pc-wk-dot pc-pill-dot" aria-hidden="true"></span>
-                  <span>WK</span>
-                </div>
-                <div id="proto-tcf-pill" class="pc-tcf-indicator pc-pill-indicator is-disabled" aria-live="polite" title="TCF CMP detection">
-                  <span class="pc-tcf-dot pc-pill-dot" aria-hidden="true"></span>
-                  <span>TCF</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div id="proto-bar-stats"></div>
+          <div id="proto-bar-signals"></div>
+          <div id="proto-grid" class="pc-grid-2col"></div>
           <div id="proto-declarations" class="proto-declarations"></div>
-          <div id="proto-coverage" class="proto-coverage"></div>
-          <details id="proto-unattributed" class="proto-unattributed" hidden>
-            <summary>Unmatched hostnames</summary>
-            <div id="proto-unattributed-list"></div>
-          </details>
-          <div id="proto-gpc-signal" class="proto-signal-single"></div>
-          <div id="proto-tcf-accord" class="proto-tcf-accord"></div>
-          <div id="proto-cmp-detect" class="proto-cmp-detect"></div>
-          <div id="proto-cosmetic-signal" class="proto-signal-single"></div>
-          <div id="proto-param-strip" class="proto-param-strip"></div>
           <div id="proto-purposes" class="proto-purposes"></div>
-          <div id="proto-cmp" class="proto-cmp"></div>
         </section>
 
         <section id="pc-view-log" class="pc-view" data-mode-view="log" role="tabpanel" aria-labelledby="pc-mode-tab-log" hidden aria-hidden="true">
-          <div class="pc-log-header">
-            <span id="pc-log-profile-site" class="pc-log-profile-badge"></span>
-            <span id="pc-log-profile-global" class="pc-log-profile-badge pc-log-profile-global"></span>
-          </div>
-          <div id="pc-log-purposes" class="pc-log-purposes"></div>
+          <div id="pc-log-dot-strip" class="pc-log-dot-strip" aria-label="Purpose states"></div>
           <div class="pc-log-tabs" role="tablist">
             <button class="pc-log-tab is-active" data-log-tab="domains" type="button" role="tab" aria-selected="true" aria-controls="pc-log-panel-domains" id="pc-log-tab-domains">Domains</button>
             <button class="pc-log-tab" data-log-tab="gpc" type="button" role="tab" aria-selected="false" aria-controls="pc-log-panel-gpc" id="pc-log-tab-gpc">GPC</button>

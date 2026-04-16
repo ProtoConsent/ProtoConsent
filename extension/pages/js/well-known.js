@@ -127,43 +127,20 @@ async function evictOldCacheEntries() {
   }
 }
 
+// Global WK indicator state (read by popup.js renderSignalsBar)
+var _wkIndicatorState = "disabled";
+var _wkIndicatorTitle = "ProtoConsent .well-known status unavailable";
+
 function setWellKnownIndicator(state, titleText) {
-  const indicatorEl = document.getElementById("pc-wk-indicator");
-  const labelEl = document.getElementById("pc-wk-label");
-  if (!indicatorEl || !labelEl) return;
+  _wkIndicatorState = state;
+  _wkIndicatorTitle = titleText || (
+    state === "active" ? "Valid ProtoConsent .well-known declaration detected"
+    : state === "inactive" ? "No valid ProtoConsent .well-known declaration for this site"
+    : "ProtoConsent .well-known status unavailable"
+  );
 
-  indicatorEl.classList.remove("is-active", "is-inactive", "is-disabled");
-
-  if (state === "active") {
-    indicatorEl.classList.add("is-active");
-    labelEl.textContent = "WK";
-    indicatorEl.title = titleText || "Valid ProtoConsent .well-known declaration detected";
-    indicatorEl.style.cursor = "pointer";
-    if (!indicatorEl._wkClickBound) {
-      indicatorEl.setAttribute("role", "button");
-      indicatorEl.setAttribute("tabindex", "0");
-      indicatorEl.addEventListener("click", toggleSidePanel);
-      indicatorEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          toggleSidePanel();
-        }
-      });
-      indicatorEl._wkClickBound = true;
-    }
-    return;
-  }
-
-  if (state === "inactive") {
-    indicatorEl.classList.add("is-inactive");
-    labelEl.textContent = "WK";
-    indicatorEl.title = titleText || "No valid ProtoConsent .well-known declaration for this site";
-    return;
-  }
-
-  indicatorEl.classList.add("is-disabled");
-  labelEl.textContent = "WK";
-  indicatorEl.title = titleText || "ProtoConsent .well-known status unavailable";
+  // Refresh the signals bar if it exists (pill indicators are rendered there now)
+  if (typeof renderSignalsBar === "function") renderSignalsBar();
 }
 
 // Load and display site declaration from .well-known/protoconsent.json

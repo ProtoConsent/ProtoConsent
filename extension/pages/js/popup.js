@@ -38,6 +38,134 @@ let activeMode = "consent";
 let gpcGlobalEnabled = true;
 let chStrippingEnabled = true;
 
+// --- Shared: collapsible bar ---
+
+function createCollapsibleBar(id, opts) {
+  // opts: { collapsedContent, expandedContent, tint, ariaLabel }
+  var bar = document.createElement("div");
+  bar.className = "pc-bar" + (opts.tint ? " pc-bar-" + opts.tint : "");
+  bar.id = id;
+
+  var toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "pc-bar-toggle";
+  toggle.setAttribute("aria-expanded", "false");
+  if (opts.ariaLabel) toggle.setAttribute("aria-label", opts.ariaLabel);
+
+  var chevron = document.createElement("span");
+  chevron.className = "pc-bar-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.textContent = "\u25B8";
+
+  var label = document.createElement("span");
+  label.className = "pc-bar-label";
+  toggle.appendChild(chevron);
+  toggle.appendChild(label);
+  bar.appendChild(toggle);
+
+  var body = document.createElement("div");
+  body.className = "pc-bar-body";
+  bar.appendChild(body);
+
+  toggle.addEventListener("click", function () {
+    var expanded = bar.classList.toggle("is-expanded");
+    toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+  });
+
+  bar._label = label;
+  bar._body = body;
+  bar.setCollapsed = function (content) {
+    if (typeof content === "string") label.textContent = content;
+    else { label.textContent = ""; label.appendChild(content); }
+  };
+  bar.setExpanded = function (content) {
+    body.textContent = "";
+    if (typeof content === "string") body.textContent = content;
+    else body.appendChild(content);
+  };
+
+  return bar;
+}
+
+// --- Shared: grid card ---
+
+function createGridCard(opts) {
+  // opts: { id, icon, title, metric, tint }
+  // Returns { card, body, setMetric(text) }
+  // body is a separate element placed AFTER card in the grid to span full-width
+  var card = document.createElement("div");
+  card.className = "pc-grid-card" + (opts.full ? " pc-grid-card-full" : "");
+  if (opts.id) card.id = opts.id;
+
+  var toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "pc-grid-card-toggle";
+  toggle.setAttribute("aria-expanded", "false");
+
+  if (opts.iconSrc) {
+    var iconEl = document.createElement("span");
+    iconEl.className = "pc-grid-card-icon";
+    iconEl.setAttribute("aria-hidden", "true");
+    var img = document.createElement("img");
+    img.src = opts.iconSrc;
+    img.width = 20;
+    img.height = 20;
+    img.alt = "";
+    img.className = "pc-grid-card-icon-img";
+    iconEl.appendChild(img);
+    toggle.appendChild(iconEl);
+  } else if (opts.icon) {
+    var iconEl = document.createElement("span");
+    iconEl.className = "pc-grid-card-icon";
+    iconEl.textContent = opts.icon;
+    iconEl.setAttribute("aria-hidden", "true");
+    toggle.appendChild(iconEl);
+  }
+
+  var titleEl = document.createElement("span");
+  titleEl.className = "pc-grid-card-title";
+  titleEl.textContent = opts.title || "";
+  toggle.appendChild(titleEl);
+
+  var metricEl = document.createElement("span");
+  metricEl.className = "pc-grid-card-metric";
+  metricEl.textContent = opts.metric || "";
+  toggle.appendChild(metricEl);
+  card.appendChild(toggle);
+
+  var body = document.createElement("div");
+  body.className = "pc-grid-card-body";
+  if (opts.id) body.id = opts.id + "-body";
+
+  toggle.addEventListener("click", function () {
+    var grid = card.parentElement;
+    var wasExpanded = card.classList.contains("is-expanded");
+
+    // Accordion: collapse all siblings
+    if (grid) {
+      grid.querySelectorAll(".pc-grid-card.is-expanded").forEach(function (c) {
+        c.classList.remove("is-expanded");
+        c.querySelector(".pc-grid-card-toggle").setAttribute("aria-expanded", "false");
+      });
+      grid.querySelectorAll(".pc-grid-card-body").forEach(function (b) {
+        b.style.display = "";
+      });
+    }
+
+    if (!wasExpanded) {
+      card.classList.add("is-expanded");
+      toggle.setAttribute("aria-expanded", "true");
+    }
+  });
+
+  return {
+    card: card,
+    body: body,
+    setMetric: function (text) { metricEl.textContent = text; },
+    setTitle: function (text) { titleEl.textContent = text; }
+  };
+}
+
 function getActivePurposes() {
   const core = PURPOSES_TO_SHOW.filter(p => lastPurposeStats[p] || lastBlockedDomains[p]);
   // Include Enhanced Protection list keys (enhanced:listId)
@@ -54,6 +182,9 @@ async function initPopup() {
     await loadConfigs();
     await loadDefaultProfile();
     initProfileSelect();
+    // Pre-fetch enhanced/proto state so tabs open instantly (fire-and-forget)
+    try { if (typeof initEnhancedTab === "function") initEnhancedTab(); } catch (_) {}
+    try { if (typeof initProtoTab === "function") initProtoTab(); } catch (_) {}
     await refreshPopupState();
   } catch (err) {
     console.error("ProtoConsent popup error:", err);
@@ -262,7 +393,7 @@ let displayRetries = 0;
 const MAX_DISPLAY_RETRIES = 2;
 
 // Compute block provenance from getMatchedRules (own) vs webRequest (observed).
-// Single source of truth — used by proto.js and debug.js.
+// Single source of truth - used by proto.js and debug.js.
 function computeBlockProvenance(coverage) {
   let own = lastBlocked || 0;
   let observed = (coverage && coverage.observed) || 0;
@@ -271,9 +402,77 @@ function computeBlockProvenance(coverage) {
   return { own: own, observed: observed, attributed: attributed, external: external };
 }
 
+// --- Stats bar + signals bar (collapsible) ---
+
+var _statsBar = null;
+var _signalsBar = null;
+
+function ensureBars() {
+  if (!_statsBar) {
+    var container = document.getElementById("pc-bar-stats");
+    if (container) {
+      _statsBar = createCollapsibleBar("pc-stats-bar", { ariaLabel: "Blocking stats", tint: null });
+      _statsBar.setCollapsed("loading...");
+      container.appendChild(_statsBar);
+    }
+  }
+  if (!_signalsBar) {
+    var container = document.getElementById("pc-bar-signals");
+    if (container) {
+      _signalsBar = createCollapsibleBar("pc-signals-bar", { ariaLabel: "Privacy signals", tint: "signals" });
+      _signalsBar.setCollapsed("Privacy signals");
+      container.appendChild(_signalsBar);
+    }
+  }
+}
+
+// Shared: build collapsed content for stats bar (used by consent + proto)
+function buildStatsCollapsed(blocked) {
+  var frag = document.createDocumentFragment();
+  var fragments = [];
+
+  if (blocked > 0) {
+    var enhancedCount = 0;
+    for (var key in lastPurposeStats) {
+      if (key.startsWith("enhanced:")) enhancedCount += lastPurposeStats[key];
+    }
+    var blockedSpan = document.createElement("span");
+    blockedSpan.appendChild(document.createTextNode(blocked + " blocked"));
+    if (enhancedCount > 0) {
+      var epSpan = document.createElement("span");
+      epSpan.className = "pc-counter-enhanced";
+      epSpan.title = enhancedCount + " blocked by Enhanced Protection";
+      blockedSpan.appendChild(document.createTextNode(" "));
+      epSpan.appendChild(document.createTextNode("("));
+      var epIcon = document.createElement("img");
+      epIcon.src = ENHANCED_ICON;
+      epIcon.width = 12;
+      epIcon.height = 12;
+      epIcon.alt = enhancedCount + " enhanced";
+      epIcon.className = "pc-counter-enhanced-icon";
+      epSpan.appendChild(epIcon);
+      epSpan.appendChild(document.createTextNode(enhancedCount + ")"));
+      blockedSpan.appendChild(epSpan);
+    }
+    fragments.push(blockedSpan);
+
+    var estimatedMs = blocked * ESTIMATED_MS_PER_BLOCKED_REQUEST;
+    if (estimatedMs >= 100) {
+      fragments.push(document.createTextNode("~" + formatEstimatedTime(estimatedMs) + " faster"));
+    }
+  }
+  if (fragments.length > 0) {
+    for (var i = 0; i < fragments.length; i++) {
+      if (i > 0) frag.appendChild(document.createTextNode(" \u00b7 "));
+      frag.appendChild(fragments[i]);
+    }
+    return frag;
+  }
+  return "Nothing blocked";
+}
+
 async function displayBlockedCount() {
-  const countEl = document.getElementById("pc-blocked-count");
-  const statRowEl = document.querySelector(".pc-header-stat");
+  ensureBars();
 
   try {
     const { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains } = await getBlockedRulesCount();
@@ -290,8 +489,6 @@ async function displayBlockedCount() {
     lastPurposeStats = Object.assign({}, domainHitCount);
 
     // Merge with blockedDomains counts (event listener covers dynamic + static matches).
-    // Use the higher value: getMatchedRules is authoritative for statics,
-    // but misses purpose attribution for dynamic rules; blockedDomains has both.
     if (blockedDomains) {
       for (const [purpose, domains] of Object.entries(blockedDomains)) {
         const total = Object.values(domains).reduce((sum, c) => sum + c, 0);
@@ -301,83 +498,50 @@ async function displayBlockedCount() {
       }
     }
 
-    // Unified counter line: "X blocked [shield N] · ~Ys faster · GPC to Z domains"
-    if (countEl) {
-      countEl.textContent = "";
-      const fragments = [];
+    // --- Stats bar collapsed content ---
+    if (_statsBar) {
+      _statsBar.setCollapsed(buildStatsCollapsed(blocked));
 
-      if (blocked > 0) {
-        // Count enhanced blocks from lastPurposeStats (enhanced:* keys)
-        let enhancedCount = 0;
-        for (const [key, val] of Object.entries(lastPurposeStats)) {
-          if (key.startsWith("enhanced:")) enhancedCount += val;
-        }
-        const blockedSpan = document.createElement("span");
-        blockedSpan.appendChild(document.createTextNode(blocked + " blocked"));
-        if (enhancedCount > 0) {
-          const epSpan = document.createElement("span");
-          epSpan.className = "pc-counter-enhanced";
-          epSpan.title = enhancedCount + " blocked by Enhanced Protection";
-          blockedSpan.appendChild(document.createTextNode(" "));
-          epSpan.appendChild(document.createTextNode("("));
-          const epIcon = document.createElement("img");
-          epIcon.src = ENHANCED_ICON;
-          epIcon.width = 12;
-          epIcon.height = 12;
-          epIcon.alt = enhancedCount + " blocked by Enhanced Protection";
-          epIcon.title = enhancedCount + " blocked by Enhanced Protection";
-          epIcon.className = "pc-counter-enhanced-icon";
-          epSpan.appendChild(epIcon);
-          epSpan.appendChild(document.createTextNode(enhancedCount + ")"));
-          blockedSpan.appendChild(epSpan);
-        }
-        fragments.push(blockedSpan);
-        const estimatedMs = blocked * ESTIMATED_MS_PER_BLOCKED_REQUEST;
-        if (estimatedMs >= 100) {
-          fragments.push(document.createTextNode("~" + formatEstimatedTime(estimatedMs) + " faster"));
-        }
-      }
-      if (gpc > 0) {
-        const domainCount = gpcDomains.length;
-        if (domainCount > 0) {
-          fragments.push(document.createTextNode("GPC to " + pluralize(domainCount, "domain")));
-        } else {
-          fragments.push(document.createTextNode("GPC to " + pluralize(gpc, "request")));
-        }
+      // --- Stats bar expanded content ---
+      var expDiv = document.createElement("div");
+
+      // Scope line (core rules)
+      var scopeText = computeScopeText();
+      if (scopeText) {
+        var scopeLine = document.createElement("span");
+        scopeLine.textContent = scopeText;
+        scopeLine.style.color = "var(--pc-accent)";
+        scopeLine.style.fontWeight = "600";
+        expDiv.appendChild(scopeLine);
       }
 
-      if (fragments.length > 0) {
-        for (let i = 0; i < fragments.length; i++) {
-          if (i > 0) countEl.appendChild(document.createTextNode(" · "));
-          countEl.appendChild(fragments[i]);
-        }
-      } else {
-        countEl.textContent = "Nothing blocked";
+      // Enhanced scope
+      var enhancedEl = document.createElement("span");
+      enhancedEl.style.color = "#b45309";
+      enhancedEl.style.fontWeight = "600";
+      enhancedEl._sep = scopeText ? " \u00b7 " : "";
+      expDiv.appendChild(enhancedEl);
+      buildEnhancedScopeLine(enhancedEl);
+
+      // Link to Log Domains
+      if (blocked > 0 || gpc > 0) {
+        var logLink = document.createElement("button");
+        logLink.type = "button";
+        logLink.className = "pc-bar-link";
+        logLink.textContent = "\u2192 View blocked domains";
+        logLink.addEventListener("click", function () { navigateToLog("domains"); });
+        expDiv.appendChild(logLink);
       }
 
-      if (blocked > 0) {
-        countEl.classList.add("has-blocked", "clickable");
-        countEl.title = "Click to see blocked domains in Log tab";
-        if (statRowEl) statRowEl.classList.add("clickable");
-      } else if (gpc > 0) {
-        countEl.classList.add("clickable");
-        countEl.classList.remove("has-blocked");
-        countEl.title = "Click to see GPC signals in Log tab";
-        if (statRowEl) statRowEl.classList.add("clickable");
-      } else {
-        countEl.classList.remove("has-blocked", "clickable");
-        countEl.title = "";
-        if (statRowEl) statRowEl.classList.remove("clickable");
-      }
+      _statsBar.setExpanded(expDiv);
     }
 
     // Inject per-purpose stats into purpose items
     displayPerPurposeStats();
-    displayProtectionScope();
-    updateGpcIndicator(gpc);
-    updateChIndicator();
-  
-  updateTcfIndicator();
+
+    // Signals bar
+    renderSignalsBar(gpc);
+
     // Debug panel (visible only when debug flag is set in storage)
     if (DEBUG_RULES) {
       renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains });
@@ -388,10 +552,7 @@ async function displayBlockedCount() {
       refreshLogView();
     }
 
-    // Auto-retry: if Chrome has counted blocked/GPC matches but our listener
-    // hasn't captured domain names yet (the service worker may have been idle
-    // when the first requests arrived), re-fetch after a short delay so the
-    // user sees domains without needing to reopen the popup.
+    // Auto-retry: re-fetch after a short delay if domain data is missing
     const hasDomainData = blockedDomains && Object.keys(blockedDomains).length > 0;
     const hasGpcData = gpcDomains && gpcDomains.length > 0;
     if (((blocked > 0 && !hasDomainData) || (gpc > 0 && !hasGpcData)) && displayRetries < MAX_DISPLAY_RETRIES) {
@@ -402,8 +563,179 @@ async function displayBlockedCount() {
     }
   } catch (err) {
     console.error("ProtoConsent: error displaying blocked count:", err);
-    if (countEl) countEl.textContent = "? requests blocked";
+    if (_statsBar) _statsBar.setCollapsed("? requests blocked");
   }
+}
+
+// Compute scope text for bar expanded view
+function computeScopeText() {
+  var domainCount = 0;
+  var pathCount = 0;
+  for (var i = 0; i < PURPOSES_TO_SHOW.length; i++) {
+    var pk = PURPOSES_TO_SHOW[i];
+    if (currentPurposesState[pk] !== false) continue;
+    if (purposeDomainCounts[pk]) domainCount += purposeDomainCounts[pk];
+    if (purposePathCounts[pk]) pathCount += purposePathCounts[pk];
+  }
+  var total = domainCount + pathCount;
+  if (total > 0) return "Core \u00b7 " + compactNumber(total) + " rules";
+  var hasBlocked = PURPOSES_TO_SHOW.some(function (pk) { return currentPurposesState[pk] === false; });
+  return hasBlocked ? "Protection enabled" : "";
+}
+
+// Build enhanced scope line into element (async, may update after load)
+function buildEnhancedScopeLine(el) {
+  if (typeof epLists !== "undefined" && Object.keys(epLists).length > 0) {
+    var stats = getEnhancedStats();
+    var celIds = typeof epConsentLinkedIds !== "undefined" ? epConsentLinkedIds : new Set();
+    var infoDomains = Object.entries(epLists)
+      .filter(function (e) { return (e[1].enabled || celIds.has(e[0])) && e[1].type === "informational"; })
+      .reduce(function (sum, e) { return sum + (e[1].domainCount || 0); }, 0);
+    renderEnhancedScopeLine(el, stats.blockingCount + stats.cosmeticCount + stats.cmpCount, stats.totalRules, stats.infoCount, infoDomains);
+  } else {
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, function (resp) {
+      if (chrome.runtime.lastError || !resp) return;
+      var lists = resp.lists || {};
+      var celIds = new Set(resp.consentLinkedListIds || []);
+      var active = Object.entries(lists).filter(function (e) { return e[1].enabled || celIds.has(e[0]); }).map(function (e) { return e[1]; });
+      var blocking = active.filter(function (l) { return l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp"; });
+      var cosmetic = active.filter(function (l) { return l.type === "cosmetic"; });
+      var cmp = active.filter(function (l) { return l.type === "cmp"; });
+      var info = active.filter(function (l) { return l.type === "informational"; });
+      var bRules = blocking.reduce(function (s, l) { return s + (l.domainCount || 0); }, 0);
+      var cRules = cosmetic.reduce(function (s, l) { return s + (l.genericCount || 0) + (l.domainRuleCount || 0); }, 0);
+      var cmpT = cmp.reduce(function (s, l) { return s + (l.cmpCount || 0); }, 0);
+      renderEnhancedScopeLine(el, blocking.length + cosmetic.length + cmp.length, bRules + cRules + cmpT,
+        info.length, info.reduce(function (s, l) { return s + (l.domainCount || 0); }, 0));
+    });
+  }
+}
+
+// --- Signals bar ---
+
+function renderSignalsBar(observedGpc) {
+  ensureBars();
+  if (!_signalsBar) return;
+
+  if (typeof observedGpc === "undefined") observedGpc = lastGpcSignalsSent;
+
+  // Collapsed: most relevant signal summary
+  var summary = buildSignalSummary(observedGpc);
+  _signalsBar.setCollapsed(summary);
+
+  // Expanded: all pill indicators
+  var pillsDiv = document.createElement("div");
+  pillsDiv.className = "pc-scope-indicators";
+  pillsDiv.style.gap = "4px 6px";
+
+  pillsDiv.appendChild(buildPill("GPC", computeGpcState(observedGpc), function () { navigateToLog("gpc"); }));
+  pillsDiv.appendChild(buildPill("CH", computeChState()));
+  var wkState = computeWkState();
+  var wkClick = (wkState.state === "active" && typeof toggleSidePanel === "function") ? function () { toggleSidePanel(); } : null;
+  pillsDiv.appendChild(buildPill("WK", wkState, wkClick));
+  pillsDiv.appendChild(buildPill("TCF", { state: "disabled", title: "Checking..." }));
+  // TCF is async, update after response
+  updateTcfPill(pillsDiv);
+
+  _signalsBar.setExpanded(pillsDiv);
+}
+
+function buildSignalSummary(observedGpc) {
+  // Pick the most relevant signal for collapsed text
+  if (observedGpc > 0 && lastGpcDomains.length > 0) {
+    return "GPC to " + pluralize(lastGpcDomains.length, "domain");
+  }
+  if (expectedGpcEnabled()) return "GPC active";
+  if (lastChStripped > 0) return "CH stripped (" + lastChStripped + ")";
+  return "Privacy signals";
+}
+
+function computeGpcState(observedGpc) {
+  if (!currentDomain || !gpcGlobalEnabled) return { state: "disabled", title: "GPC unavailable" };
+  var on = expectedGpcEnabled();
+  var tip = on ? "GPC: active" : "GPC: inactive";
+  if (observedGpc > 0 && lastGpcDomains.length > 0) {
+    tip += "\nSent to " + pluralize(lastGpcDomains.length, "domain");
+  }
+  return { state: on ? "active" : "inactive", title: tip };
+}
+
+function computeChState() {
+  if (!currentDomain || !chStrippingEnabled) return { state: "disabled", title: "CH stripping unavailable" };
+  var on = currentPurposesState.advanced_tracking === false;
+  return {
+    state: on ? "active" : "inactive",
+    title: on ? "Client Hints: stripping active" : "Client Hints: not stripped"
+  };
+}
+
+function computeWkState() {
+  var state = typeof _wkIndicatorState !== "undefined" ? _wkIndicatorState : "disabled";
+  var title = typeof _wkIndicatorTitle !== "undefined" ? _wkIndicatorTitle : "WK status unavailable";
+  return { state: state, title: title };
+}
+
+function updateTcfPill(container) {
+  if (!currentDomain) return;
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    if (!tabs || !tabs[0]) return;
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_TCF", tabId: tabs[0].id }, function (resp) {
+      if (chrome.runtime.lastError || !resp || !resp.tcf) return;
+      var tcf = resp.tcf;
+      var pill = container.querySelector('[data-signal="TCF"]');
+      if (pill) {
+        pill.classList.remove("is-disabled");
+        pill.classList.add("is-active");
+        var tip = "Cookie banner detected";
+        if (tcf.purposeConsents) {
+          var total = Object.keys(tcf.purposeConsents).length;
+          if (total > 0) {
+            var accepted = Object.entries(tcf.purposeConsents).filter(function (e) { return e[1]; }).length;
+            tip += " \u00b7 " + accepted + "/" + total + " purposes accepted";
+          }
+        }
+        pill.title = tip;
+        pill.style.cursor = "pointer";
+        pill.addEventListener("click", navigateToProtoTcf);
+      }
+    });
+  });
+}
+
+function buildPill(label, info, clickHandler) {
+  var pill = document.createElement("div");
+  pill.className = "pc-pill-indicator pc-" + label.toLowerCase() + "-indicator";
+  pill.setAttribute("data-signal", label);
+  pill.setAttribute("role", "status");
+  pill.setAttribute("aria-live", "polite");
+
+  if (info.state === "active") pill.classList.add("is-active");
+  else if (info.state === "inactive") pill.classList.add("is-inactive");
+  else pill.classList.add("is-disabled");
+
+  pill.title = info.title || "";
+
+  var dot = document.createElement("span");
+  dot.className = "pc-pill-dot pc-" + label.toLowerCase() + "-dot";
+  dot.setAttribute("aria-hidden", "true");
+  pill.appendChild(dot);
+  pill.appendChild(document.createTextNode(label));
+
+  if (clickHandler) {
+    pill.style.cursor = "pointer";
+    pill.setAttribute("role", "button");
+    pill.removeAttribute("aria-live");
+    pill.setAttribute("tabindex", "0");
+    pill.addEventListener("click", clickHandler);
+    pill.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); clickHandler(); }
+    });
+  } else {
+    pill.style.cursor = "help";
+    pill.setAttribute("tabindex", "0");
+  }
+
+  return pill;
 }
 
 function formatEstimatedTime(ms) {
@@ -416,113 +748,43 @@ function displayPerPurposeStats() {
     const itemEl = document.querySelector('.pc-purpose-item[data-purpose="' + purposeKey + '"]');
     if (!itemEl) continue;
 
-    // Remove existing stat if re-rendering
-    const existing = itemEl.querySelector(".pc-purpose-stat");
+    // Remove existing inline stat if re-rendering
+    const existing = itemEl.querySelector(".pc-purpose-stat-inline");
     if (existing) existing.remove();
 
     const count = lastPurposeStats[purposeKey];
     if (!count) continue;
 
-    const ms = count * ESTIMATED_MS_PER_BLOCKED_REQUEST;
-    const statEl = document.createElement("div");
-    statEl.className = "pc-purpose-stat clickable";
-    statEl.textContent = count + " blocked \u002D ~" + formatEstimatedTime(ms);
-    statEl.title = "View blocked domains in Log tab";
-    statEl.setAttribute("role", "button");
-    statEl.setAttribute("tabindex", "0");
-    statEl.setAttribute("aria-label", "Show blocked trackers for " + getPurposeLabel(purposeKey));
-    statEl.addEventListener("click", navigateToLog);
-    statEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        navigateToLog();
-      }
-    });
+    // Inline stat between name and toggle in the header row
+    const headerEl = itemEl.querySelector(".pc-purpose-header");
+    const toggleEl = itemEl.querySelector(".pc-purpose-toggle");
+    if (!headerEl || !toggleEl) continue;
 
-    // Insert after header, before description
-    const descEl = itemEl.querySelector(".pc-purpose-description");
-    if (descEl) {
-      itemEl.insertBefore(statEl, descEl);
-    } else {
-      itemEl.appendChild(statEl);
-    }
+    const statEl = document.createElement("span");
+    statEl.className = "pc-purpose-stat-inline";
+    statEl.textContent = count + " blocked";
+    statEl.title = "View blocked domains in Log tab";
+    statEl.style.cursor = "pointer";
+    statEl.addEventListener("click", function (e) { e.stopPropagation(); navigateToLog(); });
+    headerEl.insertBefore(statEl, toggleEl);
   }
 }
 
 // Display "Protected from X trackers" below the counter bar
+// Now integrated into stats bar expanded view via computeScopeText()
 function displayProtectionScope() {
-  const scopeEl = document.getElementById("pc-protection-scope");
-  const scopeTextEl = document.getElementById("pc-protection-scope-text");
-  if (!scopeEl || !scopeTextEl) return;
-
-  const hasBlockedPurposes = PURPOSES_TO_SHOW.some((purposeKey) => currentPurposesState[purposeKey] === false);
-
-  let domainCount = 0;
-  let pathCount = 0;
-  for (const purposeKey of PURPOSES_TO_SHOW) {
-    if (currentPurposesState[purposeKey] !== false) continue; // allowed or undefined, not blocking
-    if (purposeDomainCounts[purposeKey]) domainCount += purposeDomainCounts[purposeKey];
-    if (purposePathCounts[purposeKey]) pathCount += purposePathCounts[purposeKey];
-  }
-
-  const total = domainCount + pathCount;
-  if (total > 0) {
-    scopeTextEl.textContent = "Core \u00b7 " + compactNumber(total) + " rules";
-    scopeTextEl.title = "";
-    scopeEl.style.display = "flex";
-  } else {
-    if (hasBlockedPurposes) {
-      scopeTextEl.textContent = "Protection enabled";
-      scopeTextEl.title = "";
-    } else {
-      scopeTextEl.textContent = "No site-level protections";
-      scopeTextEl.title = lastBlocked > 0
-        ? "This site allows all purposes; blocked requests may still come from embedded third-party contexts."
-        : "This site currently allows all purposes.";
+  // Refresh the stats bar if it exists (scope is inside expanded bar now)
+  if (_statsBar) {
+    var scopeText = computeScopeText();
+    var scopeLine = _statsBar._body.querySelector(".pc-scope-line");
+    if (scopeLine) {
+      scopeLine.textContent = scopeText || "";
+      scopeLine.style.display = scopeText ? "" : "none";
     }
-    scopeEl.style.display = "flex";
-  }
-
-  // Enhanced Protection summary line
-  displayEnhancedScope();
-}
-
-function displayEnhancedScope() {
-  const el = document.getElementById("pc-enhanced-scope");
-  if (!el) return;
-
-  // epLists is a global from enhanced.js - populated after initEnhancedTab.
-  // On first popup open the tab hasn't been visited yet, so fetch from background.
-  if (typeof epLists !== "undefined" && Object.keys(epLists).length > 0) {
-    const stats = getEnhancedStats();
-    const celIds = typeof epConsentLinkedIds !== "undefined" ? epConsentLinkedIds : new Set();
-    const infoDomains = Object.entries(epLists)
-      .filter(([id, l]) => (l.enabled || celIds.has(id)) && l.type === "informational")
-      .reduce((sum, [, l]) => sum + (l.domainCount || 0), 0);
-    renderEnhancedScopeLine(el, stats.blockingCount + stats.cosmeticCount + stats.cmpCount, stats.totalRules, stats.infoCount, infoDomains);
-  } else {
-    chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
-      if (chrome.runtime.lastError || !resp) return;
-      const lists = resp.lists || {};
-      const celIds = new Set(resp.consentLinkedListIds || []);
-      const activeLists = Object.entries(lists)
-        .filter(([id, l]) => l.enabled || celIds.has(id))
-        .map(([, l]) => l);
-      const blockingLists = activeLists.filter(l => l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp");
-      const cosmeticLists = activeLists.filter(l => l.type === "cosmetic");
-      const cmpLists = activeLists.filter(l => l.type === "cmp");
-      const infoLists = activeLists.filter(l => l.type === "informational");
-      const blockingRules = blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0);
-      const cosmeticRules = cosmeticLists.reduce((sum, l) =>
-        sum + (l.genericCount || 0) + (l.domainRuleCount || 0), 0);
-      const cmpTemplates = cmpLists.reduce((sum, l) => sum + (l.cmpCount || 0), 0);
-      renderEnhancedScopeLine(el, blockingLists.length + cosmeticLists.length + cmpLists.length,
-        blockingRules + cosmeticRules + cmpTemplates,
-        infoLists.length,
-        infoLists.reduce((sum, l) => sum + (l.domainCount || 0), 0));
-    });
   }
 }
+
+
 
 function renderEnhancedScopeLine(el, blockingCount, totalDomains, infoCount, infoDomains) {
   const totalLists = blockingCount + (infoCount || 0);
@@ -531,7 +793,8 @@ function renderEnhancedScopeLine(el, blockingCount, totalDomains, infoCount, inf
     el.textContent = "";
     return;
   }
-  el.textContent = "";
+  el.style.display = "";
+  el.textContent = el._sep || "";
   const icon = document.createElement("img");
   icon.src = ENHANCED_ICON;
   icon.width = 12;
@@ -708,6 +971,13 @@ async function loadDefaultProfile() {
     chrome.storage.local.get(["defaultProfile", "defaultPurposes", "gpcEnabled", "chStrippingEnabled"], (result) => {
       defaultProfile = result.defaultProfile || "balanced";
       defaultPurposes = result.defaultPurposes || null;
+      if (!defaultPurposes && presetsConfig[defaultProfile]) {
+        defaultPurposes = {};
+        var pp = presetsConfig[defaultProfile].purposes || {};
+        for (var i = 0; i < PURPOSES_TO_SHOW.length; i++) {
+          defaultPurposes[PURPOSES_TO_SHOW[i]] = pp[PURPOSES_TO_SHOW[i]] !== false;
+        }
+      }
       currentProfile = defaultProfile;
       gpcGlobalEnabled = result.gpcEnabled !== false;
       chStrippingEnabled = result.chStrippingEnabled !== false;
@@ -971,8 +1241,8 @@ function createPurposeItemElement(purposeKey, cfg) {
   chevronEl.setAttribute("aria-hidden", "true");
   chevronEl.textContent = " ▾";
   nameEl.appendChild(nameTxt);
-  nameEl.appendChild(chevronEl);
 
+  leftEl.appendChild(chevronEl);
   leftEl.appendChild(iconEl);
   leftEl.appendChild(nameEl);
   leftEl.setAttribute("role", "button");
@@ -1062,11 +1332,13 @@ function createPurposeItemElement(purposeKey, cfg) {
     }
   }
 
-  leftEl.addEventListener("click", () => {
+  headerEl.addEventListener("click", (e) => {
+    if (e.target.closest(".pc-purpose-toggle, .pc-toggle-switch, .pc-toggle-checkbox")) return;
     const nowCollapsed = !descEl.classList.contains("is-collapsed");
     updateDescriptionVisibility(nowCollapsed);
   });
-  leftEl.addEventListener("keydown", (e) => {
+  headerEl.addEventListener("keydown", (e) => {
+    if (e.target.closest(".pc-purpose-toggle, .pc-toggle-switch, .pc-toggle-checkbox")) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       const nowCollapsed = !descEl.classList.contains("is-collapsed");
@@ -1185,58 +1457,9 @@ function expectedGpcEnabled() {
 }
 
 // Color/dot reflect the expected state; the tooltip provides full details.
-function updateGpcIndicator(observedGpc = lastGpcSignalsSent) {
-  const indicatorEl = document.getElementById("pc-gpc-indicator");
-  const labelEl = document.getElementById("pc-gpc-label");
-  if (!indicatorEl || !labelEl) return;
-
-  labelEl.textContent = "GPC";
-
-  if (!currentDomain) {
-    indicatorEl.classList.remove("is-active", "is-inactive");
-    indicatorEl.classList.add("is-disabled");
-    indicatorEl.title = "GPC unavailable on this page";
-    return;
-  }
-
-  if (!gpcGlobalEnabled) {
-    indicatorEl.classList.remove("is-active", "is-inactive");
-    indicatorEl.classList.add("is-disabled");
-    indicatorEl.title = "GPC globally disabled in Purpose Settings";
-    return;
-  }
-
-  const expectedOn = expectedGpcEnabled();
-  indicatorEl.classList.remove("is-disabled");
-  indicatorEl.classList.toggle("is-active", expectedOn);
-  indicatorEl.classList.toggle("is-inactive", !expectedOn);
-  const expectedText = expectedOn
-    ? "GPC: active - do-not-sell/share signal"
-    : "GPC: inactive";
-  const domains = lastGpcDomains;
-  let observedText;
-  if (observedGpc > 0 && domains.length > 0) {
-    observedText = "Sent to " + pluralize(domains.length, "domain")
-      + " (" + pluralize(observedGpc, "request") + ")";
-  } else if (observedGpc > 0) {
-    observedText = pluralize(observedGpc, "signal") + " sent";
-  } else {
-    observedText = "No signals sent yet on this tab";
-  }
-  indicatorEl.title = expectedText + "\n" + observedText;
-  indicatorEl.style.cursor = "pointer";
-  if (!indicatorEl._logClickBound) {
-    indicatorEl.setAttribute("role", "button");
-    indicatorEl.setAttribute("tabindex", "0");
-    indicatorEl.addEventListener("click", () => navigateToLog("gpc"));
-    indicatorEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        navigateToLog("gpc");
-      }
-    });
-    indicatorEl._logClickBound = true;
-  }
+// Now renders into the signals bar instead of a fixed HTML element.
+function updateGpcIndicator(observedGpc) {
+  renderSignalsBar(observedGpc);
 }
 
 function updateHeaderControls() {
@@ -1246,102 +1469,17 @@ function updateHeaderControls() {
     reloadBtn.disabled = !enabled;
     if (!enabled) reloadBtn.classList.remove("is-recommended");
   }
-  updateGpcIndicator();
-  updateChIndicator();
-
-  updateTcfIndicator();
+  renderSignalsBar();
 }
 
-// Client Hints stripping indicator - reflects whether high-entropy
-// Sec-CH-UA-* headers are being removed for this site.
+// Client Hints stripping indicator - now rendered in signals bar
 function updateChIndicator() {
-  const indicatorEl = document.getElementById("pc-ch-indicator");
-  const labelEl = document.getElementById("pc-ch-label");
-  if (!indicatorEl || !labelEl) return;
-
-  labelEl.textContent = "CH";
-
-  if (!currentDomain) {
-    indicatorEl.classList.remove("is-active", "is-inactive");
-    indicatorEl.classList.add("is-disabled");
-    indicatorEl.title = "Client Hints stripping unavailable on this page";
-    return;
-  }
-
-  if (!chStrippingEnabled) {
-    indicatorEl.classList.remove("is-active", "is-inactive");
-    indicatorEl.classList.add("is-disabled");
-    indicatorEl.title = "Client Hints stripping globally disabled in Purpose Settings";
-    return;
-  }
-
-  const deniesAT = currentPurposesState.advanced_tracking === false;
-  indicatorEl.classList.remove("is-disabled");
-  indicatorEl.classList.toggle("is-active", deniesAT);
-  indicatorEl.classList.toggle("is-inactive", !deniesAT);
-  if (deniesAT) {
-    const countStr = lastChStripped > 0 ? " (" + lastChStripped + " requests)" : "";
-    indicatorEl.title = "Client Hints: stripping active" + countStr +
-      "\nHigh-entropy fingerprinting headers removed";
-  } else {
-    indicatorEl.title = "Client Hints: not stripped\nAdvanced tracking allowed for this site";
-  }
+  renderSignalsBar();
 }
 
 
 function updateTcfIndicator() {
-  const indicatorEl = document.getElementById("pc-tcf-indicator");
-  const labelEl = document.getElementById("pc-tcf-label");
-  if (!indicatorEl || !labelEl) return;
-
-  labelEl.textContent = "TCF";
-
-  if (!currentDomain) {
-    indicatorEl.classList.remove("is-active", "is-inactive");
-    indicatorEl.classList.add("is-disabled");
-    indicatorEl.title = "No cookie consent banner detected";
-    return;
-  }
-
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (!tabs || !tabs[0]) return;
-    chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_TCF", tabId: tabs[0].id }, (resp) => {
-      if (chrome.runtime.lastError || !resp || !resp.tcf) {
-        indicatorEl.classList.remove("is-active", "is-inactive");
-        indicatorEl.classList.add("is-disabled");
-        indicatorEl.title = "No cookie consent banner detected";
-        return;
-      }
-      const tcf = resp.tcf;
-      indicatorEl.classList.remove("is-disabled", "is-inactive");
-      indicatorEl.classList.add("is-active");
-      // Make clickable - navigate to Proto tab where TCF accordion lives
-      indicatorEl.style.cursor = "pointer";
-      if (!indicatorEl._tcfClickBound) {
-        indicatorEl.setAttribute("role", "button");
-        indicatorEl.setAttribute("tabindex", "0");
-        indicatorEl.addEventListener("click", navigateToProtoTcf);
-        indicatorEl.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            navigateToProtoTcf();
-          }
-        });
-        indicatorEl._tcfClickBound = true;
-      }
-      let tip = "Cookie banner detected";
-      if (tcf.purposeConsents) {
-        const total = Object.keys(tcf.purposeConsents).length;
-        if (total > 0) {
-          const accepted = Object.entries(tcf.purposeConsents).filter(([, v]) => v).length;
-          tip += " \u00b7 " + accepted + "/" + total + " purposes accepted";
-        } else {
-          tip += " \u00b7 Banner not accepted or rejected";
-        }
-      }
-      indicatorEl.title = tip;
-    });
-  });
+  renderSignalsBar();
 }
 
 function waitForTabReload(tabId, timeoutMs = 12000) {
