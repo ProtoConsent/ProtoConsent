@@ -356,6 +356,11 @@ function _fillGpcBody(body, resp) {
   var domains = bgDomains.length > 0 ? bgDomains : popupDomains;
 
   if (domains.length === 0) { body.textContent = "No GPC signals sent yet"; return; }
+  var note = document.createElement("div");
+  note.textContent = "GPC is sent on requests that reach the server. Blocked requests never leave your browser.";
+  note.style.opacity = "0.7";
+  note.style.marginBottom = "4px";
+  body.appendChild(note);
   var header = document.createElement("div");
   header.innerHTML = "<strong>" + domains.length + " domains</strong> received GPC signal";
   header.style.marginBottom = "4px";
@@ -847,16 +852,6 @@ function renderDomainList(container, domains, limit) {
 // --- Show/Hide details integration ---
 // Called from popup.js toggleDescBtn handler
 
-function toggleProtoDetails(shouldExpand) {
-  const cards = document.querySelectorAll("#pc-view-proto .proto-card");
-  cards.forEach((card) => {
-    card.classList.toggle("is-expanded", shouldExpand);
-    const header = card.querySelector(".proto-card-header");
-    if (header) header.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
-    const chevron = card.querySelector(".proto-card-chevron");
-    if (chevron) chevron.textContent = shouldExpand ? " \u25BE" : " \u25B8";
-  });
-}
 
 // --- Blocker detection banner ---
 

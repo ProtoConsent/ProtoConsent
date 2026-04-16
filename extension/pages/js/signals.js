@@ -27,7 +27,7 @@ function renderSignalsBar(observedGpc) {
   var wkState = computeWkState();
   var wkClick = (wkState.state === "active" && typeof toggleSidePanel === "function") ? function () { toggleSidePanel(); } : null;
   pillsDiv.appendChild(buildPill("WK", wkState, wkClick));
-  pillsDiv.appendChild(buildPill("TCF", { state: "disabled", title: "Checking..." }));
+  pillsDiv.appendChild(buildPill("TCF", { state: "disabled", title: "TCF CMP not detected" }));
   updateTcfPill(pillsDiv);
 
   _signalsBar.setExpanded(pillsDiv);
@@ -45,22 +45,27 @@ function buildSignalSummary(observedGpc) {
 // --- Signal state computation ---
 
 function computeGpcState(observedGpc) {
-  if (!currentDomain || !gpcGlobalEnabled) return { state: "disabled", title: "GPC unavailable" };
+  if (!currentDomain) return { state: "disabled", title: "GPC unavailable on this page" };
+  if (!gpcGlobalEnabled) return { state: "disabled", title: "GPC globally disabled in Purpose Settings" };
   var on = expectedGpcEnabled();
-  var tip = on ? "GPC: active" : "GPC: inactive";
+  var tip = on ? "GPC: active - do-not-sell/share signal" : "GPC: inactive";
   if (observedGpc > 0 && lastGpcDomains.length > 0) {
-    tip += "\nSent to " + pluralize(lastGpcDomains.length, "domain");
+    tip += "\nSent to " + pluralize(lastGpcDomains.length, "domain") + " (" + pluralize(observedGpc, "request") + ")";
+  } else if (on) {
+    tip += "\nNo signals sent yet on this tab";
   }
   return { state: on ? "active" : "inactive", title: tip };
 }
 
 function computeChState() {
-  if (!currentDomain || !chStrippingEnabled) return { state: "disabled", title: "CH stripping unavailable" };
+  if (!currentDomain) return { state: "disabled", title: "Client Hints stripping unavailable on this page" };
+  if (!chStrippingEnabled) return { state: "disabled", title: "Client Hints stripping globally disabled in Purpose Settings" };
   var on = currentPurposesState.advanced_tracking === false;
-  return {
-    state: on ? "active" : "inactive",
-    title: on ? "Client Hints: stripping active" : "Client Hints: not stripped"
-  };
+  if (on) {
+    var countStr = lastChStripped > 0 ? " (" + lastChStripped + " requests)" : "";
+    return { state: "active", title: "Client Hints: stripping active" + countStr + "\nHigh-entropy fingerprinting headers removed" };
+  }
+  return { state: "inactive", title: "Client Hints: not stripped\nAdvanced tracking allowed for this site" };
 }
 
 function computeWkState() {
