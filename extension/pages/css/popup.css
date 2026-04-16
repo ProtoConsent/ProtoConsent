@@ -372,7 +372,8 @@ body {
   display: grid;
   grid-template-columns: auto auto;
   gap: 4px 6px;
-  flex-shrink: 0;
+  width: fit-content;
+  margin: 0 auto;
 }
 
 /* WK-specific */
@@ -1268,6 +1269,11 @@ body {
 
 .pc-bar-toggle:hover { background: rgba(0, 0, 0, 0.03); }
 
+.pc-bar-toggle:focus-visible {
+  outline: 2px solid #1e3a8a;
+  outline-offset: -2px;
+}
+
 .pc-bar-label {
   flex: 1;
   min-width: 0;
@@ -1364,6 +1370,11 @@ body {
 }
 
 .pc-grid-card-toggle:hover { background: rgba(0, 0, 0, 0.02); }
+
+.pc-grid-card-toggle:focus-visible {
+  outline: 2px solid #1e3a8a;
+  outline-offset: -2px;
+}
 
 .pc-grid-card-icon {
   font-size: 18px;

@@ -477,29 +477,140 @@ function renderEnhancedLists() {
   var GRID_ICONS = "../icons/grid/";
   var ov = createGridCard({ id: "ep-card-overview", iconSrc: GRID_ICONS + "overview.svg", title: "Overview", metric: overviewMetric, full: true });
   var ovBody = ov.body;
-  // Overview body: summary lines
+  // Overview body: summary stats
   var ovLines = document.createElement("div");
   ovLines.className = "ep-overview-lines";
-  if (stats.blockingCount > 0) {
-    _epLine(ovLines, "\u25C9 " + stats.blockingCount + " blocking \u00b7 " + stats.totalDomains.toLocaleString() + " domains");
-  }
-  if (stats.cosmeticCount > 0) {
-    _epLine(ovLines, "\u25D0 " + stats.cosmeticCount + " cosmetic \u00b7 " + stats.cosmeticRules.toLocaleString() + " rules");
-  }
-  if (stats.cmpCount > 0) {
-    _epLine(ovLines, "\u26A1 " + stats.cmpCount + " banner \u00b7 " + stats.cmpTemplates.toLocaleString() + " templates");
-  }
-  if (stats.paramsCount > 0) {
-    _epLine(ovLines, "\u2702 " + stats.paramsCount + " param \u00b7 " + stats.paramsTotal.toLocaleString() + " params");
-  }
-  if (stats.infoCount > 0) {
-    _epLine(ovLines, "\u2139 " + stats.infoCount + " info \u00b7 " + stats.infoDomains.toLocaleString() + " entries");
+  var ovStats = [
+    { icon: GRID_ICONS + "blocking.svg", count: stats.blockingCount, label: "blocking", detail: stats.totalDomains.toLocaleString() + " domains" },
+    { icon: GRID_ICONS + "cosmetic.svg", count: stats.cosmeticCount, label: "cosmetic", detail: stats.cosmeticRules.toLocaleString() + " rules" },
+    { icon: GRID_ICONS + "banners.svg", count: stats.cmpCount, label: "banner", detail: stats.cmpTemplates.toLocaleString() + " templates" },
+    { icon: GRID_ICONS + "detection.svg", count: stats.paramsCount + stats.infoCount, label: "detection", detail: stats.paramsTotal.toLocaleString() + " params \u00b7 " + stats.infoDomains.toLocaleString() + " entries" },
+  ];
+  for (var s = 0; s < ovStats.length; s++) {
+    if (ovStats[s].count === 0) continue;
+    var row = document.createElement("div");
+    row.className = "ep-overview-stat";
+    row.innerHTML = '<img src="' + ovStats[s].icon + '" width="16" height="16" alt="">' +
+      '<strong>' + ovStats[s].count + ' ' + ovStats[s].label + '</strong>' +
+      '<span class="ep-overview-detail">' + ovStats[s].detail + '</span>';
+    ovLines.appendChild(row);
   }
   if (stats.updatesAvailable > 0) {
-    _epLine(ovLines, "\u2191 " + stats.updatesAvailable + " update" + (stats.updatesAvailable !== 1 ? "s" : "") + " available");
+    var updRow = document.createElement("div");
+    updRow.className = "ep-overview-stat ep-overview-stat-update";
+    updRow.innerHTML = '<strong>' + stats.updatesAvailable + ' update' + (stats.updatesAvailable !== 1 ? 's' : '') + '</strong>' +
+      '<span class="ep-overview-detail">available</span>';
+    ovLines.appendChild(updRow);
   }
-  _epLine(ovLines, stats.downloadedCount + "/" + stats.catalogCount + " downloaded");
+  var dlRow = document.createElement("div");
+  dlRow.className = "ep-overview-stat ep-overview-stat-dl";
+  dlRow.innerHTML = '<strong>' + stats.downloadedCount + '/' + stats.catalogCount + '</strong>' +
+    '<span class="ep-overview-detail">downloaded</span>';
+  ovLines.appendChild(dlRow);
   ovBody.appendChild(ovLines);
+
+  // Active lists: proto-card style accordions by type
+  if (stats.enabledCount > 0) {
+    var activeWrap = document.createElement("div");
+    activeWrap.className = "ep-overview-active";
+
+    var activeTitle = document.createElement("div");
+    activeTitle.className = "ep-overview-active-title";
+    var activeTitleText = document.createElement("span");
+    activeTitleText.textContent = "Active lists";
+    activeTitle.appendChild(activeTitleText);
+    var activeTitleFlags = document.createElement("a");
+    activeTitleFlags.href = "purposes-settings.html#regional-filters";
+    activeTitleFlags.target = "_blank";
+    activeTitleFlags.className = "ep-overview-active-flags";
+    activeTitleFlags.hidden = true;
+    if (typeof buildRegionalFlags === "function") {
+      buildRegionalFlags(activeTitleFlags, { maxFlags: 3 });
+    }
+    activeTitle.appendChild(activeTitleFlags);
+    activeWrap.appendChild(activeTitle);
+
+    var coreActive = coreIds.some(function (id) {
+      return epLists[id] && (epLists[id].enabled || epConsentLinkedIds.has(id));
+    });
+    var cmpActive = cmpIds.some(function (id) {
+      return epLists[id] && (epLists[id].enabled || epConsentLinkedIds.has(id));
+    });
+
+    var typeGroups = [
+      { label: "Blocking", icon: GRID_ICONS + "blocking.svg", grouped: coreActive ? ["ProtoConsent Core"] : [], ids: blockingLists, detail: stats.totalDomains.toLocaleString() + " domains" },
+      { label: "Cosmetic", icon: GRID_ICONS + "cosmetic.svg", grouped: [], ids: cosmeticLists, detail: stats.cosmeticRules.toLocaleString() + " rules" },
+      { label: "Banners", icon: GRID_ICONS + "banners.svg", grouped: cmpActive ? ["ProtoConsent Banners"] : [], ids: bannerLists, detail: stats.cmpTemplates.toLocaleString() + " templates" },
+      { label: "Detection", icon: GRID_ICONS + "detection.svg", grouped: [], ids: detectionLists, detail: stats.paramsTotal.toLocaleString() + " params" },
+    ];
+    for (var g = 0; g < typeGroups.length; g++) {
+      var group = typeGroups[g];
+      var activeNames = group.grouped.slice();
+      for (var a = 0; a < group.ids.length; a++) {
+        var aid = group.ids[a];
+        var aData = epLists[aid];
+        if (aData && (aData.enabled || epConsentLinkedIds.has(aid))) {
+          activeNames.push(epCatalog[aid] ? epCatalog[aid].name : aid);
+        }
+      }
+      if (activeNames.length === 0) continue;
+
+      var card = document.createElement("div");
+      card.className = "ep-active-card";
+      var cardHeader = document.createElement("div");
+      cardHeader.className = "ep-active-card-header";
+      cardHeader.setAttribute("role", "button");
+      cardHeader.setAttribute("tabindex", "0");
+      cardHeader.setAttribute("aria-expanded", "false");
+      var chevron = document.createElement("span");
+      chevron.className = "ep-active-card-chevron";
+      chevron.textContent = "\u25B8";
+      var iconEl = document.createElement("img");
+      iconEl.src = group.icon;
+      iconEl.width = 18;
+      iconEl.height = 18;
+      iconEl.alt = "";
+      var nameEl = document.createElement("span");
+      nameEl.className = "ep-active-card-name";
+      nameEl.textContent = group.label;
+      var countEl = document.createElement("span");
+      countEl.className = "ep-active-card-count";
+      countEl.textContent = activeNames.length + " lists \u00b7 " + group.detail;
+      cardHeader.appendChild(chevron);
+      cardHeader.appendChild(iconEl);
+      cardHeader.appendChild(nameEl);
+      cardHeader.appendChild(countEl);
+
+      var cardBody = document.createElement("div");
+      cardBody.className = "ep-active-card-body";
+      cardBody.hidden = true;
+      for (var n = 0; n < activeNames.length; n++) {
+        var entry = document.createElement("div");
+        entry.className = "ep-active-card-entry";
+        entry.textContent = activeNames[n];
+        cardBody.appendChild(entry);
+      }
+
+      var toggle = (function (c, h, ch, b) {
+        return function () {
+          var exp = c.classList.toggle("is-expanded");
+          h.setAttribute("aria-expanded", exp ? "true" : "false");
+          ch.textContent = exp ? "\u25BE" : "\u25B8";
+          b.hidden = !exp;
+        };
+      })(card, cardHeader, chevron, cardBody);
+      cardHeader.addEventListener("click", toggle);
+      cardHeader.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+      });
+
+      card.appendChild(cardHeader);
+      card.appendChild(cardBody);
+      activeWrap.appendChild(card);
+    }
+    ovBody.appendChild(activeWrap);
+  }
+
   grid.appendChild(ov.card);
   grid.appendChild(ov.body);
 
@@ -575,14 +686,6 @@ function renderEnhancedLists() {
     }
     _epFocusListId = null;
   }
-}
-
-// Helper: add a line to the overview body
-function _epLine(parent, text) {
-  var el = document.createElement("div");
-  el.className = "ep-overview-line";
-  el.textContent = text;
-  parent.appendChild(el);
 }
 
 // Render a single non-grouped ep-list-card for use inside grid card bodies

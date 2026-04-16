@@ -65,11 +65,13 @@ function createCollapsibleBar(id, opts) {
 
   var body = document.createElement("div");
   body.className = "pc-bar-body";
+  body.hidden = true;
   bar.appendChild(body);
 
   toggle.addEventListener("click", function () {
     var expanded = bar.classList.toggle("is-expanded");
     toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+    body.hidden = !expanded;
   });
 
   bar._label = label;
@@ -135,6 +137,7 @@ function createGridCard(opts) {
 
   var body = document.createElement("div");
   body.className = "pc-grid-card-body";
+  body.hidden = true;
   if (opts.id) body.id = opts.id + "-body";
 
   toggle.addEventListener("click", function () {
@@ -148,13 +151,14 @@ function createGridCard(opts) {
         c.querySelector(".pc-grid-card-toggle").setAttribute("aria-expanded", "false");
       });
       grid.querySelectorAll(".pc-grid-card-body").forEach(function (b) {
-        b.style.display = "";
+        b.hidden = true;
       });
     }
 
     if (!wasExpanded) {
       card.classList.add("is-expanded");
       toggle.setAttribute("aria-expanded", "true");
+      body.hidden = false;
     }
   });
 
@@ -269,7 +273,7 @@ function setActiveMode(mode) {
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
-  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHitDomains: {} };
+  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHits: 0, whitelistHitDomains: {} };
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
       return EMPTY_BLOCKED_RESULT;
@@ -290,8 +294,6 @@ async function getBlockedRulesCount() {
     const domainsResp = domainsResult.status === "fulfilled" ? domainsResult.value : null;
     const dynamicRules = dynamicResult.status === "fulfilled" ? dynamicResult.value : [];
 
-    if (!matched || !matched.rulesMatchedInfo) return EMPTY_BLOCKED_RESULT;
-
     const blockedDomains = domainsResp?.data || {};
     const gpcDomains = domainsResp?.gpcDomains || [];
     const gpcDomainCounts = domainsResp?.gpcDomainCounts || {};
@@ -303,6 +305,23 @@ async function getBlockedRulesCount() {
     }
     if (domainsResp?.purposePathCounts) {
       purposePathCounts = domainsResp.purposePathCounts;
+    }
+
+    // If getMatchedRules failed but we have webRequest data, build result from that
+    if (!matched || !matched.rulesMatchedInfo) {
+      let blocked = 0;
+      const domainHitCount = {};
+      if (blockedDomains) {
+        for (const [purpose, domains] of Object.entries(blockedDomains)) {
+          const total = Object.values(domains).reduce((sum, c) => sum + c, 0);
+          if (total > 0) {
+            blocked += total;
+            domainHitCount[purpose] = total;
+          }
+        }
+      }
+      var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + c, 0);
+      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: 0, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: 0, whitelistHitDomains: {} };
     }
 
     // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)
@@ -376,6 +395,21 @@ async function getBlockedRulesCount() {
       else if (rulesetId === "_dynamic" && dynamicParamStripIds.has(info.rule.ruleId)) {
         paramStrips++;
       }
+    }
+
+    // If getMatchedRules returned fewer blocks than the webRequest-based
+    // tabBlockedDomains, use the higher count and reconcile domainHitCount.
+    // getMatchedRules can reset (e.g. after SW restart) while webRequest data survives.
+    if (blockedDomains) {
+      let webRequestTotal = 0;
+      for (const [purpose, domains] of Object.entries(blockedDomains)) {
+        const total = Object.values(domains).reduce((sum, c) => sum + c, 0);
+        webRequestTotal += total;
+        if (total > (domainHitCount[purpose] || 0)) {
+          domainHitCount[purpose] = total;
+        }
+      }
+      if (webRequestTotal > blocked) blocked = webRequestTotal;
     }
 
     return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains };
@@ -732,7 +766,6 @@ function buildPill(label, info, clickHandler) {
     });
   } else {
     pill.style.cursor = "help";
-    pill.setAttribute("tabindex", "0");
   }
 
   return pill;
@@ -869,10 +902,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const toggleDescBtn = document.getElementById("pc-toggle-descriptions");
+
+  // Toggle stats + signals collapsible bars programmatically
+  function _toggleBars() {
+    [_statsBar, _signalsBar].forEach(bar => {
+      if (!bar) return;
+      var toggle = bar.querySelector(".pc-bar-toggle");
+      if (toggle) toggle.click();
+    });
+  }
+
   if (toggleDescBtn) {
     toggleDescBtn.addEventListener("click", () => {
       if (activeMode === "enhanced") {
-        // Enhanced tab: toggle .ep-list-card is-expanded
+        // Enhanced tab: toggle overview grid card + .ep-list-card is-expanded
+        const ovCard = document.getElementById("ep-card-overview");
+        if (ovCard) {
+          const ovToggle = ovCard.querySelector(".pc-grid-card-toggle");
+          if (ovToggle) ovToggle.click();
+        }
         const cards = document.querySelectorAll(".ep-list-card");
         let collapsedCount = 0;
         cards.forEach((card) => {
@@ -888,8 +936,12 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
         return;
       }
+
+      // Toggle collapsible bars (stats + signals) for Consent and Proto
+      _toggleBars();
+
       if (activeMode === "proto") {
-        // Proto tab: toggle .proto-card is-expanded
+        // Proto tab: toggle .proto-card is-expanded (bars already toggled above)
         const cards = document.querySelectorAll("#pc-view-proto .proto-card");
         let collapsedCount = 0;
         cards.forEach((card) => {
@@ -901,7 +953,7 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
         return;
       }
-      // Consent tab: toggle .pc-purpose-description is-collapsed
+      // Consent tab: toggle .pc-purpose-description is-collapsed (bars already toggled above)
       const descriptions = document.querySelectorAll(".pc-purpose-description");
       const chevrons = document.querySelectorAll(".pc-purpose-chevron");
       const leftEls = document.querySelectorAll(".pc-purpose-left");
@@ -1482,7 +1534,7 @@ function updateTcfIndicator() {
   renderSignalsBar();
 }
 
-function waitForTabReload(tabId, timeoutMs = 12000) {
+function waitForTabReload(tabId, timeoutMs = 30000) {
   return new Promise((resolve) => {
     if (!chrome.tabs || !chrome.tabs.onUpdated) {
       resolve(false);
@@ -1544,23 +1596,45 @@ async function reloadActiveTab() {
       }
 
       const reloaded = await waitForTabReload(tab.id);
-      // Re-query elements in case popup closed
       const reloadBtnEl = document.getElementById("pc-reload-btn");
-      const countElEl = document.getElementById("pc-blocked-count");
 
       if (reloadBtnEl) reloadBtnEl.disabled = false;
 
-      if (reloaded) {
-        await refreshPopupState();
-      } else {
-        if (countElEl) countElEl.textContent = "Reload page to update stats";
-      }
+      await refreshPopupState();
+      _schedulePostReloadRefreshes();
     });
   } catch (err) {
     console.error("ProtoConsent: reload failed:", err);
     reloadBtn.disabled = false;
     await displayBlockedCount();
   }
+}
+
+// After a page reload, poll for updated counters until they stabilise.
+// Polls every 2s, stops after 5 consecutive polls with no change (max 60s).
+let _postReloadTimer = null;
+function _schedulePostReloadRefreshes() {
+  if (_postReloadTimer) clearInterval(_postReloadTimer);
+  let lastSnap = -1;
+  let stableRounds = 0;
+  const maxRounds = 30;
+  let round = 0;
+  let polling = false;
+  _postReloadTimer = setInterval(async () => {
+    if (polling) return;
+    polling = true;
+    try {
+      round++;
+      await displayBlockedCount();
+      const cur = lastBlocked + (lastGpcSignalsSent || 0);
+      if (cur === lastSnap) stableRounds++;
+      else { stableRounds = 0; lastSnap = cur; }
+      if (stableRounds >= 5 || round >= maxRounds) {
+        clearInterval(_postReloadTimer);
+        _postReloadTimer = null;
+      }
+    } finally { polling = false; }
+  }, 2000);
 }
 
 // Show a message when the active tab is not an http(s) page

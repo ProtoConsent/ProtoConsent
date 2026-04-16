@@ -451,7 +451,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           celCustomPurposes: d.celCustomPurposes || null,
         })
       ));
-      Promise.all([p1, p2, p3]).then(([sessionKeys, ext, p3Result]) => {
+      const p4 = new Promise(r => chrome.storage.local.get("regionalLanguages", d => r(d.regionalLanguages || [])));
+      Promise.all([p1, p2, p3, p4]).then(([sessionKeys, ext, p3Result, regionalLangs]) => {
         debugData.sessionKeys = sessionKeys;
         debugData.interExtEnabled = ext.interExtEnabled === true;
         debugData.interExtAllowlist = ext.interExtAllowlist || [];
@@ -463,6 +464,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         debugData.celCustomPurposes = p3Result.celCustomPurposes;
         debugData.consentLinkedListIds = lastConsentLinkedListIds;
         debugData.celPendingDownload = lastCelPendingDownload;
+        debugData.regionalLanguages = regionalLangs;
         // Blocker detection diagnostics
         debugData.blockerDetect = {
           navCount: blockerDetection.navCount,
@@ -477,7 +479,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           pathOnlyPatterns: pathOnlyUrlFilters.size,
         };
         sendResponse(debugData);
-      });
+      }).catch(() => sendResponse(debugData));
     };
     if (!lastRebuildDebug.enableIds) {
       rebuildAllDynamicRules().then(respond).catch(respond);

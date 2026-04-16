@@ -162,6 +162,7 @@ function _renderProtoBars(resp, tcfData) {
     if (_protoExpandedBars.has("proto-stats-bar")) {
       bar.classList.add("is-expanded");
       bar.querySelector(".pc-bar-toggle").setAttribute("aria-expanded", "true");
+      bar.querySelector(".pc-bar-body").hidden = false;
     }
     statsContainer.appendChild(bar);
   }
@@ -189,6 +190,7 @@ function _renderProtoBars(resp, tcfData) {
     if (_protoExpandedBars.has("proto-signals-bar")) {
       sBar.classList.add("is-expanded");
       sBar.querySelector(".pc-bar-toggle").setAttribute("aria-expanded", "true");
+      sBar.querySelector(".pc-bar-body").hidden = false;
     }
     signalsContainer.appendChild(sBar);
   }
@@ -272,7 +274,7 @@ function _renderProtoGrid(resp, wkData, tcfData) {
     if (prevExpanded === def.id) {
       gc.card.classList.add("is-expanded");
       gc.card.querySelector(".pc-grid-card-toggle").setAttribute("aria-expanded", "true");
-      gc.body.style.display = "block";
+      gc.body.hidden = false;
       // Restore open <details> inside this card
       if (_protoOpenDetails.has(def.id)) {
         var det = gc.body.querySelector("details");
@@ -605,6 +607,7 @@ function _makeMismatchCard(mismatches, wasExpanded) {
 
   let body = document.createElement("div");
   body.className = "proto-card-body";
+  body.hidden = !wasExpanded.has("mismatch");
 
   for (let i = 0; i < mismatches.length; i++) {
     let m = mismatches[i];
@@ -628,6 +631,7 @@ function _makeMismatchCard(mismatches, wasExpanded) {
     let expanded = card.classList.toggle("is-expanded");
     header.setAttribute("aria-expanded", expanded ? "true" : "false");
     chevron.textContent = expanded ? " \u25BE" : " \u25B8";
+    body.hidden = !expanded;
   };
   header.addEventListener("click", toggle);
   header.addEventListener("keydown", function (e) {
@@ -765,6 +769,7 @@ function renderProtoPurposes(blocked, wkData) {
     // Body
     const body = document.createElement("div");
     body.className = "proto-card-body";
+    body.hidden = !wasExpanded.has(category);
 
     if (items.length === 1) {
       // Single source: show domains directly
@@ -799,6 +804,7 @@ function renderProtoPurposes(blocked, wkData) {
       const expanded = card.classList.toggle("is-expanded");
       header.setAttribute("aria-expanded", expanded ? "true" : "false");
       chevron.textContent = expanded ? " \u25BE" : " \u25B8";
+      body.hidden = !expanded;
     };
     header.addEventListener("click", toggle);
     header.addEventListener("keydown", (e) => {

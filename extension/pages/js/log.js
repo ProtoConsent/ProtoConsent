@@ -187,6 +187,17 @@ function renderLogHeader() {
     row.appendChild(_logDot(key, state, isReq));
   }
 
+  // Regional language flags (right-aligned, links to settings)
+  var flagsLink = document.createElement("a");
+  flagsLink.href = "purposes-settings.html#regional-filters";
+  flagsLink.target = "_blank";
+  flagsLink.className = "pc-log-dot-flags";
+  flagsLink.hidden = true;
+  if (typeof buildRegionalFlags === "function") {
+    buildRegionalFlags(flagsLink, { maxFlags: 2 });
+  }
+  strip.appendChild(flagsLink);
+
   strip.appendChild(row);
 }
 

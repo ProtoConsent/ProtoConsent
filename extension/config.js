@@ -202,3 +202,71 @@ function getEnhancedCategoryInfo(listId) {
   if (!cfg) return null;
   return { icon: cfg.icon, short: cfg.short || "", label: cfg.label || def.category };
 }
+
+// Build regional language flags into a container element.
+// container: DOM element to append flags to
+// opts: { maxFlags, linkHref, emptyText }
+// Async: reads chrome.storage + fetches regional-languages.json
+function buildRegionalFlags(container, opts) {
+  opts = opts || {};
+  var maxFlags = opts.maxFlags || 2;
+  chrome.storage.local.get(["regionalLanguages"], function (stored) {
+    var codes = Array.isArray(stored.regionalLanguages) ? stored.regionalLanguages : [];
+    if (codes.length === 0) {
+      if (opts.emptyText) container.textContent = opts.emptyText;
+      return;
+    }
+    fetch(chrome.runtime.getURL("config/regional-languages.json"))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rlConfig) {
+        var labels = [];
+        var shown = Math.min(codes.length, maxFlags);
+        for (var i = 0; i < shown; i++) {
+          var c = codes[i];
+          var entry = rlConfig && rlConfig[c];
+          var flagCodes = entry && entry.flag
+            ? (Array.isArray(entry.flag) ? entry.flag : [entry.flag])
+            : [];
+          if (flagCodes.length > 0) {
+            for (var f = 0; f < flagCodes.length; f++) {
+              var img = document.createElement("img");
+              img.src = chrome.runtime.getURL("icons/flags/" + flagCodes[f].toLowerCase() + ".svg");
+              img.width = 16;
+              img.height = 12;
+              img.alt = entry ? entry.label : c.toUpperCase();
+              img.className = "ep-regional-flag";
+              img.dataset.fc = flagCodes[f];
+              img.onerror = function () {
+                var abbr = document.createElement("span");
+                abbr.className = "ep-regional-flag-text";
+                abbr.textContent = this.dataset.fc || this.alt.substring(0, 2).toUpperCase();
+                this.replaceWith(abbr);
+              };
+              container.appendChild(img);
+            }
+          } else {
+            var abbr = document.createElement("span");
+            abbr.className = "ep-regional-flag-text";
+            abbr.textContent = c.toUpperCase();
+            container.appendChild(abbr);
+          }
+        }
+        if (codes.length > maxFlags) {
+          var more = document.createElement("span");
+          more.className = "ep-regional-flag-text";
+          more.textContent = "+" + (codes.length - maxFlags);
+          container.appendChild(more);
+        }
+        for (var j = 0; j < codes.length; j++) {
+          var entry2 = rlConfig && rlConfig[codes[j]];
+          labels.push(entry2 ? entry2.label : codes[j].toUpperCase());
+        }
+        container.title = labels.join(", ");
+        // Unhide container if it was hidden pending async content
+        if (container.hidden) container.hidden = false;
+      })
+      .catch(function () {
+        container.textContent = codes.map(function (c) { return c.toUpperCase(); }).join(" ");
+      });
+  });
+}

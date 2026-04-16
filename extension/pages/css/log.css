@@ -26,14 +26,18 @@
 /* Dot strip: 2 rows of colored dots for purpose states */
 .pc-log-dot-strip {
   display: flex;
-  justify-content: center;
+  align-items: center;
   padding: 4px 0;
+  position: relative;
 }
 
 .pc-log-dot-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  flex: 1;
+  padding: 0 40px;
 }
 
 .pc-log-dot-label {
@@ -48,6 +52,16 @@
 .pc-log-dot-sep {
   color: var(--pc-text-soft);
   margin: 0 4px;
+}
+
+.pc-log-dot-flags {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .pc-log-dot {
