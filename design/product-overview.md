@@ -101,6 +101,7 @@ The user opens a website and, if needed, adjusts the profile or individual purpo
 | v0.5.1 | Regional filter lists (13 language-specific blocking and cosmetic filters), popup UI refactor (tabs renamed to Purposes/Protection/Overview/Log, modular JS extraction), post-reload counter polling, bug fixes |
 | v0.5.3 | Dark mode with user-controlled theme toggle (auto/light/dark), WCAG AA contrast compliance, signals bar summary improvements, side panel layout refinements |
 | v0.5.4 | Fix: restore GPC signal priority cascade in summary, stop inverting consent-linked icon in dark mode |
+| v0.5.5 | GPC display consistency (Overview grid and card body use same source as Purposes/Log), signals bar shows request count when domain names unavailable, Log regional flags moved to one-time init (no flicker on refresh), Extension ID shown in inter-extension settings, Google CMP hashed selectors replaced with stable URL-based detection |
 | **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | **Documentation** | [Protocol spec](spec/signalling-protocol.md), [.well-known spec](spec/protoconsent-well-known.md), [inter-extension protocol](spec/inter-extension-protocol.md), [CMP auto-response](cmp-auto-response.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [blocklist methodology](blocklists.md) |
 
