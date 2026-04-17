@@ -16,7 +16,7 @@ function renderSignalsBar(observedGpc) {
   if (typeof observedGpc === "undefined") observedGpc = lastGpcSignalsSent;
 
   var summary = buildSignalSummary(observedGpc);
-  _signalsBar.setCollapsed(summary);
+  _signalsBar.setCollapsed(summary, "Global Privacy Control (GPC), Client Hints stripping, .well-known declaration, TCF banner detection");
 
   var pillsDiv = document.createElement("div");
   pillsDiv.className = "pc-scope-indicators";

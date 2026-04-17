@@ -240,7 +240,11 @@ function buildStatsCollapsed(blocked) {
 
     var estimatedMs = blocked * ESTIMATED_MS_PER_BLOCKED_REQUEST;
     if (estimatedMs >= 100) {
-      fragments.push(document.createTextNode("~" + formatEstimatedTime(estimatedMs) + " faster"));
+      var timeSpan = document.createElement("span");
+      timeSpan.style.color = "#1e3a8a";
+      timeSpan.style.fontWeight = "700";
+      timeSpan.textContent = "~" + formatEstimatedTime(estimatedMs) + " faster";
+      fragments.push(timeSpan);
     }
   }
   if (fragments.length > 0) {

@@ -172,7 +172,7 @@ body {
   align-items: flex-start;
   gap: 8px;
   margin: 0 0 6px 0;
-  padding: 32px 12px 8px 12px;
+  padding: 34px 14px 10px 14px;
   border-radius: 10px;
   background: linear-gradient(180deg, #eef3f8 0%, #f9fbfd 100%);
   border: 1px solid #cfd9e3;
@@ -774,9 +774,11 @@ body {
 .pc-purpose-description {
   margin-top: 7px;
   font-size: var(--pc-font-sm);
-  color: var(--pc-text-soft);
+  color: var(--pc-text);
   line-height: 1.45;
-  padding-left: 28px;
+  padding: 6px 8px 6px 28px;
+  background: #fff;
+  border-radius: 6px;
 }
 
 /* Per-purpose blocked stat */
@@ -1335,12 +1337,12 @@ body {
 .pc-bar.is-expanded .pc-bar-body { display: block; }
 
 .pc-bar-link {
-  display: inline-block;
+  display: block;
   margin-top: 4px;
   padding: 0;
   border: none;
   background: none;
-  color: var(--pc-accent);
+  color: var(--pc-text);
   font: inherit;
   font-size: var(--pc-font-sm);
   font-weight: 600;
