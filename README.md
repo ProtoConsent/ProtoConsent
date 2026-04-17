@@ -109,14 +109,16 @@ See [architecture.md](design/architecture.md) for the full technical description
 - [Product overview](design/product-overview.md) – problem, solution, features, scope, and roadmap
 
 **Specifications**
-- [Purpose-signalling protocol](design/spec/signalling-protocol.md) - data model, communication mechanism, SDK API
+- [Purpose-signalling protocol](design/spec/signalling-protocol.md) - communication mechanism, SDK API
+- [Data model](design/spec/data-model.md) - purpose taxonomy, profiles, consent state
 - [Site declaration spec](design/spec/protoconsent-well-known.md) - `.well-known/protoconsent.json` format
+- [Inter-extension protocol](design/spec/inter-extension-protocol.md) - cross-extension consent queries, TOFU trust model
 - [JSON Schema](docs/schema/v0.2.json) - machine-readable schema for `protoconsent.json` (v0.2)
-- [Blocklists methodology](design/blocklists.md) - sources, curation, DNR format, enhanced lists
 
 **Implementation**
 - [Technical architecture](design/architecture.md) – components, data model, flows, design decisions
 - [CMP auto-response](design/cmp-auto-response.md) – consent banner suppression, CMP signatures, TC String generation
+- [Blocklists methodology](design/blocklists.md) - sources, curation, DNR format, enhanced lists
 - [Testing guide](design/testing-guide.md) – installation, test scenarios
 - [Icons and layers](design/icons-and-layers.md) – visual language and icon mapping
 
