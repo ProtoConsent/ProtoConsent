@@ -333,9 +333,11 @@ function isSupportedWebUrl(urlStr) {
 
 // Returns true when any purpose with triggers_gpc is blocked in the current configuration.
 function expectedGpcEnabled() {
-  if (!gpcGlobalEnabled) return false;
-  if (!currentDomain || !Array.isArray(gpcPurposeKeys) || gpcPurposeKeys.length === 0) return false;
-  return gpcPurposeKeys.some((key) => currentPurposesState[key] === false);
+  if (!gpcGlobalEnabled) { if (DEBUG_RULES) console.log("[GPC-debug] gpcGlobalEnabled=false"); return false; }
+  if (!currentDomain || !Array.isArray(gpcPurposeKeys) || gpcPurposeKeys.length === 0) { if (DEBUG_RULES) console.log("[GPC-debug] early exit: domain=%s, keys=%o", currentDomain, gpcPurposeKeys); return false; }
+  var result = gpcPurposeKeys.some((key) => currentPurposesState[key] === false);
+  if (!result && DEBUG_RULES) console.log("[GPC-debug] no denied purpose: state=%o, keys=%o", currentPurposesState, gpcPurposeKeys);
+  return result;
 }
 
 // Color/dot reflect the expected state; the tooltip provides full details.

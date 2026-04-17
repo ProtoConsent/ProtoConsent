@@ -37,6 +37,8 @@ function buildSignalSummary(observedGpc) {
   var main;
   if (observedGpc > 0 && lastGpcDomains.length > 0) {
     main = "GPC to " + pluralize(lastGpcDomains.length, "domain");
+  } else if (observedGpc > 0 && expectedGpcEnabled()) {
+    main = "GPC active (" + pluralize(observedGpc, "request") + ")";
   } else if (expectedGpcEnabled()) {
     main = "GPC active";
   } else if (lastChStripped > 0) {
@@ -58,6 +60,8 @@ function computeGpcState(observedGpc) {
   var tip = on ? "GPC: active - do-not-sell/share signal" : "GPC: inactive";
   if (observedGpc > 0 && lastGpcDomains.length > 0) {
     tip += "\nSent to " + pluralize(lastGpcDomains.length, "domain") + " (" + pluralize(observedGpc, "request") + ")";
+  } else if (observedGpc > 0 && on) {
+    tip += "\nSent to " + pluralize(observedGpc, "request") + " (domain names not captured)";
   } else if (on) {
     tip += "\nNo signals sent yet on this tab";
   }
