@@ -1200,6 +1200,10 @@ function validateImport(data) {
 			clean.cmpCustomUuid = data.cmpCustomUuid;
 		} else errors.push("cmpCustomUuid: must be empty or valid UUID v4");
 	}
+	if ("theme" in data) {
+		if (["auto", "light", "dark"].includes(data.theme)) clean.theme = data.theme;
+		else errors.push("theme: must be auto, light, or dark");
+	}
 
 	return { clean, errors };
 }
