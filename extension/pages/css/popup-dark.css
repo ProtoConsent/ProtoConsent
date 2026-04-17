@@ -25,6 +25,9 @@ html.pc-dark .pc-declaration-icon,
 html.pc-dark .pc-mode-tab-label {
   filter: brightness(0) invert(1);
 }
+html.pc-dark .pc-mode-tab.is-active .pc-mode-tab-label {
+  filter: brightness(0) invert(1) drop-shadow(0 0 4px rgba(255, 255, 255, 0.7));
+}
 
 html.pc-dark #popup-root {
   background: #1E212B;

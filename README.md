@@ -38,6 +38,7 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 - **Banner detection and observation:** CSS-based detection of 290+ CMP banners (via Autoconsent data), site-specific hiding rules for 237+ sites, cookie consent state decoding and comparison against your preferences. CMP activity is visible in the Log tab as banner and consent lines.
 - **URL parameter stripping:** removes tracking parameters (utm_source, fbclid, gclid, msclkid, and ~300 more) from URLs before they reach the server, plus ~1,800 site-specific parameters across ~880 domains. Stripped parameters are shown in the Overview tab and Log tab.
 - **Visibility:** real‑time log monitoring, blocked domains grouped by purpose with [Consent Commons](https://consentcommons.com/) icons, GPC signal tracking, Client Hints status, cookie consent detection, CNAME trackers and domain whitelist management.
+- **Light and dark themes:** the popup adapts to your system preference or can be set to light or dark manually from Purpose Settings.
 - **Site declarations:** websites can publish a `.well-known/protoconsent.json` to declare their data practices. No SDK or code changes required.
 - **JavaScript SDK** (MIT licensed) for web pages to query user preferences. TypeScript declarations included.
 
@@ -63,15 +64,15 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 <table>
 <tr>
 <td align="center" width="50%"><img src="design/assets/screenshots/popup-profile.png" alt="ProtoConsent popup" width="400" height="560"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-overview-monitoring.png" alt="Overview tab dashboard" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-profile-dark.png" alt="ProtoConsent popup (dark mode)" width="400" height="560"></td>
 </tr>
 <tr>
 <td align="center" width="50%"><img src="design/assets/screenshots/popup-protection-balanced.png" alt="Enhanced Protection tab" width="400" height="560"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-domains.png" alt="Log tab with blocked domains" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-protection-balanced-dark.png" alt="Enhanced Protection tab (dark mode)" width="400" height="560"></td>
 </tr>
 <tr>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Domain whitelist management" width="400" height="560"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-requests.png" alt="Request log with inter-extension API and GPC signals" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-overview-monitoring.png" alt="Overview tab dashboard" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-domains-dark.png" alt="Log tab with blocked domains (dark mode)" width="400" height="560"></td>
 </tr>
 </table>
 
@@ -81,7 +82,7 @@ Websites can publish a `.well-known/protoconsent.json` to declare their data pra
 
 <table>
 <tr>
-<td align="center"><img src="design/assets/screenshots/well-known-demo-detected.png" alt="Site declaration side panel"></td>
+<td align="center"><img src="design/assets/screenshots/well-known-demo-detected-dark.png" alt="Site declaration side panel (dark mode)"></td>
 </tr>
 </table>
 
