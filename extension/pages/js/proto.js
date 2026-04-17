@@ -228,6 +228,8 @@ function _renderProtoGrid(resp, wkData, tcfData) {
   var gpcDomains = resp.gpcDomains ? Object.keys(resp.gpcDomains) : [];
   var popupGpcDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
   var gpcCount = gpcDomains.length > 0 ? gpcDomains.length : popupGpcDomains.length;
+  var gpcRequests = resp.gpc || 0;
+  var gpcMetric = gpcCount > 0 ? gpcCount + " domains" : (gpcRequests > 0 ? gpcRequests + " requests" : "0 domains");
 
   var cmpDetected = !!(resp.cmpDetect && resp.cmpDetect.detected && resp.cmpDetect.detected.length > 0);
   var cmpCount = cmpDetected ? resp.cmpDetect.detected.length : 0;
@@ -247,7 +249,7 @@ function _renderProtoGrid(resp, wkData, tcfData) {
   var GRID_ICONS = "../icons/grid/";
   var cards = [
     { id: "proto-card-coverage", iconSrc: GRID_ICONS + "coverage.svg", title: "Coverage", metric: coverageRatio + "%" },
-    { id: "proto-card-gpc", iconSrc: GRID_ICONS + "gpc.svg", title: "GPC", metric: gpcCount + " domains" },
+    { id: "proto-card-gpc", iconSrc: GRID_ICONS + "gpc.svg", title: "GPC", metric: gpcMetric },
     { id: "proto-card-banners", iconSrc: GRID_ICONS + "banners.svg", title: "Banners", metric: cmpCount > 0 ? cmpCount + " detected" : "None" },
     { id: "proto-card-cosmetic", iconSrc: GRID_ICONS + "cosmetic.svg", title: "Cosmetic", metric: cosmRules + " rules" },
     { id: "proto-card-trackers", iconSrc: GRID_ICONS + "trackers.svg", title: "Trackers", metric: cnameCount + " cloaked" },
@@ -355,6 +357,12 @@ function _fillGpcBody(body, resp) {
   var popupDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
   var domains = bgDomains.length > 0 ? bgDomains : popupDomains;
 
+  var gpcRequests = resp.gpc || 0;
+
+  if (domains.length === 0 && gpcRequests > 0) {
+    body.textContent = "Sec-GPC: 1 sent to " + gpcRequests + " requests (domain names not captured)";
+    return;
+  }
   if (domains.length === 0) { body.textContent = "No GPC signals sent yet"; return; }
   var note = document.createElement("div");
   note.textContent = "GPC is sent on requests that reach the server. Blocked requests never leave your browser.";
