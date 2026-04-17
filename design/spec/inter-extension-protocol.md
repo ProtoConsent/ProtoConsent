@@ -134,3 +134,7 @@ The user manages the allowlist, denylist, and pending queue from the Purpose Set
 | Firefox | Supported           | **Not supported** (ignored) | All extensions can always send. Runtime `sender.id` validation works identically. Requires `browser_specific_settings.gecko.id` for a stable extension ID. |
 
 ProtoConsent omits `externally_connectable` from the manifest, giving identical open-access behaviour on both browsers. Security is enforced at runtime (opt-in toggle, per-extension allowlist, rate limiting, input validation), not at the manifest level.
+
+## 7. Test Consumer
+
+A minimal test extension is available at [`examples/test-consumer/`](../../examples/test-consumer/) to test the inter-extension API interactively. It sends capabilities queries, consent queries, invalid inputs, and rate-limit tests, and logs responses in a popup panel. See the [README](../../examples/test-consumer/README.md) for setup instructions.

@@ -91,7 +91,7 @@
             <li><strong>Conditional GPC signal</strong>: sends <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec‑GPC</a> only when privacy‑relevant purposes are denied, per site, not globally.</li>
             <li><strong>Consent banner auto-response</strong>: 31 CMP frameworks answered automatically based on purpose preferences. No DOM interaction, no click simulation. Signatures kept current via CDN.</li>
             <li><strong>Site declarations</strong>: websites can publish a <code>.well-known/protoconsent.json</code> to declare their data practices. No SDK required.</li>
-            <li><strong>Inter‑extension messaging</strong>: other browser extensions can query the user's consent state via <code>chrome.runtime.sendMessage</code>, enabling composable privacy tools.</li>
+            <li><strong>Inter‑extension messaging</strong>: other browser extensions can query the user's consent state via <code>chrome.runtime.sendMessage</code>, enabling composable privacy tools. A <a href="https://github.com/ProtoConsent/ProtoConsent/tree/main/examples/test-consumer" target="_blank" rel="noopener noreferrer">test consumer extension</a> is included for quick verification.</li>
             <li><strong>URL parameter stripping</strong>: removes tracking parameters from URLs using browser redirect rules, observable in the Proto tab.</li>
             <li><strong>Local‑only, composable</strong>: runs entirely in the browser. Designed to sit alongside existing consent tools.</li>
           </ul>
@@ -270,6 +270,7 @@ const all = await ProtoConsent.getAll();
             <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/spec/protoconsent-well-known.md" target="_blank" rel="noopener noreferrer">.well-known specification</a></li>
             <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/architecture.md" target="_blank" rel="noopener noreferrer">Architecture overview</a></li>
             <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/spec/inter-extension-protocol.md" target="_blank" rel="noopener noreferrer">Inter-extension protocol</a></li>
+            <li><a href="https://github.com/ProtoConsent/ProtoConsent/tree/main/examples/test-consumer" target="_blank" rel="noopener noreferrer">Inter-extension test consumer</a></li>
             <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/blocklists.md" target="_blank" rel="noopener noreferrer">Blocklist methodology</a></li>
             <li><a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/design/design-rationale.md" target="_blank" rel="noopener noreferrer">Design rationale</a></li>
             <li><a href="https://github.com/ProtoConsent/ProtoConsent/issues" target="_blank" rel="noopener noreferrer">GitHub issues</a></li>

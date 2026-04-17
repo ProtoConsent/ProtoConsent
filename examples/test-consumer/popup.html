@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtoConsent Inter-Ext Tester</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 420px; font-family: system-ui, sans-serif; font-size: 13px; padding: 12px; }
+  h2 { font-size: 15px; margin-bottom: 8px; }
+  label { display: block; font-weight: 600; margin-top: 10px; margin-bottom: 2px; }
+  input[type="text"] { width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px; }
+  .row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  button { padding: 6px 12px; border: 1px solid #999; border-radius: 4px; background: #f5f5f5; cursor: pointer; font-size: 12px; }
+  button:hover { background: #e0e0e0; }
+  button.danger { border-color: #c00; color: #c00; }
+  #log { margin-top: 12px; background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 11px; padding: 8px; border-radius: 4px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+  .ts { color: #888; }
+  .ok { color: #4ec9b0; }
+  .err { color: #f44747; }
+  .warn { color: #dcdcaa; }
+  hr { margin: 10px 0; border: none; border-top: 1px solid #ddd; }
+</style>
+</head>
+<body>
+  <h2>ProtoConsent Inter-Ext Tester</h2>
+
+  <label>ProtoConsent Extension ID</label>
+  <input type="text" id="targetId" placeholder="paste ProtoConsent extension ID here">
+
+  <label>Domain (for query)</label>
+  <input type="text" id="domain" value="example.com" title="Domain to query in 'Query domain' test.">
+
+  <hr>
+  <div class="row">
+    <button id="btnCaps">Capabilities</button>
+    <button id="btnQuery">Query domain</button>
+    <button id="btnBadType">Bad type</button>
+    <button id="btnBadDomain">Bad domain</button>
+  </div>
+  <div class="row">
+    <button id="btnBurst" class="danger">Burst 15 queries</button>
+    <button id="btnClear">Clear log</button>
+  </div>
+
+  <div id="log"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
