@@ -76,6 +76,34 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   scheduleSessionPersist();
 });
 
+// --- Toolbar icon theme ---
+
+function applyThemeIcon(dark) {
+  var suffix = dark ? "_dark" : "";
+  chrome.action.setIcon({
+    path: {
+      "16": "icons/protoconsent_icon_16" + suffix + ".png",
+      "24": "icons/protoconsent_icon_24" + suffix + ".png",
+      "32": "icons/protoconsent_icon_32" + suffix + ".png",
+      "48": "icons/protoconsent_icon_48" + suffix + ".png",
+      "64": "icons/protoconsent_icon_64" + suffix + ".png",
+      "128": "icons/protoconsent_icon_128" + suffix + ".png"
+    }
+  });
+}
+
+// Apply on service worker startup
+chrome.storage.local.get("_themeIconDark", function (r) {
+  applyThemeIcon(!!r._themeIconDark);
+});
+
+// React to theme changes (written by theme.js in popup/settings)
+chrome.storage.onChanged.addListener(function (changes, area) {
+  if (area === "local" && changes._themeIconDark) {
+    applyThemeIcon(!!changes._themeIconDark.newValue);
+  }
+});
+
 // Rebuild once on service worker startup
 chrome.runtime.onStartup?.addListener(() => {
   rebuildAllDynamicRules();

@@ -95,7 +95,7 @@ async function getBlockedRulesCount() {
           }
         }
       }
-      var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + c, 0);
+      var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + (c && typeof c === "object" ? c.count : (c || 0)), 0);
       return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: 0, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: 0, whitelistHitDomains: {} };
     }
 
@@ -199,12 +199,15 @@ async function getBlockedRulesCount() {
 // Compute block provenance from getMatchedRules (own) vs webRequest (observed).
 // Single source of truth - used by proto.js and debug.js.
 // In monitoring mode, own is always 0 (ProtoConsent does not block).
+// In standalone mode, the difference (observed - own) is labelled "other" because
+// it may include CSP, Mixed Content, or request aborts from the site itself -
+// not necessarily an external blocker. In monitoring mode it is "external".
 function computeBlockProvenance(coverage, mode) {
   let own = (mode === "protoconsent") ? 0 : (lastBlocked || 0);
   let observed = (coverage && coverage.observed) || 0;
   let attributed = (coverage && coverage.attributed) || 0;
-  let external = (mode === "protoconsent") ? observed : Math.max(0, observed - own);
-  return { own: own, observed: observed, attributed: attributed, external: external };
+  let other = (mode === "protoconsent") ? observed : Math.max(0, observed - own);
+  return { own: own, observed: observed, attributed: attributed, other: other };
 }
 
 // --- Stats bar rendering ---

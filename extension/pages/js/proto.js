@@ -131,7 +131,7 @@ function _renderProtoBars(resp, tcfData) {
     var isMonitoring = resp.mode === "protoconsent";
     var collapsed;
     if (isMonitoring) {
-      collapsed = "Blocked by external: " + prov.external + " \u00b7 " +
+      collapsed = "Blocked by external: " + prov.other + " \u00b7 " +
         (resp.coverage ? Math.round((resp.coverage.attributed / Math.max(resp.coverage.observed, 1)) * 100) : 0) + "% attributed";
     } else {
       collapsed = buildStatsCollapsed(lastBlocked || 0);
@@ -143,10 +143,11 @@ function _renderProtoBars(resp, tcfData) {
     var d1 = document.createElement("div");
     var d1Label = document.createElement("strong"); d1Label.textContent = "Blocked by ProtoConsent: ";
     d1.appendChild(d1Label); d1.appendChild(document.createTextNode(prov.own)); expDiv.appendChild(d1);
-    if (prov.external > 0) {
+    if (prov.other > 0) {
       var d2 = document.createElement("div");
-      var d2Label = document.createElement("strong"); d2Label.textContent = "Blocked by external: ";
-      d2.appendChild(d2Label); d2.appendChild(document.createTextNode(prov.external)); expDiv.appendChild(d2);
+      var d2Label = document.createElement("strong");
+      d2Label.textContent = isMonitoring ? "Blocked by external: " : "Other: ";
+      d2.appendChild(d2Label); d2.appendChild(document.createTextNode(prov.other)); expDiv.appendChild(d2);
     }
     if (resp.coverage) {
       var d3 = document.createElement("div");
@@ -228,6 +229,8 @@ function _renderProtoGrid(resp, wkData, tcfData) {
   var gpcDomains = resp.gpcDomains ? Object.keys(resp.gpcDomains) : [];
   var popupGpcDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
   var gpcCount = gpcDomains.length > 0 ? gpcDomains.length : popupGpcDomains.length;
+  var gpcRequests = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
+  var gpcMetric = gpcCount > 0 ? gpcCount + " domains" : (gpcRequests > 0 ? gpcRequests + " requests" : "0 domains");
 
   var cmpDetected = !!(resp.cmpDetect && resp.cmpDetect.detected && resp.cmpDetect.detected.length > 0);
   var cmpCount = cmpDetected ? resp.cmpDetect.detected.length : 0;
@@ -247,7 +250,7 @@ function _renderProtoGrid(resp, wkData, tcfData) {
   var GRID_ICONS = "../icons/grid/";
   var cards = [
     { id: "proto-card-coverage", iconSrc: GRID_ICONS + "coverage.svg", title: "Coverage", metric: coverageRatio + "%" },
-    { id: "proto-card-gpc", iconSrc: GRID_ICONS + "gpc.svg", title: "GPC", metric: gpcCount + " domains" },
+    { id: "proto-card-gpc", iconSrc: GRID_ICONS + "gpc.svg", title: "GPC", metric: gpcMetric },
     { id: "proto-card-banners", iconSrc: GRID_ICONS + "banners.svg", title: "Banners", metric: cmpCount > 0 ? cmpCount + " detected" : "None" },
     { id: "proto-card-cosmetic", iconSrc: GRID_ICONS + "cosmetic.svg", title: "Cosmetic", metric: cosmRules + " rules" },
     { id: "proto-card-trackers", iconSrc: GRID_ICONS + "trackers.svg", title: "Trackers", metric: cnameCount + " cloaked" },
@@ -335,7 +338,7 @@ function _fillCoverageBody(body, resp, wkData) {
 
   // Provenance
   var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
-  provEl.innerHTML = "<strong>Own:</strong> " + prov.own + " \u00b7 <strong>External:</strong> " + prov.external;
+  provEl.innerHTML = "<strong>Own:</strong> " + prov.own + " \u00b7 <strong>" + (resp.mode === "protoconsent" ? "External" : "Other") + ":</strong> " + prov.other;
   body.appendChild(provEl);
 
   // Unattributed hostnames
@@ -355,6 +358,12 @@ function _fillGpcBody(body, resp) {
   var popupDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
   var domains = bgDomains.length > 0 ? bgDomains : popupDomains;
 
+  var gpcRequests = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
+
+  if (domains.length === 0 && gpcRequests > 0) {
+    body.textContent = "Sec-GPC: 1 sent to " + gpcRequests + " requests (domain names not captured)";
+    return;
+  }
   if (domains.length === 0) { body.textContent = "No GPC signals sent yet"; return; }
   var note = document.createElement("div");
   note.textContent = "GPC is sent on requests that reach the server. Blocked requests never leave your browser.";
