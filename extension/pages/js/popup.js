@@ -132,6 +132,13 @@ function setActiveMode(mode) {
     tab.classList.toggle("is-active", isActive);
     tab.setAttribute("aria-selected", isActive ? "true" : "false");
   });
+
+  // Reset "Show/Hide details" button when switching tabs
+  const toggleDescBtn = document.getElementById("pc-toggle-descriptions");
+  if (toggleDescBtn) {
+    toggleDescBtn.textContent = "Show details";
+    toggleDescBtn.setAttribute("aria-expanded", "false");
+  }
 }
 
 // Navigate to the Log tab
@@ -195,7 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (toggleDescBtn) {
     toggleDescBtn.addEventListener("click", () => {
       if (activeMode === "enhanced") {
-        // Enhanced tab: toggle overview grid card + .ep-list-card is-expanded
+        // Enhanced tab: toggle collapsible bars (counter + signals) + overview grid + list cards
+        _toggleBars();
         const ovCard = document.getElementById("ep-card-overview");
         if (ovCard) {
           const ovToggle = ovCard.querySelector(".pc-grid-card-toggle");
@@ -217,22 +225,30 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Toggle collapsible bars (stats + signals) for Consent and Proto
-      _toggleBars();
-
       if (activeMode === "proto") {
-        // Proto tab: toggle .proto-card is-expanded (bars already toggled above)
-        const cards = document.querySelectorAll("#pc-view-proto .proto-card");
-        let collapsedCount = 0;
-        cards.forEach((card) => {
-          if (!card.classList.contains("is-expanded")) collapsedCount++;
+        // Proto tab: toggle its own collapsible bars + purpose accordions
+        document.querySelectorAll("#pc-view-proto .pc-bar").forEach(bar => {
+          var toggle = bar.querySelector(".pc-bar-toggle");
+          if (toggle) toggle.click();
         });
-        const shouldExpand = collapsedCount > cards.length / 2;
-        if (typeof toggleProtoDetails === "function") toggleProtoDetails(shouldExpand);
-        toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
-        toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
+        var cards = document.querySelectorAll("#proto-purposes .proto-card");
+        var collapsed = 0;
+        cards.forEach(c => { if (!c.classList.contains("is-expanded")) collapsed++; });
+        var expand = collapsed > cards.length / 2;
+        cards.forEach(c => {
+          c.classList.toggle("is-expanded", expand);
+          var h = c.querySelector(".proto-card-header");
+          if (h) h.setAttribute("aria-expanded", expand ? "true" : "false");
+          var ch = c.querySelector(".proto-card-chevron");
+          if (ch) ch.textContent = expand ? " \u25BE" : " \u25B8";
+        });
+        toggleDescBtn.textContent = expand ? "Hide details" : "Show details";
+        toggleDescBtn.setAttribute("aria-expanded", expand ? "true" : "false");
         return;
       }
+
+      // Consent tab: toggle shared bars + purpose descriptions
+      _toggleBars();
       // Consent tab: toggle .pc-purpose-description is-collapsed (bars already toggled above)
       const descriptions = document.querySelectorAll(".pc-purpose-description");
       const chevrons = document.querySelectorAll(".pc-purpose-chevron");

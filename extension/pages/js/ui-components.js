@@ -43,9 +43,10 @@ function createCollapsibleBar(id, opts) {
 
   bar._label = label;
   bar._body = body;
-  bar.setCollapsed = function (content) {
+  bar.setCollapsed = function (content, tooltip) {
     if (typeof content === "string") label.textContent = content;
     else { label.textContent = ""; label.appendChild(content); }
+    if (tooltip) toggle.title = tooltip;
   };
   bar.setExpanded = function (content) {
     body.textContent = "";

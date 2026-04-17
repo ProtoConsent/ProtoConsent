@@ -204,6 +204,25 @@
 		</div>
 
 		<div class="ps-panel" id="ps-panel-advanced" data-panel="advanced" role="tabpanel" aria-labelledby="ps-tab-advanced" hidden>
+		<section class="ps-section">
+			<div class="ps-section-head">
+				<h2>Theme</h2>
+			</div>
+			<div class="ps-dynamic-grid">
+				<div class="ps-gpc-toggle-row">
+					<div>
+						<span class="ps-gpc-info-name">Appearance</span>
+						<div class="ps-gpc-info-desc">Choose light, dark, or follow your system setting.</div>
+					</div>
+					<select id="theme-select" class="ps-default-profile-select" aria-label="Theme">
+						<option value="auto">Auto (system)</option>
+						<option value="light">Light</option>
+						<option value="dark">Dark</option>
+					</select>
+				</div>
+			</div>
+		</section>
+
 		<section id="inter-ext-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
 				<h2>Inter-extension API</h2>
@@ -275,6 +294,7 @@
 		</footer>
 	</div>
 
+	<script src="js/theme.js"></script>
 	<script src="../config.js"></script>
 	<script src="js/purposes-settings.js"></script>
 	<script src="js/purposes-settings-regional.js"></script>

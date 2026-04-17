@@ -29,6 +29,7 @@ For each site, ProtoConsent stores a local rule that combines a profile with exp
 **Lightweight user interface:**
 
 - A compact popup UI lets users see the active profile and purposes for the current site at a glance, and change them with a few clicks instead of reconfiguring each consent banner from scratch.
+- The popup supports light and dark themes, configurable from Purpose Settings (Auto/Light/Dark). Auto mode follows the operating system preference.
 - The popup provides four views accessible via a vertical tab rail: **Purposes** (purpose toggles and blocked stats), **Protection** (optional third-party blocklists), **Overview** (operating mode dashboard with signal status, purpose-attributed blocks, CMP detection, and cosmetic filtering), and **Log** (real-time request monitoring, blocked domains, GPC tracking, whitelist management, debug).
 - A real-time counter and badge show how many tracking requests have been blocked and how many carry the GPC privacy signal, giving users immediate, visible feedback on enforcement activity.
 - When advanced tracking is denied, high-entropy Client Hints headers (Sec-CH-UA-*) are stripped to reduce fingerprinting surface, with a global toggle in Purpose Settings.
@@ -98,6 +99,7 @@ The user opens a website and, if needed, adjusts the profile or individual purpo
 | v0.4.3 | CMP banner detection (285 CSS detectors), localStorage consent observation, cookie consent decoders (OneTrust, Cookiebot, CookieYes, Complianz, Wix), MAIN world security hardening |
 | v0.5.0 | Operating modes (Standalone/ProtoConsent Mode) with capabilities gating, Overview tab dashboard, URL parameter stripping (~300 global + ~1800 site-specific params), blocker detection, block provenance |
 | v0.5.1 | Regional filter lists (13 language-specific blocking and cosmetic filters), popup UI refactor (tabs renamed to Purposes/Protection/Overview/Log, modular JS extraction), post-reload counter polling, bug fixes |
+| v0.5.3 | Dark mode with user-controlled theme toggle (auto/light/dark), WCAG AA contrast compliance, signals bar summary improvements, side panel layout refinements |
 | **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | **Documentation** | [Protocol spec](spec/signalling-protocol.md), [.well-known spec](spec/protoconsent-well-known.md), [inter-extension protocol](spec/inter-extension-protocol.md), [CMP auto-response](cmp-auto-response.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [blocklist methodology](blocklists.md) |
 

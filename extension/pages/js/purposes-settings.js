@@ -1022,6 +1022,23 @@ function notifyBackground(cb) {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', initThemeSection);
+
+// --- Theme ---
+
+function initThemeSection() {
+	const sel = document.getElementById('theme-select');
+	if (!sel) return;
+	chrome.storage.local.get('theme', (data) => {
+		sel.value = data.theme || 'auto';
+	});
+	sel.addEventListener('change', () => {
+		chrome.storage.local.set({ theme: sel.value });
+	});
+	chrome.storage.onChanged.addListener((changes) => {
+		if (changes.theme) sel.value = changes.theme.newValue || 'auto';
+	});
+}
 
 // --- Export / Import ---
 
@@ -1033,7 +1050,8 @@ const EXPORT_KEYS = [
 	"dynamicListsConsent", "consentEnhancedLink",
 	"celMode", "celCustomPurposes",
 	"cmpAutoResponse", "cmpEnabled", "cmpCookieMaxAge", "cmpCustomUuid",
-	"cmpDetectionEnabled"
+	"cmpDetectionEnabled",
+	"theme"
 ];
 
 const VALID_PROFILES = ["strict", "balanced", "permissive", "custom"];
@@ -1181,6 +1199,10 @@ function validateImport(data) {
 		if (typeof data.cmpCustomUuid === "string" && (data.cmpCustomUuid === "" || UUID_RE.test(data.cmpCustomUuid))) {
 			clean.cmpCustomUuid = data.cmpCustomUuid;
 		} else errors.push("cmpCustomUuid: must be empty or valid UUID v4");
+	}
+	if ("theme" in data) {
+		if (["auto", "light", "dark"].includes(data.theme)) clean.theme = data.theme;
+		else errors.push("theme: must be auto, light, or dark");
 	}
 
 	return { clean, errors };

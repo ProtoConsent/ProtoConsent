@@ -240,7 +240,11 @@ function buildStatsCollapsed(blocked) {
 
     var estimatedMs = blocked * ESTIMATED_MS_PER_BLOCKED_REQUEST;
     if (estimatedMs >= 100) {
-      fragments.push(document.createTextNode("~" + formatEstimatedTime(estimatedMs) + " faster"));
+      var timeSpan = document.createElement("span");
+      timeSpan.style.color = "var(--pc-accent)";
+      timeSpan.style.fontWeight = "700";
+      timeSpan.textContent = "~" + formatEstimatedTime(estimatedMs) + " faster";
+      fragments.push(timeSpan);
     }
   }
   if (fragments.length > 0) {
@@ -299,7 +303,7 @@ async function displayBlockedCount() {
 
       // Enhanced scope
       var enhancedEl = document.createElement("span");
-      enhancedEl.style.color = "#b45309";
+      enhancedEl.className = "pc-enhanced-scope";
       enhancedEl.style.fontWeight = "600";
       enhancedEl._sep = scopeText ? " \u00b7 " : "";
       expDiv.appendChild(enhancedEl);

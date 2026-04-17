@@ -26,6 +26,40 @@
   --pc-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
   --pc-font: 12px;
   --pc-font-sm: 11px;
+
+  /* Surface / card tokens */
+  --pc-surface-card: #fff;
+  --pc-border-card: #d9e2ec;
+  --pc-text-heading: #334155;
+  --pc-inactive-bg: #f3f4f6;
+  --pc-inactive-border: #e5e7eb;
+  --pc-inactive-text: #6b7280;
+}
+
+html.pc-dark {
+    --pc-bg: #12141D;
+    --pc-surface: #1E212B;
+    --pc-surface-soft: #252830;
+    --pc-surface-strong: #2D313E;
+    --pc-surface-card: #1E212B;
+    --pc-line: #2D313E;
+    --pc-line-strong: #3D4250;
+    --pc-border-card: #2D313E;
+    --pc-text: #E9ECEF;
+    --pc-text-muted: #ADB5BD;
+    --pc-text-soft: #9DA5AD;
+    --pc-text-heading: #CED4DA;
+    --pc-accent: #4DABF7;
+    --pc-accent-soft: #1c3a5c;
+    --pc-accent-strong: #2b4a7a;
+    --pc-success: #51CF66;
+    --pc-success-soft: #1a3a22;
+    --pc-danger: #FF6B6B;
+    --pc-danger-soft: #3a1a1a;
+    --pc-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+    --pc-inactive-bg: #252830;
+    --pc-inactive-border: #3D4250;
+    --pc-inactive-text: #868E96;
 }
 
 /* Visually hidden but accessible to screen readers */

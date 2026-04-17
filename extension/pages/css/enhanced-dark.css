@@ -1,0 +1,179 @@
+/*
+ * ProtoConsent browser extension
+ * Copyright (C) 2026 ProtoConsent contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Dark mode overrides for enhanced.css.
+ */
+
+/* Icon inversion */
+html.pc-dark .ep-cel-icon,
+html.pc-dark .ep-category-pill img,
+html.pc-dark .ep-active-card-header img {
+  filter: brightness(0) invert(1);
+}
+
+/* Preset dropdown */
+html.pc-dark .ep-preset-btn:hover {
+  background: #3a2f18;
+  border-color: #d97706;
+}
+html.pc-dark .ep-preset-chevron {
+  color: #868E96;
+}
+html.pc-dark .ep-preset-menu {
+  background: #1E212B;
+  border-color: #3D4250;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+html.pc-dark .ep-preset-option:hover {
+  background: #3a2f18;
+}
+html.pc-dark .ep-preset-option.is-active {
+  background: linear-gradient(180deg, #3a2f18 0%, #2d2518 100%);
+  color: #FFD43B;
+}
+html.pc-dark .ep-preset-custom-icon {
+  color: #FFD43B;
+  background: linear-gradient(180deg, #3a2f18 0%, #2d2518 100%);
+  border-color: #d97706;
+}
+
+/* Action buttons */
+html.pc-dark .ep-preset-action-download,
+html.pc-dark .ep-preset-action-update {
+  color: #FFD43B;
+}
+html.pc-dark .ep-preset-action-download:hover,
+html.pc-dark .ep-preset-action-update:hover {
+  background: #3a2f18;
+  border-color: #d97706;
+  color: #FFD43B;
+}
+
+/* Active list cards */
+html.pc-dark .ep-active-card {
+  border-color: #2D313E;
+  background: #1E212B;
+}
+html.pc-dark .ep-active-card-header:hover {
+  background: #252830;
+}
+html.pc-dark .ep-active-card-header:focus-visible {
+  outline-color: #4DABF7;
+}
+
+/* List cards */
+html.pc-dark .ep-list-card.is-enabled {
+  border-color: #5a4520;
+  background: linear-gradient(180deg, #252018 0%, #1E212B 100%);
+}
+html.pc-dark .ep-list-card.is-own {
+  border-color: #2b4a7a;
+  background: linear-gradient(180deg, #1c2a3e 0%, #1E212B 100%);
+}
+html.pc-dark .ep-list-card.is-own.is-enabled {
+  border-color: #2b4a7a;
+  background: linear-gradient(180deg, #1c3a5c 0%, #1E212B 100%);
+}
+
+/* Category pills */
+html.pc-dark .ep-info-pill {
+  color: #4DABF7;
+  border-color: #2b4a7a;
+  background: #1c3a5c;
+}
+html.pc-dark .ep-cosmetic-pill {
+  color: #FFE066;
+  border-color: #6b5520;
+  background: #4a3a1a;
+}
+html.pc-dark .ep-cmp-pill {
+  color: #51CF66;
+  border-color: #2b5a35;
+  background: #1a3a22;
+}
+html.pc-dark .ep-params-pill {
+  color: #B197FC;
+  border-color: #3d2d6b;
+  background: #2a1f4e;
+}
+
+/* Download button pending */
+html.pc-dark .ep-list-download-btn.is-pending {
+  color: #FFD43B;
+  border-color: #d97706;
+  background: #3a2f18;
+}
+
+/* Sync pill */
+html.pc-dark .ep-sync-dot {
+  background-color: #4D5260;
+}
+html.pc-dark .ep-sync-pill.is-active {
+  color: #51CF66;
+  border-color: #2b5a35;
+  background-color: #1a3a22;
+}
+html.pc-dark .ep-sync-pill.is-active .ep-sync-dot {
+  background-color: #51CF66;
+}
+html.pc-dark .ep-sync-pill.is-disabled {
+  color: #868E96;
+  border-color: #3D4250;
+  background-color: #252830;
+}
+
+/* CEL pill */
+html.pc-dark .ep-cel-pill.is-active {
+  border-color: #2b4a7a;
+  background-color: #1c3a5c;
+}
+html.pc-dark .ep-cel-pill.is-disabled {
+  border-color: #3D4250;
+  background-color: #252830;
+}
+
+/* Status */
+html.pc-dark .ep-status-active {
+  color: #FFD43B;
+}
+html.pc-dark .ep-status-warn {
+  color: #FFD43B;
+}
+
+/* Overview update stat */
+html.pc-dark .ep-overview-stat-update strong {
+  color: #FFD43B;
+}
+
+/* Preset menu background */
+html.pc-dark .ep-preset-btn {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* List card enabled gradient backgrounds */
+html.pc-dark .ep-list-card.is-enabled .ep-list-header:hover {
+  background: none;
+}
+
+/* Active card body and expand states */
+html.pc-dark .ep-active-card-body {
+  color: var(--pc-text);
+}
+
+/* List card border when not enabled or own (default state) */
+html.pc-dark .ep-list-card {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Grid card body area (sibling element, not child) */
+html.pc-dark .pc-grid-card-body {
+  background: #252830;
+}
+
+/* ep-list-download-btn.is-pending hover */
+html.pc-dark .ep-list-download-btn.is-pending:hover {
+  background: #4a3a1a;
+}
+
