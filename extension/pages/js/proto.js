@@ -131,7 +131,7 @@ function _renderProtoBars(resp, tcfData) {
     var isMonitoring = resp.mode === "protoconsent";
     var collapsed;
     if (isMonitoring) {
-      collapsed = "Blocked by external: " + prov.external + " \u00b7 " +
+      collapsed = "Blocked by external: " + prov.other + " \u00b7 " +
         (resp.coverage ? Math.round((resp.coverage.attributed / Math.max(resp.coverage.observed, 1)) * 100) : 0) + "% attributed";
     } else {
       collapsed = buildStatsCollapsed(lastBlocked || 0);
@@ -143,10 +143,11 @@ function _renderProtoBars(resp, tcfData) {
     var d1 = document.createElement("div");
     var d1Label = document.createElement("strong"); d1Label.textContent = "Blocked by ProtoConsent: ";
     d1.appendChild(d1Label); d1.appendChild(document.createTextNode(prov.own)); expDiv.appendChild(d1);
-    if (prov.external > 0) {
+    if (prov.other > 0) {
       var d2 = document.createElement("div");
-      var d2Label = document.createElement("strong"); d2Label.textContent = "Blocked by external: ";
-      d2.appendChild(d2Label); d2.appendChild(document.createTextNode(prov.external)); expDiv.appendChild(d2);
+      var d2Label = document.createElement("strong");
+      d2Label.textContent = isMonitoring ? "Blocked by external: " : "Other: ";
+      d2.appendChild(d2Label); d2.appendChild(document.createTextNode(prov.other)); expDiv.appendChild(d2);
     }
     if (resp.coverage) {
       var d3 = document.createElement("div");
@@ -337,7 +338,7 @@ function _fillCoverageBody(body, resp, wkData) {
 
   // Provenance
   var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
-  provEl.innerHTML = "<strong>Own:</strong> " + prov.own + " \u00b7 <strong>External:</strong> " + prov.external;
+  provEl.innerHTML = "<strong>Own:</strong> " + prov.own + " \u00b7 <strong>" + (resp.mode === "protoconsent" ? "External" : "Other") + ":</strong> " + prov.other;
   body.appendChild(provEl);
 
   // Unattributed hostnames

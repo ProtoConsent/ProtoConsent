@@ -425,7 +425,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
         pLines.push("  own (getMatchedRules): " + prov.own);
         pLines.push("  observed (ERR_BLOCKED): " + prov.observed);
         pLines.push("  attributed (reverse index): " + prov.attributed);
-        pLines.push("  external (observed - own): " + prov.external);
+        pLines.push("  other (observed - own): " + prov.other);
         pLines.push("  unattributed buffer (this tab): " + (proto.unattributed ? proto.unattributed.length : 0));
         let pre = document.querySelector("#pc-log-debug");
         if (pre) pre.textContent += "\n" + pLines.join("\n");
