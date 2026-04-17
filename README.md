@@ -63,16 +63,16 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 
 <table>
 <tr>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-profile.png" alt="ProtoConsent popup" width="400" height="560"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-overview-monitoring-dark.png" alt="Overview tab dashboard (dark mode)" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-profile-dark.png" alt="ProtoConsent popup (dark mode)" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-overview-monitoring.png" alt="Overview tab dashboard" width="400" height="560"></td>
 </tr>
 <tr>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-protection-balanced-dark.png" alt="Enhanced Protection tab (dark mode)" width="400" height="560"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-domains.png" alt="Log tab with blocked domains" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-protection-balanced.png" alt="Enhanced Protection tab" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-domains-dark.png" alt="Log tab with blocked domains (dark mode)" width="400" height="560"></td>
 </tr>
 <tr>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-requests-dark.png" alt="Request log with inter-extension API and GPC signals" width="400" height="560"></td>  
 <td align="center" width="50%"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Domain whitelist management" width="400" height="560"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-requests-dark.png" alt="Request log with inter-extension API and GPC signals" width="400" height="560"></td>
 </tr>
 </table>
 
