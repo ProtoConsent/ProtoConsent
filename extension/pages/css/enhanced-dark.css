@@ -8,7 +8,6 @@
 
 /* Icon inversion */
 html.pc-dark .ep-cel-icon,
-html.pc-dark .ep-cel-pill-icon,
 html.pc-dark .ep-category-pill img,
 html.pc-dark .ep-active-card-header img {
   filter: brightness(0) invert(1);
@@ -85,9 +84,9 @@ html.pc-dark .ep-info-pill {
   background: #1c3a5c;
 }
 html.pc-dark .ep-cosmetic-pill {
-  color: #FFD43B;
-  border-color: #5a4520;
-  background: #3a2f18;
+  color: #FFE066;
+  border-color: #6b5520;
+  background: #4a3a1a;
 }
 html.pc-dark .ep-cmp-pill {
   color: #51CF66;

@@ -62,7 +62,7 @@ body {
 }
 
 #popup-layout.has-side-panel {
-  width: 664px;
+  width: 668px;
 }
 
 .pc-mode-rail {
@@ -871,12 +871,19 @@ body {
 /* Purpose Settings - compact CTA */
 .pc-footer-cta {
   color: var(--pc-accent);
-  font-weight: 700;
+  font-weight: 600;
   background: #edf2ff;
   border: 1px solid #c7d7f0;
   border-radius: 8px;
   padding: 3px 10px;
   box-shadow: none;
+}
+.pc-footer-cta-icon {
+  margin-right: 3px;
+  font-size: 0.85em;
+  vertical-align: middle;
+  position: relative;
+  top: -0.5px;
 }
 .pc-footer-cta:hover {
   background: #dbeafe;
@@ -1043,7 +1050,7 @@ body {
 }
 
 .pc-side-panel.is-open {
-  width: 230px;
+  width: 234px;
   height: auto;
   max-height: 580px;
   padding: 8px;
@@ -1122,6 +1129,7 @@ body {
 
 .pc-declaration-purpose {
   font-weight: 500;
+  padding-left: 4px;
 }
 
 .pc-declaration-check {
