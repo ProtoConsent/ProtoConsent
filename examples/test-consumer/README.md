@@ -1,6 +1,6 @@
 # ProtoConsent API Tester
 
-Minimal Chromium extension to test the [ProtoConsent inter-extension API](../../design/spec/inter-extension-protocol.md). Use it to verify that another extension can query user consent preferences via `chrome.runtime.sendMessage`.
+Minimal browser extension to test the [ProtoConsent inter-extension API](../../design/spec/inter-extension-protocol.md). Use it to verify that another extension can query user consent preferences via `chrome.runtime.sendMessage`.
 
 ## Setup
 
