@@ -4,8 +4,10 @@
 
 // Shared theme helper. Reads "theme" from storage ("auto"|"light"|"dark"),
 // applies or removes the html.pc-dark class accordingly.
+// Resolves "auto" via matchMedia and writes _themeIconDark to storage
+// so the background can set the toolbar icon without matchMedia.
 // Loaded early in popup.html and purposes-settings.html.
- 
+
 (function () {
   var mq = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -15,11 +17,18 @@
   // Prevent light-mode flash while theme loads
   if (isPopup) document.documentElement.style.visibility = "hidden";
 
+  var lastDark;
+
   function apply(pref) {
-    if (!isPopup) return;
     var dark = pref === "dark" || (pref !== "light" && mq.matches);
-    document.documentElement.classList.toggle("pc-dark", dark);
-    document.documentElement.style.visibility = "";
+    if (isPopup) {
+      document.documentElement.classList.toggle("pc-dark", dark);
+      document.documentElement.style.visibility = "";
+    }
+    if (dark !== lastDark) {
+      lastDark = dark;
+      chrome.storage.local.set({ _themeIconDark: dark });
+    }
   }
 
   chrome.storage.local.get("theme", function (r) {
