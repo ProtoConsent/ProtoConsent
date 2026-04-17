@@ -1,0 +1,65 @@
+/*
+ * ProtoConsent browser extension
+ * Copyright (C) 2026 ProtoConsent contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Dark mode overrides for log.css.
+ */
+
+/* Dot strip */
+html.pc-dark .pc-log-dot {
+  background: #4D5260;
+}
+html.pc-dark .pc-log-dot.is-required {
+  background: #4DABF7;
+}
+html.pc-dark .pc-log-dot.is-allowed {
+  background: #51CF66;
+}
+html.pc-dark .pc-log-dot.is-blocked {
+  background: #FF6B6B;
+}
+
+/* Console */
+html.pc-dark .pc-log-console {
+  background: #12141D;
+  color: #CED4DA;
+}
+
+/* Log line timestamp */
+html.pc-dark .pc-log-line-ts {
+  color: #868E96;
+}
+
+/* Allow button */
+html.pc-dark .pc-log-allow-btn.is-allowed {
+  color: #51CF66;
+  border-color: #2b5a35;
+  background: #1a3a22;
+}
+html.pc-dark .pc-log-allow-btn.is-allowed:hover {
+  background: #3a1a1a;
+  color: #FF6B6B;
+  border-color: #5a2b2b;
+}
+
+/* Remove button */
+html.pc-dark .pc-log-remove-btn {
+  border-color: #5a2b2b;
+}
+html.pc-dark .pc-log-remove-btn:hover {
+  background: #3a1a1a;
+}
+
+/* Domain icons (purpose PNGs are dark-on-alpha; skip enhanced shield) */
+html.pc-dark .pc-log-domains-icon img {
+  filter: brightness(0) invert(1);
+}
+html.pc-dark .pc-log-domains-icon img[alt="EP"] {
+  filter: none;
+}
+
+/* Active whitelist row */
+html.pc-dark .pc-log-table tr.is-active {
+  background: #1a3a22;
+}

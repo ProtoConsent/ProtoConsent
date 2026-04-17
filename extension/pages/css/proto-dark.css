@@ -1,0 +1,94 @@
+/*
+ * ProtoConsent browser extension
+ * Copyright (C) 2026 ProtoConsent contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Dark mode overrides for proto.css.
+ */
+
+/* Blocker banner */
+html.pc-dark .proto-blocker-banner.is-active {
+  border-color: #d97706;
+  background: linear-gradient(180deg, #3a2f18 0%, #2d2518 100%);
+  color: #FFD43B;
+}
+html.pc-dark .proto-blocker-banner.is-active .proto-blocker-banner-btn {
+  background: rgba(0, 0, 0, 0.3);
+}
+html.pc-dark .proto-blocker-banner.is-active .proto-blocker-banner-btn:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+html.pc-dark .proto-blocker-banner.is-active .proto-blocker-banner-btn.is-primary {
+  background: #d97706;
+  border-color: #d97706;
+}
+
+/* Signal dots */
+html.pc-dark .proto-signal-dot.is-inactive {
+  background: #4D5260;
+}
+
+/* Mismatch */
+html.pc-dark .proto-mismatch-count {
+  color: #FFD43B;
+}
+html.pc-dark .proto-card-mismatch {
+  border-color: #5a4520;
+  background: #3a2f18;
+}
+html.pc-dark .proto-mismatch-detail {
+  color: #FFD43B;
+}
+
+/* Coverage bar */
+html.pc-dark .proto-coverage-bar {
+  background: #2D313E;
+}
+
+/* Proto accordion cards */
+html.pc-dark .proto-card {
+  background: #1E212B;
+}
+html.pc-dark .proto-card-header:hover {
+  background: #252830;
+}
+html.pc-dark .proto-card-header:focus-visible {
+  outline-color: #4DABF7;
+}
+
+/* Declaration badges */
+html.pc-dark .proto-decl-used {
+  background: #1a3a22;
+  color: #51CF66;
+  border-color: #2b5a35;
+}
+html.pc-dark .proto-decl-mismatch {
+  background: #3a2f18;
+  color: #FFD43B;
+  border-color: #5a4520;
+}
+html.pc-dark .proto-decl-none {
+  background: #252830;
+  color: #868E96;
+  border-color: #3D4250;
+}
+
+/* Source sub-headers */
+html.pc-dark .proto-source-header {
+  color: #CED4DA;
+  border-top-color: #2D313E;
+}
+html.pc-dark .proto-source-count {
+  color: #868E96;
+}
+
+/* Proto card body background */
+html.pc-dark .proto-card-body {
+  color: var(--pc-text-muted);
+}
+
+/* Icon inversion */
+html.pc-dark .proto-card-icon,
+html.pc-dark .proto-card-icon-cat {
+  filter: brightness(0) invert(1);
+}

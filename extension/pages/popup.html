@@ -11,9 +11,13 @@
   <title>ProtoConsent</title>
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/popup.css">
+  <link rel="stylesheet" href="css/popup-dark.css">
   <link rel="stylesheet" href="css/log.css">
   <link rel="stylesheet" href="css/enhanced.css">
   <link rel="stylesheet" href="css/proto.css">
+  <link rel="stylesheet" href="css/log-dark.css">
+  <link rel="stylesheet" href="css/enhanced-dark.css">
+  <link rel="stylesheet" href="css/proto-dark.css">
   <link rel="icon" type="image/png" sizes="32x32" href="../icons/protoconsent_icon_32.png">
 </head>
 <body>
@@ -153,11 +157,9 @@
       <footer class="pc-footer">
         <div class="pc-footer-content">
           <div class="pc-footer-links">
-            <button class="pc-footer-link" type="button" id="pc-toggle-descriptions" aria-expanded="false">Show details</button>
-            <a href="purposes-settings.html" class="pc-footer-link" id="pc-purposes-link">Purpose Settings</a>
-            <a href="https://protoconsent.org" class="pc-footer-link" target="_blank" rel="noopener noreferrer">
-              Learn more
-            </a>
+            <button class="pc-footer-link pc-footer-toggle" type="button" id="pc-toggle-descriptions" aria-expanded="false">Show details</button>
+            <a href="purposes-settings.html" class="pc-footer-link pc-footer-cta" id="pc-purposes-link"><span class="pc-footer-cta-icon" aria-hidden="true">&#9881;</span> Purpose Settings</a>
+            <a href="https://protoconsent.org" class="pc-footer-link pc-footer-subtle" target="_blank" rel="noopener noreferrer">Learn more</a>
           </div>
         </div>
       </footer>
@@ -165,6 +167,7 @@
     </div>
   </div>
 
+  <script src="js/theme.js"></script>
   <script src="../config.js"></script>
   <script src="js/ui-components.js"></script>
   <script src="js/popup.js"></script>

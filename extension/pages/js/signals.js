@@ -16,7 +16,7 @@ function renderSignalsBar(observedGpc) {
   if (typeof observedGpc === "undefined") observedGpc = lastGpcSignalsSent;
 
   var summary = buildSignalSummary(observedGpc);
-  _signalsBar.setCollapsed(summary);
+  _signalsBar.setCollapsed(summary, "Global Privacy Control (GPC), Client Hints stripping, .well-known declaration, TCF banner detection");
 
   var pillsDiv = document.createElement("div");
   pillsDiv.className = "pc-scope-indicators";
@@ -27,40 +27,49 @@ function renderSignalsBar(observedGpc) {
   var wkState = computeWkState();
   var wkClick = (wkState.state === "active" && typeof toggleSidePanel === "function") ? function () { toggleSidePanel(); } : null;
   pillsDiv.appendChild(buildPill("WK", wkState, wkClick));
-  pillsDiv.appendChild(buildPill("TCF", { state: "disabled", title: "Checking..." }));
+  pillsDiv.appendChild(buildPill("TCF", { state: "disabled", title: "TCF CMP not detected" }));
   updateTcfPill(pillsDiv);
 
   _signalsBar.setExpanded(pillsDiv);
 }
 
 function buildSignalSummary(observedGpc) {
+  var parts = [];
   if (observedGpc > 0 && lastGpcDomains.length > 0) {
-    return "GPC to " + pluralize(lastGpcDomains.length, "domain");
+    parts.push("GPC to " + pluralize(lastGpcDomains.length, "domain"));
+  } else if (expectedGpcEnabled()) {
+    parts.push("GPC active");
   }
-  if (expectedGpcEnabled()) return "GPC active";
-  if (lastChStripped > 0) return "CH stripped (" + lastChStripped + ")";
-  return "Privacy signals";
+  if (lastChStripped > 0) parts.push("CH stripped (" + lastChStripped + ")");
+  var wk = computeWkState();
+  if (wk.state === "active") parts.push("Site declaration");
+  return parts.length > 0 ? parts.join(" \u00B7 ") : "Privacy signals";
 }
 
 // --- Signal state computation ---
 
 function computeGpcState(observedGpc) {
-  if (!currentDomain || !gpcGlobalEnabled) return { state: "disabled", title: "GPC unavailable" };
+  if (!currentDomain) return { state: "disabled", title: "GPC unavailable on this page" };
+  if (!gpcGlobalEnabled) return { state: "disabled", title: "GPC globally disabled in Purpose Settings" };
   var on = expectedGpcEnabled();
-  var tip = on ? "GPC: active" : "GPC: inactive";
+  var tip = on ? "GPC: active - do-not-sell/share signal" : "GPC: inactive";
   if (observedGpc > 0 && lastGpcDomains.length > 0) {
-    tip += "\nSent to " + pluralize(lastGpcDomains.length, "domain");
+    tip += "\nSent to " + pluralize(lastGpcDomains.length, "domain") + " (" + pluralize(observedGpc, "request") + ")";
+  } else if (on) {
+    tip += "\nNo signals sent yet on this tab";
   }
   return { state: on ? "active" : "inactive", title: tip };
 }
 
 function computeChState() {
-  if (!currentDomain || !chStrippingEnabled) return { state: "disabled", title: "CH stripping unavailable" };
+  if (!currentDomain) return { state: "disabled", title: "Client Hints stripping unavailable on this page" };
+  if (!chStrippingEnabled) return { state: "disabled", title: "Client Hints stripping globally disabled in Purpose Settings" };
   var on = currentPurposesState.advanced_tracking === false;
-  return {
-    state: on ? "active" : "inactive",
-    title: on ? "Client Hints: stripping active" : "Client Hints: not stripped"
-  };
+  if (on) {
+    var countStr = lastChStripped > 0 ? " (" + lastChStripped + " requests)" : "";
+    return { state: "active", title: "Client Hints: stripping active" + countStr + "\nHigh-entropy fingerprinting headers removed" };
+  }
+  return { state: "inactive", title: "Client Hints: not stripped\nAdvanced tracking allowed for this site" };
 }
 
 function computeWkState() {
