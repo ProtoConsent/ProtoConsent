@@ -829,7 +829,7 @@ body {
   align-items: center;
   justify-content: center;
   margin-top: 0;
-  padding: 5px 8px 0 8px;
+  padding: 4px 8px 0 8px;
   border-top: 1px solid #e8edf3;
 }
 
@@ -844,26 +844,55 @@ body {
 
 .pc-footer-link {
   font-size: var(--pc-font-sm);
-  color: #1e3a8a;
-  font-weight: 700;
-  text-decoration: none;
-  background: linear-gradient(180deg, #dbeafe 0%, #edf5ff 100%);
-  border: 1px solid #bfd0e4;
-  border-radius: 10px;
-  padding: 6px 10px;
   font-family: inherit;
   cursor: pointer;
   line-height: 1.2;
   white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-.pc-footer-link:hover {
-  text-decoration: none;
-  background: linear-gradient(180deg, #e3efff 0%, #cfe4ff 100%);
+/* Show details - text toggle, no chrome */
+.pc-footer-toggle {
+  color: #64748b;
+  font-weight: 500;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  box-shadow: none;
+}
+.pc-footer-toggle:hover {
+  color: #1e3a8a;
+}
+
+/* Purpose Settings - compact CTA */
+.pc-footer-cta {
+  color: #1e3a8a;
+  font-weight: 600;
+  background: #edf2ff;
+  border: 1px solid #c7d7f0;
+  border-radius: 8px;
+  padding: 3px 10px;
+  box-shadow: none;
+}
+.pc-footer-cta:hover {
+  background: #dbeafe;
   border-color: #9ec5f8;
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.14);
+  text-decoration: none;
+}
+
+/* Learn more - subtle text link */
+.pc-footer-subtle {
+  color: #64748b;
+  font-weight: 500;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  box-shadow: none;
+}
+.pc-footer-subtle:hover {
+  color: #1e3a8a;
+  text-decoration: underline;
 }
 
 .pc-footer-links {
