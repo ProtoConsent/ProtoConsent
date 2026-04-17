@@ -228,7 +228,7 @@ function _renderProtoGrid(resp, wkData, tcfData) {
   var gpcDomains = resp.gpcDomains ? Object.keys(resp.gpcDomains) : [];
   var popupGpcDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
   var gpcCount = gpcDomains.length > 0 ? gpcDomains.length : popupGpcDomains.length;
-  var gpcRequests = resp.gpc || 0;
+  var gpcRequests = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
   var gpcMetric = gpcCount > 0 ? gpcCount + " domains" : (gpcRequests > 0 ? gpcRequests + " requests" : "0 domains");
 
   var cmpDetected = !!(resp.cmpDetect && resp.cmpDetect.detected && resp.cmpDetect.detected.length > 0);
@@ -357,7 +357,7 @@ function _fillGpcBody(body, resp) {
   var popupDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
   var domains = bgDomains.length > 0 ? bgDomains : popupDomains;
 
-  var gpcRequests = resp.gpc || 0;
+  var gpcRequests = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
 
   if (domains.length === 0 && gpcRequests > 0) {
     body.textContent = "Sec-GPC: 1 sent to " + gpcRequests + " requests (domain names not captured)";
