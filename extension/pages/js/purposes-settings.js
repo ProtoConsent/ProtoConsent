@@ -1540,6 +1540,9 @@ function initInterExt() {
 	const container = document.getElementById('inter-ext-container');
 	if (!section || !toggle || !container) return;
 
+	const idEl = document.getElementById('inter-ext-id');
+	if (idEl) idEl.innerHTML = '<span class="ps-info-pill" title="Other extensions need this ID to connect">&#x2139; Info</span> <strong>Extension ID:</strong> ' + chrome.runtime.id;
+
 	function renderLists(data) {
 		const enabled = data.interExtEnabled === true;
 		toggle.checked = enabled;
