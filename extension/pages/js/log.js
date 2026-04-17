@@ -45,6 +45,17 @@ function initLogTab() {
   if (!logInitialized) {
     initLogInnerTabs();
     initLogCopyButton();
+    // Regional flags: built once (they don't change with domain)
+    var strip = document.getElementById("pc-log-dot-strip");
+    if (strip && typeof buildRegionalFlags === "function") {
+      var flagsLink = document.createElement("a");
+      flagsLink.href = "purposes-settings.html#regional-filters";
+      flagsLink.target = "_blank";
+      flagsLink.className = "pc-log-dot-flags";
+      flagsLink.hidden = true;
+      buildRegionalFlags(flagsLink, { maxFlags: 2 });
+      strip.appendChild(flagsLink);
+    }
     logInitialized = true;
   }
 
@@ -152,7 +163,9 @@ function setActiveLogTab(name) {
 function renderLogHeader() {
   var strip = document.getElementById("pc-log-dot-strip");
   if (!strip) return;
-  strip.innerHTML = "";
+  // Preserve regional flags (appended once in initLogTab); only clear dot rows
+  var existing = strip.querySelector(".pc-log-dot-row");
+  if (existing) existing.remove();
 
   // Single row: SITE dots · ALL dots
   var row = document.createElement("div");
@@ -186,17 +199,6 @@ function renderLogHeader() {
     var isReq = requiredPurposeKeys.has(key);
     row.appendChild(_logDot(key, state, isReq));
   }
-
-  // Regional language flags (right-aligned, links to settings)
-  var flagsLink = document.createElement("a");
-  flagsLink.href = "purposes-settings.html#regional-filters";
-  flagsLink.target = "_blank";
-  flagsLink.className = "pc-log-dot-flags";
-  flagsLink.hidden = true;
-  if (typeof buildRegionalFlags === "function") {
-    buildRegionalFlags(flagsLink, { maxFlags: 2 });
-  }
-  strip.appendChild(flagsLink);
 
   strip.appendChild(row);
 }
