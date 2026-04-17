@@ -34,16 +34,19 @@ function renderSignalsBar(observedGpc) {
 }
 
 function buildSignalSummary(observedGpc) {
-  var parts = [];
+  var main;
   if (observedGpc > 0 && lastGpcDomains.length > 0) {
-    parts.push("GPC to " + pluralize(lastGpcDomains.length, "domain"));
+    main = "GPC to " + pluralize(lastGpcDomains.length, "domain");
   } else if (expectedGpcEnabled()) {
-    parts.push("GPC active");
+    main = "GPC active";
+  } else if (lastChStripped > 0) {
+    main = "CH stripped (" + lastChStripped + ")";
+  } else {
+    main = "Privacy signals";
   }
-  if (lastChStripped > 0) parts.push("CH stripped (" + lastChStripped + ")");
   var wk = computeWkState();
-  if (wk.state === "active") parts.push("Site declaration");
-  return parts.length > 0 ? parts.join(" \u00B7 ") : "Privacy signals";
+  if (wk.state === "active") main += " \u00B7 Site declaration";
+  return main;
 }
 
 // --- Signal state computation ---

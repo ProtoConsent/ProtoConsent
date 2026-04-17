@@ -7,7 +7,6 @@
  */
 
 /* Icon inversion */
-html.pc-dark .ep-cel-icon,
 html.pc-dark .ep-category-pill img,
 html.pc-dark .ep-active-card-header img {
   filter: brightness(0) invert(1);
