@@ -4,7 +4,7 @@ Minimal browser extension to test the [ProtoConsent inter-extension API](../../d
 
 ## Setup
 
-1. Open `chrome://extensions` (or the equivalent in your Chromium browser).
+1. Open `chrome://extensions` (or the equivalent in your browser).
 2. Enable **Developer mode** (toggle in the top-right corner).
 3. Click **Load unpacked** and select this `test-consumer` folder.
 4. Open ProtoConsent's settings and enable the **Inter-Extension API**.
