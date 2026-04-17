@@ -95,7 +95,7 @@ async function getBlockedRulesCount() {
           }
         }
       }
-      var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + c, 0);
+      var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + (c && typeof c === "object" ? c.count : (c || 0)), 0);
       return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: 0, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: 0, whitelistHitDomains: {} };
     }
 
