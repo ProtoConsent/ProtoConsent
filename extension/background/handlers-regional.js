@@ -12,6 +12,24 @@ import {
 } from "./storage.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
 
+const CDN_PREFIX = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/";
+const RAW_PREFIX = "https://raw.githubusercontent.com/ProtoConsent/data/main/";
+
+function fetchWithFallback(url, opts) {
+  return fetch(url, opts).then(res => {
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res;
+  }).catch(err => {
+    if (url.startsWith(CDN_PREFIX)) {
+      return fetch(url.replace(CDN_PREFIX, RAW_PREFIX), opts).then(res => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res;
+      });
+    }
+    throw err;
+  });
+}
+
 // Fetch and merge regional list data for the given catalog entry.
 // Calls sendResponse with the result (ok/error).
 export async function handleRegionalFetch(listId, listDef, sendResponse) {
@@ -55,8 +73,7 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
   for (const region of langs) {
     const url = fetchBase + "regional_" + region + suffix + ".json";
     try {
-      const res = await fetch(url, { credentials: "omit", cache: "no-store" });
-      if (!res.ok) continue;
+      const res = await fetchWithFallback(url, { credentials: "omit", cache: "no-store" });
       const data = await res.json();
       fetchedRegions.push(region);
       if (Array.isArray(data.generic)) mergedGeneric.push(...data.generic);
@@ -126,8 +143,7 @@ async function fetchRegionalBlocking(listId, langs, fetchBase, suffix, sendRespo
   for (const region of langs) {
     const url = fetchBase + "regional_" + region + suffix + ".json";
     try {
-      const res = await fetch(url, { credentials: "omit", cache: "no-store" });
-      if (!res.ok) continue;
+      const res = await fetchWithFallback(url, { credentials: "omit", cache: "no-store" });
       const data = await res.json();
       fetchedRegions.push(region);
       if (Array.isArray(data.rules)) {
