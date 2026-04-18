@@ -32,7 +32,7 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 - **Per‑site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking).
 - **Consent banner auto-response:** cookie consent popups from 31 CMP frameworks (including IAB TCF v2.2) are answered automatically based on your purpose preferences. No DOM interaction, no click simulation, no waiting for the banner to render. Signatures updated via CDN alongside Enhanced lists. See [cmp-auto-response.md](design/cmp-auto-response.md).
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.
-- **Network‑level enforcement** of purpose‑based decisions via curated blocklists organised by purpose, with visible results (blocked counts, domain detail). See [blocklists.md](design/blocklists.md).
+- **Network‑level enforcement** of purpose‑based decisions via curated blocklists organised by purpose, with visible results (blocked counts, domain detail). See [list-catalog.md](design/list-catalog.md).
 - **Optional enhanced protection** with 15 curated enhanced lists (6 ProtoConsent Core purpose-based lists plus EasyList, EasyPrivacy, AdGuard DNS, HaGeZi Pro, OISD Small, Blocklist Project, AdGuard CNAME Trackers) plus regional filter lists for 13 languages, including cosmetic filtering (element-hiding CSS). Three presets (Off, Balanced, Full) or individual list selection. Remote fetch gated behind an explicit consent toggle. Consent-enhanced link optionally auto-activates lists matching denied purposes.
 - **Inter-extension API:** other browser extensions can query the user's consent state via `chrome.runtime.sendMessage`, with TOFU trust model and rate limiting. See the [protocol spec](design/spec/inter-extension-protocol.md).
 - **Banner detection and observation:** CSS-based detection of 290+ CMP banners (via Autoconsent data), site-specific hiding rules for 237+ sites, cookie consent state decoding and comparison against your preferences. CMP activity is visible in the Log tab as banner and consent lines.
@@ -118,7 +118,7 @@ See [architecture.md](design/architecture.md) for the full technical description
 **Implementation**
 - [Technical architecture](design/architecture.md) – components, data model, flows, design decisions
 - [CMP auto-response](design/cmp-auto-response.md) – consent banner suppression, CMP signatures, TC String generation
-- [Blocklists methodology](design/blocklists.md) - sources, curation, DNR format, enhanced lists
+- [List catalog](design/list-catalog.md) - sources, curation, DNR format, enhanced lists
 - [Testing guide](design/testing-guide.md) – installation, test scenarios
 - [Icons and layers](design/icons-and-layers.md) – visual language and icon mapping
 

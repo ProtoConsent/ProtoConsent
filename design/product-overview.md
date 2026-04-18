@@ -42,7 +42,7 @@ For each site, ProtoConsent stores a local rule that combines a profile with exp
 
 **Enhanced protection:** Users can optionally activate curated enhanced blocklists for broader coverage beyond the core static rulesets. 15 non-regional lists are available - 6 ProtoConsent Core lists that update weekly via CDN and 9 third-party lists from trusted open-source projects - plus 2 regional catalog entries covering 13 regions with language-specific blocking and cosmetic rules. Lists are organized in three presets (Off, Balanced, Full) or with individual list control. Regional lists are included in Balanced and Full presets when the user has selected at least one language. Remote fetching requires explicit user consent, offered during onboarding and in Purpose Settings. Lists are stored locally after download. A consent-enhanced link bridges consent purposes with Enhanced lists: denying a purpose automatically activates Enhanced lists matching that category, even if the preset is Off. Cosmetic filtering hides ad containers left empty after network-level blocking via CSS injection. Enhanced blocks appear in the Log tab with a shield icon alongside category icons.
 
-> Third-party list sources: EasyList, EasyPrivacy, AdGuard DNS, HaGeZi Pro, OISD Small, Blocklist Project (Crypto, Phishing), AdGuard CNAME Trackers. See [blocklists.md](blocklists.md) for the full catalog.
+> Third-party list sources: EasyList, EasyPrivacy, AdGuard DNS, HaGeZi Pro, OISD Small, Blocklist Project (Crypto, Phishing), AdGuard CNAME Trackers. See [list-catalog.md](list-catalog.md) for the full catalog.
 
 **Site declarations:** Websites can publish a [`.well-known/protoconsent.json`](spec/protoconsent-well-known.md) file to declare their data practices. The extension reads this file and displays the site's declared purposes, legal bases, providers, and data handling details in a side panel, using [Consent Commons](https://consentcommons.com/) icons. No SDK or code changes required - just a static JSON file, like `robots.txt` or `security.txt`.
 
@@ -89,7 +89,7 @@ The user opens a website and, if needed, adjusts the profile or individual purpo
 |---------|----------|
 | v0.1.0 | Purpose-based consent model, per-domain rules, DNR enforcement (global + per-site), popup UI with profile and purpose toggles, [JavaScript SDK](../sdk/protoconsent.js) with [TypeScript declarations](../sdk/protoconsent.d.ts) |
 | v0.1.1 | Static rulesets with path-based blocking, blocked request counter, conditional [GPC signal](https://globalprivacycontrol.org/), [.well-known side panel](spec/protoconsent-well-known.md) with [Consent Commons](https://consentcommons.com/) icons, debug panel |
-| v0.2.0 | 40 000+ curated tracker domains and 1 200+ path rules ([blocklists.md](blocklists.md)), onboarding page, purpose settings page, [demo site](https://demo.protoconsent.org) |
+| v0.2.0 | 40 000+ curated tracker domains and 1 200+ path rules ([list-catalog.md](list-catalog.md)), onboarding page, purpose settings page, [demo site](https://demo.protoconsent.org) |
 | v0.2.1 | Log monitoring tab (real-time request log, blocked domains by purpose, GPC tracking), session persistence |
 | v0.2.2 | Domain whitelist with per-site and global scope |
 | v0.3.0 | Enhanced Protection: 14 optional third-party lists with presets (Off/Balanced/Full/Custom), CDN fetch with consent gate, consent-enhanced link, cosmetic filtering (EasyList CSS injection), Client Hints stripping, CNAME cloaking detection, cookie banner detection |
@@ -104,7 +104,7 @@ The user opens a website and, if needed, adjusts the profile or individual purpo
 | v0.5.5 | GPC display consistency across all tabs, dark mode badge and dark icon set, signals bar fallback when domain data is unavailable, CMP signature updates (LinkedIn, Google), Log and Overview UI fixes |
 | v0.5.6 | Expanded curated blocklists to 58K domains and 1 200 path rules across 6 purpose categories, new security protection category, streamlined Enhanced catalog (6 Core + 7 third-party lists), CDN cache-busting for list updates, Protection tab category indicators and visual refresh |
 | **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
-| **Documentation** | [Protocol spec](spec/signalling-protocol.md), [.well-known spec](spec/protoconsent-well-known.md), [inter-extension protocol](spec/inter-extension-protocol.md), [CMP auto-response](cmp-auto-response.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [blocklist methodology](blocklists.md) |
+| **Documentation** | [Protocol spec](spec/signalling-protocol.md), [.well-known spec](spec/protoconsent-well-known.md), [inter-extension protocol](spec/inter-extension-protocol.md), [CMP auto-response](cmp-auto-response.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [list catalog](list-catalog.md) |
 
 ## 6. Scope and non‑goals
 

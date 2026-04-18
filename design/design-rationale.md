@@ -10,7 +10,7 @@ This document explains *why* ProtoConsent is designed the way it is: the premise
 - **[architecture.md](architecture.md)**: how it works technically
 - **[signalling-protocol.md](spec/signalling-protocol.md)**: the SDK and purpose‑signalling protocol
 - **[protoconsent-well-known.md](spec/protoconsent-well-known.md)**: site declaration format
-- **[blocklists.md](blocklists.md)**: enforcement methodology and list curation
+- **[list-catalog.md](list-catalog.md)**: enforcement methodology and list curation
 - **[cmp-auto-response.md](cmp-auto-response.md)**: CMP auto-response design and signature format
 - **[inter-extension-protocol.md](spec/inter-extension-protocol.md)**: inter-extension messaging API
 
@@ -118,7 +118,7 @@ ProtoConsent has clear boundaries:
 | How is it implemented? | [architecture.md](architecture.md) |
 | What is the SDK API surface? | [signalling-protocol.md](spec/signalling-protocol.md) |
 | How do site declarations work? | [protoconsent-well-known.md](spec/protoconsent-well-known.md) |
-| How are blocklists curated and applied? | [blocklists.md](blocklists.md) |
+| How are blocklists curated and applied? | [list-catalog.md](list-catalog.md) |
 | How does CMP auto-response work? | [cmp-auto-response.md](cmp-auto-response.md) |
 | How does inter-extension messaging work? | [inter-extension-protocol.md](spec/inter-extension-protocol.md) |
 | How to test the extension? | [testing-guide.md](testing-guide.md) |

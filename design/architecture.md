@@ -125,7 +125,7 @@ Dynamic rules (5,000 rule pool)
 
 *Domain‑based rules* use a single rule per category with a `requestDomains` array listing all tracker domains for that purpose. Chrome matches subdomains automatically, so listing `doubleclick.net` also blocks `static.doubleclick.net`.
 
-*Path‑based rules* complement domain rules for high‑value domains that cannot be blocked entirely: `google.com`, `facebook.com`, or `linkedin.com`. These rules use `urlFilter` patterns (e.g. `||google.com/pagead/`, `||facebook.com/tr/`) to block specific tracking endpoints while allowing the rest of the domain. See [blocklists.md](blocklists.md) §6 for details.
+*Path‑based rules* complement domain rules for high‑value domains that cannot be blocked entirely: `google.com`, `facebook.com`, or `linkedin.com`. These rules use `urlFilter` patterns (e.g. `||google.com/pagead/`, `||facebook.com/tr/`) to block specific tracking endpoints while allowing the rest of the domain. See [list-catalog.md](list-catalog.md) §6 for details.
 
 *Dynamic rules* handle per-site customisation and Enhanced Protection.
 
@@ -498,7 +498,7 @@ A separate detection and observation pipeline runs independently of auto-respons
 
 ### 13.6 CDN fetch and Enhanced integration
 
-CMP signatures, detectors, and site-specific rules are bundled in `extension/rules/` and loaded into `chrome.storage.local` at install/update. When Enhanced Protection is active, the catalog includes list entries for `protoconsent_cmp_signatures`, `protoconsent_cmp_detectors`, and `protoconsent_cmp_signatures_site` that enable CDN-based updates. See [blocklists.md](blocklists.md) for distribution details.
+CMP signatures, detectors, and site-specific rules are bundled in `extension/rules/` and loaded into `chrome.storage.local` at install/update. When Enhanced Protection is active, the catalog includes list entries for `protoconsent_cmp_signatures`, `protoconsent_cmp_detectors`, and `protoconsent_cmp_signatures_site` that enable CDN-based updates. See [list-catalog.md](list-catalog.md) for distribution details.
 
 ### 13.7 Observability
 

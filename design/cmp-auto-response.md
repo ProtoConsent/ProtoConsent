@@ -372,7 +372,7 @@ When the user enables dynamic list sync (`dynamicListsConsent`), the Enhanced Pr
 
 Listed as **ProtoConsent Banners** in the Enhanced Protection UI (`config/enhanced-lists.json`), with `type: "cmp"`, `preset: "basic"` (auto-enabled), `order: 10` (first in the list). The UI shows a purple pill and "N banner templates" stats.
 
-For the full CDN distribution model, bundled fallback, and automated refresh workflow, see [blocklists.md, CMP auto-response signatures](blocklists.md#cmp-auto-response-signatures).
+For the full CDN distribution model, bundled fallback, and automated refresh workflow, see [list-catalog.md, CMP auto-response signatures](list-catalog.md#cmp-auto-response-signatures).
 
 ## 14. Adding a new CMP
 
