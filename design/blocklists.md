@@ -18,15 +18,13 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
   - [4. Curation process](#4-curation-process)
     - [Inclusion criteria](#inclusion-criteria)
     - [Quality review](#quality-review)
-    - [Safelist](#safelist)
   - [5. DNR format](#5-dnr-format)
   - [6. Path-based rules](#6-path-based-rules)
     - [Current path rule counts](#current-path-rule-counts)
     - [Selection criteria for path rules](#selection-criteria-for-path-rules)
     - [Interaction with per-site overrides](#interaction-with-per-site-overrides)
   - [7. Enhanced protection lists (third-party)](#7-enhanced-protection-lists-third-party)
-    - [Current lists (v0.4)](#current-lists-v04)
-    - [Removed from earlier candidates](#removed-from-earlier-candidates)
+    - [Current lists (v0.5)](#current-lists-v05)
     - [Distribution model](#distribution-model)
     - [Presets](#presets)
     - [Consent-enhanced link](#consent-enhanced-link)
@@ -48,11 +46,11 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
     - [DNR implementation](#dnr-implementation)
     - [Observability](#observability)
   - [13. Regional lists](#13-regional-lists)
-    - [Sources](#sources-1)
+    - [Sources](#sources)
     - [Distribution model](#distribution-model-1)
     - [FETCH handler](#fetch-handler)
     - [Language selection](#language-selection)
-    - [Preset exclusion](#preset-exclusion)
+    - [Preset integration](#preset-integration)
     - [UI presentation](#ui-presentation)
     - [Constants](#constants)
 
@@ -60,12 +58,12 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
 
 | File | Purpose | Domains |
 | --- | --- | --- |
-| `protoconsent_ads.json` | Advertising networks | ~13,028 |
-| `protoconsent_analytics.json` | Analytics and measurement | ~14,306 |
-| `protoconsent_personalization.json` | DMPs, identity sync, personalization engines | ~65 |
-| `protoconsent_third_parties.json` | Social widgets, marketing platforms, push services | ~172 |
-| `protoconsent_advanced_tracking.json` | Fingerprinting, verification, cryptominers | ~12,662 |
-| **Total** | | **~40,233** |
+| `protoconsent_ads.json` | Advertising networks | ~27,561 |
+| `protoconsent_analytics.json` | Analytics and measurement | ~14,395 |
+| `protoconsent_personalization.json` | DMPs, identity sync, personalization engines | ~75 |
+| `protoconsent_third_parties.json` | Social widgets, marketing platforms, push services | ~187 |
+| `protoconsent_advanced_tracking.json` | Fingerprinting, verification, cryptominers | ~15,876 |
+| **Total** | | **~58,094** |
 
 ## 3. Sources
 
@@ -84,28 +82,22 @@ The curation draws from 6 public blocklists:
 
 ## 4. Curation process
 
-The current process is manual and will be replaced by an automated pipeline in the future.
-
 ### Inclusion criteria
 
 - A domain must appear in **at least 2 independent sources** to be considered.
-- Each domain is classified into one of the 5 blocking purposes based on source metadata, known seed mappings, and domain name heuristics.
+- Each domain is classified into one of the 5 blocking purposes based on source metadata.
 - Domains that cannot be classified are discarded.
-- Each category is capped at ~2000 candidates before quality review.
 
 ### Quality review
 
 After cross-referencing, a quality pass removes:
 
-- **False positives**: legitimate services that should never be blocked (payment processors, search engines, CDNs, auth providers, CAPTCHA services).
+- **False positives**: legitimate services that should never be blocked.
 - **Junk domains**: hex-hash throwaway domains, random-word cloaking domains, date-based campaign domains, and other ephemeral entries that go stale immediately.
-- **Scam/malware**: phishing sites and malware infrastructure that don't belong in a purpose-based blocklist.
 - **Redundant subdomains**: DNR `requestDomains` matches a domain and all its subdomains, so `marketo.com` already covers `app-ab01.marketo.com`. Listing both wastes rule slots.
 - **Miscategorized entries**: domains moved to their correct purpose (e.g. cryptominers from analytics to advanced tracking).
 
-### Safelist
-
-A safelist of ~120 domains ensures critical services are never blocked, even if public lists flag them. This includes payment processors (Stripe, PayPal), CDNs (Cloudflare, jsDelivr), auth providers (Auth0, Okta), CAPTCHA services, and main domains of social platforms.
+A safelist ensures critical services are never blocked, even if public lists flag them.
 
 ## 5. DNR format
 
@@ -209,18 +201,6 @@ Domain counts are approximate and change with each upstream update.
 
 Lists with a **category** display the corresponding Consent Commons icon in the UI. The `security` category is ProtoConsent-specific (not part of Consent Commons). Cosmetic lists display a dedicated pill instead of a category icon. CMP lists display a dedicated pill ("Banners") and show template counts instead of domain/rule counts.
 
-### Removed from earlier candidates
-
-| List | Reason |
-| --- | --- |
-| Peter Lowe's list | License incompatible with GPL-3.0 (McRae GPL, non-commercial). Only 3,519 domains. |
-| OISD Big | ~418K domains but heavy overlap with HaGeZi Pro (OISD aggregates HaGeZi). Redundant. |
-| Steven Black Unified | ~49K domains, high overlap with EasyList/EasyPrivacy and AdGuard DNS. Redundant. |
-| HaGeZi TIF | ~966K domains. Too aggressive for a consent-based extension; high false-positive risk. |
-| 1Hosts Lite | ~195K domains, high overlap with AdGuard DNS and HaGeZi Pro. Redundant. |
-| Blocklist Project - Ads | ~155K domains, high overlap with EasyList. Redundant with ProtoConsent Core ads. |
-| Blocklist Project - Tracking | ~15K domains, high overlap with EasyPrivacy. Redundant with ProtoConsent Core analytics. |
-
 ### Distribution model
 
 Enhanced lists are **not** shipped inside the extension package. Instead:
@@ -316,11 +296,11 @@ The extension ships static rulesets (`protoconsent_*.json`) for day-1 blocking. 
 
 | List ID | Category | Domains | Path rules |
 | --- | --- | --- | --- |
-| `protoconsent_analytics` | `analytics` | ~14,306 | 559 |
-| `protoconsent_ads` | `ads` | ~13,028 | 529 |
-| `protoconsent_personalization` | `personalization` | ~65 | 13 |
-| `protoconsent_third_parties` | `third_parties` | ~172 | 73 |
-| `protoconsent_advanced_tracking` | `advanced_tracking` | ~12,662 | 28 |
+| `protoconsent_analytics` | `analytics` | ~14,395 | 559 |
+| `protoconsent_ads` | `ads` | ~27,561 | 529 |
+| `protoconsent_personalization` | `personalization` | ~75 | 13 |
+| `protoconsent_third_parties` | `third_parties` | ~187 | 73 |
+| `protoconsent_advanced_tracking` | `advanced_tracking` | ~15,876 | 28 |
 | `protoconsent_security` | `security` | ~10 | - |
 
 Each list has its own `category` so the reverse hostname index maps domains to the correct purpose icon. In the UI, the first 5 lists appear as a single grouped card ("ProtoConsent Core") in the Protection tab. Download, toggle and remove operate on all 5 as a group. The security list appears as an independent card with `is-own` styling.
