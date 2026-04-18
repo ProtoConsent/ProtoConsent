@@ -4,7 +4,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 ## 1. Overview
 
-ProtoConsent includes a curated subset of domains from public blocklists, organized by purpose. These are stored as static DNR rulesets in `extension/rules/block_*.json` - one file per blocking purpose.
+ProtoConsent includes a curated subset of domains from public blocklists, organized by purpose. These are stored as static DNR rulesets in `extension/rules/protoconsent_*.json` - one file per blocking purpose.
 
 This is **not** a full ad/tracking blocker. The lists are drawn from public blocklists, curated with cross-source validation and quality filters, and organized by purpose to provide meaningful default protection.
 
@@ -18,15 +18,13 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
   - [4. Curation process](#4-curation-process)
     - [Inclusion criteria](#inclusion-criteria)
     - [Quality review](#quality-review)
-    - [Safelist](#safelist)
   - [5. DNR format](#5-dnr-format)
   - [6. Path-based rules](#6-path-based-rules)
     - [Current path rule counts](#current-path-rule-counts)
     - [Selection criteria for path rules](#selection-criteria-for-path-rules)
     - [Interaction with per-site overrides](#interaction-with-per-site-overrides)
   - [7. Enhanced protection lists (third-party)](#7-enhanced-protection-lists-third-party)
-    - [Current lists (v0.4)](#current-lists-v04)
-    - [Removed from earlier candidates](#removed-from-earlier-candidates)
+    - [Current lists (v0.5)](#current-lists-v05)
     - [Distribution model](#distribution-model)
     - [Presets](#presets)
     - [Consent-enhanced link](#consent-enhanced-link)
@@ -48,11 +46,11 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
     - [DNR implementation](#dnr-implementation)
     - [Observability](#observability)
   - [13. Regional lists](#13-regional-lists)
-    - [Sources](#sources-1)
+    - [Sources](#sources)
     - [Distribution model](#distribution-model-1)
     - [FETCH handler](#fetch-handler)
     - [Language selection](#language-selection)
-    - [Preset exclusion](#preset-exclusion)
+    - [Preset integration](#preset-integration)
     - [UI presentation](#ui-presentation)
     - [Constants](#constants)
 
@@ -60,16 +58,16 @@ This is **not** a full ad/tracking blocker. The lists are drawn from public bloc
 
 | File | Purpose | Domains |
 | --- | --- | --- |
-| `block_ads.json` | Advertising networks | ~12,904 |
-| `block_analytics.json` | Analytics and measurement | ~15,851 |
-| `block_personalization.json` | DMPs, identity sync, personalization engines | ~73 |
-| `block_third_parties.json` | Social widgets, marketing platforms, push services | ~171 |
-| `block_advanced_tracking.json` | Fingerprinting, verification, cryptominers | ~11,234 |
-| **Total** | | **~40,233** |
+| `protoconsent_ads.json` | Advertising networks | ~27,561 |
+| `protoconsent_analytics.json` | Analytics and measurement | ~14,395 |
+| `protoconsent_personalization.json` | DMPs, identity sync, personalization engines | ~75 |
+| `protoconsent_third_parties.json` | Social widgets, marketing platforms, push services | ~187 |
+| `protoconsent_advanced_tracking.json` | Fingerprinting, verification, cryptominers | ~15,876 |
+| **Total** | | **~58,094** |
 
 ## 3. Sources
 
-The curation draws from 7 public blocklists:
+The curation draws from 6 public blocklists:
 
 | Source | Type | Category hint | License |
 | --- | --- | --- | --- |
@@ -79,38 +77,31 @@ The curation draws from 7 public blocklists:
 | [OISD small](https://oisd.nl/) | Composite domain list | (mixed) | GPL-3.0 |
 | [OISD big](https://oisd.nl/) | Composite domain list | (mixed) | GPL-3.0 |
 | [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | DNS blocklist | (mixed) | GPL-3.0 |
-| [HaGeZi TIF](https://github.com/hagezi/dns-blocklists) | Threat intelligence | Advanced tracking | GPL-3.0 |
 
 ¹ Peter Lowe's list has no formal license; the author grants informal permission: "Feel free to combine this list with yours or lists from other sites and put it up on the web."
 
 ## 4. Curation process
 
-The current process is manual and will be replaced by an automated pipeline in the future.
-
 ### Inclusion criteria
 
 - A domain must appear in **at least 2 independent sources** to be considered.
-- Each domain is classified into one of the 5 blocking purposes based on source metadata, known seed mappings, and domain name heuristics.
+- Each domain is classified into one of the 5 blocking purposes based on source metadata.
 - Domains that cannot be classified are discarded.
-- Each category is capped at ~2000 candidates before quality review.
 
 ### Quality review
 
 After cross-referencing, a quality pass removes:
 
-- **False positives**: legitimate services that should never be blocked (payment processors, search engines, CDNs, auth providers, CAPTCHA services).
+- **False positives**: legitimate services that should never be blocked.
 - **Junk domains**: hex-hash throwaway domains, random-word cloaking domains, date-based campaign domains, and other ephemeral entries that go stale immediately.
-- **Scam/malware**: phishing sites and malware infrastructure that don't belong in a purpose-based blocklist.
 - **Redundant subdomains**: DNR `requestDomains` matches a domain and all its subdomains, so `marketo.com` already covers `app-ab01.marketo.com`. Listing both wastes rule slots.
 - **Miscategorized entries**: domains moved to their correct purpose (e.g. cryptominers from analytics to advanced tracking).
 
-### Safelist
-
-A safelist of ~120 domains ensures critical services are never blocked, even if public lists flag them. This includes payment processors (Stripe, PayPal), CDNs (Cloudflare, jsDelivr), auth providers (Auth0, Okta), CAPTCHA services, and main domains of social platforms.
+A safelist ensures critical services are never blocked, even if public lists flag them.
 
 ## 5. DNR format
 
-Each `block_*.json` contains a single declarative net request rule:
+Each `protoconsent_*.json` contains a single declarative net request rule:
 
 ```json
 [
@@ -148,17 +139,17 @@ For these domains, ProtoConsent uses **path-based rules** with `urlFilter` patte
 }
 ```
 
-Path rules are stored in `block_*_paths.json` files (one per category) alongside the domain rules. Each file contains multiple rules, one per tracking endpoint.
+Path rules are stored in `protoconsent_*_paths.json` files (one per category) alongside the domain rules. Each file contains multiple rules, one per tracking endpoint.
 
 ### Current path rule counts
 
 | File | Category | Rules | Example endpoints |
 | --- | --- | --- | --- |
-| `block_analytics_paths.json` | Analytics | 559 | `google.com/pagead/`, `googletagmanager.com/gtag/js`, `facebook.com/tr/` |
-| `block_ads_paths.json` | Ads | 529 | `google.com/adsense/`, `fundingchoicesmessages.google.com/` |
-| `block_personalization_paths.json` | Personalization | 13 | `logx.optimizely.com/`, `crwdcntrl.net/5/c=` |
-| `block_third_parties_paths.json` | Third parties | 73 | `facebook.com/plugins/`, `linkedin.com/embed/` |
-| `block_advanced_tracking_paths.json` | Advanced tracking | 28 | `privacymanager.io/`, `consent.cookiebot.com/` |
+| `protoconsent_analytics_paths.json` | Analytics | 559 | `google.com/pagead/`, `googletagmanager.com/gtag/js`, `facebook.com/tr/` |
+| `protoconsent_ads_paths.json` | Ads | 529 | `google.com/adsense/`, `fundingchoicesmessages.google.com/` |
+| `protoconsent_personalization_paths.json` | Personalization | 13 | `logx.optimizely.com/`, `crwdcntrl.net/5/c=` |
+| `protoconsent_third_parties_paths.json` | Third parties | 73 | `facebook.com/plugins/`, `linkedin.com/embed/` |
+| `protoconsent_advanced_tracking_paths.json` | Advanced tracking | 28 | `privacymanager.io/`, `consent.cookiebot.com/` |
 | **Total** | | **1,202** | |
 
 ### Selection criteria for path rules
@@ -181,7 +172,7 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 
 ### Current lists (v0.5)
 
-13 blocking/informational lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), 2 URL parameter stripping lists, 2 CMP detection lists, and 2 regional catalog entries (covering 13 regions x 2 types), organized in two presets. Regional lists are managed separately (see [section 13](#13-regional-lists)).
+7 blocking lists plus 2 non-blocking lists (cosmetic filtering and CMP auto-response), 2 URL parameter stripping lists, 2 CMP detection lists, and 2 regional catalog entries (covering 13 regions x 2 types), organized in two presets. Regional lists are managed separately (see [section 13](#13-regional-lists)).
 
 **Balanced preset** (5 lists + regional if languages selected):
 
@@ -197,30 +188,18 @@ Beyond the core static rulesets shipped with the extension, ProtoConsent support
 
 *Regional lists are only enabled when the user has selected at least one language in Purpose Settings (see [section 13](#13-regional-lists)).
 
-**Full preset** (adds 9 lists):
+**Full preset** (adds 4 lists):
 
 | List | License | Domains | Path rules | Category |
 | --- | --- | --- | --- | --- |
-| [Steven Black Unified](https://github.com/StevenBlack/hosts) | MIT | ~49K | - | - |
 | [OISD Small](https://oisd.nl/) | GPL-3.0 | ~56K | - | - |
 | [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~190K | - | - |
-| [HaGeZi TIF](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~966K | - | `advanced_tracking` |
-| [1Hosts Lite](https://github.com/badmojr/1Hosts) | MPL-2.0 | ~195K | - | - |
-| [Blocklist Project - Ads](https://github.com/blocklistproject/Lists) | Unlicense | ~155K | - | `ads` |
-| [Blocklist Project - Tracking](https://github.com/blocklistproject/Lists) | Unlicense | ~15K | - | `analytics` |
 | [Blocklist Project - Crypto](https://github.com/blocklistproject/Lists) | Unlicense | ~24K | - | `advanced_tracking` |
 | [Blocklist Project - Phishing](https://github.com/blocklistproject/Lists) | Unlicense | ~87K | - | `security` |
 
 Domain counts are approximate and change with each upstream update.
 
 Lists with a **category** display the corresponding Consent Commons icon in the UI. The `security` category is ProtoConsent-specific (not part of Consent Commons). Cosmetic lists display a dedicated pill instead of a category icon. CMP lists display a dedicated pill ("Banners") and show template counts instead of domain/rule counts.
-
-### Removed from earlier candidates
-
-| List | Reason |
-| --- | --- |
-| Peter Lowe's list | License incompatible with GPL-3.0 (McRae GPL, non-commercial). Only 3,519 domains. |
-| OISD Big | ~418K domains but heavy overlap with HaGeZi Pro (OISD aggregates HaGeZi). Redundant. |
 
 ### Distribution model
 
@@ -240,14 +219,14 @@ This keeps the extension package small, avoids bundling third-party list content
 | --- | --- |
 | Off | No enhanced lists active (core ProtoConsent only) |
 | Balanced | Enables the 5 Balanced lists on download; also enables regional lists if languages are selected |
-| Full | Enables all 14 lists on download; also enables regional lists if languages are selected |
+| Full | Enables all 9 lists on download; also enables regional lists if languages are selected |
 | Custom | User has toggled individual lists manually |
 
 When a user downloads lists with the preset set to Off, the extension auto-switches to Balanced. Regional lists have `preset: "basic"` and are included in Balanced/Full presets, but only enabled when the user has selected at least one language in Purpose Settings (see [section 13](#13-regional-lists)).
 
 ### Consent-enhanced link
 
-When the user enables the consent-enhanced link (`consentEnhancedLink` in storage), denied purposes in the **default profile** automatically activate Enhanced lists whose `category` matches. For example, if the default profile denies Ads, EasyList, EasyList Cosmetic and Blocklist Project - Ads are activated; denying Analytics activates EasyPrivacy and Blocklist Project - Tracking. Lists with `category: null` or `category: "security"` are never auto-activated.
+When the user enables the consent-enhanced link (`consentEnhancedLink` in storage), denied purposes in the **default profile** automatically activate Enhanced lists whose `category` matches. For example, if the default profile denies Ads, EasyList and EasyList Cosmetic are activated; denying Analytics activates EasyPrivacy. Lists with `category: null` or `category: "security"` are never auto-activated.
 
 The link uses the default profile only, not per-site overrides. Enhanced lists are global (they block across all sites), so tying them to the user's general privacy posture prevents unexpected cross-site effects. The Settings page links the consent-link description to the default profile selector so the connection is clear.
 
@@ -257,7 +236,7 @@ Only downloaded lists participate in DNR rule generation. When the Enhanced tab 
 
 ### Domain deduplication
 
-DNR `requestDomains` matches a domain **and all its subdomains**. The converter removes dominated subdomains so the final JSON contains only the minimal set of root domains needed. This reduces rule size significantly - HaGeZi TIF drops from over 1M raw entries to ~966K after dedup.
+DNR `requestDomains` matches a domain **and all its subdomains**. The converter removes dominated subdomains so the final JSON contains only the minimal set of root domains needed. This reduces rule size significantly - HaGeZi Pro drops from over 200K raw entries to ~190K after dedup.
 
 ### ABP format parsing
 
@@ -287,7 +266,7 @@ Unlike blocking or cosmetic lists, CMP signatures do not produce DNR rules or CS
 The CMP list follows the same distribution model as cosmetic:
 
 1. A bundled copy in `extension/rules/protoconsent_cmp_signatures.json` is loaded into storage on first install via `initBundledCmpData()` in `lifecycle.js`.
-2. When sync is enabled, the extension fetches `enhanced/protoconsent_cmp_signatures.json` from CDN and writes the signatures to storage, clearing the in-memory cache so the next page load picks up the update.
+2. When sync is enabled, the extension fetches `enhanced/protoconsent/protoconsent_cmp_signatures.json` from CDN and writes the signatures to storage, clearing the in-memory cache so the next page load picks up the update.
 3. The bridge key `_cmpSignatures` in `chrome.storage.local` is the interface between the Enhanced system and the content script. Both bundled init and CDN fetch write to it.
 
 Key differences from cosmetic:
@@ -313,19 +292,20 @@ CMP detectors contain CSS selectors for `present` (CMP loaded) and `showing` (ba
 
 ## 8. ProtoConsent Core lists
 
-The extension ships static rulesets (`block_*.json`) for day-1 blocking. The same domains and path rules are also published as 5 Enhanced-format JSON files in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo, one per purpose:
+The extension ships static rulesets (`protoconsent_*.json`) for day-1 blocking. The same domains and path rules are also published as 5 Enhanced-format JSON files in the [ProtoConsent/data](https://github.com/ProtoConsent/data) repo, one per purpose. A sixth Enhanced-only list (`protoconsent_security`) has no corresponding static ruleset - it is available only via CDN.
 
 | List ID | Category | Domains | Path rules |
 | --- | --- | --- | --- |
-| `protoconsent_analytics` | `analytics` | ~15,851 | 559 |
-| `protoconsent_ads` | `ads` | ~12,904 | 529 |
-| `protoconsent_personalization` | `personalization` | ~73 | 13 |
-| `protoconsent_third_parties` | `third_parties` | ~171 | 73 |
-| `protoconsent_advanced_tracking` | `advanced_tracking` | ~11,234 | 28 |
+| `protoconsent_analytics` | `analytics` | ~14,395 | 559 |
+| `protoconsent_ads` | `ads` | ~27,561 | 529 |
+| `protoconsent_personalization` | `personalization` | ~75 | 13 |
+| `protoconsent_third_parties` | `third_parties` | ~187 | 73 |
+| `protoconsent_advanced_tracking` | `advanced_tracking` | ~15,876 | 28 |
+| `protoconsent_security` | `security` | ~10 | - |
 
-Each list has its own `category` so the reverse hostname index maps domains to the correct purpose icon. In the UI, the 5 lists appear as a single grouped card ("ProtoConsent Core") in the Protection tab. Download, toggle and remove operate on all 5 as a group.
+Each list has its own `category` so the reverse hostname index maps domains to the correct purpose icon. In the UI, the first 5 lists appear as a single grouped card ("ProtoConsent Core") in the Protection tab. Download, toggle and remove operate on all 5 as a group. The security list appears as an independent card with `is-own` styling.
 
-All 5 are preset `Balanced`. They do not add new blocking beyond what static rulesets already cover - their purpose is to receive weekly updates via CDN independently of extension version releases.
+The first 5 are preset `Balanced`. They do not add new blocking beyond what static rulesets already cover - their purpose is to receive weekly updates via CDN independently of extension version releases. The security list is preset `Full`.
 
 ## 9. Adding a new Enhanced list
 

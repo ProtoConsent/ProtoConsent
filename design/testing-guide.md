@@ -209,7 +209,7 @@ Functional is a reference-only purpose in this version.
 
 **Analytics controls measurement and usage tracking.**
 
-- Reference domains (examples - full list in `extension/rules/block_*.json`): `google-analytics.com`, `scorecardresearch.com`, `chartbeat.com`, `fullstory.com`.
+- Reference domains (examples - full list in `extension/rules/protoconsent_*.json`): `google-analytics.com`, `scorecardresearch.com`, `chartbeat.com`, `fullstory.com`.
 
 - Steps:
   1. Visit a site that uses Google Analytics or Segment.
@@ -222,7 +222,7 @@ Functional is a reference-only purpose in this version.
 
 **Ads / Marketing controls advertising traffic.**
 
-- Reference domains (examples - full list in `extension/rules/block_*.json`): `doubleclick.net`, `googlesyndication.com`, `adservice.google.com`, `criteo.com`, `taboola.com`.
+- Reference domains (examples - full list in `extension/rules/protoconsent_*.json`): `doubleclick.net`, `googlesyndication.com`, `adservice.google.com`, `criteo.com`, `taboola.com`.
 
 - Steps:
   1. Use a site with visible ads (for example, a major news site).
@@ -234,7 +234,7 @@ Functional is a reference-only purpose in this version.
 
 **Personalization separates basic ads from advanced profiling and retargeting.**
 
-- Reference domains (examples - full list in `extension/rules/block_*.json`): `bluekai.com`, `crwdcntrl.net`, `acxiom.com`, `barilliance.com`, `audigent.com`.
+- Reference domains (examples - full list in `extension/rules/protoconsent_*.json`): `bluekai.com`, `crwdcntrl.net`, `acxiom.com`, `barilliance.com`, `audigent.com`.
 
 - Steps:
   1. On a site with banners and personalised or retargeted ads, keep **Ads / Marketing** allowed but set **Personalization / Profiling** to *Blocked*.
@@ -246,7 +246,7 @@ Functional is a reference-only purpose in this version.
 
 **Third-party sharing covers external data sharing and integrations.**
 
-- Reference domains (examples - full list in `extension/rules/block_*.json`): `connect.facebook.net`, `addthis.com`, `addtoany.com`, `intercom.io`, `disqus.com`.
+- Reference domains (examples - full list in `extension/rules/protoconsent_*.json`): `connect.facebook.net`, `addthis.com`, `addtoany.com`, `intercom.io`, `disqus.com`.
 
 - Steps:
   1. Choose a site that embeds social widgets, Hotjar or Microsoft/Bing tracking.
@@ -259,7 +259,7 @@ Functional is a reference-only purpose in this version.
 
 **Advanced tracking targets monitoring, experimentation and fingerprinting tools.**
 
-- Reference domains (examples - full list in `extension/rules/block_*.json`): `js-agent.newrelic.com`, `cdn.optimizely.com`, `fpnpmcdn.net`, `datadome.co`, `arkoselabs.com`.
+- Reference domains (examples - full list in `extension/rules/protoconsent_*.json`): `js-agent.newrelic.com`, `cdn.optimizely.com`, `fpnpmcdn.net`, `datadome.co`, `arkoselabs.com`.
 
 - Steps:
   1. Visit a site that uses New Relic, Heap, Optimizely or similar tooling.
@@ -579,7 +579,7 @@ Enhanced Protection adds optional third‑party blocklists that are fetched on d
 2. The preset bar shows four options: **Off**, **Balanced**, **Full**, and **Custom** (disabled until you toggle individual lists).
 3. Select **Balanced**. The extension will prompt you to download the Balanced lists (EasyPrivacy, EasyList, AdGuard DNS, cosmetic, banners). If you have regional languages selected in Purpose Settings, Regional Cosmetic and Regional Blocking are also included.
 4. Wait for all downloads to complete - each card shows a progress indicator, then switches to an enabled state with a domain count.
-5. Select **Full** to enable all lists including Steven Black. Lists not yet downloaded will start downloading automatically.
+5. Select **Full** to enable all lists including HaGeZi Pro and OISD Small. Lists not yet downloaded will start downloading automatically.
 
 Enhanced Protection tab with the Balanced preset active:
 
@@ -708,9 +708,9 @@ Category mapping:
 
 | Denied purpose | Enhanced lists activated |
 |----------------|------------------------|
-| analytics | EasyPrivacy, Blocklist Project Tracking |
-| ads | EasyList, EasyList Cosmetic, Blocklist Project Ads |
-| advanced_tracking | HaGeZi TIF, Blocklist Project Crypto |
+| analytics | EasyPrivacy |
+| ads | EasyList, EasyList Cosmetic |
+| advanced_tracking | Blocklist Project Crypto |
 
 To verify via the service worker console:
 

@@ -36,8 +36,8 @@ if (useDnrDebug) {
 
     let purpose = null;
 
-    if (rule.rulesetId && rule.rulesetId.startsWith("block_")) {
-      purpose = rule.rulesetId.slice(6).replace(/_paths$/, "");
+    if (rule.rulesetId && rule.rulesetId.startsWith("protoconsent_")) {
+      purpose = rule.rulesetId.slice(13).replace(/_paths$/, "");
     }
     else if (rule.rulesetId === "_dynamic" && dynamicBlockRuleMap[rule.ruleId]) {
       purpose = dynamicBlockRuleMap[rule.ruleId];

@@ -93,22 +93,22 @@ The extension provides a popup interface to manage profiles and purposes per sit
 
 - **Site rules**: mapping from domains to rules (profile plus purpose overrides) and predefined profiles
 - **Domain whitelist**: per-site and global allow entries
-- **Enhanced Protection**: list metadata in `enhancedLists`, domain/path data in `enhancedData_{listId}` keys, active preset in `enhancedPreset`, selected regional languages in `regionalLanguages`. 19 non-regional lists: 5 ProtoConsent Core (one per blocking purpose, maintained by the project) and 14 third-party from open-source projects, plus 2 regional catalog entries (13 regions x 2 types, language-gated). Core lists are bundled for first-install availability and updated weekly via CDN from the [data repository](https://github.com/ProtoConsent/data), where a GitHub Actions workflow refreshes all sources every Tuesday.
+- **Enhanced Protection**: list metadata in `enhancedLists`, domain/path data in `enhancedData_{listId}` keys, active preset in `enhancedPreset`, selected regional languages in `regionalLanguages`. 15 non-regional lists: 6 ProtoConsent Core (one per blocking purpose plus security, maintained by the project) and 9 third-party from open-source projects, plus 2 regional catalog entries (13 regions x 2 types, language-gated). Core lists are bundled for first-install availability and updated weekly via CDN from the [data repository](https://github.com/ProtoConsent/data), where a GitHub Actions workflow refreshes all sources every Tuesday.
 - **Cosmetic filtering**: compiled CSS in `_cosmeticCSS` (generic selectors) and `_cosmeticDomains` (per-domain selectors)
 - **Opt-in flags**: `dynamicListsConsent` (remote sync) and `consentEnhancedLink` (consent-enhanced link)
 
 **Enforcement (declarativeNetRequest + GPC)** – The background component uses a two‑tier rule model to balance scalability with flexibility:
 
-*Static rulesets* handle global blocking. Each of the five blocking purposes (analytics, ads, personalization, third\_parties, advanced\_tracking) has two static rulesets declared in the manifest: one for domain‑based rules (`block_ads.json`) and one for path‑based rules (`block_ads_paths.json`). All start disabled; the background script enables or disables each ruleset based on the user's global profile. Because static rulesets draw from a separate Chrome‑managed pool (up to 30,000 rules), they leave the dynamic rule budget available for per‑site customisation.
+*Static rulesets* handle global blocking. Each of the five blocking purposes (analytics, ads, personalization, third\_parties, advanced\_tracking) has two static rulesets declared in the manifest: one for domain‑based rules (`protoconsent_ads.json`) and one for path‑based rules (`protoconsent_ads_paths.json`). All start disabled; the background script enables or disables each ruleset based on the user's global profile. Because static rulesets draw from a separate Chrome‑managed pool (up to 30,000 rules), they leave the dynamic rule budget available for per‑site customisation.
 
 ```text
 Static rulesets (30,000 rule pool)
-┌──────────────────────┐  ┌──────────────────────────┐
-│ block_ads            │  │ block_ads_paths          │
-│ 1 rule, 12904 domains│  │ 529 rules, urlFilter each│
-│ requestDomains       │  │ e.g. ||google.com/adsense│
-│ priority 1           │  │ priority 1               │
-└──────────────────────┘  └──────────────────────────┘
+┌──────────────────────────┐  ┌──────────────────────────────┐
+│ protoconsent_ads         │  │ protoconsent_ads_paths       │
+│ 1 rule, 27561 domains    │  │ 529 rules, urlFilter each    │
+│ requestDomains           │  │ e.g. ||google.com/adsense    │
+│ priority 1               │  │ priority 1                   │
+└──────────────────────────┘  └──────────────────────────────┘
      × 5 categories              × 5 categories
 
 Dynamic rules (5,000 rule pool)
