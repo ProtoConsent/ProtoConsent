@@ -210,11 +210,11 @@ function loadCnameData(callback) {
 // or null if no category. Depends on globals: enhancedCatalogConfig (popup.js),
 // epCatalog (enhanced.js), purposesConfig (popup.js).
 function getEnhancedCategoryInfo(listId) {
-  const catalog = (typeof enhancedCatalogConfig !== "undefined" && Object.keys(enhancedCatalogConfig).length > 0)
-    ? enhancedCatalogConfig
-    : (typeof epCatalog !== "undefined" ? epCatalog : null);
-  if (!catalog) return null;
-  const def = catalog[listId];
+  const local = (typeof enhancedCatalogConfig !== "undefined" && Object.keys(enhancedCatalogConfig).length > 0)
+    ? enhancedCatalogConfig : null;
+  const merged = (typeof epCatalog !== "undefined" && Object.keys(epCatalog).length > 0)
+    ? epCatalog : null;
+  const def = (local && local[listId]) || (merged && merged[listId]) || null;
   if (!def || !def.category) return null;
   const cfg = (typeof purposesConfig !== "undefined" ? purposesConfig[def.category] : null)
     || ENHANCED_EXTRA_CATEGORIES[def.category];

@@ -681,6 +681,7 @@ function _renderEpListCard(listId) {
 
   const card = document.createElement("div");
   card.className = "ep-list-card";
+  if (listId.startsWith("protoconsent_")) card.classList.add("is-own");
   card.dataset.listId = listId;
   if (listData?.enabled || isConsentLinked) card.classList.add("is-enabled");
 

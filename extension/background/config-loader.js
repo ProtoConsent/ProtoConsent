@@ -225,7 +225,7 @@ export function loadEnhancedListsCatalog(options) {
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
-    const fetchOpts = { credentials: "omit", signal: controller.signal };
+    const fetchOpts = { credentials: "omit", signal: controller.signal, cache: "no-store" };
 
     return fetch(CATALOG_REMOTE_URL, fetchOpts)
       .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
