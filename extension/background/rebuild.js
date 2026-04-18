@@ -125,7 +125,7 @@ async function _rebuildAllDynamicRulesImpl() {
       const hasDomains = blocklists[purposeKey]?.domains?.length > 0;
       const hasPaths = blocklists[purposeKey]?.pathDomains?.length > 0;
       if (!hasDomains && !hasPaths) continue;
-      const rulesetId = "block_" + purposeKey;
+      const rulesetId = "protoconsent_" + purposeKey;
       if (can("ownBlocking")) {
         if (!globalPurposes[purposeKey]) {
           if (hasDomains) enableIds.push(rulesetId);

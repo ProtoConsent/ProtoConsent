@@ -79,16 +79,16 @@
 
   "declarative_net_request": {
     "rule_resources": [
-      { "id": "block_analytics", "enabled": false, "path": "rules/block_analytics.json" },
-      { "id": "block_ads", "enabled": false, "path": "rules/block_ads.json" },
-      { "id": "block_personalization", "enabled": false, "path": "rules/block_personalization.json" },
-      { "id": "block_third_parties", "enabled": false, "path": "rules/block_third_parties.json" },
-      { "id": "block_advanced_tracking", "enabled": false, "path": "rules/block_advanced_tracking.json" },
-      { "id": "block_analytics_paths", "enabled": false, "path": "rules/block_analytics_paths.json" },
-      { "id": "block_ads_paths", "enabled": false, "path": "rules/block_ads_paths.json" },
-      { "id": "block_personalization_paths", "enabled": false, "path": "rules/block_personalization_paths.json" },
-      { "id": "block_third_parties_paths", "enabled": false, "path": "rules/block_third_parties_paths.json" },
-      { "id": "block_advanced_tracking_paths", "enabled": false, "path": "rules/block_advanced_tracking_paths.json" },
+      { "id": "protoconsent_analytics", "enabled": false, "path": "rules/protoconsent_analytics.json" },
+      { "id": "protoconsent_ads", "enabled": false, "path": "rules/protoconsent_ads.json" },
+      { "id": "protoconsent_personalization", "enabled": false, "path": "rules/protoconsent_personalization.json" },
+      { "id": "protoconsent_third_parties", "enabled": false, "path": "rules/protoconsent_third_parties.json" },
+      { "id": "protoconsent_advanced_tracking", "enabled": false, "path": "rules/protoconsent_advanced_tracking.json" },
+      { "id": "protoconsent_analytics_paths", "enabled": false, "path": "rules/protoconsent_analytics_paths.json" },
+      { "id": "protoconsent_ads_paths", "enabled": false, "path": "rules/protoconsent_ads_paths.json" },
+      { "id": "protoconsent_personalization_paths", "enabled": false, "path": "rules/protoconsent_personalization_paths.json" },
+      { "id": "protoconsent_third_parties_paths", "enabled": false, "path": "rules/protoconsent_third_parties_paths.json" },
+      { "id": "protoconsent_advanced_tracking_paths", "enabled": false, "path": "rules/protoconsent_advanced_tracking_paths.json" },
       { "id": "strip_tracking_params", "enabled": false, "path": "rules/strip_tracking_params.json" },
       { "id": "strip_tracking_params_sites", "enabled": false, "path": "rules/strip_tracking_params_sites.json" }
     ]

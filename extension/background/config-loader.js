@@ -44,18 +44,18 @@ export async function loadBlocklistsConfig() {
   for (const key of PURPOSES_FOR_ENFORCEMENT) {
     const entry = {};
     try {
-      const url = chrome.runtime.getURL("rules/block_" + key + ".json");
+      const url = chrome.runtime.getURL("rules/protoconsent_" + key + ".json");
       const res = await fetch(url);
       if (!res.ok) throw new Error("HTTP " + res.status);
       const rules = await res.json();
       entry.domains = rules[0]?.condition?.requestDomains || [];
     } catch (e) {
-      if (key !== "functional" && DEBUG_RULES) console.warn("loadBlocklistsConfig: block_" + key + ".json:", e.message);
+      if (key !== "functional" && DEBUG_RULES) console.warn("loadBlocklistsConfig: protoconsent_" + key + ".json:", e.message);
       entry.domains = [];
     }
     // Extract unique domains from path-based rules
     try {
-      const url = chrome.runtime.getURL("rules/block_" + key + "_paths.json");
+      const url = chrome.runtime.getURL("rules/protoconsent_" + key + "_paths.json");
       const res = await fetch(url);
       if (!res.ok) throw new Error("HTTP " + res.status);
       const rules = await res.json();
@@ -80,7 +80,7 @@ export async function loadBlocklistsConfig() {
       }
       entry.pathDomains = pathDomains;
     } catch (e) {
-      if (key !== "functional" && DEBUG_RULES) console.warn("loadBlocklistsConfig: block_" + key + "_paths.json:", e.message);
+      if (key !== "functional" && DEBUG_RULES) console.warn("loadBlocklistsConfig: protoconsent_" + key + "_paths.json:", e.message);
       entry.pathDomains = [];
     }
     config[key] = entry;
@@ -119,8 +119,8 @@ export function resolvePurposesFromHostname(hostname) {
     if (purposes) {
       const activeDynamic = new Set(Object.values(dynamicBlockRuleMap));
       const active = purposes.filter(p =>
-        enabledBlockRulesets.has("block_" + p) ||
-        enabledBlockRulesets.has("block_" + p + "_paths") ||
+        enabledBlockRulesets.has("protoconsent_" + p) ||
+        enabledBlockRulesets.has("protoconsent_" + p + "_paths") ||
         activeDynamic.has(p)
       );
       return active.length > 0 ? active : purposes;

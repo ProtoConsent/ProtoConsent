@@ -135,10 +135,10 @@ async function getBlockedRulesCount() {
     for (const info of matched.rulesMatchedInfo) {
       const rulesetId = info.rule.rulesetId;
 
-      // Static ruleset match (e.g. "block_ads" or "block_ads_paths" -> purpose "ads")
-      if (rulesetId && rulesetId.startsWith("block_")) {
+      // Static ruleset match (e.g. "protoconsent_ads" or "protoconsent_ads_paths" -> purpose "ads")
+      if (rulesetId && rulesetId.startsWith("protoconsent_")) {
         blocked++;
-        const purpose = rulesetId.slice(6).replace(/_paths$/, "");
+        const purpose = rulesetId.slice(13).replace(/_paths$/, "");
         domainHitCount[purpose] = (domainHitCount[purpose] || 0) + 1;
         rulesetHitCount[rulesetId] = (rulesetHitCount[rulesetId] || 0) + 1;
       }
