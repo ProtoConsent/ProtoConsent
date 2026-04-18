@@ -292,19 +292,19 @@ CMP detectors contain CSS selectors for `present` (CMP loaded) and `showing` (ba
 
 ## 8. ProtoConsent Core lists
 
-The extension ships static rulesets (`protoconsent_*.json`) for day-1 blocking with 58,094 curated domains and 1,202 path rules. The [ProtoConsent/data](https://github.com/ProtoConsent/data) repo publishes 6 Enhanced-format JSON files (one per purpose) containing delta domains not already in the bundle, curated from 18 upstream sources via the [classifier pipeline](https://github.com/ProtoConsent/ProtoConsent-classifier). Combined, bundle and delta provide 185,763 domain rules and 2,451 path rules. A sixth purpose (`security`) has no corresponding static ruleset and is available only via CDN.
+The extension ships static rulesets (`protoconsent_*.json`) for day-1 blocking with 58,094 curated domains and 1,202 path rules. The [ProtoConsent/data](https://github.com/ProtoConsent/data) repo publishes 6 Enhanced-format JSON files (one per purpose) containing delta domains and paths not already in the bundle, curated from 18 upstream sources via the [classifier pipeline](https://github.com/ProtoConsent/ProtoConsent-classifier). Combined, bundle and delta provide 185,763 domain rules and 5,873 path rules. A sixth purpose (`security`) has no corresponding static ruleset and is available only via CDN.
 
-| List ID | Category | Bundle | Delta | Total | Path rules |
-| --- | --- | ---: | ---: | ---: | ---: |
-| `protoconsent_ads` | `ads` | 27,561 | 78,532 | 106,093 | 1,062 |
-| `protoconsent_analytics` | `analytics` | 14,395 | 24,481 | 38,876 | 1,121 |
-| `protoconsent_personalization` | `personalization` | 75 | 212 | 287 | 27 |
-| `protoconsent_third_parties` | `third_parties` | 187 | 486 | 673 | 183 |
-| `protoconsent_advanced_tracking` | `advanced_tracking` | 15,876 | 1,576 | 17,452 | 58 |
-| `protoconsent_security` | `security` | - | 22,382 | 22,382 | - |
-| **Total** | | **58,094** | **127,669** | **185,763** | **2,451** |
+| List ID | Category | Bundle domains | Delta domains | Total domains | Bundle paths | Delta paths | Total paths |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `protoconsent_ads` | `ads` | 27,561 | 78,532 | 106,093 | 529 | 1,117 | 1,646 |
+| `protoconsent_analytics` | `analytics` | 14,395 | 24,481 | 38,876 | 559 | 3,431 | 3,990 |
+| `protoconsent_personalization` | `personalization` | 75 | 212 | 287 | 13 | - | 13 |
+| `protoconsent_third_parties` | `third_parties` | 187 | 486 | 673 | 73 | 123 | 196 |
+| `protoconsent_advanced_tracking` | `advanced_tracking` | 15,876 | 1,576 | 17,452 | 28 | - | 28 |
+| `protoconsent_security` | `security` | - | 22,382 | 22,382 | - | - | - |
+| **Total** | | **58,094** | **127,669** | **185,763** | **1,202** | **4,671** | **5,873** |
 
-Domain counts are exact as of 2026-04-18.
+Counts are exact as of 2026-04-18.
 
 Each list has its own `category` so the reverse hostname index maps domains to the correct purpose icon. In the UI, the first 5 lists appear as a single grouped card ("ProtoConsent Core") in the Protection tab. Download, toggle and remove operate on all 5 as a group. The security list appears as an independent card with `is-own` styling.
 
