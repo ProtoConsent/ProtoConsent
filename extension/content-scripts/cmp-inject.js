@@ -96,9 +96,15 @@
   // Existing cookies: if a CMP (or the user) already set a consent cookie,
   // do not overwrite it. This prevents clobbering real consent from CMPs
   // like Didomi whose tokens are site-specific and cannot be templated.
-  const existingCookies = new Set(
-    (document.cookie || '').split(';').map(c => c.split('=')[0].trim()).filter(Boolean)
-  );
+  let existingCookies;
+  try {
+    existingCookies = new Set(
+      (document.cookie || '').split(';').map(c => c.split('=')[0].trim()).filter(Boolean)
+    );
+  } catch (_) {
+    // Sandboxed document (e.g. iframe without allow-same-origin) - skip injection entirely
+    return;
+  }
   const maxAge = Math.min(Math.max(Number(cmpCookieMaxAge) || CMP_DEFAULT_MAX_AGE, 60), 31536000);
   const injectedCookies = [];
   for (const [cmpId, cmp] of Object.entries(applicableSigs)) {
