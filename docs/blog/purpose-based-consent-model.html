@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Purpose-based consent: a missing layer in the browser – ProtoConsent</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="../assets/logo/protoconsent_logo_bold.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/logo/protoconsent_logo_32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Consent banners organize choices around vendors. ProtoConsent organizes them around purposes, and enforces them in the browser. This article explains why that distinction matters.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Purpose-based consent: a missing layer in the browser">
+  <meta property="og:description" content="Consent banners organize choices around vendors. ProtoConsent organizes them around purposes, and enforces them in the browser.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://protoconsent.org/blog/purpose-based-consent-model.html">
+  <meta property="og:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Purpose-based consent: a missing layer in the browser">
+  <meta name="twitter:description" content="Consent banners organize choices around vendors. ProtoConsent organizes them around purposes, and enforces them in the browser.">
+  <meta name="twitter:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+  <div class="page">
+    <div class="container">
+<!-- HEADER-START -->
+      <header>
+        <a href="../index.html" class="brand">
+          <img src="../assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
+          <div class="brand-name">ProtoConsent</div>
+        </a>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+        <label for="nav-toggle" class="nav-toggle-label" aria-label="Toggle menu"><span></span></label>
+        <nav class="header-links-nav" aria-label="Main">
+          <a class="header-link" href="../index.html">Home</a>
+          <a class="header-link" href="../why.html">Why ProtoConsent</a>
+          <a class="header-link" href="../developers.html">Developers</a>
+          <a class="header-link" href="../blog/">Blog</a>
+          <a class="header-link" href="../validate.html">Validate</a>
+          <a class="header-link" href="../generate.html">Generate</a>
+          <a class="header-link" href="../directory.html">Directory</a>
+          <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        </nav>
+      </header>
+      <!-- HEADER-END -->
+
+      <main id="main-content">
+        <article class="article">
+          <div class="article-header">
+            <a href="index.html" class="article-back">&larr; Back to blog</a>
+            <h1 class="article-title">Purpose-based consent: a missing layer in the browser</h1>
+            <p class="article-subtitle">
+              Why organizing privacy choices around purposes, not vendors, changes everything
+            </p>
+            <p class="article-date">April 2026</p>
+          </div>
+
+          <section class="article-section">
+            <h2>The problem with consent today</h2>
+            <p>
+              Every website asks you to make privacy decisions through a consent banner. Most people click "accept" just to get to the content. That is consent fatigue, not informed choice.
+            </p>
+            <p>
+              Existing tools sit at two extremes. Content blockers operate on domains and filter lists: effective, but blunt. Consent management platforms (CMPs) operate per site and per vendor: flexible for the site, opaque for the user. There is no browser-level layer in between where you can express intent by purpose and have it enforced consistently across sites.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>Why purpose-based</h2>
+            <p>
+              ProtoConsent organizes decisions around <em>purposes of data use</em>: functional, analytics, ads, personalization, third-party services, and advanced tracking. Not around vendors, cookies, or domains.
+            </p>
+            <p>
+              Purpose is the only abstraction that connects three things simultaneously:
+            </p>
+            <ul>
+              <li><strong>Regulation</strong>: major privacy frameworks organize consent around purpose limitation. GDPR, CCPA/CPRA, LGPD, PIPL, PIPA, and APPI all use purpose as the fundamental unit.</li>
+              <li><strong>Human comprehension</strong>: people think "I don't want ads tracking me", not "I don't want requests to doubleclick.net". Purpose maps to how users actually reason about their choices.</li>
+              <li><strong>Viable enforcement</strong>: purposes can be mapped to domain categories and filter rules that browser extension APIs can enforce at the network level.</li>
+            </ul>
+            <p>
+              A vendor-based model would fragment decisions across hundreds of entities. A cookie-based model would ignore network-level tracking. Purpose sits at the right level of abstraction.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>Why browser-level</h2>
+            <p>
+              ProtoConsent places enforcement in the browser, not in the site or in a backend:
+            </p>
+            <ul>
+              <li><strong>No delegation to sites</strong>: enforcement does not depend on each site honoring preferences. The browser blocks requests before they leave your device.</li>
+              <li><strong>No backend</strong>: no central server, no accounts, no cloud sync. All state is local.</li>
+              <li><strong>Consistency</strong>: the same choice applies the same way across sites, rather than being re-negotiated per banner.</li>
+            </ul>
+            <p>
+              The browser is the only place where you can block requests, emit privacy signals like <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">GPC</a>, and show the user what happened, all without introducing new remote points of control.
+            </p>
+          </section>
+
+          <section class="hero-meta">
+            <div class="hero-pillars">
+              <div class="hero-pillar">
+                <svg class="hero-pillar-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5.5" x2="17" y2="5.5"/><circle cx="7" cy="5.5" r="2" fill="var(--pc-blue)"/><line x1="3" y1="10" x2="17" y2="10"/><circle cx="13" cy="10" r="2" fill="var(--pc-blue)"/><line x1="3" y1="14.5" x2="17" y2="14.5"/><circle cx="9" cy="14.5" r="2" fill="var(--pc-blue)"/></svg>
+                <div class="hero-pillar-label">Express</div>
+                <div class="hero-pillar-desc">Choose what each site may do with your data</div>
+              </div>
+              <div class="hero-pillar">
+                <svg class="hero-pillar-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5l7 3.5v4c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>
+                <div class="hero-pillar-label">Enforce</div>
+                <div class="hero-pillar-desc">Block requests and signals at the network level</div>
+              </div>
+              <div class="hero-pillar">
+                <svg class="hero-pillar-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10s3.5-5 8-5 8 5 8 5-3.5 5-8 5-8-5-8-5z"/><circle cx="10" cy="10" r="2.5"/></svg>
+                <div class="hero-pillar-label">Observe</div>
+                <div class="hero-pillar-desc">See exactly what happens, per purpose and per site</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="article-section">
+            <h2>Express, enforce, observe</h2>
+            <p>
+              ProtoConsent starts from a single premise: consent is only meaningful if the user can <strong>express</strong> it in understandable terms, <strong>enforce</strong> it technically, and <strong>observe</strong> its effects. If any of the three is missing, the system fails.
+            </p>
+            <ul>
+              <li><strong>Express</strong>: per-site profiles and purpose toggles let you say "on this site, allow analytics but deny ads" from a single popup.</li>
+              <li><strong>Enforce</strong>: the browser blocks requests associated with denied purposes before they leave your device. A conditional <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">GPC</a> signal is sent per site, with legal weight under CCPA/CPRA.</li>
+              <li><strong>Observe</strong>: blocked request counters, a real-time log, and per-domain purpose attribution show you exactly what enforcement does.</li>
+            </ul>
+            <p>
+              This creates a feedback loop: the user decides, the browser enforces, the user sees the result. Consent becomes a process, not a single click.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>Enforcement is a means, not an end</h2>
+            <p>
+              ProtoConsent uses curated blocklists to enforce user choices, but blocking is not the goal: it is the mechanism that makes consent meaningful. The current core set is built from public blocklists, organized by purpose, with cross-source validation and an explicit safelist. Path-based precision (blocking <code>google.com/pagead/</code> instead of all of <code>google.com</code>) prioritizes correctness over exhaustiveness.
+            </p>
+            <p>
+              Optional extended lists provide broader coverage with curated third-party sources for users who want it, without changing the core model.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>Voluntary site cooperation</h2>
+            <p>
+              ProtoConsent supports two optional ways for websites to participate:
+            </p>
+            <ul>
+              <li><strong>Site declarations</strong>: a website publishes a <code>.well-known/protoconsent.json</code> file declaring its purposes, legal bases, and providers. The extension displays it alongside user preferences. It is a transparency signal, not enforcement evidence. <a href="well-known-declaration.html">Read more about the declaration format.</a></li>
+              <li><strong>SDK</strong>: websites can query the user's consent state per purpose and adapt their behavior accordingly. The SDK is read-only and returns <code>null</code> if no extension is present.</li>
+            </ul>
+            <p>
+              Both paths are optional. ProtoConsent works without any site integration. Sites that cooperate add transparency, not a requirement.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>What ProtoConsent is not</h2>
+            <ul>
+              <li><strong>Not a full ad blocker</strong>: its goal is purpose-based consent enforcement, not exhaustive tracking coverage.</li>
+              <li><strong>Not a consent management platform</strong>: it does not manage consent on behalf of sites or negotiate with vendors.</li>
+              <li><strong>Not a VPN or anonymity tool</strong>: browser-level enforcement cannot prevent server-side processing or offline correlation.</li>
+              <li><strong>Not a legal compliance tool</strong>: it provides technical mechanisms for consent, not legal adjudication.</li>
+            </ul>
+            <p>
+              ProtoConsent adds a layer that didn't exist: a personal consent control panel in the browser, organized around purposes, that can work alongside the tools you already use.
+            </p>
+          </section>
+
+          <section class="article-section">
+            <h2>Try it</h2>
+            <p>
+              ProtoConsent is free and open source (GPL-3.0+ for the extension, MIT for the SDK). Install it from <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">GitHub</a>, try the <a href="https://demo.protoconsent.org" target="_blank" rel="noopener noreferrer">live demo</a>, or read the <a href="../developers.html">developer guide</a> to integrate your site.
+            </p>
+          </section>
+        </article>
+      </main>
+
+<!-- FOOTER-START -->
+      <footer>
+        <div>
+          ProtoConsent is a browser extension for browser‑level, purpose‑based consent controls on the open web.
+        </div>
+        <nav class="footer-links" aria-label="Footer">
+          <a href="../index.html">Home</a>
+          <a href="../why.html">Why ProtoConsent</a>
+          <a href="../blog/">Blog</a>
+          <a href="../validate.html">Validate</a>
+          <a href="../generate.html">Generate</a>
+          <a href="../directory.html">Directory</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">Source code</a>
+          <a href="mailto:contact@protoconsent.org">Contact</a>
+          <a href="../privacy.html">Privacy</a>
+        </nav>
+      </footer>
+      <!-- FOOTER-END -->
+    </div>
+  </div>
+</body>
+</html>

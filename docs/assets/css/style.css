@@ -134,7 +134,7 @@ header {
   top: 0; transform: rotate(-45deg);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .nav-toggle-label {
     display: flex;
     align-items: center;
@@ -158,6 +158,12 @@ header {
   .header-links-nav .header-link {
     padding: 8px 16px;
     display: block;
+    border-radius: 4px;
+  }
+  .header-links-nav .header-link:hover {
+    background-color: var(--pc-bg-light);
+    color: var(--pc-blue);
+    text-decoration: none;
   }
   .nav-toggle:checked ~ .header-links-nav { display: flex; }
   header { position: relative; }
@@ -604,6 +610,12 @@ footer {
   color: var(--pc-muted);
   margin: 0;
   line-height: 1.5;
+}
+
+.article-date {
+  font-size: 13px;
+  color: var(--pc-muted);
+  margin: 4px 0 0;
 }
 
 .article .hero-meta {

@@ -272,7 +272,9 @@ The MAIN world script is read-only and observational. It does not write to `loca
 
 The following CMPs use server-side consent mechanisms that cannot be replicated by client-side cookie injection. ProtoConsent falls back to cosmetic hiding (banner hidden via CSS) on these sites.
 
-**Server-signed cookies:** Google, LinkedIn, Amazon, eBay, Facebook
+**Server-signed cookies:** Google, LinkedIn
+
+**Server-side consent (POST):** Amazon, eBay, Facebook
 
 **Site-specific tokens:** Didomi, Sourcepoint, Borlabs
 

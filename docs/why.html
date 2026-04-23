@@ -33,22 +33,26 @@
   <a href="#main-content" class="skip-link">Skip to content</a>
   <div class="page">
     <div class="container">
+<!-- HEADER-START -->
       <header>
         <a href="index.html" class="brand">
-            <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
-            <div class="brand-name">ProtoConsent</div>
-          </a>
+          <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
+          <div class="brand-name">ProtoConsent</div>
+        </a>
         <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
         <label for="nav-toggle" class="nav-toggle-label" aria-label="Toggle menu"><span></span></label>
         <nav class="header-links-nav" aria-label="Main">
           <a class="header-link" href="index.html">Home</a>
+          <a class="header-link" href="why.html">Why ProtoConsent</a>
           <a class="header-link" href="developers.html">Developers</a>
+          <a class="header-link" href="blog/">Blog</a>
           <a class="header-link" href="validate.html">Validate</a>
           <a class="header-link" href="generate.html">Generate</a>
           <a class="header-link" href="directory.html">Directory</a>
           <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
         </nav>
       </header>
+      <!-- HEADER-END -->
 
       <main id="main-content">
         <article class="article">
@@ -91,13 +95,13 @@
           <section class="article-section">
             <h2>The missing layer</h2>
             <p>
-              There is no simple, browser-level place where you can say: "on this site, I allow functional use and analytics, but never ads or advanced tracking", and have that preference enforced consistently, without relying on each site to honour it.
+              There is no simple, browser-level place where you can say: "on this site, I allow functional use and analytics, but never ads or advanced tracking", and have that preference enforced consistently, without relying on each site to honor it.
             </p>
             <p>
-              ProtoConsent fills that gap. It's a browser extension that lets you define how different <strong>purposes</strong> of data use should be treated, per site and from a single interface. Instead of deciding vendor by vendor in each cookie banner, you set high-level profiles (Strict, Balanced, Permissive) and adjust individual purpose toggles (functional, analytics, ads, personalisation, third-party services, advanced tracking).
+              ProtoConsent fills that gap. It's a browser extension that lets you define how different <strong>purposes</strong> of data use should be treated, per site and from a single interface. Instead of deciding vendor by vendor in each cookie banner, you set high-level profiles (Strict, Balanced, Permissive) and adjust individual purpose toggles (functional, analytics, ads, personalization, third-party services, advanced tracking).
             </p>
             <p>
-              The key difference: ProtoConsent organises decisions around <em>what your data is used for</em>, not around which company is asking. This maps directly to how privacy regulation frames consent, and it's how most people actually think about their choices.
+              The key difference: ProtoConsent organizes decisions around <em>what your data is used for</em>, not around which company is asking. This maps directly to how privacy regulation frames consent, and it's how most people actually think about their choices.
             </p>
           </section>
 
@@ -107,10 +111,10 @@
               ProtoConsent is a Chromium extension (Firefox planned) that runs entirely on your device:
             </p>
             <ul>
-              <li><strong>Per-site profiles and purpose toggles</strong>: assign a trust level to any website and refine specific purposes (functional, analytics, ads, personalisation, third-party services, advanced tracking).</li>
+              <li><strong>Per-site profiles and purpose toggles</strong>: assign a trust level to any website and refine specific purposes (functional, analytics, ads, personalization, third-party services, advanced tracking).</li>
               <li><strong>Network-level enforcement</strong>: the browser blocks requests associated with disabled purposes before they leave your device.</li>
               <li><strong>Conditional GPC signal</strong>: sends <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec-GPC</a> only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.</li>
-              <li><strong>Optional site cooperation</strong>: websites can declare practices via <code>.well-known/protoconsent.json</code> or adapt behaviour via the SDK. Neither is required.</li>
+              <li><strong>Optional site cooperation</strong>: websites can declare practices via <code>.well-known/protoconsent.json</code> or adapt behavior via the SDK. Neither is required.</li>
               <li><strong>Client Hints stripping</strong>: removes high-entropy fingerprinting headers (Sec-CH-UA-*) when advanced tracking is denied.</li>
               <li><strong>Cookie banner detection</strong>: detects IAB TCF consent management platforms on the page and shows their consent state, so you can see what the site's banner is doing alongside ProtoConsent's enforcement.</li>
             </ul>
@@ -125,7 +129,7 @@
               ProtoConsent is not designed as a full ad blocker, though its optional enhanced lists provide broader coverage. It is not a VPN, and not a replacement for consent management platforms. It doesn't remove cookie banners from the page and doesn't claim to solve every privacy problem.
             </p>
             <p>
-              What it does is add a layer that didn't exist: a personal consent control panel in the browser, organised around purposes, that can work alongside the tools you already use. Think of it as complementary to your existing setup: content blockers, privacy-focused browsers, or CMP preferences, not a replacement for any of them.
+              What it does is add a layer that didn't exist: a personal consent control panel in the browser, organized around purposes, that can work alongside the tools you already use. Think of it as complementary to your existing setup: content blockers, privacy-focused browsers, or CMP preferences, not a replacement for any of them.
             </p>
           </section>
 
@@ -142,7 +146,7 @@
           <section class="article-section">
             <h2>Design principles</h2>
             <ul>
-              <li><strong>Purpose-based</strong>: decisions are organised around what data is used for, not which company is asking.</li>
+              <li><strong>Purpose-based</strong>: decisions are organized around what data is used for, not which company is asking.</li>
               <li><strong>User-side</strong>: enforcement happens in the browser, not delegated to sites or backends.</li>
               <li><strong>Observable</strong>: users see the effects of their choices: blocked requests, GPC signals, domain-level detail.</li>
               <li><strong>Voluntary</strong>: site cooperation (declarations, SDK) is optional and does not change user-side enforcement.</li>
@@ -168,12 +172,15 @@
         </article>
       </main>
 
+<!-- FOOTER-START -->
       <footer>
         <div>
           ProtoConsent is a browser extension for browser‑level, purpose‑based consent controls on the open web.
         </div>
         <nav class="footer-links" aria-label="Footer">
           <a href="index.html">Home</a>
+          <a href="why.html">Why ProtoConsent</a>
+          <a href="blog/">Blog</a>
           <a href="validate.html">Validate</a>
           <a href="generate.html">Generate</a>
           <a href="directory.html">Directory</a>
@@ -182,6 +189,7 @@
           <a href="privacy.html">Privacy</a>
         </nav>
       </footer>
+      <!-- FOOTER-END -->
     </div>
   </div>
 </body>
