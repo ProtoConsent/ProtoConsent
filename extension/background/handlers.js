@@ -851,7 +851,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                   };
                   const storageUpdate = {
                     enhancedLists: lists,
-                    ["enhancedData_" + listId]: { generic: data.generic, domains: data.domains },
+                    ["enhancedData_" + listId]: { generic: data.generic, domains: data.domains, exceptions: data.exceptions || {} },
                   };
                   return new Promise(resolve => {
                     chrome.storage.local.set(storageUpdate, () => {

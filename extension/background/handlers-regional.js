@@ -65,6 +65,7 @@ export async function handleRegionalFetch(listId, listDef, sendResponse) {
 async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendResponse) {
   const mergedGeneric = [];
   const mergedDomains = {};
+  const mergedExceptions = {};
   let totalGenericCount = 0;
   let totalDomainRuleCount = 0;
   let latestVersion = null;
@@ -86,6 +87,12 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
       totalGenericCount += data.generic_count || (Array.isArray(data.generic) ? data.generic.length : 0);
       if (data.domains) {
         for (const sels of Object.values(data.domains)) totalDomainRuleCount += sels.length;
+      }
+      if (data.exceptions && typeof data.exceptions === "object") {
+        for (const [dom, sels] of Object.entries(data.exceptions)) {
+          if (mergedExceptions[dom]) mergedExceptions[dom] = mergedExceptions[dom].concat(sels);
+          else mergedExceptions[dom] = [...sels];
+        }
       }
       if (data.version && (!latestVersion || data.version > latestVersion)) latestVersion = data.version;
     } catch (_) { /* skip failed region */ }
@@ -115,7 +122,7 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
       };
       const storageUpdate = {
         enhancedLists: lists,
-        ["enhancedData_" + listId]: { generic: mergedGeneric, domains: mergedDomains },
+        ["enhancedData_" + listId]: { generic: mergedGeneric, domains: mergedDomains, exceptions: Object.keys(mergedExceptions).length > 0 ? mergedExceptions : {} },
       };
       return new Promise(resolve => {
         chrome.storage.local.set(storageUpdate, () => {

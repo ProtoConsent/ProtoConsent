@@ -792,7 +792,7 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
 
     if (activeCosmeticData.length === 0) {
       await new Promise(resolve => {
-        chrome.storage.local.remove(["_cosmeticCSS", "_cosmeticDomains"], resolve);
+        chrome.storage.local.remove(["_cosmeticCSS", "_cosmeticDomains", "_cosmeticExceptions"], resolve);
       });
       return;
     }
@@ -800,12 +800,19 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
     // Merge generic selectors and domain selectors from all active lists
     const genericSet = new Set();
     const domainMap = {};
+    const exceptionMap = {};
     for (const data of activeCosmeticData) {
       if (data.generic) for (const sel of data.generic) genericSet.add(sel);
       if (data.domains) {
         for (const [domain, sels] of Object.entries(data.domains)) {
           if (!domainMap[domain]) domainMap[domain] = new Set();
           for (const sel of sels) domainMap[domain].add(sel);
+        }
+      }
+      if (data.exceptions) {
+        for (const [domain, sels] of Object.entries(data.exceptions)) {
+          if (!exceptionMap[domain]) exceptionMap[domain] = new Set();
+          for (const sel of sels) exceptionMap[domain].add(sel);
         }
       }
     }
@@ -828,9 +835,17 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
       if (safe.length) cosmeticDomains[d] = safe;
     }
 
-    // Store compiled CSS + domain map for the content script
+    // Serialize exception map (convert Sets to Arrays)
+    const cosmeticExceptions = {};
+    for (const [d, sels] of Object.entries(exceptionMap)) {
+      const arr = [...sels];
+      if (arr.length) cosmeticExceptions[d] = arr;
+    }
+
+    // Store compiled CSS + domain map + exceptions for the content script
+    const storageData = { _cosmeticCSS: cosmeticCSS, _cosmeticDomains: cosmeticDomains, _cosmeticExceptions: Object.keys(cosmeticExceptions).length > 0 ? cosmeticExceptions : {} };
     await new Promise(resolve => {
-      chrome.storage.local.set({ _cosmeticCSS: cosmeticCSS, _cosmeticDomains: cosmeticDomains }, resolve);
+      chrome.storage.local.set(storageData, resolve);
     });
 
     // Build exclude patterns for permissive sites
