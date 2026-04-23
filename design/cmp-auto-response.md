@@ -276,6 +276,8 @@ The following CMPs use server-side consent mechanisms that cannot be replicated 
 
 **Server-side consent (POST):** Amazon, eBay, Facebook
 
+**Server-side redirect wall:** Yahoo
+
 **Site-specific tokens:** Didomi, Sourcepoint, Borlabs
 
 **localStorage-only (no injectable cookie):** Usercentrics, CCM19

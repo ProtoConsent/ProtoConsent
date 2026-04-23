@@ -152,6 +152,8 @@
     }, CMP_CLEANUP_DELAY);
   }
 
+  const hostname = location.hostname;
+
   // --- Layer 2: Cosmetic safety net ---
   // Banned selectors that would break page layout if hidden globally
   const BANNED_SELS = new Set([
@@ -162,6 +164,8 @@
   const selectors = [];
   for (const cmp of Object.values(applicableSigs)) {
     if (cmp.selector) {
+      // Skip cosmetic hiding on excluded hosts (e.g. redirect wall consent pages)
+      if (cmp.excludeHosts && cmp.excludeHosts.some(h => hostname === h || hostname.endsWith('.' + h))) continue;
       // Filter out dangerous individual selectors
       const safe = cmp.selector.split(',').map(s => s.trim()).filter(s => s && !BANNED_SELS.has(s));
       if (safe.length) selectors.push(safe.join(', '));
@@ -180,6 +184,7 @@
   const lockEntries = [];
   for (const cmp of Object.values(applicableSigs)) {
     if (cmp.selector) {
+      if (cmp.excludeHosts && cmp.excludeHosts.some(h => hostname === h || hostname.endsWith('.' + h))) continue;
       const sels = cmp.selector.split(',').map(s => s.trim()).filter(s => s && !BANNED_SELS.has(s));
       if (sels.length) lockEntries.push({ sels, cls: cmp.lockClass || null });
     }
