@@ -59,7 +59,7 @@
             Consent you can express, enforce and observe
           </p>
           <p class="hero-subtitle">
-            User‑side, purpose‑based consent for the web
+            A browser extension that lets you control how websites use your data, by purpose, not by domain.
           </p>
 
           <div class="hero-badges">
@@ -94,10 +94,22 @@
         </section>
 
         <section class="hero-meta">
-          <div class="hero-meta-inner">
-            <p>
-              Express, enforce, observe
-            </p>
+          <div class="hero-pillars">
+            <div class="hero-pillar">
+              <svg class="hero-pillar-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5.5" x2="17" y2="5.5"/><circle cx="7" cy="5.5" r="2" fill="var(--pc-blue)"/><line x1="3" y1="10" x2="17" y2="10"/><circle cx="13" cy="10" r="2" fill="var(--pc-blue)"/><line x1="3" y1="14.5" x2="17" y2="14.5"/><circle cx="9" cy="14.5" r="2" fill="var(--pc-blue)"/></svg>
+              <div class="hero-pillar-label">Express</div>
+              <div class="hero-pillar-desc">Choose what each site may do with your data</div>
+            </div>
+            <div class="hero-pillar">
+              <svg class="hero-pillar-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5l7 3.5v4c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>
+              <div class="hero-pillar-label">Enforce</div>
+              <div class="hero-pillar-desc">Block requests and signals at the network level</div>
+            </div>
+            <div class="hero-pillar">
+              <svg class="hero-pillar-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10s3.5-5 8-5 8 5 8 5-3.5 5-8 5-8-5-8-5z"/><circle cx="10" cy="10" r="2.5"/></svg>
+              <div class="hero-pillar-label">Observe</div>
+              <div class="hero-pillar-desc">See exactly what happens, per purpose and per site</div>
+            </div>
           </div>
         </section>
 
@@ -130,18 +142,13 @@
           <div class="card-inset">
             <h2>Consent you can enforce and verify</h2>
             <ul>
-              <li><strong>Per‑site profiles &amp; purpose toggles</strong>: choose what each site may do with your data.</li>
+              <li><strong>Per-site profiles and purpose toggles</strong>: choose what each site may do with your data across six purposes.</li>
               <li><strong>Two operating modes</strong>: Blocking mode blocks requests directly. Monitoring mode delegates blocking to your existing tools and adds purpose attribution via the Proto dashboard.</li>
-              <li><strong>Browser‑level enforcement</strong>: decisions are applied locally as network rules.</li>
-              <li><strong>Enhanced protection</strong>: optional curated blocklists from public sources and ProtoConsent's own core lists, with presets or per‑list control.</li>
-              <li><strong>Conditional privacy signal (GPC)</strong>: sent only when your choices justify it, per site.</li>
-              <li><strong>Consent banner auto-response</strong>: cookie consent popups from 31 CMP frameworks (OneTrust, Cookiebot, Quantcast, IAB TCF v2.2, and others) are answered automatically based on your purpose preferences. No DOM interaction, no click simulation. Signatures updated via CDN. Activity visible in the Log and Debug tabs.</li>
-              <li><strong>Site declarations</strong>: websites can publish their data practices; the extension shows them alongside your preferences.</li>
-              <li><strong>Optional SDK</strong>: sites can read your choices and adapt. MIT licensed, null-safe.</li>
-              <li><strong>Anti-fingerprinting</strong>: strips high-entropy Client Hints headers when advanced tracking is denied.</li>
-              <li><strong>URL parameter stripping</strong>: removes known tracking parameters (<code>utm_source</code>, <code>fbclid</code>, etc.) from URLs before the request is sent.</li>
-              <li><strong>Inter-extension API</strong>: other privacy extensions can query the user's consent state via the browser messaging protocol.</li>
-              <li><strong>Light and dark themes</strong>: follows your system preference, or choose manually from Purpose Settings.</li>
+              <li><strong>Conditional privacy signal (GPC)</strong>: sent only when your choices justify it, per site, with legal weight under CCPA/CPRA.</li>
+              <li><strong>Consent banner auto-response</strong>: 31 CMP frameworks answered automatically based on your purpose preferences. No DOM interaction, no click simulation.</li>
+              <li><strong>Enhanced protection</strong>: optional curated blocklists from public sources, cosmetic filtering, CNAME detection, and regional filters for 13 languages.</li>
+              <li><strong>Inter-extension API</strong>: other privacy extensions can query the user's consent state via the browser messaging protocol, enabling composable privacy tools.</li>
+              <li><strong>Site declarations and SDK</strong>: websites can publish their data practices or read user preferences and adapt. Both optional, both open.</li>
             </ul>
             <p>
               <a href="developers.html">See how it works in detail &rarr;</a>

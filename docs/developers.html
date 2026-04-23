@@ -83,20 +83,11 @@
           <div class="card-inset">
           <h2>What ProtoConsent does</h2>
           <p>
-            ProtoConsent is a browser extension that lets users define how different data‑use purposes should be treated on each site, then applies those rules locally in the browser. All preferences and enforcement happen on the user's device.
+            ProtoConsent is a browser extension that lets users define how different data-use purposes should be treated on each site, then applies those rules locally in the browser. Per-site profiles, network-level blocking, conditional GPC signals, consent banner auto-response, and optional enhanced protection - all running on the user's device with no backend.
           </p>
-          <ul>
-            <li><strong>Per‑site purpose profiles</strong>: choose how to treat functional, analytics, advertising, personalisation, third‑party services and advanced tracking for each domain.</li>
-            <li><strong>Network‑level enforcement</strong>: uses browser extension APIs to block or allow requests related to specific purposes, with observable results.</li>
-            <li><strong>Two operating modes</strong>: Blocking mode blocks requests directly. Monitoring mode delegates blocking to external tools and provides purpose attribution via the Proto tab.</li>
-            <li><strong>Optional enhanced protection</strong>: activate curated third‑party blocklists for broader coverage, with presets or individual list control.</li>
-            <li><strong>Conditional GPC signal</strong>: sends <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec‑GPC</a> only when privacy‑relevant purposes are denied, per site, not globally.</li>
-            <li><strong>Consent banner auto-response</strong>: 31 CMP frameworks answered automatically based on purpose preferences. No DOM interaction, no click simulation. Signatures kept current via CDN.</li>
-            <li><strong>Site declarations</strong>: websites can publish a <code>.well-known/protoconsent.json</code> to declare their data practices. No SDK required.</li>
-            <li><strong>Inter‑extension messaging</strong>: other browser extensions can query the user's consent state via <code>chrome.runtime.sendMessage</code>, enabling composable privacy tools. A <a href="https://github.com/ProtoConsent/ProtoConsent/tree/main/examples/test-consumer" target="_blank" rel="noopener noreferrer">test consumer extension</a> is included for quick verification.</li>
-            <li><strong>URL parameter stripping</strong>: removes tracking parameters from URLs using browser redirect rules, observable in the Proto tab.</li>
-            <li><strong>Local‑only, composable</strong>: runs entirely in the browser. Designed to sit alongside existing consent tools.</li>
-          </ul>
+          <p>
+            <a href="why.html">Read the full rationale &rarr;</a>
+          </p>
           <figure class="screenshot">
             <img src="assets/screenshots/popup-overview-monitoring-dark.png" alt="Overview tab observability dashboard (dark mode)">
             <figcaption>

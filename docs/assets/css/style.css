@@ -205,7 +205,50 @@ main {
   border-top: 1px solid var(--pc-border);
   border-bottom: 1px solid var(--pc-border);
   background: var(--pc-bg-light);
-  padding: 0.75rem 1.5rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.hero-pillars {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.hero-pillar {
+  text-align: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-pillar-icon {
+  color: var(--pc-blue);
+  margin-bottom: 6px;
+}
+
+.hero-pillar-label {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--pc-blue);
+  margin-bottom: 2px;
+}
+
+.hero-pillar-desc {
+  font-size: 13px;
+  color: var(--pc-muted);
+  line-height: 1.4;
+}
+
+@media (max-width: 500px) {
+  .hero-pillars {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+  .hero-pillar {
+    max-width: 220px;
+  }
 }
 
 .hero-meta-inner {
