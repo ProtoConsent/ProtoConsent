@@ -176,7 +176,7 @@ async function initBundledCosmeticData() {
     await new Promise(resolve => {
       chrome.storage.local.set({
         enhancedLists: lists,
-        enhancedData_easylist_cosmetic: { generic: data.generic, domains: data.domains },
+        enhancedData_easylist_cosmetic: { generic: data.generic, domains: data.domains, exceptions: data.exceptions || {} },
       }, resolve);
     });
   } catch (e) {
