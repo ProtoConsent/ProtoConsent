@@ -18,7 +18,7 @@
 
 ProtoConsent is a browser extension that lets you control how websites may use your data, expressed in terms of purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking) rather than specific trackers or domains. Not a full ad blocker, not a CMP: a personal consent control panel that lives in the browser and can coexist with existing blockers and consent tools.
 
-It works in two operating modes: **Standalone** (default) enforces purpose-based blocking directly via declarativeNetRequest. **ProtoConsent Mode** delegates blocking to an external ad blocker while ProtoConsent provides purpose attribution, coverage metrics, and signal observability - turning any blocker into a purpose-aware system.
+It works in two operating modes: **Blocking** (default) enforces purpose-based blocking directly via declarativeNetRequest. **Monitoring** delegates blocking to an external ad blocker while ProtoConsent provides purpose attribution, coverage metrics, and signal observability - turning any blocker into a purpose-aware system.
 
 No central server, no tracking, no sharing of personal data. Everything stays in your browser.
 
@@ -28,7 +28,7 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 
 ## Key features
 
-- **Two operating modes:** Standalone (full blocking) or ProtoConsent Mode (monitoring and attribution with an external blocker). Switch from Purpose Settings. The Overview tab dashboard shows mode status, coverage metrics, signal indicators, purpose-attributed blocks, CMP detection, and parameter stripping - all in one view.
+- **Two operating modes:** Blocking (full blocking) or Monitoring (attribution with an external blocker). Switch from Purpose Settings. The Overview tab dashboard shows mode status, coverage metrics, signal indicators, purpose-attributed blocks, CMP detection, and parameter stripping - all in one view.
 - **Per‑site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking).
 - **Consent banner auto-response:** cookie consent popups from 31 CMP frameworks (including IAB TCF v2.2) are answered automatically based on your purpose preferences. No DOM interaction, no click simulation, no waiting for the banner to render. Signatures updated via CDN alongside Enhanced lists. See [cmp-auto-response.md](design/cmp-auto-response.md).
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec‑GPC), sent only when privacy‑relevant purposes are denied, per site, not globally.

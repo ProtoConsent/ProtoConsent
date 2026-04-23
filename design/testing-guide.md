@@ -95,9 +95,9 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [18.4 Session persistence](#184-session-persistence)
     - [18.5 Verifying param strip state from the service worker console](#185-verifying-param-strip-state-from-the-service-worker-console)
   - [19. Testing operating mode switching](#19-testing-operating-mode-switching)
-    - [19.1 Switching to ProtoConsent Mode](#191-switching-to-protoconsent-mode)
+    - [19.1 Switching to Monitoring mode](#191-switching-to-monitoring-mode)
     - [19.2 Verifying monitoring behaviour](#192-verifying-monitoring-behaviour)
-    - [19.3 Switching back to Standalone](#193-switching-back-to-standalone)
+    - [19.3 Switching back to Blocking](#193-switching-back-to-blocking)
     - [19.4 Verifying mode persistence](#194-verifying-mode-persistence)
     - [19.5 Import/export with operating mode](#195-importexport-with-operating-mode)
 
@@ -946,7 +946,7 @@ The Overview tab provides a mode-aware dashboard showing signal status, purpose-
 1. Visit a site with a profile assigned (e.g. Balanced on a news site).
 2. Open the ProtoConsent popup and click the **Proto** tab in the mode rail.
 3. The Overview tab should show:
-   - A mode banner ("Standalone mode" in red, or "ProtoConsent Mode active" in teal if an external blocker is present).
+   - A mode banner ("Blocking mode" in red, or "Monitoring mode active" in teal if an external blocker is present).
    - A coverage bar showing attributed / observed ratio.
    - GPC signal count (if GPC-relevant purposes are denied).
    - Cosmetic filtering count (if the current domain has cosmetic rules applied).
@@ -1017,37 +1017,37 @@ Each entry is keyed by tab ID, with domain objects containing `count` and `param
 
 ## 19. Testing operating mode switching
 
-ProtoConsent supports two operating modes: Standalone (default, full blocking) and ProtoConsent Mode (monitoring only, delegates blocking to an external blocker).
+ProtoConsent supports two operating modes: Blocking (default, full blocking) and Monitoring (delegates blocking to an external blocker).
 
-### 19.1 Switching to ProtoConsent Mode
+### 19.1 Switching to Monitoring mode
 
 1. Open Purpose Settings (click the gear icon in the popup or navigate to the options page).
 2. Scroll to the "Operating Mode" section.
-3. Toggle from Standalone to ProtoConsent Mode.
-4. Open the ProtoConsent popup. The mode banner in the Overview tab should show "ProtoConsent Mode active" (teal).
-5. The mode indicator pill in the popup header should show a green dot with "ProtoConsent".
+3. Toggle from Blocking to Monitoring mode.
+4. Open the ProtoConsent popup. The mode banner in the Overview tab should show "Monitoring mode active" (teal).
+5. The mode indicator pill in the popup header should show a green dot with "Monitoring".
 
 ### 19.2 Verifying monitoring behaviour
 
-1. In ProtoConsent Mode, visit a news site.
+1. In Monitoring mode, visit a news site.
 2. Open DevTools → Network tab. Third-party requests that would normally be blocked by ProtoConsent should now go through (since DNR block rules are disabled).
 3. Open the ProtoConsent popup. The blocked request counter still shows activity if an external ad blocker is installed (ProtoConsent detects blocks via `ERR_BLOCKED_BY_CLIENT` even when it is not the source).
 4. The Overview tab should show the coverage bar and purpose attribution.
 
-### 19.3 Switching back to Standalone
+### 19.3 Switching back to Blocking
 
-1. Open Purpose Settings and toggle back to Standalone.
+1. Open Purpose Settings and toggle back to Blocking.
 2. Reload a test page. Blocked requests should reappear (DNR rules are reconstructed on mode switch).
-3. The mode indicator pill should show a red dot with "Standalone".
+3. The mode indicator pill should show a red dot with "Blocking".
 
 ### 19.4 Verifying mode persistence
 
-1. Switch to ProtoConsent Mode.
+1. Switch to Monitoring mode.
 2. Close and reopen the browser (or kill and restart the service worker).
-3. Open the popup. The mode should still be ProtoConsent Mode (persisted in `chrome.storage.local` under `operatingMode`).
+3. Open the popup. The mode should still be Monitoring mode (persisted in `chrome.storage.local` under `operatingMode`).
 
 ### 19.5 Import/export with operating mode
 
-1. In ProtoConsent Mode, export the configuration (Purpose Settings → Import/Export → Export).
+1. In Monitoring mode, export the configuration (Purpose Settings -> Import/Export -> Export).
 2. Open the exported JSON file and verify it contains `"operatingMode": "protoconsent"`.
-3. Switch to Standalone, then import the file. The mode should switch back to ProtoConsent Mode after import.
+3. Switch to Blocking, then import the file. The mode should switch back to Monitoring mode after import.
