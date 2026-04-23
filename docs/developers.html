@@ -11,11 +11,11 @@
   <link rel="icon" type="image/svg+xml" sizes="any" href="assets/logo/protoconsent_logo_bold.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/protoconsent_logo_32.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Build with ProtoConsent: read user consent preferences from the browser, declare your site's data practices, or adapt behaviour with the SDK.">
+  <meta name="description" content="Build with ProtoConsent: read user consent preferences from the browser, declare your site's data practices, or adapt behavior with the SDK.">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Developers – ProtoConsent">
-  <meta property="og:description" content="Read user consent preferences from the browser, declare your site's data practices, or adapt behaviour with the SDK.">
+  <meta property="og:description" content="Read user consent preferences from the browser, declare your site's data practices, or adapt behavior with the SDK.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://protoconsent.org/developers.html">
   <meta property="og:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
@@ -23,7 +23,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Developers – ProtoConsent">
-  <meta name="twitter:description" content="Read user consent preferences from the browser, declare your site's data practices, or adapt behaviour with the SDK.">
+  <meta name="twitter:description" content="Read user consent preferences from the browser, declare your site's data practices, or adapt behavior with the SDK.">
   <meta name="twitter:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
 
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
@@ -33,6 +33,7 @@
   <a href="#main-content" class="skip-link">Skip to content</a>
   <div class="page">
     <div class="container">
+<!-- HEADER-START -->
       <header>
         <a href="index.html" class="brand">
           <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
@@ -43,12 +44,15 @@
         <nav class="header-links-nav" aria-label="Main">
           <a class="header-link" href="index.html">Home</a>
           <a class="header-link" href="why.html">Why ProtoConsent</a>
+          <a class="header-link" href="developers.html">Developers</a>
+          <a class="header-link" href="blog/">Blog</a>
           <a class="header-link" href="validate.html">Validate</a>
           <a class="header-link" href="generate.html">Generate</a>
           <a class="header-link" href="directory.html">Directory</a>
           <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
         </nav>
       </header>
+      <!-- HEADER-END -->
 
       <main id="main-content">
         <!-- HERO -->
@@ -111,7 +115,7 @@
           </article>
 
           <article class="card card-alt">
-            <div class="card-title">Adapt behaviour</div>
+            <div class="card-title">Adapt behavior</div>
             <h2>Don't negotiate, respond</h2>
             <p>
               Use the signal to load or skip scripts, simplify banners, or respect user choices without guessing. The extension enforces at the network level regardless. The SDK lets you adapt gracefully.
@@ -122,7 +126,7 @@
         <!-- GPC -->
         <section class="card card-spaced">
           <div class="card-title">Global Privacy Control</div>
-          <h2>A legally recognised privacy signal, per site</h2>
+          <h2>A legally recognized privacy signal, per site</h2>
           <p>
             ProtoConsent sends the <a href="https://globalprivacycontrol.org/" target="_blank" rel="noopener noreferrer">Sec‑GPC</a> header automatically when privacy‑relevant purposes (ads, third‑party sharing, advanced tracking) are denied for a site.
           </p>
@@ -225,7 +229,7 @@ const all = await ProtoConsent.getAll();
             <ul>
               <li>SDK communication is fully local, via the content script bridge.</li>
               <li>Everything runs in the browser: local storage, local enforcement, local decisions.</li>
-              <li>Open source: extension (GPL-3.0+), SDK (MIT). Inspectable behaviour.</li>
+              <li>Open source: extension (GPL-3.0+), SDK (MIT). Inspectable behavior.</li>
               <li>Observable enforcement: users see blocked requests, GPC signals, and domain-level detail.</li>
             </ul>
           </article>
@@ -274,6 +278,7 @@ const all = await ProtoConsent.getAll();
         </section>
       </main>
 
+<!-- FOOTER-START -->
       <footer>
         <div>
           ProtoConsent is a browser extension for browser‑level, purpose‑based consent controls on the open web.
@@ -281,6 +286,7 @@ const all = await ProtoConsent.getAll();
         <nav class="footer-links" aria-label="Footer">
           <a href="index.html">Home</a>
           <a href="why.html">Why ProtoConsent</a>
+          <a href="blog/">Blog</a>
           <a href="validate.html">Validate</a>
           <a href="generate.html">Generate</a>
           <a href="directory.html">Directory</a>
@@ -289,6 +295,7 @@ const all = await ProtoConsent.getAll();
           <a href="privacy.html">Privacy</a>
         </nav>
       </footer>
+      <!-- FOOTER-END -->
     </div>
   </div>
   <script src="assets/js/sdk-demo.js"></script>
