@@ -12,6 +12,7 @@ let epPreset = "off";
 let epDynamicConsent = false;
 let epConsentEnhancedLink = false;
 let epConsentLinkedIds = new Set();
+let epHasRegionalLanguages = false;
 let _epFocusListId = null; // list to refocus after re-render
 let _celAutoFetchInProgress = false;
 
@@ -75,7 +76,7 @@ function getEnhancedStats() {
     totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules + cmpTemplates,
     downloadedCount: Object.keys(epLists).length - coreExtraDownloaded - cmpExtraDownloaded,
     catalogCount: Object.keys(epCatalog).length - coreExtraCatalog - cmpExtraCatalog,
-    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id) && !REGIONAL_IDS.has(id))
+    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id) && !(REGIONAL_IDS.has(id) && !epHasRegionalLanguages))
       .concat(coreCatalogIds.length > 0 && !coreDownloadedIds.length ? [coreCatalogIds[0]] : [])
       .concat(cmpCatalogIds.length > 0 && !cmpDownloadedIds.length ? [cmpCatalogIds[0]] : []),
     updatesAvailable,
@@ -114,17 +115,21 @@ function refreshEnhancedState() {
     epDynamicConsent = resp.dynamicConsent === true;
     epConsentEnhancedLink = resp.consentEnhancedLink === true;
     epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
-    renderEnhancedPresets();
-    renderEnhancedLists();
-    updateEnhancedStatus();
-    // Auto-download consent-linked lists not yet downloaded
-    const celPending = resp.celPendingDownload || [];
-    if (celPending.length > 0 && !_celAutoFetchInProgress) {
-      _celAutoFetchInProgress = true;
-      downloadAllEnhancedLists(null, celPending);
-    } else if (celPending.length === 0) {
-      _celAutoFetchInProgress = false;
-    }
+    // Read regional languages to determine if regional lists should be included
+    chrome.storage.local.get(["regionalLanguages"], (rl) => {
+      epHasRegionalLanguages = Array.isArray(rl.regionalLanguages) && rl.regionalLanguages.length > 0;
+      renderEnhancedPresets();
+      renderEnhancedLists();
+      updateEnhancedStatus();
+      // Auto-download consent-linked lists not yet downloaded
+      const celPending = resp.celPendingDownload || [];
+      if (celPending.length > 0 && !_celAutoFetchInProgress) {
+        _celAutoFetchInProgress = true;
+        downloadAllEnhancedLists(null, celPending);
+      } else if (celPending.length === 0) {
+        _celAutoFetchInProgress = false;
+      }
+    });
   });
 }
 
@@ -1087,38 +1092,46 @@ function updateAllEnhancedLists(btnEl) {
       epPreset = resp.preset || "off";
     }
 
-    const total = downloadedIds.length;
-    if (btnEl) btnEl.textContent = "0/" + total + "…";
+    // Also include undownloaded regional lists if languages are set
+    const pendingRegional = epHasRegionalLanguages
+      ? Object.keys(epCatalog).filter(id => REGIONAL_IDS.has(id) && !epLists[id])
+      : [];
+    const allIds = downloadedIds.concat(pendingRegional);
+    const total = allIds.length;
+    if (btnEl) btnEl.textContent = "Checking…";
     let completed = 0;
     let failed = 0;
     let skipped = 0;
-    for (const listId of downloadedIds) {
+    let updated = 0;
+    for (const listId of allIds) {
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
         if (chrome.runtime.lastError) resp = null;
         completed++;
         if (!resp?.ok) failed++;
         else if (resp.skipped) skipped++;
+        else updated++;
         if (btnEl) {
-          btnEl.textContent = completed + "/" + total + "…";
+          if (updated > 0 || failed > 0) btnEl.textContent = updated + " updated…";
+          else btnEl.textContent = "Checking…";
         }
         if (completed >= total) {
           if (btnEl) {
             btnEl.disabled = false;
             if (failed > 0) btnEl.textContent = failed + " failed";
-            else if (skipped === total) btnEl.textContent = "Up to date";
-            else btnEl.textContent = "Done";
+            else if (updated === 0) btnEl.textContent = "Up to date";
+            else btnEl.textContent = updated + " updated";
           }
           // Announce completion via aria-live region
           const statusEl = document.getElementById("ep-status");
           if (statusEl) {
             if (failed > 0) {
-              statusEl.textContent = "Updated " + (total - failed) + " of " + total + " lists, " + failed + " failed";
+              statusEl.textContent = updated + " updated, " + failed + " failed (" + total + " checked)";
               statusEl.className = "ep-status ep-status-warn";
-            } else if (skipped === total) {
+            } else if (updated === 0) {
               statusEl.textContent = "All " + total + " lists already up to date";
               statusEl.className = "ep-status ep-status-active";
             } else {
-              statusEl.textContent = (total - skipped) + " of " + total + " lists updated" + (skipped > 0 ? ", " + skipped + " already current" : "");
+              statusEl.textContent = updated + " updated, " + skipped + " already current";
               statusEl.className = "ep-status ep-status-active";
             }
             _protectEpStatus(6000);
