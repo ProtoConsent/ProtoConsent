@@ -90,7 +90,8 @@
   const CMP_CLEANUP_DELAY = 5000;
   setTimeout(() => {
     const cookies = [];
-    const cookieStr = document.cookie || "";
+    let cookieStr = "";
+    try { cookieStr = document.cookie || ""; } catch (_) { return; }
     if (!cookieStr) return;
     const cookieNames = new Set();
     for (const pair of cookieStr.split(";")) {
