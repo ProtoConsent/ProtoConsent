@@ -18,6 +18,25 @@ import {
 import { resolvePurposesFromHostname } from "./config-loader.js";
 import { scheduleSessionPersist, updateBadgeForTab } from "./session.js";
 
+// --- Lifetime blocked counter ---
+// In-memory running total is the source of truth. Flushed to
+// chrome.storage.local by session.js for persistence across restarts.
+let _lifetimeTotal = 0;
+
+function incrementLifetimeBlocked(n) {
+  _lifetimeTotal += n;
+}
+
+// Called by session.js on startup to restore from storage.
+export function setLifetimeTotal(n) {
+  _lifetimeTotal = n;
+}
+
+// Called by session.js (flush) and handlers.js (read).
+export function getLifetimeTotal() {
+  return _lifetimeTotal;
+}
+
 // Log port management
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "log") return;
@@ -89,6 +108,7 @@ if (useDnrDebug) {
     const tabData = tabBlockedDomains.get(request.tabId);
     if (!tabData[purpose]) tabData[purpose] = {};
     tabData[purpose][domain] = (tabData[purpose][domain] || 0) + 1;
+    incrementLifetimeBlocked(1);
     scheduleSessionPersist();
     updateBadgeForTab(request.tabId);
 
@@ -136,6 +156,7 @@ if (!useDnrDebug) {
         }
         // Path-only match: attribute to the matched purpose(s)
         metrics.attributed++;
+        incrementLifetimeBlocked(1);
         if (!tabBlockedDomains.has(details.tabId)) {
           tabBlockedDomains.set(details.tabId, {});
         }
@@ -157,6 +178,7 @@ if (!useDnrDebug) {
       }
 
       metrics.attributed++;
+      incrementLifetimeBlocked(1);
 
       if (!tabBlockedDomains.has(details.tabId)) {
         tabBlockedDomains.set(details.tabId, {});

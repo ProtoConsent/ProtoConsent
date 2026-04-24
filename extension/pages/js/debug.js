@@ -33,6 +33,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     lines.push("  data source: " + source);
     let modeLabel = (typeof operatingMode !== "undefined" && operatingMode === "protoconsent") ? "Monitoring" : "Blocking";
     lines.push("  mode: " + modeLabel);
+    lines.push("  lifetime blocked: " + (lastLifetimeBlocked || 0));
     lines.push("");
 
     // Site info

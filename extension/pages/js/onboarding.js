@@ -186,6 +186,8 @@ function wireEvents() {
     const saves = [];
     if (syncChecked) saves.push(cb => setDynamicListsConsent(true, cb));
     if (celChecked) saves.push(cb => setConsentEnhancedLink(true, cb));
+    // Set enhanced preset to basic so Protection tab starts ready
+    saves.push(cb => chrome.storage.local.set({ enhancedPreset: "basic" }, cb));
 
     // Chain saves sequentially, then navigate
     const run = (i) => {
