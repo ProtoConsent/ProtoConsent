@@ -1202,7 +1202,7 @@ footer {
   .gen-template-select { max-width: 100%; }
 }
 
-/* ── Directory page ────────────────────────────────────── */
+/* --- Directory page --- */
 
 .dir-count {
   font-size: 13px;
@@ -1271,4 +1271,53 @@ footer {
 
 .dir-error {
   color: #991b1b;
+}
+
+/* --- Store badges --- */
+
+.store-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.store-badge-official {
+  display: inline-flex;
+  align-items: center;
+}
+
+.store-badge-official img {
+  width: auto;
+  min-width: 32px;
+}
+
+.store-badge-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--pc-border);
+  background: var(--pc-white);
+  font-size: 13px;
+  color: var(--pc-muted);
+}
+
+.store-badge-pending img {
+  width: 20px;
+  height: 20px;
+  filter: grayscale(1) opacity(0.5);
+}
+
+.store-badge-pending .store-badge-note {
+  font-size: 11px;
+  color: var(--pc-muted);
+}
+
+.store-badges-stack {
+  flex-direction: column;
+  align-items: center;
 }
