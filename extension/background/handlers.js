@@ -11,6 +11,7 @@
  // @returns {string} "off" | "basic" | "full" | "custom"
  
 import { REGIONAL_IDS } from "./config-bridge.js";
+import { getLifetimeTotal } from "./tracking.js";
 
 function resolveEnhancedPreset(lists, catalog) {
   const downloaded = Object.keys(lists);
@@ -127,6 +128,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         whitelist,
         operatingMode,
         coverage: tabCoverageMetrics.get(message.tabId) || null,
+        lifetimeBlocked: getLifetimeTotal(),
       });
     });
     return true;

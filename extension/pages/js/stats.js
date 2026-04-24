@@ -15,6 +15,7 @@
 let lastPurposeStats = {};
 let lastBlockedDomains = {};
 let lastBlocked = 0;
+let lastLifetimeBlocked = 0;
 let displayRetries = 0;
 const MAX_DISPLAY_RETRIES = 2;
 
@@ -96,7 +97,7 @@ async function getBlockedRulesCount() {
         }
       }
       var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + (c && typeof c === "object" ? c.count : (c || 0)), 0);
-      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: 0, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: 0, whitelistHitDomains: {} };
+      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: 0, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: 0, whitelistHitDomains: {}, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
     }
 
     // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)
@@ -187,7 +188,7 @@ async function getBlockedRulesCount() {
       if (webRequestTotal > blocked) blocked = webRequestTotal;
     }
 
-    return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains };
+    return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
     return EMPTY_BLOCKED_RESULT;
@@ -264,9 +265,10 @@ async function displayBlockedCount() {
   ensureBars();
 
   try {
-    const { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains } = await getBlockedRulesCount();
+    const { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains, lifetimeBlocked } = await getBlockedRulesCount();
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
+    lastLifetimeBlocked = lifetimeBlocked || 0;
     lastGpcSignalsSent = gpc;
     lastChStripped = ch;
     lastGpcDomains = gpcDomains;
@@ -311,6 +313,15 @@ async function displayBlockedCount() {
       enhancedEl._sep = scopeText ? " \u00b7 " : "";
       expDiv.appendChild(enhancedEl);
       buildEnhancedScopeLine(enhancedEl);
+
+      // Lifetime total (persistent across sessions)
+      if (lastLifetimeBlocked > 0) {
+        var ltLine = document.createElement("div");
+        ltLine.className = "pc-counter-lifetime";
+        ltLine.title = "Total blocked across all sites since install";
+        ltLine.textContent = compactNumber(lastLifetimeBlocked) + " blocked since install";
+        expDiv.appendChild(ltLine);
+      }
 
       // Link to Log Domains
       if (blocked > 0 || gpc > 0) {
@@ -406,6 +417,21 @@ function formatEstimatedTime(ms) {
 }
 
 function displayPerPurposeStats() {
+  // Merge enhanced:* counts into their parent purpose via catalog category
+  var mergedCounts = {};
+  for (const key in lastPurposeStats) {
+    if (key.startsWith("enhanced:")) {
+      const listId = key.slice(9);
+      const entry = enhancedCatalogConfig[listId];
+      const cat = entry && entry.category;
+      if (cat && PURPOSES_TO_SHOW.includes(cat)) {
+        mergedCounts[cat] = (mergedCounts[cat] || 0) + lastPurposeStats[key];
+      }
+    } else {
+      mergedCounts[key] = (mergedCounts[key] || 0) + lastPurposeStats[key];
+    }
+  }
+
   for (const purposeKey of PURPOSES_TO_SHOW) {
     const itemEl = document.querySelector('.pc-purpose-item[data-purpose="' + purposeKey + '"]');
     if (!itemEl) continue;
@@ -414,7 +440,7 @@ function displayPerPurposeStats() {
     const existing = itemEl.querySelector(".pc-purpose-stat-inline");
     if (existing) existing.remove();
 
-    const count = lastPurposeStats[purposeKey];
+    const count = mergedCounts[purposeKey];
     if (!count) continue;
 
     // Inline stat between name and toggle in the header row

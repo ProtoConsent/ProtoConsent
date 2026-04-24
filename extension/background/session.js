@@ -15,6 +15,7 @@ import {
   _extEventLog,
 } from "./state.js";
 import { restoreWarningBadge } from "./blocker-detection.js";
+import { getLifetimeTotal, setLifetimeTotal } from "./tracking.js";
 
 // Throttled write to chrome.storage.session (max once per 2s)
 let sessionPersistTimer = null;
@@ -74,14 +75,20 @@ export function persistTabDataToSession() {
     },
     _unattributedBuffer: unattributedBuffer.slice(),
   });
+  // Write lifetime total to persistent storage (in-memory is source of truth)
+  const ltTotal = getLifetimeTotal();
+  if (ltTotal > 0) {
+    chrome.storage.local.set({ lifetimeBlocked: ltTotal });
+  }
 }
 
 export async function restoreTabDataFromSession() {
   if (!chrome.storage.session) return;
   // Restore operatingMode early so blocker detection evaluates under the correct mode
   try {
-    const { operatingMode } = await chrome.storage.local.get("operatingMode");
+    const { operatingMode, lifetimeBlocked } = await chrome.storage.local.get(["operatingMode", "lifetimeBlocked"]);
     if (operatingMode) setOperatingMode(operatingMode);
+    if (lifetimeBlocked > 0) setLifetimeTotal(lifetimeBlocked);
   } catch (_) {}
   try {
     const result = await chrome.storage.session.get(null);

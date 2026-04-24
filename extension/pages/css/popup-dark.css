@@ -412,6 +412,9 @@ html.pc-dark .pc-mode-indicator.is-protoconsent .pc-mode-dot {
 html.pc-dark .pc-counter-enhanced {
   color: #FFD43B;
 }
+html.pc-dark .pc-counter-lifetime {
+  color: #9ca3af;
+}
 html.pc-dark .pc-enhanced-scope {
   color: #FFD43B;
 }

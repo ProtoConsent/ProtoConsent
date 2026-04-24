@@ -829,6 +829,12 @@ body {
   flex-shrink: 0;
 }
 
+.pc-counter-lifetime {
+  color: #6b7280;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
 /* Footer */
 .pc-footer {
   display: flex;
