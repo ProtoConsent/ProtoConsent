@@ -124,7 +124,7 @@ When downloading with preset Off, the extension auto-switches to Balanced.
 
 *Regional lists only active when user has selected languages (see [section 12](#12-regional-lists)).
 
-### Full preset (adds 4 lists)
+### Full preset (adds 6 lists)
 
 | List | License | Domains | Category |
 | --- | --- | --- | --- |
@@ -132,6 +132,8 @@ When downloading with preset Off, the extension auto-switches to Balanced.
 | [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~190K | - |
 | [Blocklist Project - Crypto](https://github.com/blocklistproject/Lists) | Unlicense | ~24K | `advanced_tracking` |
 | [Blocklist Project - Phishing](https://github.com/blocklistproject/Lists) | Unlicense | ~87K | `security` |
+| [EasyList Cookie Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | - | - |
+| [Web Annoyances Cosmetic](https://github.com/LanikSJ/webannoyances) | CC BY-SA 4.0 | - | - |
 
 Domain counts are approximate and change with each upstream update.
 
@@ -170,6 +172,15 @@ Only downloaded lists participate. When the popup detects consent-linked lists n
 EasyList element-hiding rules (`##` selectors) hide ad containers and empty banners left after network-level blocking. A dedicated converter extracts generic and domain-specific selectors, validated at three levels (converter, background compile, runtime injection) to prevent CSS injection.
 
 Cosmetic filtering is purely visual cleanup - no network blocking. Active by default (Balanced preset), can be disabled independently.
+
+Two additional cosmetic lists are available in the Full preset:
+
+| List | License | Generic selectors | Domain-specific | Scope |
+| --- | --- | ---: | ---: | --- |
+| [EasyList Cookie Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~15K | ~17K | Cookie consent banners and overlays |
+| [Web Annoyances Cosmetic](https://github.com/LanikSJ/webannoyances) | CC BY-SA 4.0 | ~2K | ~8K | Cookie notices, newsletter popups, social widgets, annoyances |
+
+EasyList Cookie contains both cosmetic selectors and network blocking rules. Only cosmetic selectors are extracted - network rules that block CMP scripts are excluded because they conflict with ProtoConsent's CMP cookie injection approach (see [cmp-auto-response.md](cmp-auto-response.md)).
 
 ## 9. CMP auto-response signatures
 
