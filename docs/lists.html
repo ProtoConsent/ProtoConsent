@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<!--
+  ProtoConsent browser extension
+  Copyright (C) 2026 ProtoConsent contributors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blocklists | Purpose-based tracker lists for Pi-hole, AdGuard and uBlock Origin</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/logo/protoconsent_logo_bold.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/protoconsent_logo_32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Purpose-based tracker blocklists in 5 formats. Subscribe in Pi-hole, AdGuard, uBlock Origin, NextDNS, or any tool that accepts filter lists.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Blocklists | Purpose-based tracker lists for Pi-hole, AdGuard and uBlock Origin">
+  <meta property="og:description" content="Purpose-based tracker blocklists in 5 formats. Subscribe in Pi-hole, AdGuard, uBlock Origin, NextDNS, or any tool that accepts filter lists.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://protoconsent.org/lists.html">
+  <meta property="og:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Blocklists | Purpose-based tracker lists for Pi-hole, AdGuard and uBlock Origin">
+  <meta name="twitter:description" content="Purpose-based tracker blocklists in 5 formats. Subscribe in Pi-hole, AdGuard, uBlock Origin, NextDNS, or any tool that accepts filter lists.">
+  <meta name="twitter:image" content="https://protoconsent.org/assets/logo/protoconsent_logo_256.png">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; form-action 'none'; base-uri 'none';">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+  <div class="page">
+    <div class="container">
+<!-- HEADER-START -->
+      <header>
+        <a href="index.html" class="brand">
+          <img src="assets/logo/protoconsent_logo_bold.svg" alt="ProtoConsent" class="brand-mark" width="28" height="28">
+          <div class="brand-name">ProtoConsent</div>
+        </a>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+        <label for="nav-toggle" class="nav-toggle-label" aria-label="Toggle menu"><span></span></label>
+        <nav class="header-links-nav" aria-label="Main">
+          <a class="header-link" href="index.html">Home</a>
+          <a class="header-link" href="lists.html">Lists</a>
+          <a class="header-link" href="developers.html">Developers</a>
+          <a class="header-link" href="why.html">Why ProtoConsent</a>
+          <a class="header-link" href="blog/">Blog</a>
+          <a class="header-link" href="validate.html">Validate</a>
+          <a class="header-link" href="generate.html">Generate</a>
+          <a class="header-link" href="directory.html">Directory</a>
+          <a class="header-link" href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+      </header>
+      <!-- HEADER-END -->
+
+      <main id="main-content">
+        <article class="article">
+          <div class="article-header">
+            <a href="index.html" class="article-back">&larr; Back to home</a>
+            <h1 class="article-title">Blocklists</h1>
+            <p class="article-subtitle">
+              Purpose-based tracker blocklists in 5 formats. Right-click any link below to copy the subscription URL.
+            </p>
+          </div>
+
+          <!-- COMBINED LISTS -->
+          <section class="article-section">
+            <article class="card card-alt">
+              <div class="card-title">Combined lists</div>
+              <div class="card-inset">
+              <h2>One URL, full coverage</h2>
+              <p>
+                Pre-combined profiles with domains deduplicated across purposes. For most users, this is the easiest option.
+              </p>
+              <table class="policy-table">
+                <thead>
+                  <tr>
+                    <th>Profile</th>
+                    <th>ABP</th>
+                    <th>AdGuard</th>
+                    <th>Hosts</th>
+                    <th>Domains</th>
+                    <th>JSON</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Core</td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/abp/protoconsent_core.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/abp/protoconsent_core.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/adguard/protoconsent_core.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/adguard/protoconsent_core.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/hosts/protoconsent_core.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/hosts/protoconsent_core.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/domains/protoconsent_core.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/domains/protoconsent_core.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/json/protoconsent_core.json">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/json/protoconsent_core.json">M2</a></td>
+                  </tr>
+                  <tr>
+                    <td>Full</td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/abp/protoconsent_full.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/abp/protoconsent_full.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/adguard/protoconsent_full.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/adguard/protoconsent_full.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/hosts/protoconsent_full.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/hosts/protoconsent_full.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/domains/protoconsent_full.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/domains/protoconsent_full.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/json/protoconsent_full.json">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/json/protoconsent_full.json">M2</a></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style="margin-top: 16px">
+                <strong>Core</strong> = ads + analytics + personalization + third parties + advanced tracking.<br>
+                <strong>Full</strong> = core + security (phishing, scam, malware).
+              </p>
+              </div>
+            </article>
+          </section>
+
+          <!-- PER-PURPOSE LISTS -->
+          <section class="article-section">
+            <article class="card card-spaced">
+              <div class="card-title">Per-purpose lists</div>
+              <h2>Granular control</h2>
+              <p>
+                Subscribe only to the purposes you want to block. Each list is independent and they don't overlap.
+              </p>
+              <table class="policy-table">
+                <thead>
+                  <tr>
+                    <th>Purpose</th>
+                    <th>ABP</th>
+                    <th>AdGuard</th>
+                    <th>Hosts</th>
+                    <th>Domains</th>
+                    <th>JSON</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Ads</td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/abp/protoconsent_ads.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/abp/protoconsent_ads.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/adguard/protoconsent_ads.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/adguard/protoconsent_ads.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/hosts/protoconsent_ads.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/hosts/protoconsent_ads.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/domains/protoconsent_ads.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/domains/protoconsent_ads.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/json/protoconsent_ads.json">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/json/protoconsent_ads.json">M2</a></td>
+                  </tr>
+                  <tr>
+                    <td>Analytics</td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/abp/protoconsent_analytics.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/abp/protoconsent_analytics.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/adguard/protoconsent_analytics.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/adguard/protoconsent_analytics.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/hosts/protoconsent_analytics.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/hosts/protoconsent_analytics.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/domains/protoconsent_analytics.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/domains/protoconsent_analytics.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/json/protoconsent_analytics.json">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/json/protoconsent_analytics.json">M2</a></td>
+                  </tr>
+                  <tr>
+                    <td>Personalization</td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/abp/protoconsent_personalization.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/abp/protoconsent_personalization.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/adguard/protoconsent_personalization.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/adguard/protoconsent_personalization.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/hosts/protoconsent_personalization.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/hosts/protoconsent_personalization.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/domains/protoconsent_personalization.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/domains/protoconsent_personalization.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/json/protoconsent_personalization.json">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/json/protoconsent_personalization.json">M2</a></td>
+                  </tr>
+                  <tr>
+                    <td>Third Parties</td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/abp/protoconsent_third_parties.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/abp/protoconsent_third_parties.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/adguard/protoconsent_third_parties.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/adguard/protoconsent_third_parties.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/hosts/protoconsent_third_parties.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/hosts/protoconsent_third_parties.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/domains/protoconsent_third_parties.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/domains/protoconsent_third_parties.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/json/protoconsent_third_parties.json">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/json/protoconsent_third_parties.json">M2</a></td>
+                  </tr>
+                  <tr>
+                    <td>Advanced Tracking</td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/abp/protoconsent_advanced_tracking.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/abp/protoconsent_advanced_tracking.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/adguard/protoconsent_advanced_tracking.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/adguard/protoconsent_advanced_tracking.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/hosts/protoconsent_advanced_tracking.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/hosts/protoconsent_advanced_tracking.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/domains/protoconsent_advanced_tracking.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/domains/protoconsent_advanced_tracking.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/json/protoconsent_advanced_tracking.json">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/json/protoconsent_advanced_tracking.json">M2</a></td>
+                  </tr>
+                  <tr>
+                    <td>Security</td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/abp/protoconsent_security.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/abp/protoconsent_security.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/adguard/protoconsent_security.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/adguard/protoconsent_security.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/hosts/protoconsent_security.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/hosts/protoconsent_security.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/domains/protoconsent_security.txt">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/domains/protoconsent_security.txt">M2</a></td>
+                    <td><a href="https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/json/protoconsent_security.json">Link</a> | <a href="https://raw.githubusercontent.com/ProtoConsent/data/main/lists/json/protoconsent_security.json">M2</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </article>
+          </section>
+
+          <!-- FORMATS -->
+          <section class="article-section">
+            <article class="card card-spaced card-muted">
+              <div class="card-title">Formats</div>
+              <div class="card-inset">
+              <h2>Choose the right format for your tool</h2>
+              <table class="policy-table">
+                <thead>
+                  <tr>
+                    <th>Format</th>
+                    <th>Compatible with</th>
+                    <th>Content</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>ABP</td>
+                    <td>uBlock Origin, Adblock Plus, Ghostery</td>
+                    <td>Domains + path rules</td>
+                  </tr>
+                  <tr>
+                    <td>AdGuard</td>
+                    <td>AdGuard browser extension</td>
+                    <td>Domains + path rules</td>
+                  </tr>
+                  <tr>
+                    <td>Hosts</td>
+                    <td>Pi-hole, AdGuard Home, /etc/hosts</td>
+                    <td>Domains only</td>
+                  </tr>
+                  <tr>
+                    <td>Domains</td>
+                    <td>NextDNS, ControlD, RethinkDNS</td>
+                    <td>Domains only</td>
+                  </tr>
+                  <tr>
+                    <td>JSON</td>
+                    <td>MV3 browser extensions, custom tools</td>
+                    <td>Domains + paths + metadata</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style="margin-top: 16px">
+                ABP and AdGuard formats include both domain-level blocking (<code>||domain^</code>) and path-based rules for domains that mix tracking and legitimate content. Hosts and Domains formats contain domain-level entries only.
+              </p>
+              </div>
+            </article>
+          </section>
+
+          <!-- QUICK START -->
+          <section class="article-section">
+            <article class="card card-spaced card-mint">
+              <div class="card-title">Quick start</div>
+              <div class="card-inset">
+              <h2>Copy and paste</h2>
+              <p><strong>Pi-hole / AdGuard Home</strong> (Adlists, then update gravity):</p>
+              <div class="code-block">https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/hosts/protoconsent_core.txt</div>
+              <p><strong>uBlock Origin</strong> (Settings &gt; Filter lists &gt; Import):</p>
+              <div class="code-block">https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/abp/protoconsent_core.txt</div>
+              <p><strong>AdGuard</strong> (Settings &gt; Filters &gt; Custom &gt; Add filter):</p>
+              <div class="code-block">https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/adguard/protoconsent_core.txt</div>
+              <p><strong>NextDNS / ControlD</strong> (Denylist, add domain list):</p>
+              <div class="code-block">https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/lists/domains/protoconsent_core.txt</div>
+              <p>
+                Replace <code>protoconsent_core</code> with <code>protoconsent_full</code> to include security (phishing/malware), or use individual purpose list names for granular control.
+              </p>
+              </div>
+            </article>
+          </section>
+
+          <!-- ABOUT -->
+          <section class="article-section">
+            <h2>About these lists</h2>
+            <p>
+              The lists are compiled from the <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">ProtoConsent browser extension</a> rulesets plus enhanced delta data from the <a href="https://github.com/ProtoConsent/data" target="_blank" rel="noopener noreferrer">data repository</a>. Domains are classified by data-processing purpose using a multi-source classifier pipeline. Updated weekly via GitHub Actions.
+            </p>
+            <p>
+              <strong>Link</strong> points to jsDelivr CDN (recommended). <strong>M2</strong> points to GitHub raw (fallback). Both work as subscription URLs.
+            </p>
+            <p>
+              License: GPL-3.0-or-later. Feedback on coverage, categorization, or false positives is welcome via <a href="https://github.com/ProtoConsent/data/issues" target="_blank" rel="noopener noreferrer">GitHub issues</a>.
+            </p>
+          </section>
+
+        </article>
+      </main>
+
+<!-- FOOTER-START -->
+      <footer>
+        <div>
+          ProtoConsent is a browser extension for browser‑level, purpose‑based consent controls on the open web.
+        </div>
+        <nav class="footer-links" aria-label="Footer">
+          <a href="index.html">Home</a>
+          <a href="lists.html">Lists</a>
+          <a href="why.html">Why ProtoConsent</a>
+          <a href="blog/">Blog</a>
+          <a href="validate.html">Validate</a>
+          <a href="generate.html">Generate</a>
+          <a href="directory.html">Directory</a>
+          <a href="https://github.com/ProtoConsent/ProtoConsent" target="_blank" rel="noopener noreferrer">Source code</a>
+          <a href="mailto:contact@protoconsent.org">Contact</a>
+          <a href="privacy.html">Privacy</a>
+        </nav>
+      </footer>
+      <!-- FOOTER-END -->
+    </div>
+  </div>
+</body>
+</html>

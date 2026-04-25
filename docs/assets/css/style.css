@@ -204,6 +204,7 @@ main {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  justify-content: center;
   margin-bottom: 18px;
 }
 
@@ -288,6 +289,7 @@ main {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  justify-content: center;
   margin-bottom: 4px;
 }
 
@@ -1280,8 +1282,9 @@ footer {
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+  justify-content: center;
   margin-top: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
 .store-badge-official {
