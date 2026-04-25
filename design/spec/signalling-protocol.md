@@ -32,13 +32,18 @@ The data model (purposes, profiles, per-domain rules) is defined in [data-model.
 
 ### 2.1 Architecture
 
-```text
- Page context                Extension context
- +-----------+  postMessage  +----------------+  chrome.runtime  +------------+  chrome.storage  +---------+
- |  SDK      | <----------> | Content script | <--------------> | Background | <--------------> | Storage |
- |  (page)   |              | (bridge)       |                  | (service   |                  | (local) |
- +-----------+              +----------------+                  |  worker)   |                  +---------+
-                                                                +------------+
+```mermaid
+sequenceDiagram
+    participant W as Website (protoconsent.js)
+    participant CS as Content Script (ISOLATED)
+    participant B as Background
+
+    W->>CS: postMessage query
+    CS->>B: chrome.runtime.sendMessage
+    B->>B: Resolve purposes for domain
+    B->>CS: Response (e.g. analytics: false, ads: false)
+    CS->>W: postMessage response
+    W->>W: Adapt behavior (skip tracking scripts, etc.)
 ```
 
 - The **SDK** runs in the page's JavaScript context and cannot access extension APIs directly.

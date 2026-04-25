@@ -38,8 +38,8 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 - **Per-site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalisation, third-party services, advanced tracking).
 - **Two operating modes:** Blocking (full blocking) or Monitoring (attribution with an external blocker). The Overview tab dashboard shows mode status, coverage metrics, and purpose-attributed blocks.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec-GPC), sent only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.
-- **Consent banner auto-response:** 31 CMP frameworks (including IAB TCF v2.2) answered automatically based on your purpose preferences. No DOM interaction, no click simulation. See [cmp-auto-response.md](design/cmp-auto-response.md).
-- **Enhanced protection:** optional curated blocklists, cosmetic filtering, CNAME detection, URL parameter stripping, and regional filters for 13 languages. See [list-catalog.md](design/list-catalog.md).
+- **Consent banner auto-response:** 31 CMP frameworks (including IAB TCF v2.2) answered automatically based on your purpose preferences. No DOM interaction, no click simulation. See [cmp-auto-response.md](design/architecture/cmp-auto-response.md).
+- **Enhanced protection:** optional curated blocklists, cosmetic filtering, CNAME detection, URL parameter stripping, and regional filters for 13 languages. See [list-catalog.md](design/architecture/list-catalog.md).
 - **Inter-extension API:** other browser extensions can query the user's consent state via `chrome.runtime.sendMessage`. See the [protocol spec](design/spec/inter-extension-protocol.md).
 - **Site declarations and SDK:** websites can publish a `.well-known/protoconsent.json` to declare their data practices, or use the [SDK](sdk/protoconsent.js) (MIT) to read user preferences. Both optional.
 
@@ -101,7 +101,7 @@ For a visual walkthrough of both paths, see [protoconsent.org/developers](https:
 
 ![ProtoConsent technical diagram](design/assets/diagrams/protoconsent-technical-diagram.png)
 
-See [architecture.md](design/architecture.md) for the full technical description.
+See [architecture.md](design/architecture.md) for the full technical description and flow diagrams.
 
 ## Documentation
 
@@ -117,19 +117,16 @@ See [architecture.md](design/architecture.md) for the full technical description
 - [JSON Schema](docs/schema/v0.2.json) - machine-readable schema for `protoconsent.json` (v0.2)
 
 **Implementation**
-- [Technical architecture](design/architecture.md) – components, data model, flows, design decisions
-- [CMP auto-response](design/cmp-auto-response.md) – consent banner suppression, CMP signatures, TC String generation
-- [List catalog](design/list-catalog.md) - sources, curation, DNR format, enhanced lists
-- [Testing guide](design/testing-guide.md) – installation, test scenarios
-- [Icons and layers](design/icons-and-layers.md) – visual language and icon mapping
+- [Technical architecture](design/architecture.md) - components, data model, flows, design decisions
+- [CMP auto-response](design/architecture/cmp-auto-response.md) - consent banner suppression, CMP signatures, TC String generation
+- [Operating modes](design/architecture/operating-modes.md) - Blocking vs Monitoring, capabilities, coverage metrics
+- [URL parameter stripping](design/architecture/param-stripping.md) - detection, data model, observability
+- [List catalog](design/architecture/list-catalog.md) - sources, curation, rule format, enhanced lists
+- [Testing guide](design/testing-guide.md) - installation, test scenarios
 
 ## What's next
 
-- SDK `onchange` API for real-time site adaptation
-- Firefox compatibility
-- Ecosystem outreach and pilot sites
-
-See [product-overview.md](design/product-overview.md) for the full roadmap.
+See [product-overview.md](design/product-overview.md) for the roadmap.
 
 ## Use of Generative AI
 

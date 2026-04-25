@@ -10,8 +10,8 @@ This document explains *why* ProtoConsent is designed the way it is: the premise
 - **[architecture.md](architecture.md)**: how it works technically
 - **[signalling-protocol.md](spec/signalling-protocol.md)**: the SDK and purpose‑signalling protocol
 - **[protoconsent-well-known.md](spec/protoconsent-well-known.md)**: site declaration format
-- **[list-catalog.md](list-catalog.md)**: enforcement methodology and list curation
-- **[cmp-auto-response.md](cmp-auto-response.md)**: CMP auto-response design and signature format
+- **[list-catalog.md](architecture/list-catalog.md)**: enforcement methodology and list curation
+- **[cmp-auto-response.md](architecture/cmp-auto-response.md)**: CMP auto-response design and signature format
 - **[inter-extension-protocol.md](spec/inter-extension-protocol.md)**: inter-extension messaging API
 
 ## 1. The problem ProtoConsent addresses
@@ -118,8 +118,8 @@ ProtoConsent has clear boundaries:
 | How is it implemented? | [architecture.md](architecture.md) |
 | What is the SDK API surface? | [signalling-protocol.md](spec/signalling-protocol.md) |
 | How do site declarations work? | [protoconsent-well-known.md](spec/protoconsent-well-known.md) |
-| How are blocklists curated and applied? | [list-catalog.md](list-catalog.md) |
-| How does CMP auto-response work? | [cmp-auto-response.md](cmp-auto-response.md) |
+| How are blocklists curated and applied? | [list-catalog.md](architecture/list-catalog.md) |
+| How does CMP auto-response work? | [cmp-auto-response.md](architecture/cmp-auto-response.md) |
 | How does inter-extension messaging work? | [inter-extension-protocol.md](spec/inter-extension-protocol.md) |
 | How to test the extension? | [testing-guide.md](testing-guide.md) |
-| What visual language does it use? | [icons-and-layers.md](icons-and-layers.md) |
+| What visual language does it use? | [icons-and-layers.md](architecture/icons-and-layers.md) |

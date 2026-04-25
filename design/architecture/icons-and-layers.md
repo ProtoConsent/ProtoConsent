@@ -1,6 +1,6 @@
 # Icons and information layers
 
-This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../LICENSE-CC-BY-SA) file for details.
+This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../../LICENSE-CC-BY-SA) file for details.
 
 ProtoConsent uses the [Consent Commons](https://consentcommons.com/el-sistema/) icon system as a visual language to explain what each purpose means.
 

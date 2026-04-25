@@ -117,7 +117,7 @@ Consumers encountering a `protoconsent` version they do not fully support should
 ## 3. Relationship to other specifications
 
 - **`security.txt` (RFC 9116):** similar pattern: a `.well-known` file for machine-readable site metadata. ProtoConsent follows the same convention.
-- **Consent Commons:** the purpose categories and legal basis values align with the [Consent Commons](https://consentcommons.com/) taxonomy. See `icons-and-layers.md` for the visual mapping.
+- **Consent Commons:** the purpose categories and legal basis values align with the [Consent Commons](https://consentcommons.com/) taxonomy. See [icons-and-layers.md](../architecture/icons-and-layers.md) for the visual mapping.
 - **ProtoConsent SDK:** the SDK enables dynamic interaction (page queries extension). The `.well-known` file enables static declaration (extension reads site). Both are complementary: a site can use one, both, or neither.
 - **GPC (`Sec-GPC`):** GPC signals user preference (browser to site). `.well-known/protoconsent.json` signals site practices (site to browser). They are complementary directions.
 

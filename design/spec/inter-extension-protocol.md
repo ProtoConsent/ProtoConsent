@@ -20,16 +20,21 @@ The protocol reuses the same data model and purpose definitions described in [da
   - [4. Discovery](#4-discovery)
   - [5. Security Model](#5-security-model)
   - [6. Cross-Browser Compatibility](#6-cross-browser-compatibility)
+  - [7. Test Consumer](#7-test-consumer)
 
 ## 2. Architecture
 
-```text
- Consumer extension                        ProtoConsent extension
- ┌────────────────┐  sendMessage(extId)   ┌────────────────┐  chrome.storage  ┌─────────┐
- │  Background /  │ ────────────────────→ │ onMessageExt.  │ ←──────────────→ │ Storage │
- │  Service worker│                       │ (background)   │                  │ (local) │
- │                │ ←──────────────────── │                │                  └─────────┘
- └────────────────┘  sendResponse         └────────────────┘
+```mermaid
+sequenceDiagram
+    participant C as Consumer Extension
+    participant P as ProtoConsent Background
+    participant S as Local Storage
+
+    C->>P: chrome.runtime.sendMessage(extId, query)
+    P->>P: Verify sender.id (allowlist, rate limit)
+    P->>S: Read consent state for domain
+    S->>P: Site rule + profile
+    P->>C: sendResponse (purposes, profile)
 ```
 
 Communication uses `chrome.runtime.sendMessage(targetExtensionId, message)` on the sender side and `chrome.runtime.onMessageExternal` on the receiver. The browser verifies `sender.id`; it cannot be spoofed.
@@ -38,7 +43,7 @@ Communication uses `chrome.runtime.sendMessage(targetExtensionId, message)` on t
 
 All messages use a `type` field prefixed with `protoconsent:`.
 
-**Capabilities discovery** — the consumer asks what the provider supports:
+**Capabilities discovery** - the consumer asks what the provider supports:
 
 ```json
 { "type": "protoconsent:capabilities" }
@@ -57,7 +62,7 @@ Response:
 }
 ```
 
-**Consent query** — the consumer queries consent state for a domain:
+**Consent query** - the consumer queries consent state for a domain:
 
 ```json
 {
@@ -87,7 +92,7 @@ Response:
 
 All six purposes are always returned, regardless of which the consumer is interested in.
 
-**Error** — returned for invalid, unauthorized, or rate-limited queries:
+**Error** - returned for invalid, unauthorized, or rate-limited queries:
 
 ```json
 {
@@ -111,9 +116,9 @@ If ProtoConsent is not installed, `chrome.runtime.sendMessage` sets `chrome.runt
 
 ## 5. Security Model
 
-- **Opt-in master switch**: the inter-extension API is disabled by default. The user must explicitly enable it in ProtoConsent's settings (`interExtEnabled` in storage). When disabled, a `disabled` error is returned (not a silent drop), so legitimate developers can diagnose the issue. Toggling the switch off and on preserves the allowlist, denylist, and pending queue — it only stops and resumes message processing.
-- **TOFU allowlist (Trust on First Use)**: even when the API is enabled, each consumer extension must be individually approved by the user. On first contact from an unknown extension, ProtoConsent stores a pending authorization request and responds with a `need_authorization` error. The user can then approve or deny the extension via the settings UI. Approved extension IDs are stored in `interExtAllowlist`. This prevents silent probing by untrusted extensions.
-- **Denylist**: when the user explicitly denies an extension, its ID is moved to `interExtDenylist`. Future messages from denied extensions are silently dropped — no response is sent, giving the attacker no signal that ProtoConsent is active.
+- **Opt-in master switch**: the inter-extension API is disabled by default. The user must explicitly enable it in ProtoConsent's settings. When disabled, a `disabled` error is returned (not a silent drop), so legitimate developers can diagnose the issue. Toggling the switch off and on preserves the allowlist, denylist, and pending queue - it only stops and resumes message processing.
+- **TOFU allowlist (Trust on First Use)**: even when the API is enabled, each consumer extension must be individually approved by the user. On first contact from an unknown extension, ProtoConsent stores a pending authorization request and responds with a `need_authorization` error. The user can then approve or deny the extension via the settings UI. This prevents silent probing by untrusted extensions.
+- **Denylist**: when the user explicitly denies an extension, its ID is moved to the denylist. Future messages from denied extensions are silently dropped - no response is sent, giving the attacker no signal that ProtoConsent is active.
 - **Pending queue cap**: the pending authorization queue is capped at 10 entries. When full, new unknown extensions are silently ignored (not queued) to prevent an attacker from evicting legitimate pending requests that the user has not yet reviewed. The user must clear or act on pending entries before new ones can be recorded.
 - **Global unknown-ID cooldown**: a maximum of 3 new unknown extension IDs are processed per minute. Beyond this threshold, messages from unknown extensions are silently dropped. This prevents flooding attacks where a malicious actor generates many fake extension IDs to overwhelm the user with authorization prompts.
 - **Read-only**: the listener only reads storage. There is no code path from external messages to storage writes or rule rebuilds.
@@ -124,7 +129,7 @@ If ProtoConsent is not installed, `chrome.runtime.sendMessage` sets `chrome.runt
 - **Bounded response**: the response contains only the fixed six-purpose schema, a profile name, and a version string. No user-controlled data beyond the echoed domain.
 - **No intrusive prompts**: authorization requests are queued silently and reviewed at the user's discretion via the settings UI. This eliminates clickjacking vectors from automated popup windows.
 
-The user manages the allowlist, denylist, and pending queue from the Purpose Settings page, which provides a master switch and per-extension Allow / Block / Revoke / Unblock controls. All inter-extension events (successes, errors, rate limits) are also visible in the Log tab's Requests stream, colour-coded and timestamped, so the user can observe API activity after the fact. Silent drops (denylist, global cooldown) are not logged. See [architecture.md §12.4–12.5](../architecture.md#124-management-ui) for implementation details.
+The user manages the allowlist, denylist, and pending queue from the Purpose Settings page, which provides a master switch and per-extension Allow / Block / Revoke / Unblock controls. All inter-extension events (successes, errors, rate limits) are also visible in the Log tab's Requests stream, colour-coded and timestamped, so the user can observe API activity after the fact. Silent drops (denylist, global cooldown) are not logged.
 
 ## 6. Cross-Browser Compatibility
 

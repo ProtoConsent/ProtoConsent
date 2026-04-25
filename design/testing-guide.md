@@ -852,7 +852,7 @@ ProtoConsent allows exporting and importing the full configuration (site rules, 
 
 ## 16. Testing CMP auto-response
 
-CMP auto-response injects consent cookies before CMP scripts load, suppressing consent banners based on the user's purpose preferences. See [cmp-auto-response.md](cmp-auto-response.md) for the full design.
+CMP auto-response injects consent cookies before CMP scripts load, suppressing consent banners based on the user's purpose preferences. See [cmp-auto-response.md](architecture/cmp-auto-response.md) for the full design.
 
 ### 16.1 Verifying banner suppression
 
