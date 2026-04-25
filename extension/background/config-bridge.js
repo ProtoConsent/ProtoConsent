@@ -49,3 +49,14 @@ export const CAPABILITIES = {
 
 // SYNC: must match config.js REGIONAL_IDS
 export const REGIONAL_IDS = new Set(["regional_cosmetic", "regional_blocking"]);
+
+// Domains where .well-known/protoconsent.json fetch is skipped.
+// Browser store pages reject extension requests with CORS errors that
+// surface in chrome://extensions error log.
+export const WELL_KNOWN_SKIP_DOMAINS = new Set([
+  "chromewebstore.google.com",
+  "chrome.google.com",
+  "addons.mozilla.org",
+  "microsoftedge.microsoft.com",
+  "addons.opera.com",
+]);
