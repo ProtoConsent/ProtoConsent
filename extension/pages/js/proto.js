@@ -322,7 +322,14 @@ function _countCname(blocked) {
 
 function _fillCoverageBody(body, resp, wkData) {
   var coverage = resp.coverage || {};
-  if (!coverage.observed) { body.textContent = "No data yet"; return; }
+  if (!coverage.observed) {
+    if (resp.isBrave && resp.mode === "protoconsent") {
+      body.textContent = "Brave Shields blocks before ProtoConsent can monitor";
+    } else {
+      body.textContent = "No data yet";
+    }
+    return;
+  }
   var prov = computeBlockProvenance(coverage, resp.mode);
   var ratio = coverage.observed > 0 ? Math.round((coverage.attributed / coverage.observed) * 100) : 0;
 
@@ -874,26 +881,24 @@ function renderBlockerDetectionBanner(state, mode, targetId) {
 
   // Determine which case applies
   let config = null;
-  // if (state.suggestMonitoring && mode !== "protoconsent") {
-  //   config = {
-  //     title: "External blocker detected",
-  //     detail: "Switch to Monitoring mode to complement your blocker with privacy signals, banner management and consent control.",
-  //     primaryLabel: "Switch to Monitoring",
-  //     dismissLabel: "Dismiss",
-  //     dismissTarget: "suggestion",
-  //     onPrimary: function () {
-  //       chrome.runtime.sendMessage({ type: "PROTOCONSENT_SET_OPERATING_MODE", mode: "protoconsent" }, function (resp) {
-  //         void chrome.runtime.lastError;
-  //         if (resp && !resp.ok) return;
-  //         if (typeof operatingMode !== "undefined") operatingMode = "protoconsent";
-  //         if (typeof updateModeIndicator === "function") updateModeIndicator("protoconsent");
-  //         if (typeof setActiveMode === "function") setActiveMode("proto");
-  //         if (typeof initProtoTab === "function") initProtoTab();
-  //       });
-  //     },
-  //   };
-  // } else if (state.warnNoBlocker && mode === "protoconsent") {
-  if (state.warnNoBlocker && mode === "protoconsent") {
+  if (state.isBrave && mode === "protoconsent") {
+    config = {
+      title: "Brave Shields active",
+      detail: "Brave blocks trackers before ProtoConsent can count them. Block counts will show 0, but privacy signals (GPC), banner management, cosmetic filtering, and URL cleaning remain active. Switch to Blocking mode for purpose-based protection on top of Shields.",
+      primaryLabel: "Switch to Blocking",
+      dismissLabel: "Dismiss",
+      dismissTarget: "warning",
+      onPrimary: function () {
+        chrome.runtime.sendMessage({ type: "PROTOCONSENT_SET_OPERATING_MODE", mode: "standalone" }, function (resp) {
+          void chrome.runtime.lastError;
+          if (resp && !resp.ok) return;
+          if (typeof operatingMode !== "undefined") operatingMode = "standalone";
+          if (typeof updateModeIndicator === "function") updateModeIndicator("standalone");
+          if (typeof setActiveMode === "function") setActiveMode("consent");
+        });
+      },
+    };
+  } else if (state.warnNoBlocker && mode === "protoconsent") {
     config = {
       title: "No external blocking observed",
       detail: "Monitoring mode does not block network requests. No other blocker appears to be active. Switch to Blocking mode for full protection.",

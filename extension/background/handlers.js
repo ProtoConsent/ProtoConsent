@@ -10,7 +10,7 @@
  // @param {Object} catalog - enhanced-lists.json catalog
  // @returns {string} "off" | "basic" | "full" | "custom"
  
-import { REGIONAL_IDS } from "./config-bridge.js";
+import { REGIONAL_IDS, WELL_KNOWN_SKIP_DOMAINS } from "./config-bridge.js";
 import { getLifetimeTotal } from "./tracking.js";
 
 function resolveEnhancedPreset(lists, catalog) {
@@ -62,7 +62,7 @@ import { rebuildAllDynamicRules } from "./rebuild.js";
 import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
 import { scheduleSessionPersist } from "./session.js";
-import { getBlockerDetectionState, resetBehavioralCounters, dismissBlockerDetection } from "./blocker-detection.js";
+import { getBlockerDetectionState, resetBehavioralCounters, dismissBlockerDetection, isBrave } from "./blocker-detection.js";
 
 // Handle a bridge query from the content script.
 export async function handleBridgeQuery(message) {
@@ -182,6 +182,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (mode !== operatingMode) setOperatingMode(mode);
       sendResponse({
         mode,
+        isBrave: isBrave(),
         coverage: tabCoverageMetrics.get(tabId) || null,
         blocked: tabBlockedDomains.get(tabId) || {},
         gpcDomains: tabGpcDomains.get(tabId) || {},
@@ -499,6 +500,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return;
     }
     const host = (message.host && typeof message.host === "string") ? message.host : domain;
+    if (WELL_KNOWN_SKIP_DOMAINS.has(host.toLowerCase())) {
+      sendResponse({ data: null });
+      return;
+    }
     const protocol = message.protocol === "http:" ? "http://" : "https://";
     const url = protocol + host + "/.well-known/protoconsent.json";
     fetch(url, { credentials: "omit", redirect: "follow" })
