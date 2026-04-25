@@ -30,7 +30,7 @@ All design decisions derive from completing this triangle. If any of the three i
 
 ## 3. Why purpose‑based consent
 
-ProtoConsent organises decisions around *purposes of data use* (functional, analytics, ads, personalisation, third‑party services, advanced tracking), not around vendors, cookies, or domains.
+ProtoConsent organises decisions around *purposes of data use* (functional, analytics, ads, personalization, third‑party services, advanced tracking), not around vendors, cookies, or domains.
 
 Purpose is the only abstraction that connects three things simultaneously:
 

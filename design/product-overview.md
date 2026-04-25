@@ -20,7 +20,7 @@ For each site, ProtoConsent stores a local rule that combines a profile with exp
 
 **Per‑site profiles:** ProtoConsent lets users assign simple profiles such as “Strict”, “Balanced”, or “Permissive” to each website, so they can quickly express their general level of trust without dealing with dozens of granular switches.
 
-**Purpose‑based toggles:** Within each site, users can toggle individual purposes (such as functional, analytics, ads, personalisation, third‑party services, or advanced tracking) on or off, refining the profile when they care about specific data uses.
+**Purpose‑based toggles:** Within each site, users can toggle individual purposes (such as functional, analytics, ads, personalization, third‑party services, or advanced tracking) on or off, refining the profile when they care about specific data uses.
 
 **Local‑only storage:** All rules are stored locally in the browser, without any remote server or central account.
 

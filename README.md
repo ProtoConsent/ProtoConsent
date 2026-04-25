@@ -16,7 +16,7 @@
   <img src="https://img.shields.io/badge/firefox-planned-lightgrey?logo=firefox&logoColor=white" alt="Firefox planned">
 </p>
 
-ProtoConsent is a browser extension that lets you control how websites may use your data, expressed in terms of purposes (functional, analytics, ads, personalisation, third‑party services, advanced tracking) rather than specific trackers or domains. Not a full ad blocker, not a CMP: a personal consent control panel that lives in the browser and can coexist with existing blockers and consent tools.
+ProtoConsent is a browser extension that lets you control how websites may use your data, expressed in terms of purposes (functional, analytics, ads, personalization, third‑party services, advanced tracking) rather than specific trackers or domains. Not a full ad blocker, not a CMP: a personal consent control panel that lives in the browser and can coexist with existing blockers and consent tools.
 
 It works in two operating modes: **Blocking** (default) enforces purpose-based blocking directly via declarativeNetRequest. **Monitoring** delegates blocking to an external ad blocker while ProtoConsent provides purpose attribution, coverage metrics, and signal observability - turning any blocker into a purpose-aware system.
 
@@ -35,7 +35,7 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 
 ## Key features
 
-- **Per-site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalisation, third-party services, advanced tracking).
+- **Per-site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalization, third-party services, advanced tracking).
 - **Two operating modes:** Blocking (full blocking) or Monitoring (attribution with an external blocker). The Overview tab dashboard shows mode status, coverage metrics, and purpose-attributed blocks.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec-GPC), sent only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.
 - **Consent banner auto-response:** 31 CMP frameworks (including IAB TCF v2.2) answered automatically based on your purpose preferences. No DOM interaction, no click simulation. See [cmp-auto-response.md](design/architecture/cmp-auto-response.md).
