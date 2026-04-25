@@ -98,7 +98,7 @@ in the extension but are compiled from upstream open-source projects.
 
 | Source | Authors | License | Files |
 |--------|---------|---------|-------|
-| [EasyList](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `easylist.json`, `easylist_cosmetic.json` |
+| [EasyList](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `easylist.json`, `easylist_cosmetic.json`, `easylist_cookie_cosmetic.json` |
 | [EasyPrivacy](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `easyprivacy.json` |
 | [AdGuard DNS Filter](https://github.com/AdguardTeam/AdGuardSDNSFilter) | AdGuard Team | GPL-3.0 | `adguard_dns.json` |
 | [OISD](https://oisd.nl/) | Stephan van Ruth | GPL-3.0 | `oisd_small.json` |
@@ -124,6 +124,12 @@ in the extension but are compiled from upstream open-source projects.
 |--------|---------|---------|-------|
 | [EasyList regional supplements](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `regional/regional_{cn,de,nl,es,he,it,lt,pl}_*.json` |
 | [AdGuard language filters](https://github.com/AdguardTeam/AdguardFilters) | AdGuard Team | GPL-3.0 | `regional/regional_{cn,de,nl,es,fr,ja,ru,tr,uk}_*.json` |
+
+### Cosmetic annoyance filtering
+
+| Source | Authors | License | Files |
+|--------|---------|---------|-------|
+| [Web Annoyances Ultralist](https://github.com/LanikSJ/webannoyances) | yourduskquibbles, LanikSJ | CC BY-SA 4.0 | `webannoyances_cosmetic.json` |
 
 13 regions: Chinese, German, Dutch, Spanish/Portuguese, French, Hebrew, Italian, Japanese,
 Lithuanian, Polish, Russian, Turkish, Ukrainian. Each region produces two files (cosmetic +
@@ -193,3 +199,11 @@ https://github.com/DandelionSprout/Dandelicence
 > contributors' names cannot endorse forked products without written
 > permission, and near-unmodified redistributions shall be accessible in
 > ≥100 countries worldwide.
+
+### CC BY-SA 4.0 (Web Annoyances Ultralist)
+
+Web Annoyances Ultralist is distributed under the Creative Commons
+Attribution-ShareAlike 4.0 International license.
+The full license text is available at: https://creativecommons.org/licenses/by-sa/4.0/
+
+> Copyright (c) 2016-2024 by yourduskquibbles and LanikSJ
