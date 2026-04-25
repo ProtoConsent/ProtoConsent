@@ -217,6 +217,30 @@ async function loadSiteDeclaration() {
   }
 }
 
+// Clear cached .well-known for current domain and re-fetch
+var _wkRecheckStatus = null;
+var _wkRecheckPending = false;
+
+async function refreshWellKnown() {
+  if (!currentDomain || _wkRecheckPending) return;
+  _wkRecheckPending = true;
+
+  _wkRecheckStatus = "Checking declaration\u2026";
+  if (typeof renderSignalsBar === "function") renderSignalsBar();
+
+  await new Promise(resolve => chrome.storage.local.remove("wk_" + currentDomain, resolve));
+  await loadSiteDeclaration();
+
+  _wkRecheckStatus = _wkIndicatorState === "active" ? "Declaration found" : "No declaration found";
+  if (typeof renderSignalsBar === "function") renderSignalsBar();
+
+  setTimeout(function () {
+    _wkRecheckStatus = null;
+    _wkRecheckPending = false;
+    if (typeof renderSignalsBar === "function") renderSignalsBar();
+  }, 4000);
+}
+
 // Minimal validation of a ProtoConsent .well-known/protoconsent.json file.
 // See design/spec/protoconsent-well-known.md §4.2 for the rules.
 function validateSiteDeclaration(json) {

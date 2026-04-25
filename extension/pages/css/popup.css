@@ -401,6 +401,13 @@ body {
   background-color: #9ca3af;
 }
 
+.pc-wk-recheck-status {
+  text-align: center;
+  font-size: var(--pc-font-sm);
+  color: var(--pc-text-muted);
+  padding: 2px 0 0;
+}
+
 /* GPC-specific */
 .pc-gpc-dot {
   background-color: #dc2626;
@@ -1420,8 +1427,8 @@ body {
   cursor: pointer;
   font: inherit;
   text-align: center;
+  -webkit-user-select: none;
   user-select: none;
-}
 
 .pc-grid-card-toggle:hover { background: rgba(0, 0, 0, 0.02); }
 

@@ -25,12 +25,29 @@ function renderSignalsBar(observedGpc) {
   pillsDiv.appendChild(buildPill("GPC", computeGpcState(observedGpc), function () { navigateToLog("gpc"); }));
   pillsDiv.appendChild(buildPill("CH", computeChState()));
   var wkState = computeWkState();
-  var wkClick = (wkState.state === "active" && typeof toggleSidePanel === "function") ? function () { toggleSidePanel(); } : null;
+  var wkClick;
+  if (wkState.state === "active" && typeof toggleSidePanel === "function") {
+    wkClick = function () { toggleSidePanel(); };
+  } else if (currentDomain && typeof refreshWellKnown === "function") {
+    wkClick = function () { refreshWellKnown(); };
+  }
   pillsDiv.appendChild(buildPill("WK", wkState, wkClick));
   pillsDiv.appendChild(buildPill("TCF", { state: "disabled", title: "TCF CMP not detected" }));
   updateTcfPill(pillsDiv);
 
-  _signalsBar.setExpanded(pillsDiv);
+  var wrapper = document.createElement("div");
+  wrapper.appendChild(pillsDiv);
+
+  if (typeof _wkRecheckStatus === "string" && _wkRecheckStatus) {
+    var statusEl = document.createElement("div");
+    statusEl.className = "pc-wk-recheck-status";
+    statusEl.setAttribute("role", "status");
+    statusEl.setAttribute("aria-live", "polite");
+    statusEl.textContent = _wkRecheckStatus;
+    wrapper.appendChild(statusEl);
+  }
+
+  _signalsBar.setExpanded(wrapper);
 }
 
 function buildSignalSummary(observedGpc) {
@@ -82,6 +99,7 @@ function computeChState() {
 function computeWkState() {
   var state = typeof _wkIndicatorState !== "undefined" ? _wkIndicatorState : "disabled";
   var title = typeof _wkIndicatorTitle !== "undefined" ? _wkIndicatorTitle : "WK status unavailable";
+  if (state !== "active" && currentDomain) title += "\nClick to recheck";
   return { state: state, title: title };
 }
 
