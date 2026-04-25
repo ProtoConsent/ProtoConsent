@@ -93,7 +93,7 @@ ProtoConsent offers two ways for websites to participate, both optional:
 
 - **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, retention, sharing scope). No SDK, no code changes, just a JSON file. See the [spec](design/spec/protoconsent-well-known.md), the [JSON Schema](docs/schema/v0.2.json), the [demo site source](https://github.com/ProtoConsent/demo) for a complete example, or use the online tools: [generator](https://protoconsent.org/generate.html), [validator](https://protoconsent.org/validate.html), [CI action](https://github.com/ProtoConsent/validate-action).
 - **Integrate the SDK:** import `sdk/protoconsent.js` (MIT) and call `get('analytics')` to read the user's preferences. Returns `true`, `false`, or `null` (extension not installed). See the [quick example](design/spec/signalling-protocol.md#quick-example) and [SDK source](sdk/protoconsent.js).
-- **List your site in the directory:** if your site already serves a declaration, [add it to the public directory](https://github.com/ProtoConsent/ProtoConsent/issues/new?template=add-site.yml) — your file will be validated automatically. Browse the [directory](https://protoconsent.org/directory.html).
+- **List your site in the directory:** if your site already serves a declaration, [add it to the public directory](https://github.com/ProtoConsent/protoconsent.org/issues/new?template=add-site.yml) — your file will be validated automatically. Browse the [directory](https://protoconsent.org/directory.html).
 
 For a visual walkthrough of both paths, see [protoconsent.org/developers](https://protoconsent.org/developers.html).
 
