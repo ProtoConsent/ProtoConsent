@@ -139,8 +139,8 @@ body {
   display: block;
   flex-shrink: 0;
   pointer-events: none;
-  user-select: none;
   -webkit-user-select: none;
+  user-select: none;
 }
 
 .pc-mode-tab.is-active .pc-mode-tab-label {
@@ -1429,6 +1429,7 @@ body {
   text-align: center;
   -webkit-user-select: none;
   user-select: none;
+}
 
 .pc-grid-card-toggle:hover { background: rgba(0, 0, 0, 0.02); }
 
