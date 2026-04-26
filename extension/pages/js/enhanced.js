@@ -31,13 +31,23 @@ function getEnhancedStats() {
     .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && (l.type === "tracking_params" || l.type === "tracking_params_sites"))
     .reduce((sum, [id, l]) => sum + (l.paramCount || (epCatalog[id] && epCatalog[id].param_count) || 0), 0);
   let updatesAvailable = 0;
+  let coreUpdate = false;
+  let cmpUpdate = false;
   for (const id of Object.keys(epLists)) {
-    if (CORE_IDS.has(id) || CMP_IDS.has(id)) continue;
     if (epLists[id].bundled) continue;
     const catalogDef = epCatalog[id];
-    if (catalogDef && catalogDef.version && epLists[id].version &&
-        catalogDef.version > epLists[id].version) {
-      updatesAvailable++;
+    const hasUpdate = catalogDef && catalogDef.version && epLists[id].version &&
+        catalogDef.version > epLists[id].version;
+    if (!hasUpdate) continue;
+    if (CORE_IDS.has(id)) { coreUpdate = true; continue; }
+    if (CMP_IDS.has(id)) { cmpUpdate = true; continue; }
+    updatesAvailable++;
+  }
+  if (coreUpdate) updatesAvailable++;
+  if (cmpUpdate) updatesAvailable++;
+  if (epHasRegionalLanguages) {
+    for (const id of Object.keys(epCatalog)) {
+      if (REGIONAL_IDS.has(id) && !epLists[id]) updatesAvailable++;
     }
   }
   const cosmeticRules = cosmeticLists.reduce((sum, l) =>
