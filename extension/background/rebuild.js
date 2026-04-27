@@ -293,6 +293,7 @@ async function _rebuildAllDynamicRulesImpl() {
     } // end can("whitelistOverrides")
 
     // 4b. Hotfix allow rules: override static rulesets for zombie domains
+    let hotfixDomainCount = 0;
     if (can("ownBlocking")) {
       let hotfixData = enhancedData["protoconsent_hotfix"];
       if (!hotfixData) {
@@ -309,7 +310,8 @@ async function _rebuildAllDynamicRulesImpl() {
             resourceTypes: BLOCK_RESOURCE_TYPES,
           },
         });
-        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix allow rule for", hotfixData.domains.length, "domains");
+        hotfixDomainCount = hotfixData.domains.length;
+        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix allow rule for", hotfixDomainCount, "domains");
         setHotfixDomainSet(new Set(hotfixData.domains));
       } else {
         setHotfixDomainSet(new Set());
@@ -709,6 +711,7 @@ async function _rebuildAllDynamicRulesImpl() {
         cmpLists: Object.entries(enhancedListsMeta)
           .filter(([id, m]) => m.type === "cmp" && (m.enabled || consentLinkedListIds.has(id)))
           .map(([id]) => id),
+        hotfixDomainCount,
         ts: Date.now(),
       });
     }

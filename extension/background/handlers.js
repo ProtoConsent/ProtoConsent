@@ -40,7 +40,7 @@ import {
   operatingMode, setOperatingMode,
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
-  tabCoverageMetrics, unattributedBuffer, blockerDetection, tabHotfixHits,
+  tabCoverageMetrics, unattributedBuffer, blockerDetection, tabHotfixHits, hotfixDomainSet,
   pathOnlyUrlFilters,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
@@ -469,6 +469,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         debugData.consentLinkedListIds = lastConsentLinkedListIds;
         debugData.celPendingDownload = lastCelPendingDownload;
         debugData.regionalLanguages = regionalLangs;
+        // Hotfix diagnostics
+        debugData.hotfixListenerActive = hotfixDomainSet.size > 0;
         // Blocker detection diagnostics
         debugData.blockerDetect = {
           navCount: blockerDetection.navCount,
