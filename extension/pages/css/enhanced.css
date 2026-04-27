@@ -386,6 +386,11 @@
   cursor: help;
 }
 
+.ep-category-pill img {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
 .ep-category-pill:hover {
   border-color: var(--pc-line-strong);
   background: var(--pc-surface-soft);
@@ -423,7 +428,12 @@
   color: var(--pc-accent, #1d4ed8);
   border-color: var(--pc-accent, #1d4ed8);
   background: var(--pc-accent-soft, #dbeafe);
-  padding: 1px 6px;
+}
+
+.ep-core-pill img {
+  width: 11px;
+  height: 11px;
+  filter: brightness(0) saturate(100%) invert(24%) sepia(89%) saturate(2070%) hue-rotate(222deg) brightness(95%) contrast(92%);
 }
 
 .ep-cel-icon {

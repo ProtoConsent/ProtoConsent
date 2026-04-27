@@ -788,7 +788,14 @@ function _renderEpListCard(listId) {
     pill.className = "ep-category-pill ep-cmp-pill";
     pill.title = "CMP auto-response - handles cookie consent banners";
     pill.setAttribute("aria-label", "Banner auto-response");
-    pill.textContent = "\u26A1 Banners";
+    const cmpIcon = document.createElement("img");
+    cmpIcon.src = "../icons/grid/banners.svg";
+    cmpIcon.width = 12;
+    cmpIcon.height = 12;
+    cmpIcon.alt = "";
+    cmpIcon.onerror = function() { this.style.display = "none"; };
+    pill.appendChild(cmpIcon);
+    pill.appendChild(document.createTextNode(" Banners"));
     header.appendChild(pill);
   } else if (listDef.type === "tracking_params" || listDef.type === "tracking_params_sites") {
     const pill = document.createElement("span");
