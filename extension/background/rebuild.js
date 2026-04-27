@@ -25,7 +25,7 @@ import {
 import {
   getDefaultProfileConfig, resolvePurposes, getAllRulesFromStorage,
   getWhitelistFromStorage, isValidHostname,
-  getEnhancedListsFromStorage, getAllEnhancedDataFromStorage,
+  getEnhancedListsFromStorage, getAllEnhancedDataFromStorage, getEnhancedDataFromStorage,
   getEnhancedPresetFromStorage,
 } from "./storage.js";
 import {
@@ -289,6 +289,27 @@ async function _rebuildAllDynamicRulesImpl() {
       whitelistRulesAdded++;
     }
     } // end can("whitelistOverrides")
+
+    // 4b. Hotfix allow rules: override static rulesets for revoked zombie domains
+    if (can("ownBlocking")) {
+      let revokeData = enhancedData["protoconsent_revoke"];
+      if (!revokeData) {
+        revokeData = await getEnhancedDataFromStorage("protoconsent_revoke");
+      }
+      if (revokeData?.domains?.length) {
+        const rId = nextRuleId++;
+        newRules.push({
+          id: rId,
+          priority: 3,
+          action: { type: "allow" },
+          condition: {
+            requestDomains: revokeData.domains,
+            resourceTypes: BLOCK_RESOURCE_TYPES,
+          },
+        });
+        if (DEBUG_RULES) console.log("ProtoConsent rebuild: safelist allow rule for", revokeData.domains.length, "revoked domains");
+      }
+    }
 
     // 5. Enhanced Protection lists (dynamic block rules, priority 2)
     const consentLinkedListIds = new Set();

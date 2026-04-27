@@ -1159,6 +1159,62 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               });
             });
           }
+          if (listDef.type === "revoke") {
+            if (!data.revocations || !Array.isArray(data.revocations)) {
+              throw new Error("Invalid revoke format: missing revocations array");
+            }
+            const domains = data.revocations.filter(d => typeof d === "string" && d.length > 0);
+            if (!domains.length) {
+              throw new Error("Invalid revoke format: no valid domains");
+            }
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, revokeCount: existing.revokeCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeRevoke(lists, shouldEnable);
+                  });
+                }
+                return storeRevoke(lists, shouldEnable);
+                function storeRevoke(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    revokeCount: domains.length,
+                    type: "revoke",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { domains },
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      rebuildAllDynamicRules();
+                      sendResponse({ ok: true, revokeCount: domains.length });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
           if (!data.rules || !Array.isArray(data.rules)) {
             throw new Error("Invalid list format: missing rules array");
           }
