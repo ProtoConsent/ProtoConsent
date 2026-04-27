@@ -9,7 +9,8 @@ import { INTEREXT_PROTOCOL_VERSION } from "./config-bridge.js";
 import { logPorts, _extEventLog, EXT_EVENT_LOG_CAP } from "./state.js";
 import { scheduleSessionPersist } from "./session.js";
 import { handleBridgeQuery } from "./handlers.js";
-import { isValidHostname } from "./storage.js";
+import { isValidHostname, getWhitelistFromStorage } from "./storage.js";
+import { resolvePurposesFromHostname } from "./config-loader.js";
 
 // --- Rate limiting ---
 const _extRateLimit = new Map();
@@ -109,7 +110,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
         name: "ProtoConsent",
         version: manifest.version,
         protocol_version: INTEREXT_PROTOCOL_VERSION,
-        supported_types: ["protoconsent:query", "protoconsent:capabilities"],
+        supported_types: ["protoconsent:query", "protoconsent:classify", "protoconsent:capabilities"],
         purposes: ["functional", "analytics", "ads", "personalization", "third_parties", "advanced_tracking"]
       });
       pushExtEvent({ sender: senderId, action: "capabilities", result: "ok" });
@@ -140,6 +141,41 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
       }).catch(() => {
         sendResponse({ type: "protoconsent:error", error: "internal", message: "Failed to resolve purposes" });
         pushExtEvent({ sender: senderId, action: "query", domain, result: "internal" });
+      });
+      return;
+    }
+
+    // Domain classification + user decision (per-site override, then default profile)
+    if (message.type === "protoconsent:classify") {
+      const domain = message.domain;
+      if (!domain || typeof domain !== "string" || domain.length > 253 || !isValidHostname(domain)) {
+        sendResponse({ type: "protoconsent:error", error: "invalid_domain", message: "A valid hostname is required" });
+        pushExtEvent({ sender: senderId, action: "classify", domain: String(message.domain || ""), result: "invalid_domain" });
+        return;
+      }
+      const purposes = resolvePurposesFromHostname(domain);
+      Promise.all([
+        handleBridgeQuery({ domain, action: "getAll" }),
+        getWhitelistFromStorage()
+      ]).then(([resolved, whitelist]) => {
+        let decision = purposes.length ? "allow" : null;
+        for (const p of purposes) {
+          if (!p.startsWith("enhanced:") && resolved[p] === false) {
+            decision = "block";
+            break;
+          }
+        }
+        // Whitelist overrides: if domain is whitelisted (globally or for itself as site)
+        if (decision === "block" && whitelist[domain]) {
+          if (whitelist[domain]["*"] || whitelist[domain][domain]) {
+            decision = "allow";
+          }
+        }
+        sendResponse({ type: "protoconsent:classify_response", domain, purposes, decision });
+        pushExtEvent({ sender: senderId, action: "classify", domain, result: "ok", purposes, decision });
+      }).catch(() => {
+        sendResponse({ type: "protoconsent:error", error: "internal", message: "Failed to classify domain" });
+        pushExtEvent({ sender: senderId, action: "classify", domain, result: "internal" });
       });
       return;
     }

@@ -57,7 +57,7 @@ Response:
   "name": "ProtoConsent",
   "version": "0.4.0",
   "protocol_version": "0.1",
-  "supported_types": ["protoconsent:query", "protoconsent:capabilities"],
+  "supported_types": ["protoconsent:query", "protoconsent:classify", "protoconsent:capabilities"],
   "purposes": ["functional", "analytics", "ads", "personalization", "third_parties", "advanced_tracking"]
 }
 ```
@@ -91,6 +91,28 @@ Response:
 ```
 
 All six purposes are always returned, regardless of which the consumer is interested in.
+
+**Domain classification** - the consumer queries which blocking category a domain belongs to:
+
+```json
+{
+  "type": "protoconsent:classify",
+  "domain": "doubleclick.net"
+}
+```
+
+Response:
+
+```json
+{
+  "type": "protoconsent:classify_response",
+  "domain": "doubleclick.net",
+  "purposes": ["ads"],
+  "decision": "block"
+}
+```
+
+The `purposes` array contains core purpose keys (e.g. `ads`, `analytics`) or enhanced list references (e.g. `enhanced:easylist`). An empty array means the domain is not in any blocklist. The `decision` field is `"block"` if any classified purpose is denied for this domain (checking per-site overrides first, then the default profile), `"allow"` if all are permitted, or `null` if the domain is not classified. Unlike `query`, this returns the domain's classification in ProtoConsent's blocking lists combined with the user's default profile decision.
 
 **Error** - returned for invalid, unauthorized, or rate-limited queries:
 
