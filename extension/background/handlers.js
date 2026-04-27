@@ -40,7 +40,7 @@ import {
   operatingMode, setOperatingMode,
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
-  tabCoverageMetrics, unattributedBuffer, blockerDetection,
+  tabCoverageMetrics, unattributedBuffer, blockerDetection, tabHotfixHits, hotfixDomainSet,
   pathOnlyUrlFilters,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
@@ -128,6 +128,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         whitelist,
         operatingMode,
         coverage: tabCoverageMetrics.get(message.tabId) || null,
+        hotfixHits: tabHotfixHits.has(message.tabId) ? Array.from(tabHotfixHits.get(message.tabId)) : [],
+        hotfixActive: hotfixDomainSet.size > 0,
         lifetimeBlocked: getLifetimeTotal(),
       });
     });
@@ -468,6 +470,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         debugData.consentLinkedListIds = lastConsentLinkedListIds;
         debugData.celPendingDownload = lastCelPendingDownload;
         debugData.regionalLanguages = regionalLangs;
+        // Hotfix diagnostics
+        debugData.hotfixListenerActive = hotfixDomainSet.size > 0;
         // Blocker detection diagnostics
         debugData.blockerDetect = {
           navCount: blockerDetection.navCount,
@@ -1152,6 +1156,62 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                       }
                       rebuildAllDynamicRules();
                       sendResponse({ ok: true, paramCount, domainCount });
+                      resolve();
+                    });
+                  });
+                }
+              });
+            });
+          }
+          if (listDef.type === "revoke") {
+            if (!data.revocations || !Array.isArray(data.revocations)) {
+              throw new Error("Invalid revoke format: missing revocations array");
+            }
+            const domains = data.revocations.filter(d => typeof d === "string" && d.length > 0);
+            if (!domains.length) {
+              throw new Error("Invalid revoke format: no valid domains");
+            }
+            return withEnhancedStorageLock(() => {
+              return getEnhancedListsFromStorage().then(lists => {
+                const existing = lists[listId];
+                if (existing && data.version && existing.version === data.version) {
+                  sendResponse({ ok: true, skipped: true, hotfixCount: existing.hotfixCount });
+                  return;
+                }
+                const existingEnabled = existing?.enabled;
+                let shouldEnable;
+                if (existingEnabled !== undefined) {
+                  shouldEnable = existingEnabled;
+                } else {
+                  shouldEnable = true;
+                  return getEnhancedPresetFromStorage().then(preset => {
+                    if (preset === "off") shouldEnable = false;
+                    else if (preset === "basic") shouldEnable = listDef.preset === "basic";
+                    return storeHotfix(lists, shouldEnable);
+                  });
+                }
+                return storeHotfix(lists, shouldEnable);
+                function storeHotfix(lists, enabled) {
+                  lists[listId] = {
+                    enabled,
+                    version: data.version || null,
+                    lastFetched: Date.now(),
+                    hotfixCount: domains.length,
+                    type: "revoke",
+                  };
+                  const storageUpdate = {
+                    enhancedLists: lists,
+                    ["enhancedData_" + listId]: { domains },
+                  };
+                  return new Promise(resolve => {
+                    chrome.storage.local.set(storageUpdate, () => {
+                      if (chrome.runtime.lastError) {
+                        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+                        resolve();
+                        return;
+                      }
+                      rebuildAllDynamicRules();
+                      sendResponse({ ok: true, hotfixCount: domains.length });
                       resolve();
                     });
                   });

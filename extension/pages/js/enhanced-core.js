@@ -78,7 +78,14 @@ function renderCoreCard(coreIds) {
   const pill = document.createElement("span");
   pill.className = "ep-category-pill ep-core-pill";
   pill.title = "ProtoConsent own blocklist";
-  pill.textContent = "\u25C9 Core";
+  const coreIcon = document.createElement("img");
+  coreIcon.src = "../icons/purposes/core.svg";
+  coreIcon.width = 12;
+  coreIcon.height = 12;
+  coreIcon.alt = "";
+  coreIcon.onerror = function() { this.style.display = "none"; };
+  pill.appendChild(coreIcon);
+  pill.appendChild(document.createTextNode(" Core"));
   header.appendChild(pill);
 
   if (anyDownloaded) {
@@ -274,10 +281,17 @@ function renderCmpCard(cmpIds) {
   header.appendChild(nameEl);
 
   const pill = document.createElement("span");
-  pill.className = "ep-category-pill ep-cmp-pill";
+  pill.className = "ep-category-pill ep-core-pill";
   pill.title = "CMP detection and auto-response";
   pill.setAttribute("aria-label", "Banner handling");
-  pill.textContent = "\u26A1 Banners";
+  const cmpIcon = document.createElement("img");
+  cmpIcon.src = "../icons/grid/banners.svg";
+  cmpIcon.width = 12;
+  cmpIcon.height = 12;
+  cmpIcon.alt = "";
+  cmpIcon.onerror = function() { this.style.display = "none"; };
+  pill.appendChild(cmpIcon);
+  pill.appendChild(document.createTextNode(" Banners"));
   header.appendChild(pill);
 
   if (anyDownloaded) {

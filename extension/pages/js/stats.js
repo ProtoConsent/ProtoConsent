@@ -49,7 +49,7 @@ function ensureBars() {
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
-  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHits: 0, whitelistHitDomains: {} };
+  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHits: 0, whitelistHitDomains: {}, hotfixPending: false };
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
       return EMPTY_BLOCKED_RESULT;
@@ -74,6 +74,12 @@ async function getBlockedRulesCount() {
     const gpcDomains = domainsResp?.gpcDomains || [];
     const gpcDomainCounts = domainsResp?.gpcDomainCounts || {};
     lastWhitelist = domainsResp?.whitelist || {};
+    const hotfixHits = domainsResp?.hotfixHits || [];
+    const hotfixPending = (domainsResp?.hotfixActive && hotfixHits.length === 0);
+    for (const d of hotfixHits) {
+      if (!lastWhitelist[d]) lastWhitelist[d] = {};
+      if (!lastWhitelist[d]["_hotfix"]) lastWhitelist[d]["_hotfix"] = "hotfix";
+    }
 
     // Cache per-purpose domain and path counts for displayProtectionScope
     if (domainsResp?.purposeDomainCounts) {
@@ -97,7 +103,7 @@ async function getBlockedRulesCount() {
         }
       }
       var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + (c && typeof c === "object" ? c.count : (c || 0)), 0);
-      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: 0, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: 0, whitelistHitDomains: {}, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
+      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: 0, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: 0, whitelistHitDomains: {}, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
     }
 
     // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)
@@ -188,7 +194,7 @@ async function getBlockedRulesCount() {
       if (webRequestTotal > blocked) blocked = webRequestTotal;
     }
 
-    return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
+    return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
     return EMPTY_BLOCKED_RESULT;
@@ -265,7 +271,7 @@ async function displayBlockedCount() {
   ensureBars();
 
   try {
-    const { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains, lifetimeBlocked } = await getBlockedRulesCount();
+    const { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains, hotfixPending, lifetimeBlocked } = await getBlockedRulesCount();
     lastBlockedDomains = blockedDomains;
     lastBlocked = blocked;
     lastLifetimeBlocked = lifetimeBlocked || 0;
@@ -355,7 +361,7 @@ async function displayBlockedCount() {
     // Auto-retry: re-fetch after a short delay if domain data is missing
     const hasDomainData = blockedDomains && Object.keys(blockedDomains).length > 0;
     const hasGpcData = gpcDomains && gpcDomains.length > 0;
-    if (((blocked > 0 && !hasDomainData) || (gpc > 0 && !hasGpcData)) && displayRetries < MAX_DISPLAY_RETRIES) {
+    if (((blocked > 0 && !hasDomainData) || (gpc > 0 && !hasGpcData) || hotfixPending) && displayRetries < MAX_DISPLAY_RETRIES) {
       displayRetries++;
       setTimeout(displayBlockedCount, 1500);
     } else {

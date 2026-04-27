@@ -20,7 +20,7 @@ let _celAutoFetchInProgress = false;
 function getEnhancedStats() {
   // Include consent-linked lists as active even if not manually enabled
   const activeLists = Object.entries(epLists)
-    .filter(([id, l]) => l.enabled || epConsentLinkedIds.has(id))
+    .filter(([id, l]) => (l.enabled || epConsentLinkedIds.has(id)) && l.type !== "revoke")
     .map(([, l]) => l);
   const blockingLists = activeLists.filter(l => !l.type);
   const infoLists = activeLists.filter(l => l.type === "informational");
@@ -84,9 +84,9 @@ function getEnhancedStats() {
     cosmeticRules,
     cmpTemplates,
     totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules + cmpTemplates,
-    downloadedCount: Object.keys(epLists).length - coreExtraDownloaded - cmpExtraDownloaded,
-    catalogCount: Object.keys(epCatalog).length - coreExtraCatalog - cmpExtraCatalog,
-    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id) && !(REGIONAL_IDS.has(id) && !epHasRegionalLanguages))
+    downloadedCount: Object.keys(epLists).filter(id => epLists[id].type !== "revoke").length - coreExtraDownloaded - cmpExtraDownloaded,
+    catalogCount: Object.keys(epCatalog).filter(id => epCatalog[id].type !== "revoke").length - coreExtraCatalog - cmpExtraCatalog,
+    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id) && !(REGIONAL_IDS.has(id) && !epHasRegionalLanguages) && epCatalog[id].type !== "revoke")
       .concat(coreCatalogIds.length > 0 && !coreDownloadedIds.length ? [coreCatalogIds[0]] : [])
       .concat(cmpCatalogIds.length > 0 && !cmpDownloadedIds.length ? [cmpCatalogIds[0]] : []),
     updatesAvailable,
@@ -468,6 +468,7 @@ function renderEnhancedLists() {
 
   for (const [listId, listDef] of catalogEntries) {
     if (CORE_IDS.has(listId) || CMP_IDS.has(listId)) continue;
+    if (listDef.type === "revoke") continue;
     if (listDef.type === "cosmetic" || listDef.type === "regional_cosmetic") {
       cosmeticLists.push(listId);
     } else if (listDef.type === "cmp") {
@@ -537,11 +538,15 @@ function renderEnhancedLists() {
       return epLists[id] && (epLists[id].enabled || epConsentLinkedIds.has(id));
     });
 
+    var hotfixActive = !!epLists["protoconsent_hotfix"];
+    var hotfixCount = hotfixActive ? (epLists["protoconsent_hotfix"].hotfixCount || 0) : 0;
+
     var typeGroups = [
       { label: "Blocking", icon: GRID_ICONS + "blocking.svg", grouped: coreActive ? ["ProtoConsent Core"] : [], ids: blockingLists, detail: stats.totalDomains.toLocaleString() + " domains" },
       { label: "Cosmetic", icon: GRID_ICONS + "cosmetic.svg", grouped: [], ids: cosmeticLists, detail: stats.cosmeticRules.toLocaleString() + " rules" },
       { label: "Banners", icon: GRID_ICONS + "banners.svg", grouped: cmpActive ? ["ProtoConsent Banners"] : [], ids: bannerLists, detail: stats.cmpTemplates.toLocaleString() + " templates" },
       { label: "Detection", icon: GRID_ICONS + "detection.svg", grouped: [], ids: detectionLists, detail: stats.paramsTotal.toLocaleString() + " params \u00b7 " + stats.infoDomains.toLocaleString() + " entries" },
+      { label: "Exceptions", icon: GRID_ICONS + "exception.svg", grouped: hotfixActive ? ["ProtoConsent Hotfix"] : [], ids: [], detail: hotfixCount + " domain" + (hotfixCount !== 1 ? "s" : "") },
     ];
     for (var g = 0; g < typeGroups.length; g++) {
       var group = typeGroups[g];
@@ -666,6 +671,41 @@ function renderEnhancedLists() {
   grid.appendChild(dt.card);
   grid.appendChild(dt.body);
 
+  // 6. Exceptions card (hotfix domains)
+  if (hotfixActive && hotfixCount > 0) {
+    var ex = createGridCard({ id: "ep-card-exceptions", iconSrc: GRID_ICONS + "exception.svg", title: "Exceptions", metric: hotfixCount + " domain" + (hotfixCount !== 1 ? "s" : "") });
+    var exBody = ex.body;
+    (function (body) {
+      chrome.storage.local.get(["enhancedData_protoconsent_hotfix"], function (result) {
+        var data = result.enhancedData_protoconsent_hotfix;
+        if (!data || !data.domains || !data.domains.length) {
+          body.textContent = "No domains";
+          return;
+        }
+        var domains = data.domains;
+        var MAX_LISTED = 50;
+        var wrap = document.createElement("div");
+        wrap.className = "ep-hotfix-domains";
+        if (domains.length > MAX_LISTED) {
+          var summary = document.createElement("div");
+          summary.className = "ep-hotfix-domain-entry";
+          summary.textContent = domains.length.toLocaleString() + " domains corrected since last release";
+          wrap.appendChild(summary);
+        } else {
+          for (var i = 0; i < domains.length; i++) {
+            var entry = document.createElement("div");
+            entry.className = "ep-hotfix-domain-entry";
+            entry.textContent = domains[i];
+            wrap.appendChild(entry);
+          }
+        }
+        body.appendChild(wrap);
+      });
+    })(exBody);
+    grid.appendChild(ex.card);
+    grid.appendChild(ex.body);
+  }
+
   container.appendChild(grid);
 
   // Restore expanded card
@@ -748,7 +788,14 @@ function _renderEpListCard(listId) {
     pill.className = "ep-category-pill ep-cmp-pill";
     pill.title = "CMP auto-response - handles cookie consent banners";
     pill.setAttribute("aria-label", "Banner auto-response");
-    pill.textContent = "\u26A1 Banners";
+    const cmpIcon = document.createElement("img");
+    cmpIcon.src = "../icons/grid/banners.svg";
+    cmpIcon.width = 12;
+    cmpIcon.height = 12;
+    cmpIcon.alt = "";
+    cmpIcon.onerror = function() { this.style.display = "none"; };
+    pill.appendChild(cmpIcon);
+    pill.appendChild(document.createTextNode(" Banners"));
     header.appendChild(pill);
   } else if (listDef.type === "tracking_params" || listDef.type === "tracking_params_sites") {
     const pill = document.createElement("span");
@@ -1115,9 +1162,13 @@ function updateAllEnhancedLists(btnEl) {
     let updated = 0;
     for (const listId of allIds) {
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
-        if (chrome.runtime.lastError) resp = null;
+        if (chrome.runtime.lastError) {
+          resp = null;
+        }
         completed++;
-        if (!resp?.ok) failed++;
+        if (!resp?.ok) {
+          failed++;
+        }
         else if (resp.skipped) skipped++;
         else updated++;
         if (btnEl) {

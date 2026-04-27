@@ -21,11 +21,12 @@ import {
   _rebuildQueued, setRebuildQueued,
   GPC_SCRIPT_ID, COSMETIC_SCRIPT_ID,
   setOperatingMode, can,
+  setHotfixDomainSet,
 } from "./state.js";
 import {
   getDefaultProfileConfig, resolvePurposes, getAllRulesFromStorage,
   getWhitelistFromStorage, isValidHostname,
-  getEnhancedListsFromStorage, getAllEnhancedDataFromStorage,
+  getEnhancedListsFromStorage, getAllEnhancedDataFromStorage, getEnhancedDataFromStorage,
   getEnhancedPresetFromStorage,
 } from "./storage.js";
 import {
@@ -33,6 +34,7 @@ import {
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
 import { updateCmpInjectionData } from "./cmp-injection.js";
+import { updateHotfixListener } from "./tracking.js";
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
 export async function rebuildAllDynamicRules() {
@@ -289,6 +291,35 @@ async function _rebuildAllDynamicRulesImpl() {
       whitelistRulesAdded++;
     }
     } // end can("whitelistOverrides")
+
+    // 4b. Hotfix allow rules: override static rulesets for zombie domains
+    let hotfixDomainCount = 0;
+    if (can("ownBlocking")) {
+      let hotfixData = enhancedData["protoconsent_hotfix"];
+      if (!hotfixData) {
+        hotfixData = await getEnhancedDataFromStorage("protoconsent_hotfix");
+      }
+      if (hotfixData?.domains?.length) {
+        const rId = nextRuleId++;
+        newRules.push({
+          id: rId,
+          priority: 3,
+          action: { type: "allow" },
+          condition: {
+            requestDomains: hotfixData.domains,
+            resourceTypes: BLOCK_RESOURCE_TYPES,
+          },
+        });
+        hotfixDomainCount = hotfixData.domains.length;
+        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix allow rule for", hotfixDomainCount, "domains");
+        setHotfixDomainSet(new Set(hotfixData.domains));
+      } else {
+        setHotfixDomainSet(new Set());
+      }
+    } else {
+      setHotfixDomainSet(new Set());
+    }
+    updateHotfixListener();
 
     // 5. Enhanced Protection lists (dynamic block rules, priority 2)
     const consentLinkedListIds = new Set();
@@ -680,6 +711,7 @@ async function _rebuildAllDynamicRulesImpl() {
         cmpLists: Object.entries(enhancedListsMeta)
           .filter(([id, m]) => m.type === "cmp" && (m.enabled || consentLinkedListIds.has(id)))
           .map(([id]) => id),
+        hotfixDomainCount,
         ts: Date.now(),
       });
     }

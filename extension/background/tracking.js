@@ -14,6 +14,7 @@ import {
   logPorts, _extEventLog,
   tabCoverageMetrics, unattributedBuffer, UNATTRIBUTED_BUFFER_CAP,
   pathOnlyUrlFilters,
+  hotfixDomainSet, tabHotfixHits,
 } from "./state.js";
 import { resolvePurposesFromHostname } from "./config-loader.js";
 import { scheduleSessionPersist, updateBadgeForTab } from "./session.js";
@@ -326,3 +327,45 @@ chrome.webNavigation.onCommitted.addListener((details) => {
     } catch (_) {}
   }
 });
+
+// --- Hotfix domain tracking via onCompleted ---
+// Registered dynamically by rebuild.js when hotfix domains exist.
+// Tracks which hotfix domains were actually loaded per tab.
+let _hotfixListener = null;
+
+export function updateHotfixListener() {
+  if (_hotfixListener) {
+    try { chrome.webRequest.onCompleted.removeListener(_hotfixListener); } catch (_) {}
+    _hotfixListener = null;
+  }
+  if (hotfixDomainSet.size === 0) return;
+
+  const urls = [];
+  for (const d of hotfixDomainSet) {
+    urls.push("*://*." + d + "/*");
+    urls.push("*://" + d + "/*");
+  }
+
+  _hotfixListener = (details) => {
+    if (details.tabId < 0) return;
+    let hostname;
+    try { hostname = new URL(details.url).hostname; } catch (_) { return; }
+    if (!hotfixDomainSet.has(hostname)) {
+      const parts = hostname.split(".");
+      for (let i = 1; i < parts.length - 1; i++) {
+        const parent = parts.slice(i).join(".");
+        if (hotfixDomainSet.has(parent)) { hostname = parent; break; }
+      }
+    }
+    if (!hotfixDomainSet.has(hostname)) return;
+    if (!tabHotfixHits.has(details.tabId)) tabHotfixHits.set(details.tabId, new Set());
+    tabHotfixHits.get(details.tabId).add(hostname);
+  };
+
+  try {
+    chrome.webRequest.onCompleted.addListener(_hotfixListener, { urls });
+  } catch (e) {
+    console.warn("ProtoConsent: hotfix onCompleted listener failed:", e.message);
+    _hotfixListener = null;
+  }
+}

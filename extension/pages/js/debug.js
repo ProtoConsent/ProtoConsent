@@ -6,6 +6,8 @@
 // Renders directly into #pc-log-debug (only called when DEBUG_RULES = true).
 // Loaded after popup.js; uses globals: currentDomain, currentProfile, currentPurposesState.
 
+var HOTFIX_HEADER = "\u2014 hotfix (safelist) \u2014";
+
 function renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains }) {
   const content = document.getElementById("pc-log-debug");
   if (!content) return;
@@ -134,6 +136,13 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     } else {
       lines.push("— enhanced protection: off —");
+      lines.push("");
+    }
+
+    // Hotfix (safelist)
+    if (bg && bg.hotfixDomainCount > 0) {
+      lines.push(HOTFIX_HEADER);
+      lines.push("  domains: " + bg.hotfixDomainCount + "  listener: " + (bg.hotfixListenerActive ? "active" : "inactive"));
       lines.push("");
     }
 
@@ -347,6 +356,24 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
             if (pre) pre.textContent += "\n" + lines2.join("\n");
           }
         });
+        // Hotfix tab hits (reuse tabId from same query)
+        if (bg && bg.hotfixDomainCount > 0) {
+          chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_BLOCKED_DOMAINS", tabId: tabs[0].id }, (resp) => {
+            if (chrome.runtime.lastError) { void chrome.runtime.lastError; return; }
+            var hits = resp && resp.hotfixHits;
+            if (hits && hits.length > 0) {
+              var pre = document.querySelector("#pc-log-debug");
+              if (pre) {
+                var idx = pre.textContent.indexOf(HOTFIX_HEADER);
+                if (idx !== -1) {
+                  var before = pre.textContent.slice(0, pre.textContent.indexOf("\n", idx + 1) + 1);
+                  var after = pre.textContent.slice(before.length);
+                  pre.textContent = before + "  tab hits: " + hits.join(", ") + "\n" + after;
+                }
+              }
+            }
+          });
+        }
       }
     });
 

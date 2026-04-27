@@ -29,7 +29,8 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [Language selection](#language-selection)
     - [Preset integration](#preset-integration)
     - [UI](#ui)
-  - [13. Adding a new list](#13-adding-a-new-list)
+  - [13. Hotfix safelist](#13-hotfix-safelist)
+  - [14. Adding a new list](#14-adding-a-new-list)
 
 ## 1. Overview
 
@@ -257,7 +258,38 @@ Regional lists participate in Balanced/Full presets but are excluded from preset
 
 Two cards in the Protection tab (Regional Cosmetic and Regional Blocking) show flag icons for selected languages. Region selection is handled exclusively in Purpose Settings. Flag icons are from [flag-icons](https://github.com/lipis/flag-icons) (MIT license).
 
-## 13. Adding a new list
+## 13. Hotfix safelist
+
+The data repo produces `protoconsent_hotfix.json` listing domains that should no longer be blocked but are still present in the frozen extension bundle. These domains are blocked by static rulesets (priority 1) until the next extension release.
+
+The hotfix neutralizes them with a single DNR allow rule at priority 3, overriding both static blocks (priority 1) and enhanced dynamic blocks (priority 2). This is a **core list** - always active when downloaded, regardless of preset or enabled state. It has no UI toggle and does not appear as a toggleable card in the Protection tab.
+
+| Property | Value |
+| --- | --- |
+| Catalog ID | `protoconsent_hotfix` |
+| Display name | ProtoConsent Hotfix |
+| Type | `revoke` |
+| Preset | `basic` |
+| Source | [ProtoConsent/data](https://github.com/ProtoConsent/data) |
+| License | GPL-3.0+ |
+| CDN URL | `enhanced/protoconsent/protoconsent_hotfix.json` |
+
+JSON format:
+
+```json
+{
+  "version": "2026-04-27",
+  "generated": "2026-04-27T06:11:25.598Z",
+  "revocation_count": 1,
+  "revocations": ["example-domain.com"]
+}
+```
+
+The rebuild inserts a single allow rule with `requestDomains` containing all revoked domains. The extension also maintains a runtime `hotfixDomainSet` to track which requests match hotfix domains (for observability in the debug panel and whitelist log).
+
+In the UI, the Exceptions accordion in the Overview section of the Protection tab shows the domain count. The Exceptions grid card lists individual domains when expanded.
+
+## 14. Adding a new list
 
 Adding a third-party list requires entries in 3 files:
 
