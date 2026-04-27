@@ -320,13 +320,16 @@ async function displayBlockedCount() {
       expDiv.appendChild(enhancedEl);
       buildEnhancedScopeLine(enhancedEl);
 
-      // Lifetime total (persistent across sessions)
-      if (lastLifetimeBlocked > 0) {
-        var ltLine = document.createElement("div");
-        ltLine.className = "pc-counter-lifetime";
-        ltLine.title = "Total blocked across all sites since install";
-        ltLine.textContent = compactNumber(lastLifetimeBlocked) + " blocked since install";
-        expDiv.appendChild(ltLine);
+      // Lifetime total (persistent across sessions) - shown below profile/site row
+      var ltEl = document.getElementById("pc-lifetime-counter");
+      if (ltEl) {
+        if (lastLifetimeBlocked > 0) {
+          ltEl.textContent = compactNumber(lastLifetimeBlocked) + " total blocked";
+          ltEl.title = "Total blocked across all sites since install";
+          ltEl.hidden = false;
+        } else {
+          ltEl.hidden = true;
+        }
       }
 
       // Link to Log Domains
