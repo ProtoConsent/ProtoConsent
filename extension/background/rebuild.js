@@ -292,9 +292,9 @@ async function _rebuildAllDynamicRulesImpl() {
 
     // 4b. Hotfix allow rules: override static rulesets for revoked zombie domains
     if (can("ownBlocking")) {
-      let revokeData = enhancedData["protoconsent_revoke"];
+      let revokeData = enhancedData["protoconsent_hotfix"];
       if (!revokeData) {
-        revokeData = await getEnhancedDataFromStorage("protoconsent_revoke");
+        revokeData = await getEnhancedDataFromStorage("protoconsent_hotfix");
       }
       if (revokeData?.domains?.length) {
         const rId = nextRuleId++;

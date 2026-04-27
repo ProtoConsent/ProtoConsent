@@ -538,8 +538,8 @@ function renderEnhancedLists() {
       return epLists[id] && (epLists[id].enabled || epConsentLinkedIds.has(id));
     });
 
-    var revokeActive = epLists["protoconsent_revoke"] && epLists["protoconsent_revoke"].enabled;
-    var revokeCount = revokeActive ? (epLists["protoconsent_revoke"].revokeCount || 0) : 0;
+    var revokeActive = epLists["protoconsent_hotfix"] && epLists["protoconsent_hotfix"].enabled;
+    var revokeCount = revokeActive ? (epLists["protoconsent_hotfix"].revokeCount || 0) : 0;
 
     var typeGroups = [
       { label: "Blocking", icon: GRID_ICONS + "blocking.svg", grouped: coreActive ? ["ProtoConsent Core"] : [], ids: blockingLists, detail: stats.totalDomains.toLocaleString() + " domains" },
@@ -676,8 +676,8 @@ function renderEnhancedLists() {
     var ex = createGridCard({ id: "ep-card-exceptions", iconSrc: GRID_ICONS + "exception.svg", title: "Exceptions", metric: revokeCount + " domain" + (revokeCount !== 1 ? "s" : "") });
     var exBody = ex.body;
     (function (body) {
-      chrome.storage.local.get(["enhancedData_protoconsent_revoke"], function (result) {
-        var data = result.enhancedData_protoconsent_revoke;
+      chrome.storage.local.get(["enhancedData_protoconsent_hotfix"], function (result) {
+        var data = result.enhancedData_protoconsent_hotfix;
         if (!data || !data.domains || !data.domains.length) {
           body.textContent = "No domains";
           return;
