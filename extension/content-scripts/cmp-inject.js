@@ -20,10 +20,15 @@
   const protocol = window.location.protocol;
   if (protocol !== 'http:' && protocol !== 'https:') return;
 
-  const { _cmpSignatures: sigs, _userPurposes: prefs, _tcString: tcString,
-    cmpAutoResponse, cmpEnabled, cmpCookieMaxAge, cmpCustomUuid } =
-    await chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString',
+  let stored;
+  try {
+    stored = await chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString',
       'cmpAutoResponse', 'cmpEnabled', 'cmpCookieMaxAge', 'cmpCustomUuid']);
+  } catch (_) { return; }
+  const sigs = stored._cmpSignatures;
+  const prefs = stored._userPurposes;
+  const tcString = stored._tcString;
+  const { cmpAutoResponse, cmpEnabled, cmpCookieMaxAge, cmpCustomUuid } = stored;
   if (cmpAutoResponse === false) return;
   if (!sigs || !prefs) return;
 
@@ -282,14 +287,16 @@
   if (window === window.top) {
     const cmpIds = Object.keys(applicableSigs);
     if (cmpIds.length > 0) {
-      chrome.runtime.sendMessage({
-        type: "PROTOCONSENT_CMP_APPLIED",
-        domain: domain,
-        cmpIds: cmpIds,
-        cookieCount: injectedCookies.length,
-        selectorCount: selectors.length,
-        scrollUnlock: lockEntries.length > 0,
-      }, () => { void chrome.runtime.lastError; });
+      try {
+        chrome.runtime.sendMessage({
+          type: "PROTOCONSENT_CMP_APPLIED",
+          domain: domain,
+          cmpIds: cmpIds,
+          cookieCount: injectedCookies.length,
+          selectorCount: selectors.length,
+          scrollUnlock: lockEntries.length > 0,
+        }, () => { void chrome.runtime.lastError; });
+      } catch (_) {}
     }
   }
 })();
