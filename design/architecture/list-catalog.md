@@ -52,7 +52,7 @@ The extension ships static DNR rulesets organized by purpose for day-1 blocking 
 | Security (`security`) | - | 22,382 | 22,382 | - |
 | **Total** | **58,094** | **127,669** | **185,763** | **5,873** |
 
-Counts as of 2026-04-18. The first 5 purposes are Balanced preset; security is Full preset. In the UI, the first 5 appear as a grouped card ("ProtoConsent Core") in the Protection tab.
+Counts as of 2026-04-18. The first 5 purposes are Balanced preset; security is also Balanced preset. In the UI, the first 5 appear as a grouped card ("ProtoConsent Core") in the Protection tab.
 
 ## 3. DNR format
 
@@ -117,7 +117,6 @@ When downloading with preset Off, the extension auto-switches to Balanced.
 | List | License | Domains | Path rules | Category |
 | --- | --- | --- | --- | --- |
 | [EasyPrivacy](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~46K | ~4K | `analytics` |
-| [EasyList](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~58K | ~1.6K | `ads` |
 | [AdGuard DNS Filter](https://github.com/AdguardTeam/AdGuardSDNSFilter) | GPL-3.0 | ~165K | - | - |
 | [EasyList Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | - | - | `ads` |
 | [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | - | - | - |
@@ -125,14 +124,16 @@ When downloading with preset Off, the extension auto-switches to Balanced.
 
 *Regional lists only active when user has selected languages (see [section 12](#12-regional-lists)).
 
-### Full preset (adds 6 lists)
+### Full preset (adds 8 lists)
 
 | List | License | Domains | Category |
 | --- | --- | --- | --- |
+| [EasyList](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~56K | `ads` |
 | [OISD Small](https://oisd.nl/) | GPL-3.0 | ~56K | - |
 | [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~190K | - |
 | [Blocklist Project - Crypto](https://github.com/blocklistproject/Lists) | Unlicense | ~24K | `advanced_tracking` |
 | [Blocklist Project - Phishing](https://github.com/blocklistproject/Lists) | Unlicense | ~87K | `security` |
+| [AdGuard CNAME Trackers](https://github.com/AdguardTeam/cname-trackers) | MIT | ~240K | - |
 | [EasyList Cookie Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | - | - |
 | [Web Annoyances Cosmetic](https://github.com/LanikSJ/webannoyances) | CC BY-SA 4.0 | - | - |
 
@@ -206,7 +207,7 @@ Detectors contain CSS selectors for banner presence/visibility. Site-specific si
 
 CNAME cloaking disguises trackers as first-party subdomains via DNS CNAME records (e.g. `metrics.example.com` CNAMEs to `tracker.adjust.com`). Chromium extensions have no DNS API, so ProtoConsent uses a static lookup map from [AdGuard CNAME Trackers](https://github.com/AdguardTeam/cname-trackers) (MIT license).
 
-The map contains ~229K disguised domains mapped to ~244 tracker destinations. This is an **informational** list - it does not block requests. When enabled, the Log tab shows a CNAME indicator next to matched domains. Part of the Balanced preset.
+The map contains ~240K disguised domains mapped to ~244 tracker destinations. This is an **informational** list - it does not block requests. When enabled, the Log tab shows a CNAME indicator next to matched domains. Part of the Full preset.
 
 ## 11. URL parameter stripping
 
