@@ -21,6 +21,7 @@ import {
   _rebuildQueued, setRebuildQueued,
   GPC_SCRIPT_ID, COSMETIC_SCRIPT_ID,
   setOperatingMode, can,
+  setHotfixDomainSet,
 } from "./state.js";
 import {
   getDefaultProfileConfig, resolvePurposes, getAllRulesFromStorage,
@@ -33,6 +34,7 @@ import {
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
 import { updateCmpInjectionData } from "./cmp-injection.js";
+import { updateHotfixListener } from "./tracking.js";
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
 export async function rebuildAllDynamicRules() {
@@ -290,26 +292,32 @@ async function _rebuildAllDynamicRulesImpl() {
     }
     } // end can("whitelistOverrides")
 
-    // 4b. Hotfix allow rules: override static rulesets for revoked zombie domains
+    // 4b. Hotfix allow rules: override static rulesets for zombie domains
     if (can("ownBlocking")) {
-      let revokeData = enhancedData["protoconsent_hotfix"];
-      if (!revokeData) {
-        revokeData = await getEnhancedDataFromStorage("protoconsent_hotfix");
+      let hotfixData = enhancedData["protoconsent_hotfix"];
+      if (!hotfixData) {
+        hotfixData = await getEnhancedDataFromStorage("protoconsent_hotfix");
       }
-      if (revokeData?.domains?.length) {
+      if (hotfixData?.domains?.length) {
         const rId = nextRuleId++;
         newRules.push({
           id: rId,
           priority: 3,
           action: { type: "allow" },
           condition: {
-            requestDomains: revokeData.domains,
+            requestDomains: hotfixData.domains,
             resourceTypes: BLOCK_RESOURCE_TYPES,
           },
         });
-        if (DEBUG_RULES) console.log("ProtoConsent rebuild: safelist allow rule for", revokeData.domains.length, "revoked domains");
+        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix allow rule for", hotfixData.domains.length, "domains");
+        setHotfixDomainSet(new Set(hotfixData.domains));
+      } else {
+        setHotfixDomainSet(new Set());
       }
+    } else {
+      setHotfixDomainSet(new Set());
     }
+    updateHotfixListener();
 
     // 5. Enhanced Protection lists (dynamic block rules, priority 2)
     const consentLinkedListIds = new Set();

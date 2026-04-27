@@ -40,7 +40,7 @@ import {
   operatingMode, setOperatingMode,
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
-  tabCoverageMetrics, unattributedBuffer, blockerDetection,
+  tabCoverageMetrics, unattributedBuffer, blockerDetection, tabHotfixHits,
   pathOnlyUrlFilters,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
@@ -128,6 +128,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         whitelist,
         operatingMode,
         coverage: tabCoverageMetrics.get(message.tabId) || null,
+        hotfixHits: tabHotfixHits.has(message.tabId) ? Array.from(tabHotfixHits.get(message.tabId)) : [],
         lifetimeBlocked: getLifetimeTotal(),
       });
     });
@@ -1171,7 +1172,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               return getEnhancedListsFromStorage().then(lists => {
                 const existing = lists[listId];
                 if (existing && data.version && existing.version === data.version) {
-                  sendResponse({ ok: true, skipped: true, revokeCount: existing.revokeCount });
+                  sendResponse({ ok: true, skipped: true, hotfixCount: existing.hotfixCount });
                   return;
                 }
                 const existingEnabled = existing?.enabled;
@@ -1183,16 +1184,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                   return getEnhancedPresetFromStorage().then(preset => {
                     if (preset === "off") shouldEnable = false;
                     else if (preset === "basic") shouldEnable = listDef.preset === "basic";
-                    return storeRevoke(lists, shouldEnable);
+                    return storeHotfix(lists, shouldEnable);
                   });
                 }
-                return storeRevoke(lists, shouldEnable);
-                function storeRevoke(lists, enabled) {
+                return storeHotfix(lists, shouldEnable);
+                function storeHotfix(lists, enabled) {
                   lists[listId] = {
                     enabled,
                     version: data.version || null,
                     lastFetched: Date.now(),
-                    revokeCount: domains.length,
+                    hotfixCount: domains.length,
                     type: "revoke",
                   };
                   const storageUpdate = {
@@ -1207,7 +1208,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                         return;
                       }
                       rebuildAllDynamicRules();
-                      sendResponse({ ok: true, revokeCount: domains.length });
+                      sendResponse({ ok: true, hotfixCount: domains.length });
                       resolve();
                     });
                   });

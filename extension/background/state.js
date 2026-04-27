@@ -199,6 +199,13 @@ export const tabCoverageMetrics = new Map();
 export const unattributedBuffer = [];
 export const UNATTRIBUTED_BUFFER_CAP = 50;
 
+// --- Hotfix tracking ---
+// Set of hotfix domains (updated by rebuild.js when hotfix data changes).
+// tabHotfixHits: tabId -> Set of hotfix hostnames observed via onCompleted.
+export let hotfixDomainSet = new Set();
+export function setHotfixDomainSet(v) { hotfixDomainSet = v; }
+export const tabHotfixHits = new Map();
+
 // Tab navigation tracking
 export const tabNavigating = new Set();
 export const tabLastUrl = new Map();

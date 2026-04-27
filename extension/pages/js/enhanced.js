@@ -538,15 +538,15 @@ function renderEnhancedLists() {
       return epLists[id] && (epLists[id].enabled || epConsentLinkedIds.has(id));
     });
 
-    var revokeActive = epLists["protoconsent_hotfix"] && epLists["protoconsent_hotfix"].enabled;
-    var revokeCount = revokeActive ? (epLists["protoconsent_hotfix"].revokeCount || 0) : 0;
+    var hotfixActive = epLists["protoconsent_hotfix"] && epLists["protoconsent_hotfix"].enabled;
+    var hotfixCount = hotfixActive ? (epLists["protoconsent_hotfix"].hotfixCount || 0) : 0;
 
     var typeGroups = [
       { label: "Blocking", icon: GRID_ICONS + "blocking.svg", grouped: coreActive ? ["ProtoConsent Core"] : [], ids: blockingLists, detail: stats.totalDomains.toLocaleString() + " domains" },
       { label: "Cosmetic", icon: GRID_ICONS + "cosmetic.svg", grouped: [], ids: cosmeticLists, detail: stats.cosmeticRules.toLocaleString() + " rules" },
       { label: "Banners", icon: GRID_ICONS + "banners.svg", grouped: cmpActive ? ["ProtoConsent Banners"] : [], ids: bannerLists, detail: stats.cmpTemplates.toLocaleString() + " templates" },
       { label: "Detection", icon: GRID_ICONS + "detection.svg", grouped: [], ids: detectionLists, detail: stats.paramsTotal.toLocaleString() + " params \u00b7 " + stats.infoDomains.toLocaleString() + " entries" },
-      { label: "Exceptions", icon: GRID_ICONS + "exception.svg", grouped: revokeActive ? ["ProtoConsent Hotfix"] : [], ids: [], detail: revokeCount + " domain" + (revokeCount !== 1 ? "s" : "") },
+      { label: "Exceptions", icon: GRID_ICONS + "exception.svg", grouped: hotfixActive ? ["ProtoConsent Hotfix"] : [], ids: [], detail: hotfixCount + " domain" + (hotfixCount !== 1 ? "s" : "") },
     ];
     for (var g = 0; g < typeGroups.length; g++) {
       var group = typeGroups[g];
@@ -671,9 +671,9 @@ function renderEnhancedLists() {
   grid.appendChild(dt.card);
   grid.appendChild(dt.body);
 
-  // 6. Exceptions card (safelist / revoked domains)
-  if (revokeActive && revokeCount > 0) {
-    var ex = createGridCard({ id: "ep-card-exceptions", iconSrc: GRID_ICONS + "exception.svg", title: "Exceptions", metric: revokeCount + " domain" + (revokeCount !== 1 ? "s" : "") });
+  // 6. Exceptions card (hotfix domains)
+  if (hotfixActive && hotfixCount > 0) {
+    var ex = createGridCard({ id: "ep-card-exceptions", iconSrc: GRID_ICONS + "exception.svg", title: "Exceptions", metric: hotfixCount + " domain" + (hotfixCount !== 1 ? "s" : "") });
     var exBody = ex.body;
     (function (body) {
       chrome.storage.local.get(["enhancedData_protoconsent_hotfix"], function (result) {
@@ -685,16 +685,16 @@ function renderEnhancedLists() {
         var domains = data.domains;
         var MAX_LISTED = 50;
         var wrap = document.createElement("div");
-        wrap.className = "ep-revoke-domains";
+        wrap.className = "ep-hotfix-domains";
         if (domains.length > MAX_LISTED) {
           var summary = document.createElement("div");
-          summary.className = "ep-revoke-domain-entry";
+          summary.className = "ep-hotfix-domain-entry";
           summary.textContent = domains.length.toLocaleString() + " domains corrected since last release";
           wrap.appendChild(summary);
         } else {
           for (var i = 0; i < domains.length; i++) {
             var entry = document.createElement("div");
-            entry.className = "ep-revoke-domain-entry";
+            entry.className = "ep-hotfix-domain-entry";
             entry.textContent = domains[i];
             wrap.appendChild(entry);
           }
@@ -1155,9 +1155,13 @@ function updateAllEnhancedLists(btnEl) {
     let updated = 0;
     for (const listId of allIds) {
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId }, (resp) => {
-        if (chrome.runtime.lastError) resp = null;
+        if (chrome.runtime.lastError) {
+          resp = null;
+        }
         completed++;
-        if (!resp?.ok) failed++;
+        if (!resp?.ok) {
+          failed++;
+        }
         else if (resp.skipped) skipped++;
         else updated++;
         if (btnEl) {

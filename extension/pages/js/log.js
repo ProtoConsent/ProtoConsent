@@ -1074,8 +1074,9 @@ function renderLogWhitelist() {
   const wDir = sw.dir === "asc" ? 1 : -1;
   if (sw.col === "scope") {
     entries.sort((a, b) => {
-      if (a.site === "*" && b.site !== "*") return wDir;
-      if (a.site !== "*" && b.site === "*") return -wDir;
+      const aT = a.site === "_hotfix" ? 2 : a.site === "*" ? 1 : 0;
+      const bT = b.site === "_hotfix" ? 2 : b.site === "*" ? 1 : 0;
+      if (aT !== bT) return (aT - bT) * wDir;
       return a.domain.localeCompare(b.domain);
     });
   } else {
@@ -1165,44 +1166,55 @@ function renderLogWhitelist() {
     const cfg = purposesConfig[entry.purpose];
     const tr = document.createElement("tr");
     const isGlobal = entry.site === "*";
+    const isHotfix = entry.site === "_hotfix";
     const hits = lastWhitelistHitDomains[entry.domain] || 0;
     if (hits > 0) tr.className = "is-active";
 
     const tdIcon = document.createElement("td");
     tdIcon.className = "pc-log-domains-icon";
-    const purposeStr = String(entry.purpose);
-    if (purposeStr.startsWith("enhanced:")) {
+    if (isHotfix) {
       const img = document.createElement("img");
-      img.src = ENHANCED_ICON;
+      img.src = "../icons/grid/exception.svg";
       img.width = 14;
       img.height = 14;
-      img.alt = "EP";
-      img.title = "Enhanced: " + (purposeStr.split(":")[1] || "");
-      img.onerror = function() { tdIcon.textContent = "EP"; };
-      tdIcon.appendChild(img);
-      const catInfo = getEnhancedCategoryInfo(purposeStr.split(":")[1]);
-      if (catInfo) {
-        const catImg = document.createElement("img");
-        catImg.src = catInfo.icon;
-        catImg.width = 12;
-        catImg.height = 12;
-        catImg.alt = catInfo.short;
-        catImg.title = catInfo.label;
-        catImg.style.marginLeft = "2px";
-        catImg.onerror = function() { this.style.display = "none"; };
-        tdIcon.appendChild(catImg);
-      }
-    } else if (cfg && cfg.icon) {
-      const img = document.createElement("img");
-      img.src = cfg.icon;
-      img.width = 14;
-      img.height = 14;
-      img.alt = cfg.short || "";
-      img.title = getPurposeLabel(entry.purpose);
+      img.alt = "Hotfix";
+      img.title = "Hotfix exception";
       tdIcon.appendChild(img);
     } else {
-      tdIcon.textContent = cfg?.short || purposeStr.charAt(0).toUpperCase();
-      tdIcon.title = getPurposeLabel(purposeStr);
+      const purposeStr = String(entry.purpose);
+      if (purposeStr.startsWith("enhanced:")) {
+        const img = document.createElement("img");
+        img.src = ENHANCED_ICON;
+        img.width = 14;
+        img.height = 14;
+        img.alt = "EP";
+        img.title = "Enhanced: " + (purposeStr.split(":")[1] || "");
+        img.onerror = function() { tdIcon.textContent = "EP"; };
+        tdIcon.appendChild(img);
+        const catInfo = getEnhancedCategoryInfo(purposeStr.split(":")[1]);
+        if (catInfo) {
+          const catImg = document.createElement("img");
+          catImg.src = catInfo.icon;
+          catImg.width = 12;
+          catImg.height = 12;
+          catImg.alt = catInfo.short;
+          catImg.title = catInfo.label;
+          catImg.style.marginLeft = "2px";
+          catImg.onerror = function() { this.style.display = "none"; };
+          tdIcon.appendChild(catImg);
+        }
+      } else if (cfg && cfg.icon) {
+        const img = document.createElement("img");
+        img.src = cfg.icon;
+        img.width = 14;
+        img.height = 14;
+        img.alt = cfg.short || "";
+        img.title = getPurposeLabel(entry.purpose);
+        tdIcon.appendChild(img);
+      } else {
+        tdIcon.textContent = cfg?.short || purposeStr.charAt(0).toUpperCase();
+        tdIcon.title = getPurposeLabel(purposeStr);
+      }
     }
 
     const tdDomain = document.createElement("td");
@@ -1214,47 +1226,51 @@ function renderLogWhitelist() {
 
     const tdRemove = document.createElement("td");
     tdRemove.className = "pc-log-domains-action";
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.className = "pc-log-remove-btn";
-    removeBtn.textContent = "Remove";
-    removeBtn.title = "Remove " + entry.domain + " from whitelist";
-    removeBtn.setAttribute("aria-label", "Remove " + entry.domain + " from whitelist");
-    removeBtn.dataset.wlDomain = entry.domain;
-    removeBtn.addEventListener("click", () => handleWhitelistRemove(entry.domain, entry.site));
-    tdRemove.appendChild(removeBtn);
+    if (!isHotfix) {
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "pc-log-remove-btn";
+      removeBtn.textContent = "Remove";
+      removeBtn.title = "Remove " + entry.domain + " from whitelist";
+      removeBtn.setAttribute("aria-label", "Remove " + entry.domain + " from whitelist");
+      removeBtn.dataset.wlDomain = entry.domain;
+      removeBtn.addEventListener("click", () => handleWhitelistRemove(entry.domain, entry.site));
+      tdRemove.appendChild(removeBtn);
+    }
 
     const tdScope = document.createElement("td");
     tdScope.className = "pc-log-domains-action";
     const scopeLabel = document.createElement("span");
-    scopeLabel.className = "pc-log-scope-label" + (isGlobal ? " is-global" : "");
-    scopeLabel.textContent = isGlobal ? "Global" : "Site";
-    scopeLabel.title = isGlobal ? "Allowed on all sites" : "Allowed on " + entry.site;
+    scopeLabel.className = "pc-log-scope-label" + (isHotfix ? " is-hotfix" : isGlobal ? " is-global" : "");
+    scopeLabel.textContent = isHotfix ? "Hotfix" : isGlobal ? "Global" : "Site";
+    scopeLabel.title = isHotfix ? "Corrected by hotfix update" : isGlobal ? "Allowed on all sites" : "Allowed on " + entry.site;
     tdScope.appendChild(scopeLabel);
 
     const tdToggle = document.createElement("td");
     tdToggle.className = "pc-log-domains-action";
-    const toggleBtn = document.createElement("button");
-    toggleBtn.type = "button";
-    toggleBtn.className = "pc-log-scope-toggle-btn";
-    toggleBtn.textContent = isGlobal ? "\u2192 Site" : "\u2192 All";
-    toggleBtn.setAttribute("aria-label", isGlobal
-      ? "Make " + entry.domain + " site-only" + (currentDomain ? " (" + currentDomain + ")" : "")
-      : "Make " + entry.domain + " global (all sites)");
-    toggleBtn.dataset.wlDomain = entry.domain;
-    if (isGlobal) {
-      toggleBtn.title = canToggle
-        ? "Change to per-site (only " + currentDomain + ")"
-        : "Cannot change scope: no active site";
-    } else {
-      toggleBtn.title = "Change to global (all sites)";
+    if (!isHotfix) {
+      const toggleBtn = document.createElement("button");
+      toggleBtn.type = "button";
+      toggleBtn.className = "pc-log-scope-toggle-btn";
+      toggleBtn.textContent = isGlobal ? "\u2192 Site" : "\u2192 All";
+      toggleBtn.setAttribute("aria-label", isGlobal
+        ? "Make " + entry.domain + " site-only" + (currentDomain ? " (" + currentDomain + ")" : "")
+        : "Make " + entry.domain + " global (all sites)");
+      toggleBtn.dataset.wlDomain = entry.domain;
+      if (isGlobal) {
+        toggleBtn.title = canToggle
+          ? "Change to per-site (only " + currentDomain + ")"
+          : "Cannot change scope: no active site";
+      } else {
+        toggleBtn.title = "Change to global (all sites)";
+      }
+      if (!canToggle && isGlobal) {
+        toggleBtn.disabled = true;
+      } else {
+        toggleBtn.addEventListener("click", () => handleWhitelistToggleScope(entry.domain, entry.site));
+      }
+      tdToggle.appendChild(toggleBtn);
     }
-    if (!canToggle && isGlobal) {
-      toggleBtn.disabled = true;
-    } else {
-      toggleBtn.addEventListener("click", () => handleWhitelistToggleScope(entry.domain, entry.site));
-    }
-    tdToggle.appendChild(toggleBtn);
 
     tr.appendChild(tdIcon);
     tr.appendChild(tdDomain);

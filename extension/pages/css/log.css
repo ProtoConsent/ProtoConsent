@@ -431,6 +431,11 @@
   color: var(--pc-text-muted);
 }
 
+.pc-log-scope-label.is-hotfix {
+  color: var(--pc-accent);
+  font-weight: 600;
+}
+
 .pc-log-scope-toggle-btn {
   font-family: inherit;
   font-size: var(--pc-font-sm);

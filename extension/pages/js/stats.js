@@ -74,6 +74,11 @@ async function getBlockedRulesCount() {
     const gpcDomains = domainsResp?.gpcDomains || [];
     const gpcDomainCounts = domainsResp?.gpcDomainCounts || {};
     lastWhitelist = domainsResp?.whitelist || {};
+    const hotfixHits = domainsResp?.hotfixHits || [];
+    for (const d of hotfixHits) {
+      if (!lastWhitelist[d]) lastWhitelist[d] = {};
+      if (!lastWhitelist[d]["_hotfix"]) lastWhitelist[d]["_hotfix"] = "hotfix";
+    }
 
     // Cache per-purpose domain and path counts for displayProtectionScope
     if (domainsResp?.purposeDomainCounts) {

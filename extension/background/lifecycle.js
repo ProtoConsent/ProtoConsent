@@ -10,7 +10,7 @@ import {
   tabCmpDetectData, tabGppData,
   tabNavigating, tabLastUrl,
   tabCoverageMetrics,
-  unattributedBuffer,
+  unattributedBuffer, tabHotfixHits,
 } from "./state.js";
 import { scheduleSessionPersist } from "./session.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
@@ -33,6 +33,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabCmpDetectData.delete(tabId);
       tabGppData.delete(tabId);
       tabCoverageMetrics.delete(tabId);
+      tabHotfixHits.delete(tabId);
       // Remove stale unattributed entries for this tab
       for (let i = unattributedBuffer.length - 1; i >= 0; i--) {
         if (unattributedBuffer[i].tabId === tabId) unattributedBuffer.splice(i, 1);
@@ -68,6 +69,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   tabCmpDetectData.delete(tabId);
   tabGppData.delete(tabId);
   tabCoverageMetrics.delete(tabId);
+  tabHotfixHits.delete(tabId);
   tabLastUrl.delete(tabId);
   for (let i = unattributedBuffer.length - 1; i >= 0; i--) {
     if (unattributedBuffer[i].tabId === tabId) unattributedBuffer.splice(i, 1);

@@ -263,6 +263,7 @@
   gap: 6px;
   padding: 5px 8px;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   font-size: var(--pc-font);
 }
@@ -754,14 +755,14 @@ a.ep-regional-langs:hover {
   outline-offset: 2px;
 }
 
-/* Exceptions (revoke/safelist) domain list inside grid card */
-.ep-revoke-domains {
+/* Exceptions (hotfix) domain list inside grid card */
+.ep-hotfix-domains {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.ep-revoke-domain-entry {
+.ep-hotfix-domain-entry {
   font-size: var(--pc-font-sm);
   color: var(--pc-text-soft);
   padding: 1px 0;
