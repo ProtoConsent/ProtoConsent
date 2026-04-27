@@ -129,6 +129,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         operatingMode,
         coverage: tabCoverageMetrics.get(message.tabId) || null,
         hotfixHits: tabHotfixHits.has(message.tabId) ? Array.from(tabHotfixHits.get(message.tabId)) : [],
+        hotfixActive: hotfixDomainSet.size > 0,
         lifetimeBlocked: getLifetimeTotal(),
       });
     });

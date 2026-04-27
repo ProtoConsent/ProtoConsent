@@ -33,7 +33,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabCmpDetectData.delete(tabId);
       tabGppData.delete(tabId);
       tabCoverageMetrics.delete(tabId);
-      tabHotfixHits.delete(tabId);
+      // tabHotfixHits: NOT cleared on navigation - hotfix domains are global,
+      // hits re-accumulate quickly and clearing causes badge/whitelist flicker.
+      // Cleared only on tab close (onRemoved).
       // Remove stale unattributed entries for this tab
       for (let i = unattributedBuffer.length - 1; i >= 0; i--) {
         if (unattributedBuffer[i].tabId === tabId) unattributedBuffer.splice(i, 1);
