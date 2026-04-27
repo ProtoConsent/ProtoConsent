@@ -538,7 +538,7 @@ function renderEnhancedLists() {
       return epLists[id] && (epLists[id].enabled || epConsentLinkedIds.has(id));
     });
 
-    var hotfixActive = epLists["protoconsent_hotfix"] && epLists["protoconsent_hotfix"].enabled;
+    var hotfixActive = !!epLists["protoconsent_hotfix"];
     var hotfixCount = hotfixActive ? (epLists["protoconsent_hotfix"].hotfixCount || 0) : 0;
 
     var typeGroups = [

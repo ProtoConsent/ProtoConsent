@@ -49,7 +49,7 @@ function ensureBars() {
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
-  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHits: 0, whitelistHitDomains: {} };
+  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHits: 0, whitelistHitDomains: {}, hotfixPending: false };
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
       return EMPTY_BLOCKED_RESULT;
