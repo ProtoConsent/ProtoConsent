@@ -254,7 +254,7 @@ function _renderProtoGrid(resp, wkData, tcfData) {
     { id: "proto-card-banners", iconSrc: GRID_ICONS + "banners.svg", title: "Banners", metric: cmpCount > 0 ? cmpCount + " detected" : "None" },
     { id: "proto-card-cosmetic", iconSrc: GRID_ICONS + "cosmetic.svg", title: "Cosmetic", metric: cosmRules + " rules" },
     { id: "proto-card-trackers", iconSrc: GRID_ICONS + "trackers.svg", title: "Trackers", metric: cnameCount + " cloaked" },
-    { id: "proto-card-cleanlinks", iconSrc: GRID_ICONS + "cleanlinks.svg", title: "Clean Links", metric: paramTotal + " stripped" },
+    { id: "proto-card-cleanlinks", iconSrc: GRID_ICONS + "cleanlinks.svg", title: "URL Cleanup", metric: paramTotal + " stripped" },
   ];
 
   for (var c = 0; c < cards.length; c++) {
@@ -716,7 +716,7 @@ function renderProtoPurposes(blocked, wkData) {
     if (pCfg) return { icon: pCfg.icon, label: getPurposeLabel(cat) };
     const extra = ENHANCED_EXTRA_CATEGORIES[cat];
     if (extra) return { icon: extra.icon, label: extra.label };
-    return { icon: ENHANCED_ICON, label: "General Protection" };
+    return { icon: "../icons/grid/blocking.svg", label: "General Protection" };
   }
 
   for (const { category, items, total } of sorted) {
