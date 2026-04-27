@@ -19,7 +19,10 @@
   if (protocol !== "http:" && protocol !== "https:") return;
 
   // Read detection data from storage
-  const stored = await chrome.storage.local.get(["_cmpDetectors", "_cmpSignatures", "_cmpSiteSignatures", "cmpDetectionEnabled"]);
+  let stored;
+  try {
+    stored = await chrome.storage.local.get(["_cmpDetectors", "_cmpSignatures", "_cmpSiteSignatures", "cmpDetectionEnabled"]);
+  } catch (_) { return; }
 
   // Respect the detection toggle (default: enabled)
   if (stored.cmpDetectionEnabled === false) return;
@@ -74,13 +77,15 @@
       const lateSiteHidden = applySiteHiding(late);
       if (late.length === 0 && lateSiteHidden.length === 0) return;
       detectSent = true;
-      chrome.runtime.sendMessage({
-        type: "PROTOCONSENT_CMP_DETECTED",
-        domain,
-        detected: late,
-        cookies: [],
-        siteHidden: lateSiteHidden,
-      }, () => { void chrome.runtime.lastError; });
+      try {
+        chrome.runtime.sendMessage({
+          type: "PROTOCONSENT_CMP_DETECTED",
+          domain,
+          detected: late,
+          cookies: [],
+          siteHidden: lateSiteHidden,
+        }, () => { void chrome.runtime.lastError; });
+      } catch (_) {}
     }, 4000);
   }
 
@@ -112,13 +117,15 @@
       }
     }
     if (cookies.length === 0) return;
-    chrome.runtime.sendMessage({
-      type: "PROTOCONSENT_CMP_DETECTED",
-      domain,
-      detected: [],
-      cookies,
-      siteHidden: [],
-    }, () => { void chrome.runtime.lastError; });
+    try {
+      chrome.runtime.sendMessage({
+        type: "PROTOCONSENT_CMP_DETECTED",
+        domain,
+        detected: [],
+        cookies,
+        siteHidden: [],
+      }, () => { void chrome.runtime.lastError; });
+    } catch (_) {}
   }, CMP_CLEANUP_DELAY + 1000);
 
   // --- Site-specific hiding ---
@@ -163,11 +170,13 @@
   // Skip reporting if nothing found (detect + site-specific)
   if (detected.length === 0 && siteHidden.length === 0) return;
 
-  chrome.runtime.sendMessage({
-    type: "PROTOCONSENT_CMP_DETECTED",
-    domain,
-    detected,
-    cookies: [],
-    siteHidden,
-  }, () => { void chrome.runtime.lastError; });
+  try {
+    chrome.runtime.sendMessage({
+      type: "PROTOCONSENT_CMP_DETECTED",
+      domain,
+      detected,
+      cookies: [],
+      siteHidden,
+    }, () => { void chrome.runtime.lastError; });
+  } catch (_) {}
 })();

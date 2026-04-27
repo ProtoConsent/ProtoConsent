@@ -13,7 +13,8 @@
 
   const host = location.hostname.replace(/^www\./, "");
 
-  chrome.storage.local.get(["_cosmeticCSS", "_cosmeticDomains", "_cosmeticExceptions"], (r) => {
+  try {
+    chrome.storage.local.get(["_cosmeticCSS", "_cosmeticDomains", "_cosmeticExceptions"], (r) => {
     if (chrome.runtime.lastError) return;
     if (!r._cosmeticCSS && !r._cosmeticDomains) return;
 
@@ -67,11 +68,14 @@
     // Report to background for Log tab streaming
     // Only report from the top frame to avoid duplicate messages from iframes
     if (window === window.top) {
-      chrome.runtime.sendMessage({
-        type: "PROTOCONSENT_COSMETIC_APPLIED",
-        domain: host,
-        siteRules: siteRuleCount,
-      }, () => { void chrome.runtime.lastError; });
+      try {
+        chrome.runtime.sendMessage({
+          type: "PROTOCONSENT_COSMETIC_APPLIED",
+          domain: host,
+          siteRules: siteRuleCount,
+        }, () => { void chrome.runtime.lastError; });
+      } catch (_) {}
     }
   });
+  } catch (_) {}
 })();

@@ -55,10 +55,12 @@
           if (/^\d+$/.test(k) && typeof v === 'boolean') purposeConsents[k] = v;
         }
       }
-      chrome.runtime.sendMessage({
-        type: 'PROTOCONSENT_TCF_DETECTED',
-        cmpId, cmpVersion, tcfPolicyVersion, purposeConsents,
-      }, () => { void chrome.runtime.lastError; });
+      try {
+        chrome.runtime.sendMessage({
+          type: 'PROTOCONSENT_TCF_DETECTED',
+          cmpId, cmpVersion, tcfPolicyVersion, purposeConsents,
+        }, () => { void chrome.runtime.lastError; });
+      } catch (_) {}
       return;
     }
 
@@ -75,10 +77,12 @@
           .slice(0, 20)
           .map(s => s.replace(/[^a-z0-9_:.]/gi, ''));
       }
-      chrome.runtime.sendMessage({
-        type: 'PROTOCONSENT_GPP_DETECTED',
-        gppVersion, supportedAPIs,
-      }, () => { void chrome.runtime.lastError; });
+      try {
+        chrome.runtime.sendMessage({
+          type: 'PROTOCONSENT_GPP_DETECTED',
+          gppVersion, supportedAPIs,
+        }, () => { void chrome.runtime.lastError; });
+      } catch (_) {}
       return;
     }
 
@@ -104,10 +108,12 @@
         }).filter(Boolean);
       }
       if (entries.length === 0) return;
-      chrome.runtime.sendMessage({
-        type: 'PROTOCONSENT_CMP_STORAGE_DETECTED',
-        entries,
-      }, () => { void chrome.runtime.lastError; });
+      try {
+        chrome.runtime.sendMessage({
+          type: 'PROTOCONSENT_CMP_STORAGE_DETECTED',
+          entries,
+        }, () => { void chrome.runtime.lastError; });
+      } catch (_) {}
       return;
     }
 
@@ -139,31 +145,43 @@
     }, BACKGROUND_TIMEOUT_MS);
 
     // Forward to the background service worker
-    chrome.runtime.sendMessage({
-      type: 'PROTOCONSENT_BRIDGE_QUERY',
-      domain: domain,
-      action: msg.action,
-      purpose: msg.purpose || null
-    }, (response) => {
-      if (responded) return;
-      responded = true;
-      clearTimeout(timeoutId);
+    try {
+      chrome.runtime.sendMessage({
+        type: 'PROTOCONSENT_BRIDGE_QUERY',
+        domain: domain,
+        action: msg.action,
+        purpose: msg.purpose || null
+      }, (response) => {
+        if (responded) return;
+        responded = true;
+        clearTimeout(timeoutId);
 
-      // Handle runtime errors (background unavailable, extension context invalidated)
-      if (chrome.runtime.lastError) {
+        // Handle runtime errors (background unavailable, extension context invalidated)
+        if (chrome.runtime.lastError) {
+          window.postMessage({
+            type: 'PROTOCONSENT_RESPONSE',
+            id: msg.id,
+            data: null
+          }, window.location.origin);
+          return;
+        }
+
+        window.postMessage({
+          type: 'PROTOCONSENT_RESPONSE',
+          id: msg.id,
+          data: (response && response.data !== undefined) ? response.data : null
+        }, window.location.origin);
+      });
+    } catch (_) {
+      if (!responded) {
+        responded = true;
+        clearTimeout(timeoutId);
         window.postMessage({
           type: 'PROTOCONSENT_RESPONSE',
           id: msg.id,
           data: null
         }, window.location.origin);
-        return;
       }
-
-      window.postMessage({
-        type: 'PROTOCONSENT_RESPONSE',
-        id: msg.id,
-        data: (response && response.data !== undefined) ? response.data : null
-      }, window.location.origin);
-    });
+    }
   });
 })();
