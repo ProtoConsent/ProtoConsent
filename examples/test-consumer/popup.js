@@ -63,6 +63,11 @@ $("btnQuery").addEventListener("click", () => {
   send({ type: "protoconsent:query", domain });
 });
 
+$("btnClassify").addEventListener("click", () => {
+  const domain = $("domain").value.trim() || "example.com";
+  send({ type: "protoconsent:classify", domain });
+});
+
 $("btnBadType").addEventListener("click", () => {
   send({ type: "protoconsent:nonexistent" });
 });
@@ -101,10 +106,14 @@ $("btnClear").addEventListener("click", () => {
   logEl.innerHTML = "";
 });
 
-// Persist target ID across popup opens
+// Persist target ID and domain across popup opens
 $("targetId").addEventListener("input", () => {
   chrome.storage.local.set({ _testTargetId: $("targetId").value.trim() });
 });
-chrome.storage.local.get(["_testTargetId"], (r) => {
+$("domain").addEventListener("input", () => {
+  chrome.storage.local.set({ _testDomain: $("domain").value.trim() });
+});
+chrome.storage.local.get(["_testTargetId", "_testDomain"], (r) => {
   if (r._testTargetId) $("targetId").value = r._testTargetId;
+  if (r._testDomain) $("domain").value = r._testDomain;
 });
