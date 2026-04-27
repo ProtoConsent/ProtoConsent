@@ -98,6 +98,7 @@ Dynamic rules (5,000 rule pool)
 │ Per-site overrides: max 10 rules (priority 2)│
 │ Enhanced lists:     N rules     (priority 2) │
 │ Whitelist allow:    1+ rules    (priority 3) │
+│ Hotfix allow:       0-1 rules   (priority 3) │
 │ GPC global: 1 rule              (priority 1) │
 │ GPC per-site: max 2 rules       (priority 2) │
 │ CH strip global: 1 rule         (priority 1) │
@@ -266,7 +267,7 @@ When multiple rules match the same request, Chrome applies the following precede
 2. At the same priority, dynamic rules beat static rules.
 3. At the same priority and source, `allow` beats `block`.
 
-ProtoConsent uses this model deliberately: static rulesets block at priority 1, per‑site overrides at priority 2, and whitelist allow rules at priority 3. A user who allows ads on a specific site gets a dynamic allow rule that cleanly overrides the global static block without modifying it. A whitelisted domain gets a priority‑3 allow rule that wins over both static blocks and per‑site overrides.
+ProtoConsent uses this model deliberately: static rulesets block at priority 1, per-site overrides at priority 2, and whitelist/hotfix allow rules at priority 3. A user who allows ads on a specific site gets a dynamic allow rule that cleanly overrides the global static block without modifying it. A whitelisted domain gets a priority-3 allow rule that wins over both static blocks and per-site overrides. The hotfix list uses the same priority to unblock domains removed between extension releases (see [list-catalog.md](architecture/list-catalog.md) section 13).
 
 ### `requestDomains` matching
 

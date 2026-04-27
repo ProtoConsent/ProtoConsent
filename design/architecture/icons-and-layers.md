@@ -10,12 +10,12 @@ Each ProtoConsent purpose is represented by a Consent Commons icon displayed as 
 
 | Purpose | Icon | Consent Commons icon | File | Notes |
 |---------|------|---------------------|------|-------|
-| `functional` | ![](../extension/icons/purposes/functional.png) | Box (service management) | `icons/purposes/functional.png` | CC “gestión del servicio” |
-| `analytics` | ![](../extension/icons/purposes/analytics.png) | Person + bar chart (profiling & analytics) | `icons/purposes/analytics.png` | CC “perfilado y analítica” |
-| `ads` | ![](../extension/icons/purposes/ads.png) | Megaphone (marketing) | `icons/purposes/ads.png` | CC “marketing” |
-| `personalization` | ![](../extension/icons/purposes/personalization.png) | Person + bar chart + “P” overlay | `icons/purposes/personalization.png` | Shares base icon with analytics; “P” overlay distinguishes it |
-| `third_parties` | ![](../extension/icons/purposes/third_parties.png) | Person + nodes (third-party access) | `icons/purposes/third_parties.png` | CC “información a terceros” |
-| `advanced_tracking` | ![](../extension/icons/purposes/advanced_tracking.png) | Eye (custom) | `icons/purposes/advanced_tracking.png` | No Consent Commons equivalent; custom SVG design (source: `advanced_tracking.svg`) |
+| `functional` | ![](../../extension/icons/purposes/functional.png) | Box (service management) | `icons/purposes/functional.png` | CC “gestión del servicio” |
+| `analytics` | ![](../../extension/icons/purposes/analytics.png) | Person + bar chart (profiling & analytics) | `icons/purposes/analytics.png` | CC “perfilado y analítica” |
+| `ads` | ![](../../extension/icons/purposes/ads.png) | Megaphone (marketing) | `icons/purposes/ads.png` | CC “marketing” |
+| `personalization` | ![](../../extension/icons/purposes/personalization.png) | Person + bar chart + “P” overlay | `icons/purposes/personalization.png` | Shares base icon with analytics; “P” overlay distinguishes it |
+| `third_parties` | ![](../../extension/icons/purposes/third_parties.png) | Person + nodes (third-party access) | `icons/purposes/third_parties.png` | CC “información a terceros” |
+| `advanced_tracking` | ![](../../extension/icons/purposes/advanced_tracking.png) | Eye (custom) | `icons/purposes/advanced_tracking.png` | No Consent Commons equivalent; custom SVG design (source: `advanced_tracking.svg`) |
 
 Icons are PNG files at 125×125 pixels, rendered at 18×18 in the popup. When an icon is present, the letter badge (F, An, Ad, P, 3P, T) is replaced; if no icon file is found, the letter badge remains as fallback.
 
@@ -25,12 +25,12 @@ When a website publishes a `.well-known/protoconsent.json` declaration, the popu
 
 | `legal_basis` value | Icon | Consent Commons icon | File |
 |---------------------|------|---------------------|------|
-| `consent` | ![](../extension/icons/declaration/consent.png) | Check in circle | `icons/declaration/consent.png` |
-| `contractual` | ![](../extension/icons/declaration/contractual.png) | Signed document | `icons/declaration/contractual.png` |
-| `legitimate_interest` | ![](../extension/icons/declaration/legitimate_interest.png) | Empty circle | `icons/declaration/legitimate_interest.png` |
-| `legal_obligation` | ![](../extension/icons/declaration/legal_obligation.png) | Temple / columns | `icons/declaration/legal_obligation.png` |
-| `public_interest` | ![](../extension/icons/declaration/public_interest.png) | Public building | `icons/declaration/public_interest.png` |
-| `vital_interest` | ![](../extension/icons/declaration/vital_interest.png) | Heart | `icons/declaration/vital_interest.png` |
+| `consent` | ![](../../extension/icons/declaration/consent.png) | Check in circle | `icons/declaration/consent.png` |
+| `contractual` | ![](../../extension/icons/declaration/contractual.png) | Signed document | `icons/declaration/contractual.png` |
+| `legitimate_interest` | ![](../../extension/icons/declaration/legitimate_interest.png) | Empty circle | `icons/declaration/legitimate_interest.png` |
+| `legal_obligation` | ![](../../extension/icons/declaration/legal_obligation.png) | Temple / columns | `icons/declaration/legal_obligation.png` |
+| `public_interest` | ![](../../extension/icons/declaration/public_interest.png) | Public building | `icons/declaration/public_interest.png` |
+| `vital_interest` | ![](../../extension/icons/declaration/vital_interest.png) | Heart | `icons/declaration/vital_interest.png` |
 
 Icons are rendered at 14×14 next to the legal basis text. The label “legitimate_interest” is abbreviated to “legit. interest” for space. The value `legal_obligation` uses the generic temple/columns icon (the Consent Commons section header for legal basis) as Consent Commons does not include one for this basis.
 
@@ -38,14 +38,14 @@ Icons are rendered at 14×14 next to the legal basis text. The label “legitima
 
 | Field | Icon | Consent Commons icon | File |
 |-------|------|---------------------|------|
-| `sharing` (any value) | ![](../extension/icons/declaration/sharing.png) | Arrow E→ (data shared) | `icons/declaration/sharing.png` |
+| `sharing` (any value) | ![](../../extension/icons/declaration/sharing.png) | Arrow E→ (data shared) | `icons/declaration/sharing.png` |
 
 ## 4. International transfers icons (site declaration panel)
 
 | `international_transfers` value | Icon | Consent Commons icon | File |
 |---------------------------------|------|---------------------|------|
-| `true` | ![](../extension/icons/declaration/intl_transfers_yes.png) | Bidirectional arrows ↔ | `icons/declaration/intl_transfers_yes.png` |
-| `false` | ![](../extension/icons/declaration/intl_transfers_no.png) | Angle brackets < > | `icons/declaration/intl_transfers_no.png` |
+| `true` | ![](../../extension/icons/declaration/intl_transfers_yes.png) | Bidirectional arrows ↔ | `icons/declaration/intl_transfers_yes.png` |
+| `false` | ![](../../extension/icons/declaration/intl_transfers_no.png) | Angle brackets < > | `icons/declaration/intl_transfers_no.png` |
 
 ## 5. Out of scope (v0.1)
 
@@ -58,14 +58,14 @@ The following Consent Commons icons are not used in the current version:
 
 ## 6. Enhanced Protection icons
 
-Enhanced Protection uses two additional SVG icons that are not part of the Consent Commons system:
+Enhanced Protection uses two SVG icons that are not part of the Consent Commons system:
 
-| Purpose | Icon | Consent Commons icon | File | Notes |
-|---------|------|---------------------|------|-------|
-| `enhanced` | <img src="../extension/icons/purposes/enhanced.png" width="60"> | Orange shield | `icons/purposes/enhanced.png` | Identifies Enhanced Protection blocks in counter bar, Log domains and whitelist panels |
-| `security` | <img src="../extension/icons/purposes/security.png" width="60"> | B&W shield with checkmark | `icons/purposes/security.png` | ProtoConsent‑specific (not Consent Commons). Used for lists like Blocklist Project Phishing |
+| Purpose | Icon | Description | File | Notes |
+|---------|------|-------------|------|-------|
+| `enhanced` | <img src="../../extension/icons/purposes/enhanced.svg" width="60"> | Orange half-fill shield | `icons/purposes/enhanced.svg` | Identifies Enhanced Protection blocks in counter bar, Log domains and whitelist panels |
+| `security` | <img src="../../extension/icons/purposes/security.svg" width="60"> | Half-fill shield (`currentColor`) | `icons/purposes/security.svg` | Same shape as enhanced, inherits text color. Used for lists like Blocklist Project Phishing |
 
-Icons are PNG files at 125×125 (matching purposes icons in §1) and SVG originals at 18×18. The `enhanced` shield appears as primary icon for all enhanced blocks; category icons (from §1 or `security`) appear next to it as a category marker.
+SVG originals at 18×18. The `enhanced` shield (orange) appears as primary icon for all enhanced blocks; category icons (from section 1 or `security`) appear next to it as a category marker.
 
 ## 7. Grid card icons (Overview and Protection tabs)
 
@@ -75,21 +75,22 @@ The Overview and Protection tabs use a shared set of SVG icons for their metric 
 
 | Card | Icon | Description | File | Metric shown |
 |------|------|-------------|------|-------------|
-| Coverage | <img src="../extension/icons/grid/coverage.svg" width="60"> | Pie chart (circle with filled quarter) | `icons/grid/coverage.svg` | Purpose coverage % |
-| GPC | <img src="../extension/icons/grid/gpc.svg" width="60"> | Padlock | `icons/grid/gpc.svg` | Domains with GPC signal |
-| Banners | <img src="../extension/icons/grid/banners.svg" width="60"> | Monitor with horizontal divider and stand | `icons/grid/banners.svg` | CMP banners detected |
-| Cosmetic | <img src="../extension/icons/grid/cosmetic.svg" width="60"> | Sun (circle with 8 rays) | `icons/grid/cosmetic.svg` | Cosmetic filter rules active |
-| Trackers | <img src="../extension/icons/grid/trackers.svg" width="60"> | Magnifying glass | `icons/grid/trackers.svg` | CNAME-cloaked trackers |
-| Clean Links | <img src="../extension/icons/grid/cleanlinks.svg" width="60"> | Angle brackets with dashed line | `icons/grid/cleanlinks.svg` | URL parameters stripped |
+| Coverage | <img src="../../extension/icons/grid/coverage.svg" width="60"> | Cloud with shield | `icons/grid/coverage.svg` | Purpose coverage % |
+| GPC | <img src="../../extension/icons/grid/gpc.svg" width="60"> | Shield with padlock | `icons/grid/gpc.svg` | Domains with GPC signal |
+| Banners | <img src="../../extension/icons/grid/banners.svg" width="60"> | Cookie with bite | `icons/grid/banners.svg` | CMP banners detected |
+| Cosmetic | <img src="../../extension/icons/grid/cosmetic.svg" width="60"> | Sunglasses | `icons/grid/cosmetic.svg` | Cosmetic filter rules active |
+| Trackers | <img src="../../extension/icons/grid/trackers.svg" width="60"> | Spy with hat and glasses | `icons/grid/trackers.svg` | CNAME-cloaked trackers |
+| URL Cleanup | <img src="../../extension/icons/grid/cleanlinks.svg" width="60"> | Scissors | `icons/grid/cleanlinks.svg` | URL parameters stripped |
 
 ### Protection tab grid cards
 
 | Card | Icon | Description | File | Metric shown |
 |------|------|-------------|------|-------------|
-| Overview | <img src="../extension/icons/grid/overview.svg" width="60"> | Dashboard panel (rectangle with grid lines and highlighted cell) | `icons/grid/overview.svg` | Active lists and total rules |
-| Blocking | <img src="../extension/icons/grid/blocking.svg" width="60"> | Shield | `icons/grid/blocking.svg` | Blocking lists summary |
-| Cosmetic | <img src="../extension/icons/grid/cosmetic.svg" width="60"> | Sun (circle with 8 rays) | `icons/grid/cosmetic.svg` | Cosmetic lists summary |
-| Banners | <img src="../extension/icons/grid/banners.svg" width="60"> | Monitor with horizontal divider and stand | `icons/grid/banners.svg` | Banner/CMP lists summary |
-| Detection | <img src="../extension/icons/grid/detection.svg" width="60"> | Crosshair (concentric circles with dashed outer ring and cardinal ticks) | `icons/grid/detection.svg` | Detection lists summary |
+| Overview | <img src="../../extension/icons/grid/overview.svg" width="60"> | Gauge dial | `icons/grid/overview.svg` | Active lists and total rules |
+| Blocking | <img src="../../extension/icons/grid/blocking.svg" width="60"> | Half-fill shield | `icons/grid/blocking.svg` | Blocking lists summary |
+| Cosmetic | <img src="../../extension/icons/grid/cosmetic.svg" width="60"> | Sunglasses | `icons/grid/cosmetic.svg` | Cosmetic lists summary |
+| Banners | <img src="../../extension/icons/grid/banners.svg" width="60"> | Cookie with bite | `icons/grid/banners.svg` | Banner/CMP lists summary |
+| Detection | <img src="../../extension/icons/grid/detection.svg" width="60"> | Antenna with signal | `icons/grid/detection.svg` | Detection lists summary |
+| Exceptions | <img src="../../extension/icons/grid/exception.svg" width="60"> | Shield with checkmark | `icons/grid/exception.svg` | Hotfix safelist domains |
 
 Cosmetic and Banners icons are shared between both tabs. All icons inherit text color via `currentColor` and scale cleanly at 20×20 and smaller sizes.
