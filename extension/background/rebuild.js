@@ -502,6 +502,10 @@ async function _rebuildAllDynamicRulesImpl() {
 
     // Build enhanced reverse index for onErrorOccurred attribution (always, both modes)
     // Prefer lists with a category (purpose) over uncategorized ones.
+    // Only index domain-level rules (full domain blocks); skip pathRules because
+    // they only block specific URL patterns, not the entire domain. Including them
+    // causes false attribution (e.g. a pathRule for ||instagram.com/api/v1/... would
+    // make ALL instagram.com failures be attributed to that list).
     const newEnhancedReverseIndex = new Map();
     const indexedHasCategory = new Set();
     for (const [listId, listData] of Object.entries(enhancedData)) {
@@ -514,17 +518,6 @@ async function _rebuildAllDynamicRulesImpl() {
           if (indexedHasCategory.has(d) && !hasCategory) continue;
           newEnhancedReverseIndex.set(d, listId);
           if (hasCategory) indexedHasCategory.add(d);
-        }
-      }
-      if (listData.pathRules?.length) {
-        for (const pr of listData.pathRules) {
-          const m = pr.urlFilter?.match(/^\|\|([^/]+)/);
-          if (!m) continue;
-          if (indexedHasCategory.has(m[1]) && !hasCategory) continue;
-          if (!newEnhancedReverseIndex.has(m[1]) || hasCategory) {
-            newEnhancedReverseIndex.set(m[1], listId);
-            if (hasCategory) indexedHasCategory.add(m[1]);
-          }
         }
       }
     }
