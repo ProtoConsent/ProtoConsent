@@ -151,7 +151,7 @@ function _renderProtoBars(resp, tcfData) {
     }
     if (resp.coverage) {
       var d3 = document.createElement("div");
-      var d3Label = document.createElement("strong"); d3Label.textContent = "Attribution: ";
+      var d3Label = document.createElement("strong"); d3Label.textContent = "Purpose attribution: ";
       d3.appendChild(d3Label); d3.appendChild(document.createTextNode((resp.coverage.attributed || 0) + " / " + (resp.coverage.observed || 0) + " matched")); expDiv.appendChild(d3);
     }
     var link = document.createElement("button"); link.type = "button"; link.className = "pc-bar-link";
@@ -340,7 +340,7 @@ function _fillCoverageBody(body, resp, wkData) {
   fillEl.style.width = ratio + "%"; barEl.appendChild(fillEl); body.appendChild(barEl);
 
   var textEl = document.createElement("div"); textEl.className = "proto-coverage-text";
-  textEl.innerHTML = "<span><strong>" + ratio + "%</strong> attributed</span><span><strong>" + (coverage.observed - (coverage.attributed || 0)) + "</strong> unmatched</span>";
+  textEl.innerHTML = "<span><strong>" + ratio + "%</strong> purposes attributed</span><span><strong>" + (coverage.observed - (coverage.attributed || 0)) + "</strong> unmatched</span>";
   body.appendChild(textEl);
 
   // Provenance + heuristic summary on one line

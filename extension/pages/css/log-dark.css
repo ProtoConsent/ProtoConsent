@@ -59,6 +59,11 @@ html.pc-dark .pc-log-domains-icon img[alt="EP"] {
   filter: none;
 }
 
+/* Tab icons */
+html.pc-dark .pc-log-tab-icon {
+  filter: brightness(0) invert(1);
+}
+
 /* Active whitelist row */
 html.pc-dark .pc-log-table tr.is-active {
   background: #1a3a22;
