@@ -607,7 +607,7 @@ function renderEnhancedPresets() {
 		fetch(chrome.runtime.getURL('config/enhanced-lists.json')).then(r => {
 			if (!r.ok) throw new Error("enhanced-lists.json: HTTP " + r.status);
 			return r.json();
-		}),
+		}).then(data => data.lists || data),
 		new Promise(resolve => {
 			chrome.storage.local.get(['enhancedPreset'], r => resolve(r.enhancedPreset || 'off'));
 		}),
@@ -1048,6 +1048,7 @@ const EXPORT_KEYS = [
 	"enhancedPreset", "enhancedLists",
 	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending",
 	"dynamicListsConsent", "consentEnhancedLink",
+	"autoRefreshIntervalOwn", "autoRefreshIntervalExternal",
 	"celMode", "celCustomPurposes",
 	"cmpAutoResponse", "cmpEnabled", "cmpCookieMaxAge", "cmpCustomUuid",
 	"cmpDetectionEnabled",
@@ -1157,6 +1158,16 @@ function validateImport(data) {
 		if (typeof data.consentEnhancedLink === "boolean") clean.consentEnhancedLink = data.consentEnhancedLink;
 		else errors.push("consentEnhancedLink: must be boolean");
 	}
+	if ("autoRefreshIntervalOwn" in data) {
+		const v = data.autoRefreshIntervalOwn;
+		if (typeof v === "number" && v >= 6 && v <= 168) clean.autoRefreshIntervalOwn = v;
+		else errors.push("autoRefreshIntervalOwn: must be number 6-168");
+	}
+	if ("autoRefreshIntervalExternal" in data) {
+		const v = data.autoRefreshIntervalExternal;
+		if (typeof v === "number" && v >= 6 && v <= 168) clean.autoRefreshIntervalExternal = v;
+		else errors.push("autoRefreshIntervalExternal: must be number 6-168");
+	}
 	if ("celMode" in data) {
 		if (data.celMode === "profile" || data.celMode === "custom") clean.celMode = data.celMode;
 		else errors.push("celMode: must be 'profile' or 'custom'");
@@ -1217,7 +1228,7 @@ function renderDynamicListsToggle(purposes) {
 	if (!section || !toggle || !label) return;
 
 	chrome.storage.local.get(['dynamicListsConsent', 'consentEnhancedLink', 'celMode', 'celCustomPurposes'], (data) => {
-		const syncEnabled = data.dynamicListsConsent === true;
+		const syncEnabled = data.dynamicListsConsent !== false;
 		toggle.checked = syncEnabled;
 		label.textContent = syncEnabled ? 'Enabled' : 'Disabled';
 
@@ -1230,6 +1241,7 @@ function renderDynamicListsToggle(purposes) {
 		}
 
 		section.classList.remove('ps-hidden');
+		renderAutoRefreshSettings(syncEnabled);
 	});
 
 	toggle.addEventListener('change', () => {
@@ -1241,6 +1253,12 @@ function renderDynamicListsToggle(purposes) {
 				{ type: "PROTOCONSENT_ENHANCED_GET_STATE", forceRefresh: true },
 				() => { void chrome.runtime.lastError; }
 			);
+			// Update alarms and auto-refresh section visibility
+			chrome.runtime.sendMessage(
+				{ type: "PROTOCONSENT_REFRESH_ALARMS_UPDATED" },
+				() => { void chrome.runtime.lastError; }
+			);
+			renderAutoRefreshSettings(enabled);
 		});
 	});
 
@@ -1258,6 +1276,89 @@ function renderDynamicListsToggle(purposes) {
 			});
 		});
 	}
+}
+
+function renderAutoRefreshSettings(syncEnabled) {
+	const section = document.getElementById('ps-autorefresh-section');
+	if (!section) return;
+	if (!syncEnabled) {
+		section.classList.add('ps-hidden');
+		return;
+	}
+	section.classList.remove('ps-hidden');
+
+	const ownInput = document.getElementById('ps-refresh-own');
+	const extInput = document.getElementById('ps-refresh-ext');
+	if (!ownInput || !extInput) return;
+
+	// Always reload values from storage (even on re-render)
+	chrome.storage.local.get(['autoRefreshIntervalOwn', 'autoRefreshIntervalExternal'], (data) => {
+		let ownVal = parseInt(data.autoRefreshIntervalOwn, 10);
+		let extVal = parseInt(data.autoRefreshIntervalExternal, 10);
+		ownInput.value = (isNaN(ownVal) || ownVal < 6 || ownVal > 168) ? 24 : ownVal;
+		extInput.value = (isNaN(extVal) || extVal < 6 || extVal > 168) ? 24 : extVal;
+		if (data.autoRefreshIntervalOwn) ownInput.classList.add('ps-cmp-input-saved');
+		if (data.autoRefreshIntervalExternal) extInput.classList.add('ps-cmp-input-saved');
+	});
+
+	// Only attach listeners once
+	if (ownInput.dataset.bound) return;
+	ownInput.dataset.bound = "1";
+	extInput.dataset.bound = "1";
+
+	function validateInterval(input, errorId) {
+		const raw = input.value.trim();
+		const errorEl = document.getElementById(errorId);
+		const savedEl = document.getElementById(errorId.replace('-error', '-saved'));
+		if (!raw) {
+			input.classList.remove('ps-cmp-input-error', 'ps-cmp-input-saved');
+			if (errorEl) errorEl.classList.add('ps-hidden');
+			if (savedEl) savedEl.classList.add('ps-hidden');
+			return true;
+		}
+		const val = parseInt(raw, 10);
+		if (isNaN(val) || val < 6 || val > 168) {
+			if (errorEl) { errorEl.textContent = 'Must be 6-168'; errorEl.classList.remove('ps-hidden'); }
+			input.classList.add('ps-cmp-input-error');
+			input.classList.remove('ps-cmp-input-saved');
+			if (savedEl) savedEl.classList.add('ps-hidden');
+			return false;
+		}
+		input.classList.remove('ps-cmp-input-error');
+		if (errorEl) errorEl.classList.add('ps-hidden');
+		return true;
+	}
+
+	function saveInterval(input, storageKey, errorId) {
+		if (!validateInterval(input, errorId)) return;
+		const raw = input.value.trim();
+		const val = raw ? parseInt(raw, 10) : 24;
+		input.value = val;
+		chrome.storage.local.set({ [storageKey]: val }, () => {
+			chrome.runtime.sendMessage(
+				{ type: "PROTOCONSENT_REFRESH_ALARMS_UPDATED" },
+				() => { void chrome.runtime.lastError; }
+			);
+			input.classList.add('ps-cmp-input-saved');
+			const saved = document.getElementById(errorId.replace('-error', '-saved'));
+			if (saved) {
+				saved.classList.remove('ps-hidden');
+				setTimeout(() => saved.classList.add('ps-hidden'), 1500);
+			}
+		});
+	}
+
+	// Block non-digit keys that type="number" allows (e, +, -, .)
+	function blockNonDigitKeys(e) {
+		if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+	}
+	ownInput.addEventListener('keydown', blockNonDigitKeys);
+	extInput.addEventListener('keydown', blockNonDigitKeys);
+
+	ownInput.addEventListener('input', () => validateInterval(ownInput, 'ps-refresh-own-error'));
+	extInput.addEventListener('input', () => validateInterval(extInput, 'ps-refresh-ext-error'));
+	ownInput.addEventListener('change', () => saveInterval(ownInput, 'autoRefreshIntervalOwn', 'ps-refresh-own-error'));
+	extInput.addEventListener('change', () => saveInterval(extInput, 'autoRefreshIntervalExternal', 'ps-refresh-ext-error'));
 }
 
 const CEL_PURPOSE_ORDER = ["analytics", "ads", "personalization", "third_parties", "advanced_tracking"];

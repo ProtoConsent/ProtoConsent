@@ -31,6 +31,9 @@ import "./background/tracking.js";
 // 8. Lifecycle - tab events, onStartup, onInstalled (depends on rebuild)
 import "./background/lifecycle.js";
 
+// 9. Auto-refresh engine - chrome.alarms for periodic list updates
+import "./background/auto-refresh.js";
+
 // --- Top-level initialization ---
 // Restore persisted tab data from session storage on every SW load.
 // Store promise so message handlers can await it before reading tab data.

@@ -595,6 +595,36 @@ body {
   align-items: start;
 }
 
+/* --- Auto-refresh card --- */
+.ps-autorefresh-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid var(--pc-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+  margin-top: 10px;
+}
+.ps-autorefresh-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.ps-autorefresh-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ps-autorefresh-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ps-autorefresh-input .ps-cmp-text-input {
+  width: 60px;
+}
+
 /* --- Mode radio cards --- */
 .ps-mode-cards {
   display: grid;
@@ -1144,6 +1174,10 @@ details[open] > .ps-accordion-header::before {
   }
 
   .ps-dynamic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ps-autorefresh-grid {
     grid-template-columns: 1fr;
   }
 

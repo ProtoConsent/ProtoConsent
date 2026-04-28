@@ -35,6 +35,7 @@ import {
 } from "./config-loader.js";
 import { updateCmpInjectionData } from "./cmp-injection.js";
 import { updateHotfixListener } from "./tracking.js";
+import { consumeCelPendingDownloads } from "./auto-refresh.js";
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
 export async function rebuildAllDynamicRules() {
@@ -376,6 +377,11 @@ async function _rebuildAllDynamicRulesImpl() {
 
     setLastConsentLinkedListIds([...consentLinkedListIds]);
     setLastCelPendingDownload(celPendingDownload);
+
+    // Auto-download CEL-linked lists in background without waiting for UI
+    if (celPendingDownload.length > 0) {
+      consumeCelPendingDownloads();
+    }
 
     const enhancedExclude = permissiveSites.length > 0 ? permissiveSites : undefined;
 

@@ -127,6 +127,32 @@
 			</div>
 			<div id="ps-cel-note" class="ps-cel-note ps-hidden"></div>
 			<div id="ps-cel-mode-panel" class="ps-cel-mode-panel ps-hidden"></div>
+			<div id="ps-autorefresh-section" class="ps-autorefresh-card ps-hidden">
+				<div class="ps-autorefresh-head">
+					<span class="ps-gpc-info-name">Auto-refresh interval</span>
+					<div class="ps-gpc-info-desc">How often to check for list updates. Range: 6-168 hours (7 days).</div>
+				</div>
+				<div class="ps-autorefresh-grid">
+					<div class="ps-autorefresh-field">
+						<label for="ps-refresh-own" class="ps-gpc-info-name">ProtoConsent lists</label>
+						<div class="ps-autorefresh-input">
+							<input type="number" id="ps-refresh-own" class="ps-cmp-text-input" min="6" max="168" step="1" placeholder="24">
+							<span>hours</span>
+							<span id="ps-refresh-own-error" class="ps-cmp-field-error ps-hidden"></span>
+							<span id="ps-refresh-own-saved" class="ps-cmp-field-saved ps-hidden">Saved</span>
+						</div>
+					</div>
+					<div class="ps-autorefresh-field">
+						<label for="ps-refresh-ext" class="ps-gpc-info-name">External lists</label>
+						<div class="ps-autorefresh-input">
+							<input type="number" id="ps-refresh-ext" class="ps-cmp-text-input" min="6" max="168" step="1" placeholder="24">
+							<span>hours</span>
+							<span id="ps-refresh-ext-error" class="ps-cmp-field-error ps-hidden"></span>
+							<span id="ps-refresh-ext-saved" class="ps-cmp-field-saved ps-hidden">Saved</span>
+						</div>
+					</div>
+				</div>
+			</div>
 			<details class="ps-accordion">
 				<summary class="ps-accordion-header">Protection presets <span class="ps-info-pill" title="Informational only, does not change settings">&#x2139; Info</span></summary>
 				<div class="ps-accordion-body">

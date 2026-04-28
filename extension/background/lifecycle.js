@@ -17,6 +17,7 @@ import { rebuildAllDynamicRules } from "./rebuild.js";
 import { onNavigation, applyWarningBadgeForTab } from "./blocker-detection.js";
 import { clearPendingNavUrl } from "./tracking.js";
 import { DEBUG_RULES } from "./config-bridge.js";
+import { setupAlarms, refreshLists, checkOverdueRefresh } from "./auto-refresh.js";
 
 // Clear per-tab tracking on navigation and tab close.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
@@ -111,6 +112,8 @@ chrome.storage.onChanged.addListener(function (changes, area) {
 // Rebuild once on service worker startup
 chrome.runtime.onStartup?.addListener(() => {
   rebuildAllDynamicRules();
+  setupAlarms();
+  checkOverdueRefresh();
 });
 
 // Also rebuild when the extension is installed or updated
@@ -142,6 +145,22 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   await initBundledCmpSiteSignatures();
 
   rebuildAllDynamicRules();
+
+  if (details.reason === 'install') {
+    // Default dynamicListsConsent to true on fresh install (opt-out in Settings)
+    // Default enhancedPreset to "basic" so auto-downloaded lists are enabled
+    // Must await before refreshLists reads these values
+    await new Promise(resolve => {
+      chrome.storage.local.set({ dynamicListsConsent: true, enhancedPreset: "basic" }, resolve);
+    });
+  }
+
+  // Set up auto-refresh alarms and trigger immediate list download
+  setupAlarms();
+  // Await to keep service worker alive during downloads
+  // On install: initial download of all preset-matching lists
+  // On update: refresh already-downloaded lists (version check skips unchanged)
+  await refreshLists("all", details.reason === 'install' ? { initialDownload: true } : undefined);
 
   if (details.reason === 'install') {
     chrome.storage.local.get(['onboardingComplete'], (result) => {
