@@ -55,7 +55,7 @@ Response:
 {
   "type": "protoconsent:capabilities_response",
   "name": "ProtoConsent",
-  "version": "0.4.0",
+  "version": "0.6",
   "protocol_version": "0.1",
   "supported_types": ["protoconsent:query", "protoconsent:classify", "protoconsent:capabilities"],
   "purposes": ["functional", "analytics", "ads", "personalization", "third_parties", "advanced_tracking"]
@@ -86,7 +86,7 @@ Response:
     "advanced_tracking": false
   },
   "profile": "balanced",
-  "version": "0.4.0"
+  "version": "0.6"
 }
 ```
 

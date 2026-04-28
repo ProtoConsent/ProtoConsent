@@ -221,31 +221,48 @@ Stripping is gated by the `advanced_tracking` purpose (active when denied, which
 
 ## 12. Regional lists
 
-Regional filter lists provide language-specific blocking and cosmetic rules from EasyList regional supplements and AdGuard language-specific filters. Each region produces two files: cosmetic (element hiding) and blocking (domains + paths). 13 regions are supported.
+Regional filter lists provide language-specific blocking and cosmetic rules from EasyList regional supplements and AdGuard language-specific filters. Each region produces two files: cosmetic (element hiding) and blocking (domains + paths). 30 regions are supported.
 
 ### Supported regions
 
 | Region | Code | Sources |
 | --- | --- | --- |
+| Arabic | `ar` | AdGuard Arabic |
+| Bulgarian | `bg` | AdGuard Bulgarian |
 | Chinese | `cn` | EasyList China + AdGuard Chinese |
+| Czech/Slovak | `cs` | AdGuard Czech/Slovak |
 | German | `de` | EasyList Germany + AdGuard German |
-| Dutch | `nl` | EasyList Dutch + AdGuard Dutch |
 | Spanish/Portuguese | `es` | EasyList Spanish + Portuguese + AdGuard Spanish/Portuguese |
+| Estonian | `et` | AdGuard Estonian |
+| Persian | `fa` | AdGuard Persian |
+| Finnish | `fi` | AdGuard Finnish |
 | French | `fr` | AdGuard French |
 | Hebrew | `he` | EasyList Hebrew |
+| Hindi | `hi` | AdGuard Hindi |
+| Serbo-Croatian | `hr` | AdGuard Serbo-Croatian |
+| Hungarian | `hu` | AdGuard Hungarian |
+| Indonesian | `id` | AdGuard Indonesian |
 | Italian | `it` | EasyList Italy |
 | Japanese | `ja` | AdGuard Japanese |
+| Korean | `ko` | AdGuard Korean |
 | Lithuanian | `lt` | EasyList Lithuania |
+| Latvian | `lv` | AdGuard Latvian |
+| Macedonian | `mk` | AdGuard Macedonian |
+| Dutch | `nl` | EasyList Dutch + AdGuard Dutch |
+| Nordic | `no` | AdGuard Nordic |
 | Polish | `pl` | EasyList Polish |
 | Russian | `ru` | AdGuard Russian |
+| Swedish | `sv` | AdGuard Swedish |
+| Thai | `th` | AdGuard Thai |
 | Turkish | `tr` | AdGuard Turkish |
 | Ukrainian | `uk` | AdGuard Ukrainian |
+| Vietnamese | `vi` | AdGuard Vietnamese |
 
 Regions with multiple sources merge and deduplicate rules from all sources.
 
 ### Distribution
 
-The catalog contains 2 regional entries (cosmetic and blocking). Each covers all 13 regions. Individual region files are fetched from CDN when the user downloads. Both entries have Balanced preset, gated by language selection.
+The catalog contains 2 regional entries (cosmetic and blocking). Each covers all 30 regions. Individual region files are fetched from CDN when the user downloads. Both entries have Balanced preset, gated by language selection.
 
 ### Language selection
 

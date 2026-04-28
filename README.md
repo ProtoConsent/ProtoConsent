@@ -9,52 +9,56 @@
 <p align="center"><em>User‑side, purpose‑based consent for the web</em></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.6-blue" alt="version 0.5.6">
+  <img src="https://img.shields.io/badge/version-0.6-blue" alt="version 0.6">
   <img src="https://img.shields.io/github/license/ProtoConsent/ProtoConsent" alt="GPL-3.0+">
   <img src="https://img.shields.io/badge/manifest-v3-green" alt="Manifest V3">
   <img src="https://img.shields.io/badge/chromium-supported-brightgreen?logo=googlechrome&logoColor=white" alt="Chromium">
   <img src="https://img.shields.io/badge/firefox-planned-lightgrey?logo=firefox&logoColor=white" alt="Firefox planned">
 </p>
 
-ProtoConsent is a browser extension that lets you control how websites may use your data, expressed in terms of purposes (functional, analytics, ads, personalization, third‑party services, advanced tracking) rather than specific trackers or domains. Not a full ad blocker, not a CMP: a personal consent control panel that lives in the browser and can coexist with existing blockers and consent tools.
+ProtoConsent is a browser extension that lets you control how websites may use your data. You set your preferences once - by purpose (functional, analytics, ads, personalization, third-party services, advanced tracking) - and the extension enforces them across every site you visit.
 
-It works in two operating modes: **Blocking** (default) enforces purpose-based blocking directly via declarativeNetRequest. **Monitoring** delegates blocking to an external ad blocker while ProtoConsent provides purpose attribution, coverage metrics, and signal observability - turning any blocker into a purpose-aware system.
+A personal consent control panel that lives in the browser. Purpose-based blocking, tracker detection, and signal management in one place - can coexist with existing blockers and consent tools. Works out of the box with no configuration needed.
 
 No central server, no tracking, no sharing of personal data. Everything stays in your browser.
 
 **Project website:** <https://protoconsent.org> · **Live demo:** <https://demo.protoconsent.org>
 
 <p align="center">
-  <a href="https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo"><img src="design/assets/icons/microsoft-edge-add-ons-badge.png" alt="Get it from Microsoft Edge" height="56"></a>
+  <a href="https://chromewebstore.google.com/detail/protoconsent/dkcdkdcclhofocmkecccmikkfmfgfdlb"><img src="design/assets/icons/chrome-badge.png" alt="Available in the Chrome Web Store" height="56"></a>
   &nbsp;
-  <img src="design/assets/icons/chrome.svg" alt="Chrome" height="18"> <em>Chrome Web Store - in review</em>
+  <a href="https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo"><img src="design/assets/icons/microsoft-edge-add-ons-badge.png" alt="Get it from Microsoft Edge" height="56"></a>
+</p>
+<p align="center">
+  <img src="design/assets/icons/brave.png" alt="Brave" height="28"> <em>via Chrome Web Store</em>
   &nbsp;&nbsp;
   <img src="design/assets/icons/opera.svg" alt="Opera" height="18"> <em>Opera Addons - in review</em>
 </p>
-<p align="center">You can also install locally in developer mode on any Chromium-based browser.</p>
+<p align="center"><em>Also works on Vivaldi, Arc, and any Chromium-based browser.</em></p>
+<p align="center">You can also install locally in developer mode.</p>
 
 ## Key features
 
 - **Per-site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalization, third-party services, advanced tracking).
-- **Two operating modes:** Blocking (full blocking) or Monitoring (attribution with an external blocker). The Overview tab dashboard shows mode status, coverage metrics, and purpose-attributed blocks.
-- **Conditional [Global Privacy Control](https://globalprivacycontrol.org/)** (Sec-GPC), sent only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.
-- **Consent banner auto-response:** 31 CMP frameworks (including IAB TCF v2.2) answered automatically based on your purpose preferences. No DOM interaction, no click simulation. See [cmp-auto-response.md](design/architecture/cmp-auto-response.md).
-- **Enhanced protection:** optional curated blocklists, cosmetic filtering, CNAME detection, URL parameter stripping, and regional filters for 13 languages. See [list-catalog.md](design/architecture/list-catalog.md).
-- **Inter-extension API:** other browser extensions can query the user's consent state via `chrome.runtime.sendMessage`. See the [protocol spec](design/spec/inter-extension-protocol.md).
+- **Enhanced protection out of the box:** curated blocklists, cosmetic filtering, CNAME detection, URL parameter stripping, and regional filters for 30 languages - all enabled by default and kept up to date automatically.
+- **Two operating modes:** Blocking (default, full enforcement) or Monitoring (delegates blocking to your existing ad blocker while ProtoConsent adds purpose attribution, coverage metrics, and signal observability).
+- **Consent banner auto-response:** 31 CMP frameworks (including IAB TCF v2.2) answered automatically based on your purpose preferences. No DOM interaction, no click simulation - banners never appear.
+- **Conditional [Global Privacy Control](https://globalprivacycontrol.org/):** Sec-GPC sent only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.
 - **Site declarations and SDK:** websites can publish a `.well-known/protoconsent.json` to declare their data practices, or use the [SDK](sdk/protoconsent.js) (MIT) to read user preferences. Both optional.
+- **Inter-extension API:** other browser extensions can query the user's consent state. See the [protocol spec](design/spec/inter-extension-protocol.md).
 
 For a detailed feature breakdown, see [product-overview.md](design/product-overview.md).
 
 ## Getting started
 
-ProtoConsent is available on the [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo). To try the latest development version:
+ProtoConsent is available on the [Chrome Web Store](https://chromewebstore.google.com/detail/protoconsent/dkcdkdcclhofocmkecccmikkfmfgfdlb) and the [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo). To try the latest development version:
 
 1. Clone this repository.
 2. Open `chrome://extensions/` (or `edge://extensions/`) and enable **Developer mode**.
 3. Click **Load unpacked** and select the `extension/` folder (the one containing `manifest.json`).
 4. Open any site and click the ProtoConsent icon in the toolbar.
 
-On first install, a four-screen onboarding page will guide you through selecting a default privacy profile and opting into Enhanced lists features. You can then adjust per-site settings from the popup at any time.
+On first install, a two-step onboarding page will guide you through selecting a default privacy profile. Enhanced protection lists are enabled by default and download automatically in the background. You can then adjust per-site settings from the popup at any time.
 
 To see the extension in action without configuring anything, visit [demo.protoconsent.org](https://demo.protoconsent.org). It includes a site declaration, an SDK live test, and a GPC signal check.
 

@@ -66,6 +66,7 @@ Central coordination point. Does not render UI; receives messages from popup and
 - **Site declarations**: fetches `.well-known/protoconsent.json` on behalf of the popup and caches results (24h success, 6h failure)
 - **TCF detection**: receives CMP data from the content script bridge, validates and stores it per tab
 - **Onboarding**: opens the welcome page on first install when no default profile exists
+- **Auto-refresh**: periodically checks list freshness via `chrome.alarms` and re-fetches stale Enhanced Protection lists from CDN. Configurable interval in Purpose Settings. Runs with a concurrency lock to prevent overlapping fetches.
 
 ### 2.3 Local storage
 
@@ -73,9 +74,9 @@ All configuration lives in the browser’s extension storage. No remote server i
 
 - **Site rules**: mapping from domains to rules (profile plus purpose overrides) and predefined profiles
 - **Domain whitelist**: per-site and global allow entries
-- **Enhanced Protection**: list metadata, domain/path data, active preset, and selected regional languages. 15 non-regional lists: 6 ProtoConsent Core (one per blocking purpose plus security, maintained by the project) and 9 third-party from open-source projects, plus 2 regional catalog entries (13 regions x 2 types, language-gated). Core lists are bundled for first-install availability and updated weekly via CDN from the [data repository](https://github.com/ProtoConsent/data), where a GitHub Actions workflow refreshes all sources every Tuesday.
+- **Enhanced Protection**: list metadata, domain/path data, active preset, and selected regional languages. 15 non-regional lists: 6 ProtoConsent Core (one per blocking purpose plus security, maintained by the project) and 9 third-party from open-source projects, plus 2 regional catalog entries (30 regions x 2 types, language-gated). Core lists are bundled for first-install availability and updated weekly via CDN from the [data repository](https://github.com/ProtoConsent/data), where a GitHub Actions workflow refreshes all sources every Tuesday.
 - **Cosmetic filtering**: compiled CSS for generic selectors and per-domain selectors
-- **Opt-in flags**: remote sync consent and consent-enhanced link
+- **Opt-in flags**: consent-enhanced link toggle, remote sync toggle (on by default)
 
 ### 2.4 Enforcement (declarativeNetRequest + GPC)
 
@@ -153,7 +154,7 @@ Per-site GPC overrides use `requestDomains` (the destination URL), not `initiato
 
 ### 2.7 Extension pages
 
-**Onboarding** - Opens on first install and guides new users through four screens: (1) default profile selection, (2) feature overview, (3) Enhanced lists opt-ins (remote sync and consent-enhanced link), and (4) confirmation with next steps.
+**Onboarding** - Opens on first install and guides new users through two steps: (1) default profile selection and (2) confirmation with active feature summary. Enhanced protection lists are enabled by default.
 
 **Purpose settings** - Lets users customise the global default profile by toggling individual purposes, manage Enhanced lists (sync toggle and consent-enhanced link toggle), and shows the active Enhanced Protection preset alongside the consent presets. Accessible from the popup or the browser’s extensions page.
 
@@ -254,6 +255,7 @@ Enforcement is based on built‑in browser APIs (declarativeNetRequest), so Prot
 | `webNavigation` | Detect URL parameter stripping by DNR redirect rules. `onBeforeNavigate` captures the original URL before DNR processes it; `onCommitted` provides the final URL after parameters have been stripped. Comparing the two reveals which tracking parameters were removed. Read-only. |
 | `unlimitedStorage` | Store downloaded Enhanced Protection blocklist data locally. Enhanced lists can be large (hundreds of thousands of domains), so the default 10 MB quota may not suffice. |
 | `host_permissions: <all_urls>` | Required by `declarativeNetRequest` to apply blocking and header rules across all domains, by `scripting` to inject the GPC content script on any site, and by `webRequest` to observe network events on all origins. Without broad host access, per‑site enforcement would not work. |
+| `alarms` | Schedule periodic auto-refresh of Enhanced Protection lists. The extension checks list freshness at configurable intervals and re-fetches stale data from CDN without user intervention. |
 
 ## 7. Chrome declarativeNetRequest: priority and limits
 
@@ -281,8 +283,8 @@ The `initiatorDomains` condition matches the **origin that initiated the request
 
 | Limit | Value | ProtoConsent usage |
 | --- | --- | --- |
-| Static rulesets (max declared) | 100 | 10 (5 domain + 5 path) |
-| Static rulesets (max enabled) | 50 | Up to 10 |
+| Static rulesets (max declared) | 100 | 12 (5 domain + 5 path + 2 param strip) |
+| Static rulesets (max enabled) | 50 | Up to 12 |
 | Static rules (total) | 30,000 | Domain rules + path rules (see [list-catalog.md](architecture/list-catalog.md) for current counts) |
 | Dynamic + session rules | 5,000 | Base rules (overrides + GPC + CH strip) + enhanced list rules + whitelist rules |
 | `getMatchedRules` calls | 20 per 10 min | 1 per popup open |
