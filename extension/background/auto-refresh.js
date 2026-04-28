@@ -43,7 +43,14 @@ function pooled(tasks, limit) {
 
 // Refresh downloaded+enabled lists matching the filter.
 // options.initialDownload: download all preset-matching lists, not just already-downloaded ones.
+let _refreshRunning = false;
+
 export function refreshLists(filter, options) {
+  if (_refreshRunning) {
+    if (DEBUG_RULES) console.log("ProtoConsent auto-refresh: skipped (already running)");
+    return Promise.resolve();
+  }
+  _refreshRunning = true;
   const initialDownload = options && options.initialDownload;
   if (DEBUG_RULES) console.log("ProtoConsent auto-refresh: starting", filter, initialDownload ? "(initial)" : "");
   return new Promise(resolve => {
@@ -111,6 +118,10 @@ export function refreshLists(filter, options) {
         }); // presetPromise
       });
     });
+  }).catch(e => {
+    console.warn("ProtoConsent auto-refresh error:", e);
+  }).finally(() => {
+    _refreshRunning = false;
   });
 }
 
@@ -166,7 +177,7 @@ export function checkOverdueRefresh() {
 
     loadEnhancedListsCatalog().then(catalog => {
       if (!catalog) return;
-      getEnhancedListsFromStorage().then(lists => {
+      return getEnhancedListsFromStorage().then(lists => {
         let ownOverdue = false;
         let extOverdue = false;
         for (const [listId, meta] of Object.entries(lists)) {
@@ -179,18 +190,20 @@ export function checkOverdueRefresh() {
             else extOverdue = true;
           }
         }
-        if (ownOverdue && extOverdue) refreshLists("all");
-        else if (ownOverdue) refreshLists("own");
-        else if (extOverdue) refreshLists("external");
+        if (ownOverdue && extOverdue) return refreshLists("all");
+        else if (ownOverdue) return refreshLists("own");
+        else if (extOverdue) return refreshLists("external");
       });
+    }).catch(e => {
+      console.warn("ProtoConsent: overdue refresh check failed:", e);
     });
   });
 }
 
 // Alarm listener - dispatches to the correct refresh filter.
 chrome.alarms.onAlarm.addListener(alarm => {
-  if (alarm.name === ALARM_OWN) refreshLists("own");
-  if (alarm.name === ALARM_EXTERNAL) refreshLists("external");
+  if (alarm.name === ALARM_OWN) refreshLists("own").catch(() => {});
+  if (alarm.name === ALARM_EXTERNAL) refreshLists("external").catch(() => {});
 });
 
 // Message listener - re-setup alarms when settings change, refresh on re-enable.
@@ -201,7 +214,7 @@ chrome.runtime.onMessage.addListener((message) => {
     // If sync was just re-enabled, trigger immediate refresh of downloaded lists
     chrome.storage.local.get(["dynamicListsConsent"], data => {
       if (data.dynamicListsConsent !== false) {
-        refreshLists("all");
+        refreshLists("all").catch(() => {});
       }
     });
   }

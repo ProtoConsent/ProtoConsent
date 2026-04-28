@@ -15,6 +15,12 @@ let selectedProfile = RECOMMENDED;
 let presets = null;
 let purposes = null;
 
+function closeOnboardingTab() {
+  chrome.tabs.getCurrent(tab => {
+    if (tab) chrome.tabs.remove(tab.id);
+  });
+}
+
 async function init() {
   try {
     const [presetsRes, purposesRes] = await Promise.all([
@@ -138,14 +144,14 @@ function wireEvents() {
     selectedProfile = RECOMMENDED;
     save(() => {
       chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-settings.html') });
-      window.close();
+      closeOnboardingTab();
     });
   });
 
   // Done -> open Settings and close onboarding tab
   document.getElementById('ob-done').addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-settings.html') });
-    window.close();
+    closeOnboardingTab();
   });
 }
 

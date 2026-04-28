@@ -1352,8 +1352,18 @@ function renderAutoRefreshSettings(syncEnabled) {
 	function blockNonDigitKeys(e) {
 		if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
 	}
+	// Sanitize pasted values to digits only
+	function sanitizePaste(e) {
+		e.preventDefault();
+		const text = (e.clipboardData || window.clipboardData).getData("text");
+		const digits = text.replace(/[^0-9]/g, "");
+		if (digits) e.target.value = digits;
+		validateInterval(e.target, e.target.id === 'ps-refresh-own' ? 'ps-refresh-own-error' : 'ps-refresh-ext-error');
+	}
 	ownInput.addEventListener('keydown', blockNonDigitKeys);
 	extInput.addEventListener('keydown', blockNonDigitKeys);
+	ownInput.addEventListener('paste', sanitizePaste);
+	extInput.addEventListener('paste', sanitizePaste);
 
 	ownInput.addEventListener('input', () => validateInterval(ownInput, 'ps-refresh-own-error'));
 	extInput.addEventListener('input', () => validateInterval(extInput, 'ps-refresh-ext-error'));
