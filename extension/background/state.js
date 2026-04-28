@@ -176,6 +176,14 @@ export function setWlQueue(v) { _wlQueue = v; }
 export let enhancedStorageChain = Promise.resolve();
 export function setEnhancedStorageChain(v) { enhancedStorageChain = v; }
 
+// Serialized cosmetic exceptions write queue
+export let _cosmeticExcQueue = Promise.resolve();
+export function setCosmeticExcQueue(v) { _cosmeticExcQueue = v; }
+
+// Serialized cosmetic excluded sites write queue
+export let _cosmeticSiteQueue = Promise.resolve();
+export function setCosmeticSiteQueue(v) { _cosmeticSiteQueue = v; }
+
 // Sequential rebuild guard
 export let _rebuildRunning = false;
 export function setRebuildRunning(v) { _rebuildRunning = v; }

@@ -502,6 +502,10 @@ async function _rebuildAllDynamicRulesImpl() {
 
     // Build enhanced reverse index for onErrorOccurred attribution (always, both modes)
     // Prefer lists with a category (purpose) over uncategorized ones.
+    // Only index domain-level rules (full domain blocks); skip pathRules because
+    // they only block specific URL patterns, not the entire domain. Including them
+    // causes false attribution (e.g. a pathRule for ||instagram.com/api/v1/... would
+    // make ALL instagram.com failures be attributed to that list).
     const newEnhancedReverseIndex = new Map();
     const indexedHasCategory = new Set();
     for (const [listId, listData] of Object.entries(enhancedData)) {
@@ -514,17 +518,6 @@ async function _rebuildAllDynamicRulesImpl() {
           if (indexedHasCategory.has(d) && !hasCategory) continue;
           newEnhancedReverseIndex.set(d, listId);
           if (hasCategory) indexedHasCategory.add(d);
-        }
-      }
-      if (listData.pathRules?.length) {
-        for (const pr of listData.pathRules) {
-          const m = pr.urlFilter?.match(/^\|\|([^/]+)/);
-          if (!m) continue;
-          if (indexedHasCategory.has(m[1]) && !hasCategory) continue;
-          if (!newEnhancedReverseIndex.has(m[1]) || hasCategory) {
-            newEnhancedReverseIndex.set(m[1], listId);
-            if (hasCategory) indexedHasCategory.add(m[1]);
-          }
         }
       }
     }
@@ -849,9 +842,18 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
       }
     }
 
+    // Merge user-defined cosmetic exceptions
+    const userExc = await new Promise(resolve =>
+      chrome.storage.local.get(["cosmeticUserExceptions"], r => resolve(r.cosmeticUserExceptions || {}))
+    );
+    for (const [domain, sels] of Object.entries(userExc)) {
+      if (!exceptionMap[domain]) exceptionMap[domain] = new Set();
+      for (const sel of sels) exceptionMap[domain].add(sel);
+    }
+
     // Build CSS string: chunk generic selectors into groups of 500
     // Filter out selectors containing { or } to prevent CSS injection
-    const allGeneric = [...genericSet].filter(s => !s.includes("{") && !s.includes("}"));
+    const allGeneric = [...genericSet].filter(s => !s.includes("{") && !s.includes("}") && !s.includes("<") && !s.includes("url("));
     const CHUNK = 500;
     const chunks = [];
     for (let i = 0; i < allGeneric.length; i += CHUNK) {
@@ -863,7 +865,7 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
     // Serialize domain map (convert Sets to Arrays, filter unsafe selectors)
     const cosmeticDomains = {};
     for (const [d, sels] of Object.entries(domainMap)) {
-      const safe = [...sels].filter(s => !s.includes("{") && !s.includes("}"));
+      const safe = [...sels].filter(s => !s.includes("{") && !s.includes("}") && !s.includes("<") && !s.includes("url("));
       if (safe.length) cosmeticDomains[d] = safe;
     }
 
@@ -880,12 +882,18 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
       chrome.storage.local.set(storageData, resolve);
     });
 
-    // Build exclude patterns for permissive sites
+    // Build exclude patterns for permissive sites + user-excluded cosmetic sites
     const excludeMatches = [];
     if (permissiveSites && permissiveSites.length > 0) {
       for (const site of permissiveSites) {
         excludeMatches.push(`*://*.${site}/*`, `*://${site}/*`);
       }
+    }
+    const cosmeticExcSites = await new Promise(resolve =>
+      chrome.storage.local.get(["cosmeticExcludedSites"], r => resolve(r.cosmeticExcludedSites || []))
+    );
+    for (const site of cosmeticExcSites) {
+      excludeMatches.push(`*://*.${site}/*`, `*://${site}/*`);
     }
 
     await chrome.scripting.registerContentScripts([{

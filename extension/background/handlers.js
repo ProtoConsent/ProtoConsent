@@ -52,6 +52,7 @@ import {
   getWhitelistFromStorage, isValidHostname,
   getEnhancedListsFromStorage, getEnhancedPresetFromStorage,
   withEnhancedStorageLock, withWhitelist,
+  withCosmeticExceptions, withCosmeticExcludedSites,
 } from "./storage.js";
 import {
   loadBlocklistsConfig, loadPresetsConfig, loadPurposesConfig,
@@ -248,6 +249,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       tabCosmeticData.set(tabId, {
         domain: message.domain,
         siteRules: message.siteRules || 0,
+        genericSelectors: message.genericSelectors || [],
+        domainSelectors: message.domainSelectors || [],
         ts: Date.now(),
       });
       scheduleSessionPersist();
@@ -257,6 +260,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             type: "cosmetic",
             domain: message.domain,
             siteRules: message.siteRules || 0,
+            genericSelectors: message.genericSelectors || [],
+            domainSelectors: message.domainSelectors || [],
             tabId,
           });
         } catch (_) {}
@@ -300,6 +305,92 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const info = tabCosmeticData.get(message.tabId) || null;
     sendResponse({ cosmetic: info });
     return;
+  }
+
+  // Popup requests user-defined cosmetic exceptions
+  if (message.type === "PROTOCONSENT_GET_COSMETIC_EXCEPTIONS") {
+    chrome.storage.local.get(["cosmeticUserExceptions"], (r) => {
+      sendResponse({ exceptions: r.cosmeticUserExceptions || {} });
+    });
+    return true;
+  }
+
+  // Cosmetic whitelist: exclude a selector for a domain
+  if (message.type === "PROTOCONSENT_COSMETIC_EXCLUDE") {
+    const { domain, selector } = message;
+    if (!domain || !selector || !isValidHostname(domain)) {
+      sendResponse({ ok: false }); return;
+    }
+    withCosmeticExceptions(exc => {
+      if (!exc[domain]) exc[domain] = [];
+      if (!exc[domain].includes(selector)) exc[domain].push(selector);
+      return new Promise(resolve => {
+        chrome.storage.local.set({ cosmeticUserExceptions: exc }, () => {
+          if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
+          rebuildAllDynamicRules();
+          sendResponse({ ok: true });
+          resolve();
+        });
+      });
+    });
+    return true;
+  }
+
+  // Cosmetic whitelist: restore a previously excluded selector
+  if (message.type === "PROTOCONSENT_COSMETIC_RESTORE") {
+    const { domain, selector } = message;
+    if (!domain || !selector || !isValidHostname(domain)) { sendResponse({ ok: false }); return; }
+    withCosmeticExceptions(exc => {
+      if (exc[domain]) {
+        exc[domain] = exc[domain].filter(s => s !== selector);
+        if (exc[domain].length === 0) delete exc[domain];
+      }
+      return new Promise(resolve => {
+        chrome.storage.local.set({ cosmeticUserExceptions: exc }, () => {
+          if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
+          rebuildAllDynamicRules();
+          sendResponse({ ok: true });
+          resolve();
+        });
+      });
+    });
+    return true;
+  }
+
+  // Cosmetic whitelist: exclude all cosmetic filtering for a site
+  if (message.type === "PROTOCONSENT_COSMETIC_EXCLUDE_SITE") {
+    const { domain } = message;
+    if (!domain || !isValidHostname(domain)) { sendResponse({ ok: false }); return; }
+    withCosmeticExcludedSites(sites => {
+      if (!sites.includes(domain)) sites.push(domain);
+      return new Promise(resolve => {
+        chrome.storage.local.set({ cosmeticExcludedSites: sites }, () => {
+          if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
+          rebuildAllDynamicRules();
+          sendResponse({ ok: true });
+          resolve();
+        });
+      });
+    });
+    return true;
+  }
+
+  // Cosmetic whitelist: restore cosmetic filtering for a site
+  if (message.type === "PROTOCONSENT_COSMETIC_RESTORE_SITE") {
+    const { domain } = message;
+    if (!domain || !isValidHostname(domain)) { sendResponse({ ok: false }); return; }
+    withCosmeticExcludedSites(sites => {
+      const filtered = sites.filter(s => s !== domain);
+      return new Promise(resolve => {
+        chrome.storage.local.set({ cosmeticExcludedSites: filtered }, () => {
+          if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
+          rebuildAllDynamicRules();
+          sendResponse({ ok: true });
+          resolve();
+        });
+      });
+    });
+    return true;
   }
 
   // Popup requests CMP auto-response state for a tab

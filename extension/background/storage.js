@@ -10,6 +10,8 @@ import {
   PURPOSES_FOR_ENFORCEMENT, purposesConfig,
   _wlQueue, setWlQueue,
   enhancedStorageChain, setEnhancedStorageChain,
+  _cosmeticExcQueue, setCosmeticExcQueue,
+  _cosmeticSiteQueue, setCosmeticSiteQueue,
 } from "./state.js";
 
 // Validate domain: must look like a hostname
@@ -137,5 +139,31 @@ export function withEnhancedStorageLock(fn) {
 export function withWhitelist(fn) {
   const next = _wlQueue.then(() => getWhitelistFromStorage().then(fn), () => getWhitelistFromStorage().then(fn));
   setWlQueue(next);
+  return next;
+}
+
+// Serialized cosmetic user exceptions write queue
+function getCosmeticUserExceptions() {
+  return new Promise(resolve => {
+    chrome.storage.local.get(["cosmeticUserExceptions"], r => resolve(r.cosmeticUserExceptions || {}));
+  });
+}
+
+export function withCosmeticExceptions(fn) {
+  const next = _cosmeticExcQueue.then(() => getCosmeticUserExceptions().then(fn), () => getCosmeticUserExceptions().then(fn));
+  setCosmeticExcQueue(next);
+  return next;
+}
+
+// Serialized cosmetic excluded sites write queue
+function getCosmeticExcludedSites() {
+  return new Promise(resolve => {
+    chrome.storage.local.get(["cosmeticExcludedSites"], r => resolve(r.cosmeticExcludedSites || []));
+  });
+}
+
+export function withCosmeticExcludedSites(fn) {
+  const next = _cosmeticSiteQueue.then(() => getCosmeticExcludedSites().then(fn), () => getCosmeticExcludedSites().then(fn));
+  setCosmeticSiteQueue(next);
   return next;
 }

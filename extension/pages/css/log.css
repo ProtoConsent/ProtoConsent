@@ -112,7 +112,7 @@
   font-size: var(--pc-font);
   font-weight: 600;
   letter-spacing: 0.02em;
-  padding: 7px 8px 6px;
+  padding: 7px 10px 6px;
   border: none;
   border-bottom: 2px solid transparent;
   background: none;
@@ -128,6 +128,24 @@
 .pc-log-tab.is-active {
   color: var(--pc-accent);
   border-bottom-color: var(--pc-accent);
+}
+
+.pc-log-tab-icon {
+  width: 17px;
+  height: 17px;
+  display: block;
+  opacity: 0.45;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.pc-log-tab:hover .pc-log-tab-icon {
+  opacity: 0.85;
+  transform: scale(1.15);
+}
+
+.pc-log-tab.is-active .pc-log-tab-icon {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .pc-log-tab[hidden] {
@@ -463,4 +481,39 @@
 
 .pc-log-table tr.is-active td:first-child {
   border-left: 2px solid var(--pc-accent);
+}
+
+/* --- Cosmetic selector rows --- */
+
+.pc-cosmetic-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.pc-cosmetic-header-row .pc-log-purpose-label {
+  margin-bottom: 0;
+}
+
+.pc-cosmetic-active td:first-child img {
+  filter: hue-rotate(90deg) saturate(2) brightness(1.2);
+}
+
+.pc-cosmetic-active .pc-cosmetic-sel-cell {
+  color: var(--pc-success, #15803d);
+}
+
+.pc-cosmetic-excluded td {
+  opacity: 0.6;
+}
+
+.pc-cosmetic-sel-cell {
+  font-family: monospace;
+  font-size: var(--pc-font-sm, 11px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }

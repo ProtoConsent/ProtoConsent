@@ -63,3 +63,12 @@ html.pc-dark .pc-log-domains-icon img[alt="EP"] {
 html.pc-dark .pc-log-table tr.is-active {
   background: #1a3a22;
 }
+
+/* Cosmetic excluded rows */
+html.pc-dark .pc-cosmetic-excluded td {
+  opacity: 0.5;
+}
+
+html.pc-dark .pc-cosmetic-active .pc-cosmetic-sel-cell {
+  color: #51CF66;
+}
