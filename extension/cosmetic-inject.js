@@ -20,6 +20,8 @@
 
     let text = r._cosmeticCSS || "";
     let siteRuleCount = 0;
+    let appliedGeneric = [];
+    let appliedDomain = [];
 
     // Apply cosmetic exceptions: remove generic selectors excepted for this domain
     if (r._cosmeticExceptions && text) {
@@ -42,6 +44,20 @@
       }
     }
 
+    // Collect applied generic selectors from the (post-exception) CSS
+    if (text) {
+      const suffix = "{display:none!important}";
+      for (const chunk of text.split("\n")) {
+        if (!chunk.endsWith(suffix)) continue;
+        const sels = chunk.slice(0, chunk.length - suffix.length).split(",");
+        for (const s of sels) {
+          if (appliedGeneric.length >= 500) break;
+          appliedGeneric.push(s);
+        }
+        if (appliedGeneric.length >= 500) break;
+      }
+    }
+
     // Domain-specific: walk up hostname (sub.example.com -> example.com)
     if (r._cosmeticDomains) {
       const sels = [];
@@ -57,6 +73,7 @@
       if (sels.length) {
         text += "\n" + sels.join(",") + "{display:none!important}";
         siteRuleCount = sels.length;
+        appliedDomain = sels;
       }
     }
 
@@ -73,6 +90,8 @@
           type: "PROTOCONSENT_COSMETIC_APPLIED",
           domain: host,
           siteRules: siteRuleCount,
+          genericSelectors: appliedGeneric,
+          domainSelectors: appliedDomain,
         }, () => { void chrome.runtime.lastError; });
       } catch (_) {}
     }

@@ -27,6 +27,10 @@ function refreshLogView() {
   renderLogDomains();
   renderLogGpc();
   renderLogWhitelist();
+  // Cosmetic: only skip re-render if we already have cached data
+  if (!_cosmeticCachedData) {
+    renderLogCosmetic();
+  }
 }
 
 // --- One-time setup + refresh ---
