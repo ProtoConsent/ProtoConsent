@@ -12,7 +12,6 @@ const PROFILE_ORDER = ['strict', 'balanced', 'permissive'];
 const RECOMMENDED = 'balanced';
 
 let selectedProfile = RECOMMENDED;
-let selectedMode = 'standalone';
 let presets = null;
 let purposes = null;
 
@@ -129,81 +128,24 @@ function wireEvents() {
     }
   });
 
-  // Get Started → go to mode selection
+  // Get Started -> save and go to done screen
   document.getElementById('ob-save').addEventListener('click', () => {
-    goToScreen('ob-mode');
-  });
-
-  // Skip → save balanced + blocking and go to done
-  document.getElementById('ob-skip').addEventListener('click', () => {
-    selectedProfile = RECOMMENDED;
-    selectedMode = 'standalone';
     save(() => goToScreen('ob-done-screen'));
   });
 
-  // Mode cards: click and keyboard
-  const modeContainer = document.getElementById('ob-modes');
-  modeContainer.addEventListener('click', (e) => {
-    const card = e.target.closest('.ob-mode-card');
-    if (card) selectModeCard(card);
-  });
-  modeContainer.addEventListener('keydown', (e) => {
-    const card = e.target.closest('.ob-mode-card');
-    if (!card) return;
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      selectModeCard(card);
-    } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-      e.preventDefault();
-      const next = card.nextElementSibling;
-      if (next) next.focus();
-    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-      e.preventDefault();
-      const prev = card.previousElementSibling;
-      if (prev) prev.focus();
-    }
-  });
-
-  // Mode Continue → save profile + mode, go to dynamic lists
-  document.getElementById('ob-continue-mode').addEventListener('click', () => {
+  // Skip -> save balanced defaults, open Settings, close onboarding
+  document.getElementById('ob-skip').addEventListener('click', () => {
+    selectedProfile = RECOMMENDED;
     save(() => {
-      const celProfileEl = document.getElementById('ob-cel-profile-name');
-      if (celProfileEl) celProfileEl.textContent = presets[selectedProfile]?.label || selectedProfile;
-      goToScreen('ob-dynamic');
+      chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-settings.html') });
+      window.close();
     });
   });
 
-  // Mode Back → return to profile selection
-  document.getElementById('ob-back-mode').addEventListener('click', () => {
-    goToScreen('ob-setup');
-  });
-
-  // Dynamic lists: Continue - save checked options and go to done
-  document.getElementById('ob-continue-dynamic').addEventListener('click', () => {
-    const celChecked = document.getElementById('ob-cel-toggle')?.checked;
-
-    const saves = [];
-    if (celChecked) saves.push(cb => setConsentEnhancedLink(true, cb));
-    // Set enhanced preset to basic so Protection tab starts ready
-    saves.push(cb => chrome.storage.local.set({ enhancedPreset: "basic" }, cb));
-
-    // Chain saves sequentially, then navigate
-    const run = (i) => {
-      if (i >= saves.length) { goToScreen('ob-done-screen'); return; }
-      saves[i](() => run(i + 1));
-    };
-    run(0);
-  });
-
-  // Dynamic lists: Back → return to mode selection
-  document.getElementById('ob-back-dynamic').addEventListener('click', () => {
-    goToScreen('ob-mode');
-  });
-
-  // Settings link in confirmation screen
-  document.getElementById('ob-link-settings').addEventListener('click', (e) => {
-    e.preventDefault();
+  // Done -> open Settings and close onboarding tab
+  document.getElementById('ob-done').addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-settings.html') });
+    window.close();
   });
 }
 
@@ -216,17 +158,6 @@ function selectCard(card) {
   card.classList.add('is-selected');
   card.setAttribute('aria-checked', 'true');
   selectedProfile = card.dataset.profile;
-}
-
-function selectModeCard(card) {
-  const cards = document.querySelectorAll('.ob-mode-card');
-  cards.forEach((c) => {
-    c.classList.remove('is-selected');
-    c.setAttribute('aria-checked', 'false');
-  });
-  card.classList.add('is-selected');
-  card.setAttribute('aria-checked', 'true');
-  selectedMode = card.dataset.mode;
 }
 
 function goToScreen(screenId) {
@@ -244,40 +175,47 @@ function goToScreen(screenId) {
 }
 
 function save(callback) {
+  const celChecked = document.getElementById('ob-cel-toggle')?.checked;
+
   const data = {
     defaultProfile: selectedProfile,
-    operatingMode: selectedMode,
-    onboardingComplete: true
+    operatingMode: 'standalone',
+    onboardingComplete: true,
+    enhancedPreset: 'basic',
   };
 
   chrome.storage.local.set(data, () => {
+    // Save CEL if checked
+    if (celChecked) {
+      setConsentEnhancedLink(true, () => { void 0; });
+    }
+
     // Notify background to rebuild rules with new default + mode
-    chrome.runtime.sendMessage({ type: 'PROTOCONSENT_SET_OPERATING_MODE', mode: selectedMode }, () => {
+    chrome.runtime.sendMessage({ type: 'PROTOCONSENT_SET_OPERATING_MODE', mode: 'standalone' }, () => {
       void chrome.runtime.lastError;
     });
     chrome.runtime.sendMessage({ type: 'PROTOCONSENT_RULES_UPDATED' }, () => {
       void chrome.runtime.lastError;
     });
 
-    // Show chosen profile and mode
+    // Show chosen profile
+    const celProfileEl = document.getElementById('ob-cel-profile-name');
+    if (celProfileEl) celProfileEl.textContent = presets[selectedProfile]?.label || selectedProfile;
     document.getElementById('ob-chosen-profile').textContent =
       presets[selectedProfile]?.label || selectedProfile;
-    const modeLabel = selectedMode === 'protoconsent' ? 'Monitoring' : 'Blocking';
-    document.getElementById('ob-chosen-mode').textContent = modeLabel;
 
     if (callback) callback();
   });
 }
 
 function detectRegionalLanguage() {
-  const card = document.getElementById('ob-regional-card');
   const container = document.getElementById('ob-regional-flags');
-  if (!card || !container) return;
+  if (!container) return;
 
   fetch(chrome.runtime.getURL('config/regional-languages.json'))
     .then(r => r.ok ? r.json() : null)
     .then(rlConfig => {
-      if (!rlConfig) { card.hidden = true; return; }
+      if (!rlConfig) return;
 
       // Build language -> region map
       const langToRegion = {};
@@ -319,7 +257,7 @@ function detectRegionalLanguage() {
           container.appendChild(img);
         }
       } else {
-        // No detection: show all available flags so user knows languages are supported
+        // No detection: show all available flags
         container.setAttribute('aria-label', '13 languages available');
         const sortedCodes = Object.keys(rlConfig).sort();
         for (const code of sortedCodes) {
@@ -343,7 +281,7 @@ function detectRegionalLanguage() {
         }
       }
     })
-    .catch(() => { if (card) card.hidden = true; });
+    .catch(() => {});
 }
 
 document.addEventListener('DOMContentLoaded', init);
