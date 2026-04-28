@@ -343,19 +343,68 @@ function _fillCoverageBody(body, resp, wkData) {
   textEl.innerHTML = "<span><strong>" + ratio + "%</strong> attributed</span><span><strong>" + (coverage.observed - (coverage.attributed || 0)) + "</strong> unmatched</span>";
   body.appendChild(textEl);
 
-  // Provenance
+  // Provenance + heuristic summary on one line
   var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
-  provEl.innerHTML = "<strong>Own:</strong> " + prov.own + " \u00b7 <strong>" + (resp.mode === "protoconsent" ? "External" : "Other") + ":</strong> " + prov.other;
+  var provText = "<strong>Own:</strong> " + prov.own + " \u00b7 <strong>" + (resp.mode === "protoconsent" ? "External" : "Other") + ":</strong> " + prov.other;
+  if (resp.unattributed && resp.unattributed.length > 0) {
+    var heuristicCounts = {};
+    var heuristicTotal = 0;
+    for (var h = 0; h < resp.unattributed.length; h++) {
+      var hk = resp.unattributed[h].heuristic;
+      if (hk) { heuristicTotal++; heuristicCounts[hk] = (heuristicCounts[hk] || 0) + 1; }
+    }
+    provText += " \u00b7 <strong>Guess:</strong> " + heuristicTotal + "/" + resp.unattributed.length;
+    if (heuristicTotal > 0) {
+      var parts = [];
+      var sorted = Object.entries(heuristicCounts).sort(function(a,b){ return b[1]-a[1]; });
+      for (var hi = 0; hi < sorted.length; hi++) parts.push(sorted[hi][1] + " " + sorted[hi][0]);
+      provText += " (" + parts.join(", ") + ")";
+    }
+  }
+  provEl.innerHTML = provText;
   body.appendChild(provEl);
 
   // Unattributed hostnames
   if (resp.unattributed && resp.unattributed.length > 0) {
-    var toggle = document.createElement("details"); toggle.style.marginTop = "4px";
-    var sum = document.createElement("summary"); sum.textContent = "Unmatched hostnames (" + resp.unattributed.length + ")";
-    toggle.appendChild(sum);
+    var toggle = document.createElement("div"); toggle.className = "ep-active-card"; toggle.style.marginTop = "4px";
+    var sumHeader = document.createElement("div"); sumHeader.className = "ep-active-card-header";
+    sumHeader.setAttribute("role", "button"); sumHeader.setAttribute("tabindex", "0");
+    sumHeader.setAttribute("aria-expanded", "false");
+    sumHeader.setAttribute("aria-label", "Unmatched hostnames, " + resp.unattributed.length + " entries");
+    var sumChevron = document.createElement("span"); sumChevron.className = "ep-active-card-chevron"; sumChevron.textContent = "\u25B8";
+    var sumName = document.createElement("span"); sumName.className = "ep-active-card-name"; sumName.textContent = "Unmatched hostnames";
+    var sumCount = document.createElement("span"); sumCount.className = "ep-active-card-count"; sumCount.textContent = resp.unattributed.length;
+    sumHeader.appendChild(sumChevron); sumHeader.appendChild(sumName); sumHeader.appendChild(sumCount);
+    var toggleBody = document.createElement("div"); toggleBody.className = "ep-active-card-body";
     for (var i = 0; i < Math.min(resp.unattributed.length, 10); i++) {
-      var d = document.createElement("div"); d.textContent = resp.unattributed[i].hostname; toggle.appendChild(d);
+      var d = document.createElement("div"); d.className = "proto-unmatched-row";
+      var hostSpan = document.createElement("span"); hostSpan.className = "proto-unmatched-host";
+      hostSpan.textContent = resp.unattributed[i].hostname;
+      d.appendChild(hostSpan);
+      if (resp.unattributed[i].heuristic) {
+        var badge = document.createElement("span");
+        badge.className = "pc-heuristic-badge";
+        badge.textContent = resp.unattributed[i].heuristic;
+        badge.title = "Best-guess classification from hostname pattern";
+        d.appendChild(badge);
+      }
+      toggleBody.appendChild(d);
     }
+    if (resp.unattributed.length > 10) {
+      var more = document.createElement("div"); more.className = "proto-card-more";
+      more.textContent = "+" + (resp.unattributed.length - 10) + " more";
+      toggleBody.appendChild(more);
+    }
+    var toggleFn = function() {
+      var expanded = toggle.classList.toggle("is-expanded");
+      sumHeader.setAttribute("aria-expanded", expanded ? "true" : "false");
+      sumChevron.textContent = expanded ? "\u25BE" : "\u25B8";
+    };
+    sumHeader.addEventListener("click", toggleFn);
+    sumHeader.addEventListener("keydown", function(e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleFn(); }
+    });
+    toggle.appendChild(sumHeader); toggle.appendChild(toggleBody);
     body.appendChild(toggle);
   }
 }

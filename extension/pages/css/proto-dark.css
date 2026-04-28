@@ -72,6 +72,11 @@ html.pc-dark .proto-decl-none {
   color: #868E96;
   border-color: #3D4250;
 }
+html.pc-dark .pc-heuristic-badge {
+  background: #2e1a47;
+  color: #b794f4;
+  border-color: #4c2d7a;
+}
 
 /* Source sub-headers */
 html.pc-dark .proto-source-header {

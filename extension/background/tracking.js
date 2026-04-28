@@ -17,6 +17,7 @@ import {
   hotfixDomainSet, tabHotfixHits,
 } from "./state.js";
 import { resolvePurposesFromHostname } from "./config-loader.js";
+import { guessHeuristicPurpose } from "./heuristic.js";
 import { scheduleSessionPersist, updateBadgeForTab } from "./session.js";
 
 // --- Lifetime blocked counter ---
@@ -152,7 +153,8 @@ if (!useDnrDebug) {
         if (!pathPurposes) {
           // Truly unattributed block: buffer for debug/Proto tab
           if (unattributedBuffer.length >= UNATTRIBUTED_BUFFER_CAP) unattributedBuffer.shift();
-          unattributedBuffer.push({ hostname, tabId: details.tabId, ts: Date.now() });
+          const heuristic = guessHeuristicPurpose(hostname);
+          unattributedBuffer.push({ hostname, tabId: details.tabId, ts: Date.now(), heuristic });
           return;
         }
         // Path-only match: attribute to the matched purpose(s)

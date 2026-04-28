@@ -261,6 +261,32 @@
   border: 1px solid #d1d5db;
 }
 
+/* Heuristic guess badge for unmatched hostnames */
+.proto-unmatched-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.proto-unmatched-host {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pc-heuristic-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #c4b5fd;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .proto-card-body {
   display: none;
   padding: 0 10px 6px 26px;

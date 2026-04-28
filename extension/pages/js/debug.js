@@ -455,6 +455,19 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
         pLines.push("  attributed (reverse index): " + prov.attributed);
         pLines.push("  other (observed - own): " + prov.other);
         pLines.push("  unattributed buffer (this tab): " + (proto.unattributed ? proto.unattributed.length : 0));
+        if (proto.unattributed && proto.unattributed.length > 0) {
+          var heuristicCount = 0;
+          var heuristicByCat = {};
+          for (var hi = 0; hi < proto.unattributed.length; hi++) {
+            var h = proto.unattributed[hi].heuristic;
+            if (h) { heuristicCount++; heuristicByCat[h] = (heuristicByCat[h] || 0) + 1; }
+          }
+          pLines.push("  heuristic guesses: " + heuristicCount + "/" + proto.unattributed.length);
+          if (heuristicCount > 0) {
+            var cats = Object.entries(heuristicByCat).sort(function(a,b){ return b[1]-a[1]; });
+            pLines.push("    " + cats.map(function(c){ return c[0] + ": " + c[1]; }).join(", "));
+          }
+        }
         let pre = document.querySelector("#pc-log-debug");
         if (pre) pre.textContent += "\n" + pLines.join("\n");
       });
