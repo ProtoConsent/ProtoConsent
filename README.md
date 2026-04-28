@@ -77,7 +77,7 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 </tr>
 <tr>
 <td align="center" width="50%"><img src="design/assets/screenshots/popup-log-requests-dark.png" alt="Request log with inter-extension API and GPC signals" width="400" height="560"></td>  
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-whitelist.png" alt="Domain whitelist management" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-banners.png" alt="CMP banner detection and consent observation" width="400" height="560"></td>
 </tr>
 </table>
 
