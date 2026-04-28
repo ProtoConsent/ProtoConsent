@@ -5,12 +5,13 @@
 // Handles FETCH and storage-change logic for regional_cosmetic and
 // regional_blocking enhanced lists. Extracted from handlers.js.
 
-import { REGIONAL_IDS } from "./config-bridge.js";
+import { REGIONAL_IDS, DEBUG_RULES } from "./config-bridge.js";
 import { loadRegionalLanguagesConfig } from "./config-loader.js";
 import {
   getEnhancedListsFromStorage, withEnhancedStorageLock,
 } from "./storage.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
+import { fetchAndEnableRegionalList } from "./auto-refresh.js";
 
 const CDN_PREFIX = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/";
 const RAW_PREFIX = "https://raw.githubusercontent.com/ProtoConsent/data/main/";
@@ -244,14 +245,25 @@ export function initRegionalStorageListener() {
         return;
       }
 
-      // Languages selected: re-fetch enabled regional lists
-      getEnhancedListsFromStorage().then(lists => {
+      // Languages selected: re-fetch enabled regional lists + download missing ones
+      if (DEBUG_RULES) console.log("ProtoConsent regional: languages changed to", newLangs);
+      Promise.all([
+        getEnhancedListsFromStorage(),
+        new Promise(r => chrome.storage.local.get("dynamicListsConsent", d => r(d.dynamicListsConsent !== false))),
+      ]).then(([lists, syncEnabled]) => {
         for (const id of REGIONAL_IDS) {
-          if (!lists[id] || !lists[id].enabled) continue;
-          chrome.runtime.sendMessage({
-            type: "PROTOCONSENT_ENHANCED_FETCH",
-            listId: id,
-          }).catch(() => {});
+          if (lists[id] && lists[id].enabled) {
+            // Already downloaded + enabled: re-fetch with new languages
+            if (DEBUG_RULES) console.log("ProtoConsent regional: re-fetching", id);
+            chrome.runtime.sendMessage({
+              type: "PROTOCONSENT_ENHANCED_FETCH",
+              listId: id,
+            }).catch(() => {});
+          } else if (!lists[id] && syncEnabled) {
+            // Not yet downloaded + sync enabled: trigger initial download
+            if (DEBUG_RULES) console.log("ProtoConsent regional: initial download of", id);
+            fetchAndEnableRegionalList(id).catch(e => console.warn("ProtoConsent regional: download error for", id, e));
+          }
         }
       });
     }, 100);

@@ -180,11 +180,9 @@ function wireEvents() {
 
   // Dynamic lists: Continue - save checked options and go to done
   document.getElementById('ob-continue-dynamic').addEventListener('click', () => {
-    const syncChecked = document.getElementById('ob-sync-toggle')?.checked;
     const celChecked = document.getElementById('ob-cel-toggle')?.checked;
 
     const saves = [];
-    if (syncChecked) saves.push(cb => setDynamicListsConsent(true, cb));
     if (celChecked) saves.push(cb => setConsentEnhancedLink(true, cb));
     // Set enhanced preset to basic so Protection tab starts ready
     saves.push(cb => chrome.storage.local.set({ enhancedPreset: "basic" }, cb));
