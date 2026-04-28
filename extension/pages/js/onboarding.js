@@ -264,7 +264,7 @@ function detectRegionalLanguage() {
         }
       } else {
         // No detection: show all available flags
-        container.setAttribute('aria-label', '13 languages available');
+        container.setAttribute('aria-label', '30 languages available');
         const sortedCodes = Object.keys(rlConfig).sort();
         for (const code of sortedCodes) {
           const entry = rlConfig[code];
