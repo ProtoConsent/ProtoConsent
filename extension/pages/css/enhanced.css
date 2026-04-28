@@ -772,6 +772,12 @@ a.ep-regional-langs:hover {
   gap: 2px;
 }
 
+.ep-hotfix-desc {
+  font-size: var(--pc-font-sm);
+  color: var(--pc-text-muted);
+  margin-bottom: 6px;
+}
+
 .ep-hotfix-domain-entry {
   font-size: var(--pc-font-sm);
   color: var(--pc-text-soft);

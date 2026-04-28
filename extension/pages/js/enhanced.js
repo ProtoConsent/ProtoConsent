@@ -686,6 +686,10 @@ function renderEnhancedLists() {
         var MAX_LISTED = 50;
         var wrap = document.createElement("div");
         wrap.className = "ep-hotfix-domains";
+        var desc = document.createElement("div");
+        desc.className = "ep-hotfix-desc";
+        desc.textContent = "Domains excluded from blocking lists to prevent site breakage.";
+        wrap.appendChild(desc);
         if (domains.length > MAX_LISTED) {
           var summary = document.createElement("div");
           summary.className = "ep-hotfix-domain-entry";
