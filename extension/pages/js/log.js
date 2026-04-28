@@ -733,19 +733,24 @@ function connectLogPort() {
 
   logPort.onDisconnect.addListener(() => {
     logPort = null;
-    // Service worker restarted - try to reconnect after a short delay
+    // Service worker restarted - clear log and reconnect so port replay is clean
     setTimeout(() => {
       if (!logPort && activeMode === "log") {
+        const pre = document.getElementById("pc-log-requests");
+        if (pre) pre.innerHTML = "";
+        _historicalReplayed = false;
         initLogTab();
       }
     }, 1000);
   });
 }
 
+// Track whether historical data has been replayed to prevent re-renders
+let _historicalReplayed = false;
+
 function refreshLogRequests() {
-  const pre = document.getElementById("pc-log-requests");
-  if (!pre) return;
-  pre.innerHTML = "";
+  if (_historicalReplayed) return;
+  _historicalReplayed = true;
   replayHistoricalLog();
 }
 
@@ -784,7 +789,7 @@ function replayHistoricalLog() {
         let detail = "[param-strip] " + domain;
         if (info && info.params && info.params.length > 0) detail += " \u2212 " + info.params.join(", ");
         if (info && info.count > 1) detail += " (" + info.count + ")";
-        appendLogLine(detail, "param-strip");
+        appendLogLine(detail, "param-strip", undefined, true);
       }
     });
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_COSMETIC", tabId: tabs[0].id }, (resp) => {
@@ -792,11 +797,11 @@ function replayHistoricalLog() {
       const c = resp.cosmetic;
       let detail = "[cosmetic] " + c.domain;
       if (c.siteRules > 0) detail += " +" + c.siteRules + " site rules";
-      appendLogLine(detail, "cosmetic", c.ts);
+      appendLogLine(detail, "cosmetic", c.ts, true);
     });
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_CMP_DETECT", tabId: tabs[0].id }, (resp) => {
       if (chrome.runtime.lastError || !resp?.cmpDetect) return;
-      renderCmpDetectLog(resp.cmpDetect);
+      renderCmpDetectLog(resp.cmpDetect, true);
     });
   });
 
@@ -812,7 +817,7 @@ function replayHistoricalLog() {
 const LOG_MAX_LINES = 500;
 const LOG_NODES_PER_LINE = 3; // tsSpan + lineSpan + "\n" textNode
 
-function appendLogLine(text, type, ts) {
+function appendLogLine(text, type, ts, prepend) {
   const pre = document.getElementById("pc-log-requests");
   if (!pre) return;
 
@@ -840,8 +845,15 @@ function appendLogLine(text, type, ts) {
   // Only auto-scroll if user is already near the bottom
   const atBottom = (pre.scrollHeight - pre.scrollTop - pre.clientHeight) < 40;
 
-  pre.appendChild(tsSpan);
-  pre.appendChild(line);
+  if (prepend) {
+    const nl = document.createTextNode("\n");
+    pre.insertBefore(nl, pre.firstChild);
+    pre.insertBefore(line, pre.firstChild);
+    pre.insertBefore(tsSpan, pre.firstChild);
+  } else {
+    pre.appendChild(tsSpan);
+    pre.appendChild(line);
+  }
   line.textContent = text;
 
   // CNAME cloaking indicator in stream
@@ -861,7 +873,9 @@ function appendLogLine(text, type, ts) {
     }
   }
 
-  pre.appendChild(document.createTextNode("\n"));
+  if (!prepend) {
+    pre.appendChild(document.createTextNode("\n"));
+  }
 
   // Evict oldest lines when exceeding cap
   const maxNodes = LOG_MAX_LINES * LOG_NODES_PER_LINE;
@@ -874,21 +888,21 @@ function appendLogLine(text, type, ts) {
 
 // --- CMP detect/observe log rendering ---
 
-function renderCmpDetectLog(msg) {
+function renderCmpDetectLog(msg, prepend) {
   const domain = msg.domain || "?";
 
   // Detection lines
   if (Array.isArray(msg.detected)) {
     for (const d of msg.detected) {
       const state = d.showing ? "showing" : (d.present ? "present" : "detected");
-      appendLogLine("[banner] " + domain + " - " + d.cmpId + " (" + state + ")", "banner", msg.ts);
+      appendLogLine("[banner] " + domain + " - " + d.cmpId + " (" + state + ")", "banner", msg.ts, prepend);
     }
   }
 
   // Site-specific hiding lines
   if (Array.isArray(msg.siteHidden)) {
     for (const s of msg.siteHidden) {
-      appendLogLine("[banner] " + domain + " - " + s.cmpId + " site-specific (" + s.selectorCount + " selectors)", "banner", msg.ts);
+      appendLogLine("[banner] " + domain + " - " + s.cmpId + " site-specific (" + s.selectorCount + " selectors)", "banner", msg.ts, prepend);
     }
   }
 
@@ -899,10 +913,10 @@ function renderCmpDetectLog(msg) {
         for (const c of obs.conflicts) {
           const cmpStr = c.cmpValue ? "allow" : "deny";
           const usStr = c.userValue ? "allow" : "deny";
-          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": " + c.purpose + " CMP=" + cmpStr + " us=" + usStr, "banner-consent", msg.ts);
+          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": " + c.purpose + " CMP=" + cmpStr + " us=" + usStr, "banner-consent", msg.ts, prepend);
         }
       } else {
-        appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": consent matches", "banner-consent", msg.ts);
+        appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": consent matches", "banner-consent", msg.ts, prepend);
       }
     }
   }
@@ -913,9 +927,9 @@ function renderCmpDetectLog(msg) {
       // Summary results (e.g. Usercentrics without service names)
       if (obs.summary && obs.decoded) {
         if (obs.decoded._noInteraction) {
-          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": banner pending (no user interaction)", "banner-consent", msg.ts);
+          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": banner pending (no user interaction)", "banner-consent", msg.ts, prepend);
         } else if (typeof obs.decoded._allow === "number") {
-          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": " + obs.decoded._allow + " allow / " + obs.decoded._deny + " deny", "banner-consent", msg.ts);
+          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": " + obs.decoded._allow + " allow / " + obs.decoded._deny + " deny", "banner-consent", msg.ts, prepend);
         }
         continue;
       }
@@ -923,10 +937,10 @@ function renderCmpDetectLog(msg) {
         for (const c of obs.conflicts) {
           const cmpStr = c.cmpValue ? "allow" : "deny";
           const usStr = c.userValue ? "allow" : "deny";
-          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": " + c.purpose + " CMP=" + cmpStr + " us=" + usStr, "banner-consent", msg.ts);
+          appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": " + c.purpose + " CMP=" + cmpStr + " us=" + usStr, "banner-consent", msg.ts, prepend);
         }
       } else {
-        appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": consent matches", "banner-consent", msg.ts);
+        appendLogLine("[banner-consent] " + domain + " - " + obs.cmpId + ": consent matches", "banner-consent", msg.ts, prepend);
       }
     }
   }

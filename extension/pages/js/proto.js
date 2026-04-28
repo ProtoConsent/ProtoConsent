@@ -132,7 +132,7 @@ function _renderProtoBars(resp, tcfData) {
     var collapsed;
     if (isMonitoring) {
       collapsed = "Blocked by external: " + prov.other + " \u00b7 " +
-        (resp.coverage ? Math.round((resp.coverage.attributed / Math.max(resp.coverage.observed, 1)) * 100) : 0) + "% attributed";
+        (resp.coverage ? Math.round((resp.coverage.attributed / Math.max(resp.coverage.observed, 1)) * 100) : 0) + "% purpose attributed";
     } else {
       collapsed = buildStatsCollapsed(lastBlocked || 0);
     }
