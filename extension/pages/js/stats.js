@@ -356,9 +356,12 @@ async function displayBlockedCount() {
       renderDebugPanel({ blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains });
     }
 
-    // Refresh Log tab panels if currently active
-    if (activeMode === "log" && typeof refreshLogView === "function") {
-      refreshLogView();
+    // Refresh Log tab panels if currently active (skip requests - they stream via port)
+    if (activeMode === "log" && typeof renderLogDomains === "function") {
+      renderLogHeader();
+      renderLogDomains();
+      renderLogGpc();
+      renderLogWhitelist();
     }
 
     // Auto-retry: re-fetch after a short delay if domain data is missing

@@ -167,6 +167,7 @@ html.pc-dark .pc-pill-indicator.is-disabled {
   background-color: #252830;
 }
 html.pc-dark .pc-pill-indicator.is-disabled .pc-pill-dot {
+  opacity: 1;
   background-color: #4D5260;
 }
 html.pc-dark .pc-gpc-indicator.is-disabled .pc-gpc-dot {

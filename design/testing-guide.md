@@ -676,14 +676,12 @@ Cosmetic filtering is also affected by the consent-enhanced link: since the list
 
 ### 13.7 Enhanced lists consent gate (sync)
 
-Remote fetching of enhanced lists requires the user's explicit consent, stored as `dynamicListsConsent` in `chrome.storage.local`. This opt-in is offered during onboarding (step 3) and in Purpose Settings.
+Remote fetching of enhanced lists is enabled by default (`dynamicListsConsent` in `chrome.storage.local`). The sync toggle is available in Purpose Settings.
 
-1. Fresh install: open onboarding and proceed to step 3 ("Enhanced lists"). The **Sync list updates** checkbox is unchecked by default.
-2. Complete onboarding **without** checking the Sync box.
-3. Open the Protection tab in the popup. The Sync pill should show "Sync: off" and clicking Download or a preset should have no effect on remote fetch (only bundled data is available).
-4. Open Purpose Settings → **Enhanced Lists** section. The **Sync** toggle should be off.
-5. Enable the Sync toggle. The label should change to "Enabled".
-6. Return to the Protection tab. The Sync pill should show "Sync: on". Downloading lists should now fetch from the CDN.
+1. Fresh install: complete onboarding. Enhanced lists sync should be on by default.
+2. Open the Protection tab in the popup. The Sync pill should show "Sync: on". Lists should fetch from CDN automatically.
+3. Open Purpose Settings and disable the **Sync** toggle. The label should change to "Disabled".
+4. Return to the Protection tab. The Sync pill should show "Sync: off". Only bundled data should be available.
 
 To verify via the service worker console:
 

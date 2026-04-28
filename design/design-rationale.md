@@ -96,7 +96,7 @@ ProtoConsent has clear boundaries:
 
 - **Not yet a web standard**: the protocol is a working draft; formal standardisation is a long‑term goal pending real‑world adoption.
 - **Not a CMP**: it does not manage consent on behalf of sites, negotiate with vendors, or provide compliance certification.
-- **Not a full ad blocker**: its core goal is purpose‑based consent enforcement, not exhaustive tracking coverage. Enhanced lists extend coverage optionally.
+- **Not a replacement for dedicated ad blockers**: its core goal is purpose‑based consent enforcement. Enhanced Protection provides substantial blocking coverage out of the box, but the focus remains on purpose attribution and user control rather than filter-list completeness.
 - **Not control over all data processing**: browser‑level enforcement cannot prevent server‑side processing, first‑party abuse, or offline correlation. ProtoConsent makes *network‑level* effects visible and controllable.
 - **Not legal adjudication**: it does not validate legal bases, perform impact assessments, or certify compliance.
 

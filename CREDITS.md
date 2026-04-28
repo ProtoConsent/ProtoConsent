@@ -56,10 +56,10 @@ Icons not from Consent Commons:
 |--------|---------|---------|-------|
 | [flag-icons](https://github.com/lipis/flag-icons) | Lipis | MIT | Regional filter language flags |
 
-14 SVG flags (4x3 aspect ratio) used in the Enhanced Protection regional list
+35 SVG flags (4x3 aspect ratio) used in the Enhanced Protection regional list
 cards to indicate active language regions:
 
-    extension/icons/flags/{cn,de,es,fr,il,it,jp,lt,nl,pl,pt,ru,tr,ua}.svg
+    extension/icons/flags/{bg,cn,cz,de,dk,ee,es,fi,fr,hr,hu,id,il,in,ir,is,it,jp,kr,lt,lv,mk,nl,no,pl,pt,rs,ru,sa,se,sk,th,tr,ua,vn}.svg
 
 ### CMP banner handling (Autoconsent)
 
@@ -122,8 +122,13 @@ in the extension but are compiled from upstream open-source projects.
 
 | Source | Authors | License | Files |
 |--------|---------|---------|-------|
-| [EasyList regional supplements](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `regional/regional_{cn,de,nl,es,he,it,lt,pl}_*.json` |
-| [AdGuard language filters](https://github.com/AdguardTeam/AdguardFilters) | AdGuard Team | GPL-3.0 | `regional/regional_{cn,de,nl,es,fr,ja,ru,tr,uk}_*.json` |
+| [EasyList regional supplements](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `regional/regional_*_*.json` |
+| [AdGuard language filters](https://github.com/AdguardTeam/AdguardFilters) | AdGuard Team | GPL-3.0 | `regional/regional_*_*.json` |
+| [ABPVN List](https://github.com/nickyhelper/nickyfilters) | nickyhelper | GPL-3.0 | `regional/regional_vi_*.json` |
+| [List-KR](https://github.com/nickyhelper/nickyfilters) | nickyhelper | GPL-3.0 | `regional/regional_ko_*.json` |
+| [Frellwit's Swedish Filter](https://github.com/nickyhelper/nickyfilters) | Frellwit | CC BY-SA 4.0 | `regional/regional_sv_*.json` |
+| [Dandelion Sprout's Nordic Filters](https://github.com/DandelionSprout/adfilt) | Dandelion Sprout | Dandelicence v1.4 | `regional/regional_no_*.json` |
+| [Dandelion Sprout's Serbo-Croatian List](https://github.com/DandelionSprout/adfilt) | Dandelion Sprout | Dandelicence v1.4 | `regional/regional_hr_*.json` |
 
 ### Cosmetic annoyance filtering
 
@@ -131,9 +136,11 @@ in the extension but are compiled from upstream open-source projects.
 |--------|---------|---------|-------|
 | [Web Annoyances Ultralist](https://github.com/LanikSJ/webannoyances) | yourduskquibbles, LanikSJ | CC BY-SA 4.0 | `webannoyances_cosmetic.json` |
 
-13 regions: Chinese, German, Dutch, Spanish/Portuguese, French, Hebrew, Italian, Japanese,
-Lithuanian, Polish, Russian, Turkish, Ukrainian. Each region produces two files (cosmetic +
-blocking). Regional lists are remote-catalog only and not bundled in the extension.
+30 regions: Arabic, Bulgarian, Chinese, Czech/Slovak, German, Spanish/Portuguese, Estonian,
+Persian, Finnish, French, Hebrew, Hindi, Serbo-Croatian, Hungarian, Indonesian, Italian,
+Japanese, Korean, Lithuanian, Latvian, Macedonian, Dutch, Nordic, Polish, Russian, Swedish,
+Thai, Turkish, Ukrainian, Vietnamese. Each region produces two files (cosmetic + blocking).
+Regional lists are remote-catalog only and not bundled in the extension.
 
 AdGuard's TrackParamFilter general section provides the global parameter list (~304 params).
 Per-site parameters in `dandelion_tracking_params.json` are merged from AdGuard's specific
