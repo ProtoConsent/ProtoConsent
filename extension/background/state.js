@@ -75,6 +75,9 @@ export function setDynamicParamStripIds(v) { dynamicParamStripIds = v; }
 export let dynamicWhitelistMap = {};
 export function setDynamicWhitelistMap(v) { dynamicWhitelistMap = v; }
 
+// Per-tab whitelist hit tracking (domain -> count)
+export const tabWhitelistHits = new Map();
+
 // Maps dynamic enhanced block rule IDs to their list ID
 export let dynamicEnhancedMap = {};
 export function setDynamicEnhancedMap(v) { dynamicEnhancedMap = v; }

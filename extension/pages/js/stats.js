@@ -61,7 +61,9 @@ async function getBlockedRulesCount() {
     const tabId = tabs[0].id;
 
     const [matchedResult, domainsResult, dynamicResult] = await Promise.allSettled([
-      chrome.declarativeNetRequest.getMatchedRules({ tabId }),
+      chrome.declarativeNetRequest.getMatchedRules
+        ? chrome.declarativeNetRequest.getMatchedRules({ tabId })
+        : Promise.resolve(null),
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_BLOCKED_DOMAINS", tabId }),
       chrome.declarativeNetRequest.getDynamicRules(),
     ]);
@@ -102,8 +104,12 @@ async function getBlockedRulesCount() {
           }
         }
       }
+      const wlHitDomains = domainsResp?.whitelistHitDomains || {};
+      const wlHits = Object.values(wlHitDomains).reduce((s, c) => s + c, 0);
       var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + (c && typeof c === "object" ? c.count : (c || 0)), 0);
-      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: 0, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: 0, whitelistHitDomains: {}, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
+      const psData = domainsResp?.paramStrips || {};
+      const psTotal = Object.values(psData).reduce((s, d) => s + (d && typeof d === "object" ? d.count : (d || 0)), 0);
+      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: psTotal, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: wlHits, whitelistHitDomains: wlHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
     }
 
     // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)
@@ -135,8 +141,6 @@ async function getBlockedRulesCount() {
     let gpc = 0;
     let ch = 0;
     let paramStrips = 0;
-    let whitelistHits = 0;
-    const whitelistHitDomains = {}; // domain -> count
     const domainHitCount = {};
     const rulesetHitCount = {}; // rulesetId -> count (for debug)
     for (const info of matched.rulesMatchedInfo) {
@@ -162,12 +166,9 @@ async function getBlockedRulesCount() {
       else if (rulesetId === "_dynamic" && dynamicChIds.has(info.rule.ruleId)) {
         ch++;
       }
-      // Whitelist allow rule (dynamic)
+      // Whitelist allow rule (dynamic) - hits tracked via onCompleted
       else if (rulesetId === "_dynamic" && dynamicWhitelistDomains[info.rule.ruleId]) {
-        whitelistHits++;
-        for (const d of dynamicWhitelistDomains[info.rule.ruleId]) {
-          whitelistHitDomains[d] = (whitelistHitDomains[d] || 0) + 1;
-        }
+        // no-op: whitelist hits come from background onCompleted tracker
       }
       // Static param strip rulesets
       else if (rulesetId === "strip_tracking_params" || rulesetId === "strip_tracking_params_sites") {
@@ -194,7 +195,10 @@ async function getBlockedRulesCount() {
       if (webRequestTotal > blocked) blocked = webRequestTotal;
     }
 
-    return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits, whitelistHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
+    const wlHitDomains = domainsResp?.whitelistHitDomains || {};
+    const wlHits = Object.values(wlHitDomains).reduce((s, c) => s + c, 0);
+
+    return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits: wlHits, whitelistHitDomains: wlHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
     return EMPTY_BLOCKED_RESULT;
@@ -434,7 +438,7 @@ function displayPerPurposeStats() {
   for (const key in lastPurposeStats) {
     if (key.startsWith("enhanced:")) {
       const listId = key.slice(9);
-      const entry = enhancedCatalogConfig[listId];
+      const entry = (enhancedCatalogConfig.lists || enhancedCatalogConfig)[listId];
       const cat = entry && entry.category;
       if (cat && PURPOSES_TO_SHOW.includes(cat)) {
         mergedCounts[cat] = (mergedCounts[cat] || 0) + lastPurposeStats[key];

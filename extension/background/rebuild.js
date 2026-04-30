@@ -111,7 +111,7 @@ async function _rebuildAllDynamicRulesImpl() {
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
     const existingIds = existingRules.map((r) => r.id);
 
-    const newRules = [];
+    let newRules = [];
     let nextRuleId = BASE_RULE_ID;
     const newDynamicBlockMap = {};
     const newGpcSetIds = new Set();
@@ -410,20 +410,76 @@ async function _rebuildAllDynamicRulesImpl() {
       }
 
       if (listData.pathRules?.length) {
+        const byDomain = new Map();
+        const ungroupable = [];
         for (const pr of listData.pathRules) {
+          const m = pr.urlFilter.match(/^\|\|([^/]+)\/(.*)/);
+          if (m) {
+            if (!byDomain.has(m[1])) byDomain.set(m[1], []);
+            byDomain.get(m[1]).push(m[2]);
+          } else {
+            ungroupable.push(pr);
+          }
+        }
+
+        const REGEX_BYTE_LIMIT = 1400;
+        for (const [domain, paths] of byDomain) {
+          if (paths.length === 1) {
+            const rId = nextRuleId++;
+            newEnhancedMap[rId] = listId;
+            const condition = { urlFilter: `||${domain}/${paths[0]}`, resourceTypes: BLOCK_RESOURCE_TYPES };
+            if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+            newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+          } else {
+            const escaped = domain.replace(/\./g, "\\.");
+            const prefix = `^https?://(.*\\.)?${escaped}/(`;
+            let chunk = [];
+            let chunkLen = prefix.length + 1;
+            for (const p of paths) {
+              const ep = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+              const added = chunk.length === 0 ? ep.length : ep.length + 1;
+              if (chunkLen + added > REGEX_BYTE_LIMIT) {
+                if (chunk.length > 0) {
+                  const rId = nextRuleId++;
+                  newEnhancedMap[rId] = listId;
+                  const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
+                  if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+                  condition.regexFilter = prefix + chunk.join("|") + ")";
+                  condition.isUrlFilterCaseSensitive = false;
+                  newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+                  chunk = [];
+                  chunkLen = prefix.length + 1;
+                }
+                if (prefix.length + 1 + ep.length > REGEX_BYTE_LIMIT) {
+                  const rId = nextRuleId++;
+                  newEnhancedMap[rId] = listId;
+                  const condition = { urlFilter: `||${domain}/${p}`, resourceTypes: BLOCK_RESOURCE_TYPES };
+                  if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+                  newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+                  continue;
+                }
+              }
+              chunk.push(ep);
+              chunkLen += added;
+            }
+            if (chunk.length > 0) {
+              const rId = nextRuleId++;
+              newEnhancedMap[rId] = listId;
+              const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
+              if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+              condition.regexFilter = prefix + chunk.join("|") + ")";
+              condition.isUrlFilterCaseSensitive = false;
+              newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+            }
+          }
+        }
+
+        for (const pr of ungroupable) {
           const rId = nextRuleId++;
           newEnhancedMap[rId] = listId;
-          const condition = {
-            urlFilter: pr.urlFilter,
-            resourceTypes: BLOCK_RESOURCE_TYPES,
-          };
+          const condition = { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
           if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-          newRules.push({
-            id: rId,
-            priority: 2,
-            action: { type: "block" },
-            condition,
-          });
+          newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
         }
       }
     }
@@ -716,6 +772,39 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     // 7. Apply changes: dynamic rules FIRST, then static rulesets.
+    // Safety cap: trim enhanced rules if over MAX_NUMBER_OF_DYNAMIC_RULES
+    const dynLimit = chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES || 5000;
+    if (newRules.length > dynLimit) {
+      const excess = newRules.length - dynLimit + DYNAMIC_RULE_RESERVE;
+      const enhancedRuleIds = new Set(Object.keys(newEnhancedMap).map(Number));
+      let trimmed = 0;
+      for (let i = newRules.length - 1; i >= 0 && trimmed < excess; i--) {
+        if (enhancedRuleIds.has(newRules[i].id)) {
+          delete newEnhancedMap[newRules[i].id];
+          newRules.splice(i, 1);
+          trimmed++;
+        }
+      }
+      if (DEBUG_RULES) console.warn("ProtoConsent: trimmed", trimmed, "enhanced rules to fit dynamic limit");
+    }
+
+    const regexRules = newRules.filter(r => r.condition?.regexFilter);
+    if (regexRules.length) {
+      const checks = await Promise.all(regexRules.map(r =>
+        chrome.declarativeNetRequest.isRegexSupported({ regex: r.condition.regexFilter, isCaseSensitive: r.condition.isUrlFilterCaseSensitive ?? true })
+      ));
+      const badIds = new Set();
+      for (let i = 0; i < checks.length; i++) {
+        if (!checks[i].isSupported) {
+          badIds.add(regexRules[i].id);
+          if (DEBUG_RULES) console.warn("ProtoConsent: dropping regex rule", regexRules[i].id, checks[i].reason, regexRules[i].condition.regexFilter.slice(0, 120));
+        }
+      }
+      if (badIds.size) {
+        newRules = newRules.filter(r => !badIds.has(r.id));
+      }
+    }
+
     try {
       await chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: existingIds,

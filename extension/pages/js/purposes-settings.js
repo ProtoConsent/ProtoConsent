@@ -846,6 +846,12 @@ function initCmpSection() {
 	const listEl = document.getElementById('cmp-list');
 	const uuidInput = document.getElementById('cmp-uuid-input');
 	const maxageInput = document.getElementById('cmp-maxage-input');
+	const cookieToggle = document.getElementById('cmp-cookie-toggle');
+	const cookieLabel = document.getElementById('cmp-cookie-label');
+	const cosmeticToggle = document.getElementById('cmp-cosmetic-toggle');
+	const cosmeticLabel = document.getElementById('cmp-cosmetic-label');
+	const scrollToggle = document.getElementById('cmp-scroll-toggle');
+	const scrollLabel = document.getElementById('cmp-scroll-label');
 	let cmpQueue = Promise.resolve();
 	if (!section || !toggle || !detail || !listEl) return;
 
@@ -858,13 +864,31 @@ function initCmpSection() {
 		sigsPromise.then(sigs => {
 			const cmpIds = Object.keys(sigs);
 
-			chrome.storage.local.get(['cmpAutoResponse', 'cmpEnabled', 'cmpCustomUuid', 'cmpCookieMaxAge'], (data) => {
+			chrome.storage.local.get(['cmpAutoResponse', 'cmpEnabled', 'cmpCustomUuid', 'cmpCookieMaxAge',
+				'cmpCookieInjectionEnabled', 'cmpCosmeticEnabled', 'cmpScrollUnlockEnabled'], (data) => {
 				const masterOn = data.cmpAutoResponse !== false;
 				const enabled = data.cmpEnabled || {};
 
 				toggle.checked = masterOn;
 				toggleLabel.textContent = masterOn ? 'Enabled' : 'Disabled';
 				if (!masterOn) detail.classList.add('ps-hidden');
+
+				const layerToggles = [
+					{ el: cookieToggle, label: cookieLabel, key: 'cmpCookieInjectionEnabled' },
+					{ el: cosmeticToggle, label: cosmeticLabel, key: 'cmpCosmeticEnabled' },
+					{ el: scrollToggle, label: scrollLabel, key: 'cmpScrollUnlockEnabled' },
+				];
+				for (const { el, label, key } of layerToggles) {
+					if (!el) continue;
+					const on = key === 'cmpCookieInjectionEnabled' ? data[key] === true : data[key] !== false;
+					el.checked = on;
+					if (label) label.textContent = on ? 'Enabled' : 'Disabled';
+					el.addEventListener('change', () => {
+						const v = el.checked;
+						if (label) label.textContent = v ? 'Enabled' : 'Disabled';
+						chrome.storage.local.set({ [key]: v });
+					});
+				}
 
 				// Per-CMP checkboxes
 				for (const id of cmpIds) {
@@ -1052,6 +1076,7 @@ const EXPORT_KEYS = [
 	"celMode", "celCustomPurposes",
 	"cmpAutoResponse", "cmpEnabled", "cmpCookieMaxAge", "cmpCustomUuid",
 	"cmpDetectionEnabled",
+	"cmpCookieInjectionEnabled", "cmpCosmeticEnabled", "cmpScrollUnlockEnabled",
 	"theme"
 ];
 
@@ -1192,6 +1217,12 @@ function validateImport(data) {
 	if ("cmpDetectionEnabled" in data) {
 		if (typeof data.cmpDetectionEnabled === "boolean") clean.cmpDetectionEnabled = data.cmpDetectionEnabled;
 		else errors.push("cmpDetectionEnabled: must be boolean");
+	}
+	for (const bk of ["cmpCookieInjectionEnabled", "cmpCosmeticEnabled", "cmpScrollUnlockEnabled"]) {
+		if (bk in data) {
+			if (typeof data[bk] === "boolean") clean[bk] = data[bk];
+			else errors.push(bk + ": must be boolean");
+		}
 	}
 	if ("cmpEnabled" in data) {
 		const ce = data.cmpEnabled;

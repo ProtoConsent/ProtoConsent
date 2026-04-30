@@ -169,7 +169,7 @@
 				<div class="ps-gpc-toggle-row">
 					<div>
 						<span class="ps-gpc-info-name">Master switch</span>
-						<div class="ps-gpc-info-desc">Cookie banners disappear automatically. ProtoConsent answers them for you, accepting or rejecting each purpose based on your profile.</div>
+						<div class="ps-gpc-info-desc">Cookie banners are hidden automatically via CSS. Scroll locks are removed so you can browse freely.</div>
 					</div>
 					<label class="ps-gpc-toggle-label" for="cmp-auto-toggle" id="cmp-auto-label">Enabled</label>
 					<input type="checkbox" id="cmp-auto-toggle" class="ps-gpc-toggle" aria-label="CMP auto-response" checked>
@@ -184,6 +184,32 @@
 				</div>
 			</div>
 			<div id="cmp-detail" class="ps-cmp-detail">
+				<div class="ps-cmp-layers">
+					<div class="ps-cmp-layer-row">
+						<div>
+							<span class="ps-gpc-info-name">Cookie injection <span class="ps-badge-experimental">(Experimental)</span></span>
+							<div class="ps-gpc-info-desc">Pre-set consent cookies for CMPs that read them at load time.</div>
+						</div>
+						<label class="ps-gpc-toggle-label" for="cmp-cookie-toggle" id="cmp-cookie-label">Disabled</label>
+						<input type="checkbox" id="cmp-cookie-toggle" class="ps-gpc-toggle" aria-label="Cookie injection">
+					</div>
+					<div class="ps-cmp-layer-row">
+						<div>
+							<span class="ps-gpc-info-name">Cosmetic hiding</span>
+							<div class="ps-gpc-info-desc">Hide cookie banners with CSS. Use Log > Cosmetics whitelist or exclude full site if a site shows a broken overlay.</div>
+						</div>
+						<label class="ps-gpc-toggle-label" for="cmp-cosmetic-toggle" id="cmp-cosmetic-label">Enabled</label>
+						<input type="checkbox" id="cmp-cosmetic-toggle" class="ps-gpc-toggle" aria-label="Cosmetic hiding" checked>
+					</div>
+					<div class="ps-cmp-layer-row">
+						<div>
+							<span class="ps-gpc-info-name">Scroll unlock</span>
+							<div class="ps-gpc-info-desc">Remove scroll locks applied by consent banners.</div>
+						</div>
+						<label class="ps-gpc-toggle-label" for="cmp-scroll-toggle" id="cmp-scroll-label">Enabled</label>
+						<input type="checkbox" id="cmp-scroll-toggle" class="ps-gpc-toggle" aria-label="Scroll unlock" checked>
+					</div>
+				</div>
 				<details class="ps-accordion">
 					<summary class="ps-accordion-header">CMP list</summary>
 					<div class="ps-accordion-body">

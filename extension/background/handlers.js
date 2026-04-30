@@ -38,7 +38,7 @@ function resolveEnhancedPreset(lists, catalog) {
 import {
   PURPOSES_FOR_ENFORCEMENT,
   operatingMode, setOperatingMode,
-  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabCoverageMetrics, unattributedBuffer, blockerDetection, tabHotfixHits, hotfixDomainSet,
   pathOnlyUrlFilters,
@@ -521,6 +521,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         gpcDomains: gpcDomains ? Object.keys(gpcDomains) : [],
         gpcDomainCounts: gpcDomains || {},
         whitelist,
+        whitelistHitDomains: tabWhitelistHits.get(message.tabId) || {},
         operatingMode,
         coverage: tabCoverageMetrics.get(message.tabId) || null,
         hotfixHits: tabHotfixHits.has(message.tabId) ? Array.from(tabHotfixHits.get(message.tabId)) : [],
@@ -839,6 +840,35 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         });
       } else {
         finalize([]);
+      }
+
+      if (detected.length > 0) {
+        chrome.storage.local.get(["_cmpSignatures", "_cmpDomainCache"], (r) => {
+          const sigKeys = r._cmpSignatures ? Object.keys(r._cmpSignatures) : [];
+          const resolved = new Set();
+          for (const d of detected) {
+            const id = d.cmpId;
+            if (sigKeys.includes(id)) {
+              resolved.add(id);
+            } else {
+              for (const sk of sigKeys) {
+                if (id.startsWith(sk + '_') || (id.startsWith(sk) && id.length > sk.length && !/[a-z]/.test(id[sk.length]))) {
+                  resolved.add(sk);
+                  break;
+                }
+              }
+            }
+          }
+          if (resolved.size === 0) return;
+          const cache = (r._cmpDomainCache && typeof r._cmpDomainCache === 'object' && !Array.isArray(r._cmpDomainCache))
+            ? r._cmpDomainCache : {};
+          cache[message.domain] = [...resolved];
+          const keys = Object.keys(cache);
+          if (keys.length > 300) {
+            for (const k of keys.slice(0, keys.length - 300)) delete cache[k];
+          }
+          chrome.storage.local.set({ _cmpDomainCache: cache });
+        });
       }
     }
     return;

@@ -397,7 +397,7 @@ For the protocol specification, message format, security model, and management U
 
 ## 13. CMP auto-response and banner observation
 
-ProtoConsent can automatically respond to consent banners by injecting pre-computed consent cookies before the CMP script loads, preventing banners from appearing. A separate detection and observation pipeline identifies CMP presence on pages and compares the CMP's stored consent against the user's preferences.
+ProtoConsent automatically hides consent banners via cosmetic CSS and scroll unlock. An experimental cookie injection layer (disabled by default) can optionally pre-set consent cookies before CMP scripts load. A separate detection and observation pipeline identifies CMP presence on pages and compares the CMP's stored consent against the user's preferences.
 
 For the full design, signature format, TC String specification, detection pipeline, and list of supported CMPs, see [cmp-auto-response.md](architecture/cmp-auto-response.md).
 

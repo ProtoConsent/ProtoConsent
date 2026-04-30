@@ -1,10 +1,10 @@
 {
-  "version": "2026-04-14",
+  "version": "2026-04-30",
   "type": "cmp_detectors",
-  "generated": "2026-04-14T22:46:18.053Z",
+  "generated": "2026-04-30T12:32:21.325Z",
   "source": "Autoconsent (duckduckgo/autoconsent) MPL-2.0",
-  "autoconsent_tree_hash": "c890ffb474b371fc",
-  "cmp_count": 288,
+  "autoconsent_tree_hash": "c372282dfbc267af",
+  "cmp_count": 287,
   "detectors": {
     "abc": {
       "present": [
@@ -373,14 +373,6 @@
       ],
       "domains": [
         "channel4.com"
-      ]
-    },
-    "chatgpt": {
-      "present": [
-        "body > div:not([id]) > div:nth-child(2):not([id]) > div:not([id]) > div:nth-child(2):not([id]) > div:nth-child(2):not([id]) > button:nth-child(2):not([id])"
-      ],
-      "showing": [
-        "body > div:not([id]) > div:nth-child(2):not([id]) > div:not([id]) > div:nth-child(2):not([id]) > div:nth-child(2):not([id]) > button:nth-child(2):not([id])"
       ]
     },
     "check24partnerprogrammde": {
@@ -815,17 +807,6 @@
       ],
       "domains": [
         "dunelm.com"
-      ]
-    },
-    "amazon": {
-      "present": [
-        "#cos-banner"
-      ],
-      "showing": [
-        "#cos-banner"
-      ],
-      "domains": [
-        "amazon"
       ]
     },
     "ebay": {
@@ -1306,14 +1287,10 @@
     },
     "linkedin_com": {
       "present": [
-        ".artdeco-global-alert[type=COOKIE_CONSENT]",
-        ".artdeco-global-alert--COOKIE_CONSENT",
-        "[data-testid=\"global-alerts-title\"]"
+        ".artdeco-global-alert[type=COOKIE_CONSENT]"
       ],
       "showing": [
-        ".artdeco-global-alert[type=COOKIE_CONSENT]",
-        ".artdeco-global-alert--COOKIE_CONSENT",
-        "[data-testid=\"global-alerts-actions\"]"
+        ".artdeco-global-alert[type=COOKIE_CONSENT]"
       ],
       "domains": [
         "linkedin.com"
@@ -2229,14 +2206,13 @@
     },
     "twitter": {
       "present": [
-        "[data-testid=\"BottomBar\"]"
+        "body > div#react-root > div:not([id]) > div:not([id]) > div:nth-child(1)#layers > div:not([id]) > div:nth-child(2):not([id]) > div:not([id]) > div:not([id])[data-testid=BottomBar] > div:not([id]) > div:nth-child(2):not([id]) > button:nth-child(2):not([id])"
       ],
       "showing": [
-        "[data-testid=\"BottomBar\"]"
+        "body > div#react-root > div:not([id]) > div:not([id]) > div:nth-child(1)#layers > div:not([id]) > div:nth-child(2):not([id]) > div:not([id]) > div:not([id])[data-testid=BottomBar] > div:not([id]) > div:nth-child(2):not([id]) > button:nth-child(2):not([id])"
       ],
       "domains": [
-        "twitter.com",
-        "x.com"
+        "twitter.com"
       ]
     },
     "u12dataprotectionnotice": {

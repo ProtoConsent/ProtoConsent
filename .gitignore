@@ -23,7 +23,14 @@ package.json
 node_modules/
 npm-debug.log*
 
+# Build output
+build/
+
 # Chrome generated files
 extension/_metadata/generated_indexed_rulesets/
 extension.pem
 extension.crx
+
+# Firefox generated files
+*.xpi
+web-ext-artifacts/
