@@ -23,12 +23,14 @@
   let stored;
   try {
     stored = await chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString',
-      'cmpAutoResponse', 'cmpEnabled', 'cmpCookieMaxAge', 'cmpCustomUuid']);
+      'cmpAutoResponse', 'cmpEnabled', 'cmpCookieMaxAge', 'cmpCustomUuid',
+      'cmpCookieInjectionEnabled', 'cmpCosmeticEnabled', 'cmpScrollUnlockEnabled']);
   } catch (_) { return; }
   const sigs = stored._cmpSignatures;
   const prefs = stored._userPurposes;
   const tcString = stored._tcString;
-  const { cmpAutoResponse, cmpEnabled, cmpCookieMaxAge, cmpCustomUuid } = stored;
+  const { cmpAutoResponse, cmpEnabled, cmpCookieMaxAge, cmpCustomUuid,
+    cmpCookieInjectionEnabled, cmpCosmeticEnabled, cmpScrollUnlockEnabled } = stored;
   if (cmpAutoResponse === false) return;
   if (!sigs || !prefs) return;
 
@@ -97,6 +99,13 @@
   const safeTcString = typeof tcString === 'string'
     ? tcString.replace(/[^A-Za-z0-9_\-.~+/=]/g, '').slice(0, 2000) : '';
 
+  const hostname = location.hostname;
+  const BANNED_SELS = new Set([
+    'div', 'span', 'body', 'html', 'main', 'header', 'footer', 'section',
+    'article', 'aside', 'nav', 'title', '*', '[role="dialog"]',
+    '.modal', '.overlay', '.modal-backdrop', '.popup',
+  ]);
+
   // --- Layer 1: Cookie injection ---
   // Existing cookies: if a CMP (or the user) already set a consent cookie,
   // do not overwrite it. This prevents clobbering real consent from CMPs
@@ -107,179 +116,157 @@
       (document.cookie || '').split(';').map(c => c.split('=')[0].trim()).filter(Boolean)
     );
   } catch (_) {
-    // Sandboxed document (e.g. iframe without allow-same-origin) - skip injection entirely
     return;
   }
-  const maxAge = Math.min(Math.max(Number(cmpCookieMaxAge) || CMP_DEFAULT_MAX_AGE, 60), 31536000);
   const injectedCookies = [];
-  for (const [cmpId, cmp] of Object.entries(applicableSigs)) {
-    if (!cmp.cookie) continue;
-    const fmt = cmp.format || { allow: '1', deny: '0' };
+  if (cmpCookieInjectionEnabled !== false) {
+    const maxAge = Math.min(Math.max(Number(cmpCookieMaxAge) || CMP_DEFAULT_MAX_AGE, 60), 31536000);
+    for (const [cmpId, cmp] of Object.entries(applicableSigs)) {
+      if (!cmp.cookie) continue;
+      const fmt = cmp.format || { allow: '1', deny: '0' };
 
-    for (const c of cmp.cookie) {
-      if (typeof c.template !== 'string' || !c.template) continue;
-      if (!c.name || /[;=\s]/.test(c.name)) continue;
-      if (existingCookies.has(c.name)) continue;
+      for (const c of cmp.cookie) {
+        if (typeof c.template !== 'string' || !c.template) continue;
+        if (!c.name || /[;=\s]/.test(c.name)) continue;
+        if (existingCookies.has(c.name)) continue;
 
-      let val = c.template
-        .replaceAll('{DATE_ISO}', now.toISOString())
-        .replaceAll('{DATESTAMP_ENCODED}', encodeURIComponent(now.toString()))
-        .replaceAll('{UUID}', uuid)
-        .replaceAll('{TIMESTAMP}', String(now.getTime()))
-        .replaceAll('{STAMP}', String(Math.random()).slice(2, 10))
-        .replaceAll('{TC_STRING}', safeTcString);
+        let val = c.template
+          .replaceAll('{DATE_ISO}', now.toISOString())
+          .replaceAll('{DATESTAMP_ENCODED}', encodeURIComponent(now.toString()))
+          .replaceAll('{UUID}', uuid)
+          .replaceAll('{TIMESTAMP}', String(now.getTime()))
+          .replaceAll('{STAMP}', String(Math.random()).slice(2, 10))
+          .replaceAll('{TC_STRING}', safeTcString);
 
-      for (const [purpose, allowed] of Object.entries(prefs)) {
-        val = val.replaceAll(`{${purpose}}`, allowed ? fmt.allow : fmt.deny);
+        for (const [purpose, allowed] of Object.entries(prefs)) {
+          val = val.replaceAll(`{${purpose}}`, allowed ? fmt.allow : fmt.deny);
+        }
+
+        val = val.replace(/\{[a-z_]+\}/g, fmt.deny);
+        val = val.replaceAll(';', '');
+        try {
+          document.cookie = `${c.name}=${val}; path=/; domain=.${domain}; SameSite=Lax; max-age=${maxAge}`;
+          injectedCookies.push(c.name);
+        } catch (_) {}
       }
+    }
 
-      // Strip unconsumed placeholders (e.g. new purposes not yet in prefs)
-      val = val.replace(/\{[a-z_]+\}/g, fmt.deny);
-
-      // Sanitize: strip semicolons to prevent cookie attribute injection
-      val = val.replaceAll(';', '');
-      try {
-        document.cookie = `${c.name}=${val}; path=/; domain=.${domain}; SameSite=Lax; max-age=${maxAge}`;
-        injectedCookies.push(c.name);
-      } catch (_) { /* sandboxed document, skip */ }
+    if (injectedCookies.length) {
+      setTimeout(() => {
+        for (const name of injectedCookies) {
+          try { document.cookie = `${name}=; path=/; domain=.${domain}; max-age=0`; } catch (_) {}
+        }
+      }, CMP_CLEANUP_DELAY);
     }
   }
 
-  // Cleanup: delete injected cookies after CMPs have read them (~5s).
-  // CMPs read their cookie synchronously during script init (first 1-2s).
-  // Reduces HTTP overhead on subsequent requests (images, XHR, lazy loads).
-  // Cookies are re-injected on next navigation via document_start.
-  if (injectedCookies.length) {
-    setTimeout(() => {
-      for (const name of injectedCookies) {
-        try { document.cookie = `${name}=; path=/; domain=.${domain}; max-age=0`; } catch (_) {}
-      }
-    }, CMP_CLEANUP_DELAY);
-  }
-
-  const hostname = location.hostname;
 
   // --- Layer 2: Cosmetic safety net ---
-  // Banned selectors that would break page layout if hidden globally
-  const BANNED_SELS = new Set([
-    'div', 'span', 'body', 'html', 'main', 'header', 'footer', 'section',
-    'article', 'aside', 'nav', 'title', '*', '[role="dialog"]',
-    '.modal', '.overlay', '.modal-backdrop', '.popup',
-  ]);
   const selectors = [];
-  for (const cmp of Object.values(applicableSigs)) {
-    if (cmp.selector) {
-      // Skip cosmetic hiding on excluded hosts (e.g. redirect wall consent pages)
-      if (cmp.excludeHosts && cmp.excludeHosts.some(h => hostname === h || hostname.endsWith('.' + h))) continue;
-      // Filter out dangerous individual selectors
-      const safe = cmp.selector.split(',').map(s => s.trim()).filter(s => s && !BANNED_SELS.has(s));
-      if (safe.length) selectors.push(safe.join(', '));
+  if (cmpCosmeticEnabled !== false) {
+    for (const cmp of Object.values(applicableSigs)) {
+      if (cmp.selector) {
+        if (cmp.excludeHosts && cmp.excludeHosts.some(h => hostname === h || hostname.endsWith('.' + h))) continue;
+        const safe = cmp.selector.split(',').map(s => s.trim()).filter(s => s && !BANNED_SELS.has(s));
+        if (safe.length) selectors.push(safe.join(', '));
+      }
     }
-  }
-  if (selectors.length) {
-    const style = document.createElement('style');
-    style.setAttribute('data-pc-cmp', '');
-    style.textContent = selectors.join(',') + '{display:none!important}';
-    (document.head || document.documentElement).appendChild(style);
+    if (selectors.length) {
+      const style = document.createElement('style');
+      style.setAttribute('data-pc-cmp', '');
+      style.textContent = selectors.join(',') + '{display:none!important}';
+      (document.head || document.documentElement).appendChild(style);
+    }
   }
 
   // --- Layer 3: Scroll unlock (only if CMP banner exists in DOM) ---
-  // Banners are injected dynamically by CMP scripts after document_start.
-  // Use MutationObserver to detect them the moment they appear.
   const lockEntries = [];
-  for (const cmp of Object.values(applicableSigs)) {
-    if (cmp.selector) {
-      if (cmp.excludeHosts && cmp.excludeHosts.some(h => hostname === h || hostname.endsWith('.' + h))) continue;
-      const sels = cmp.selector.split(',').map(s => s.trim()).filter(s => s && !BANNED_SELS.has(s));
-      if (sels.length) lockEntries.push({ sels, cls: cmp.lockClass || null });
+  if (cmpScrollUnlockEnabled !== false) {
+    for (const cmp of Object.values(applicableSigs)) {
+      if (cmp.selector) {
+        if (cmp.excludeHosts && cmp.excludeHosts.some(h => hostname === h || hostname.endsWith('.' + h))) continue;
+        const sels = cmp.selector.split(',').map(s => s.trim()).filter(s => s && !BANNED_SELS.has(s));
+        if (sels.length) lockEntries.push({ sels, cls: cmp.lockClass || null });
+      }
     }
-  }
-  if (lockEntries.length) {
-    const unlock = () => {
-      // CSS targeted at CMP lock classes — self-removing when enforce() strips the class.
-      // Does NOT blanket html/body to avoid interfering with legitimate modals.
-      const lockClasses = lockEntries.map(e => e.cls).filter(Boolean);
-      if (lockClasses.length) {
-        const s = document.createElement('style');
-        s.setAttribute('data-pc-cmp', '');
-        const lockSels = lockClasses.flatMap(c => [`body.${c}`, `html.${c}`]).join(',');
-        s.textContent = lockSels + '{overflow:auto!important;height:auto!important;position:static!important}';
-        (document.head || document.documentElement).appendChild(s);
+    if (lockEntries.length) {
+      const unlock = () => {
+        const lockClasses = lockEntries.map(e => e.cls).filter(Boolean);
+        if (lockClasses.length) {
+          const s = document.createElement('style');
+          s.setAttribute('data-pc-cmp', '');
+          const lockSels = lockClasses.flatMap(c => [`body.${c}`, `html.${c}`]).join(',');
+          s.textContent = lockSels + '{overflow:auto!important;height:auto!important;position:static!important}';
+          (document.head || document.documentElement).appendChild(s);
+        }
+
+        const enforce = () => {
+          const b = document.body;
+          if (b) {
+            const bs = getComputedStyle(b);
+            if (bs.overflow === 'hidden' || bs.overflow === 'clip')
+              b.style.setProperty('overflow', 'auto', 'important');
+            if (bs.position === 'fixed')
+              b.style.setProperty('position', 'static', 'important');
+            lockEntries.forEach(e => {
+              if (e.cls && b.classList.contains(e.cls)) b.classList.remove(e.cls);
+            });
+          }
+          const h = document.documentElement;
+          const hs = getComputedStyle(h);
+          if (hs.overflow === 'hidden' || hs.overflow === 'clip')
+            h.style.setProperty('overflow', 'auto', 'important');
+        };
+        enforce();
+
+        let enforcePending = false;
+        const scheduleEnforce = () => {
+          if (!enforcePending) {
+            enforcePending = true;
+            requestAnimationFrame(() => { enforcePending = false; enforce(); });
+          }
+        };
+        const mo = new MutationObserver(scheduleEnforce);
+        const startWatch = () => {
+          if (document.body)
+            mo.observe(document.body, { attributes: true, attributeFilter: ['style', 'class'] });
+          mo.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
+        };
+        if (document.body) startWatch();
+        else document.addEventListener('DOMContentLoaded', startWatch, { once: true });
+        setTimeout(() => mo.disconnect(), CMP_ENFORCE_TIMEOUT);
+      };
+
+      const tryUnlock = () => {
+        for (const { sels, cls } of lockEntries) {
+          try {
+            if (sels.some(s => document.querySelector(s))) return true;
+          } catch (_) {}
+          if (cls && document.body?.classList.contains(cls)) return true;
+        }
+        return false;
+      };
+
+      if (tryUnlock()) {
+        unlock();
+      } else {
+        const observer = new MutationObserver(() => {
+          if (tryUnlock()) {
+            observer.disconnect();
+            unlock();
+          }
+        });
+        observer.observe(document.documentElement, {
+          childList: true, subtree: true, attributes: true, attributeFilter: ['class']
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+          if (tryUnlock()) {
+            observer.disconnect();
+            unlock();
+          }
+        }, { once: true });
+        setTimeout(() => observer.disconnect(), CMP_OBSERVER_TIMEOUT);
       }
-
-      // Inline !important overrides for CMPs that lock scroll via JS, not classes.
-      // Only overrides lock patterns (hidden/clip/fixed), not arbitrary values,
-      // so legitimate modals using overflow:hidden are not affected.
-      const enforce = () => {
-        const b = document.body;
-        if (b) {
-          const bs = getComputedStyle(b);
-          if (bs.overflow === 'hidden' || bs.overflow === 'clip')
-            b.style.setProperty('overflow', 'auto', 'important');
-          if (bs.position === 'fixed')
-            b.style.setProperty('position', 'static', 'important');
-          lockEntries.forEach(e => {
-            if (e.cls && b.classList.contains(e.cls)) b.classList.remove(e.cls);
-          });
-        }
-        const h = document.documentElement;
-        const hs = getComputedStyle(h);
-        if (hs.overflow === 'hidden' || hs.overflow === 'clip')
-          h.style.setProperty('overflow', 'auto', 'important');
-      };
-      enforce();
-
-      // Watch for CMP re-locking attempts for 10 seconds
-      let enforcePending = false;
-      const scheduleEnforce = () => {
-        if (!enforcePending) {
-          enforcePending = true;
-          requestAnimationFrame(() => { enforcePending = false; enforce(); });
-        }
-      };
-      const mo = new MutationObserver(scheduleEnforce);
-      const startWatch = () => {
-        if (document.body)
-          mo.observe(document.body, { attributes: true, attributeFilter: ['style', 'class'] });
-        mo.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
-      };
-      if (document.body) startWatch();
-      else document.addEventListener('DOMContentLoaded', startWatch, { once: true });
-      setTimeout(() => mo.disconnect(), CMP_ENFORCE_TIMEOUT);
-    };
-
-    const tryUnlock = () => {
-      for (const { sels, cls } of lockEntries) {
-        try {
-          if (sels.some(s => document.querySelector(s))) return true;
-        } catch (_) { /* malformed selector in signatures */ }
-        if (cls && document.body?.classList.contains(cls)) return true;
-      }
-      return false;
-    };
-
-    if (tryUnlock()) {
-      unlock();
-    } else {
-      const observer = new MutationObserver(() => {
-        if (tryUnlock()) {
-          observer.disconnect();
-          unlock();
-        }
-      });
-      // Observe on documentElement (exists at document_start, unlike body)
-      observer.observe(document.documentElement, {
-        childList: true, subtree: true, attributes: true, attributeFilter: ['class']
-      });
-      // Re-check after DOM is parsed (observer misses pre-existing nodes)
-      document.addEventListener('DOMContentLoaded', () => {
-        if (tryUnlock()) {
-          observer.disconnect();
-          unlock();
-        }
-      }, { once: true });
-      // Safety timeout: stop observing after 15s
-      setTimeout(() => observer.disconnect(), CMP_OBSERVER_TIMEOUT);
     }
   }
 
