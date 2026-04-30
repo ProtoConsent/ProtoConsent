@@ -894,7 +894,7 @@ body {
   display: flex;
   align-items: start;
   gap: 10px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  background: linear-gradient(180deg, var(--pc-surface-card, #ffffff) 0%, var(--pc-surface-soft, #fbfdff) 100%);
   border: 1px solid var(--pc-line);
   border-radius: 12px;
   padding: 12px 14px;

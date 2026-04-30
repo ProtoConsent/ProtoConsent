@@ -852,7 +852,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               resolved.add(id);
             } else {
               for (const sk of sigKeys) {
-                if (id.startsWith(sk + '_') || id.startsWith(sk)) {
+                if (id.startsWith(sk + '_') || (id.startsWith(sk) && id.length > sk.length && !/[a-z]/.test(id[sk.length]))) {
                   resolved.add(sk);
                   break;
                 }
@@ -860,7 +860,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             }
           }
           if (resolved.size === 0) return;
-          const cache = r._cmpDomainCache || {};
+          const cache = (r._cmpDomainCache && typeof r._cmpDomainCache === 'object' && !Array.isArray(r._cmpDomainCache))
+            ? r._cmpDomainCache : {};
           cache[message.domain] = [...resolved];
           const keys = Object.keys(cache);
           if (keys.length > 300) {

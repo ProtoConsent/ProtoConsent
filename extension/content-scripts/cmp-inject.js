@@ -122,7 +122,7 @@
   const injectedCookies = [];
   if (cmpCookieInjectionEnabled === true) {
     const domainCache = stored._cmpDomainCache;
-    const cachedCmpIds = domainCache && domainCache[domain];
+    const cachedCmpIds = (domainCache && typeof domainCache === 'object') ? domainCache[domain] : undefined;
     const sigsToInject = cachedCmpIds
       ? Object.fromEntries(Object.entries(applicableSigs).filter(([id]) => cachedCmpIds.includes(id)))
       : applicableSigs;
