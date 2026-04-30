@@ -906,6 +906,16 @@ body {
   min-width: 0;
 }
 
+.ps-badge-experimental {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: #b45309;
+  background: #fef3c7;
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
+
 .ps-cmp-list {
   display: grid;
   grid-template-columns: 1fr 1fr;

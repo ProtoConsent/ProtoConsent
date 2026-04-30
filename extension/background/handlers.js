@@ -841,6 +841,34 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       } else {
         finalize([]);
       }
+
+      if (detected.length > 0) {
+        chrome.storage.local.get(["_cmpSignatures", "_cmpDomainCache"], (r) => {
+          const sigKeys = r._cmpSignatures ? Object.keys(r._cmpSignatures) : [];
+          const resolved = new Set();
+          for (const d of detected) {
+            const id = d.cmpId;
+            if (sigKeys.includes(id)) {
+              resolved.add(id);
+            } else {
+              for (const sk of sigKeys) {
+                if (id.startsWith(sk + '_') || id.startsWith(sk)) {
+                  resolved.add(sk);
+                  break;
+                }
+              }
+            }
+          }
+          if (resolved.size === 0) return;
+          const cache = r._cmpDomainCache || {};
+          cache[message.domain] = [...resolved];
+          const keys = Object.keys(cache);
+          if (keys.length > 300) {
+            for (const k of keys.slice(0, keys.length - 300)) delete cache[k];
+          }
+          chrome.storage.local.set({ _cmpDomainCache: cache });
+        });
+      }
     }
     return;
   }

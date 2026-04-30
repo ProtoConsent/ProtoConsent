@@ -880,7 +880,7 @@ function initCmpSection() {
 				];
 				for (const { el, label, key } of layerToggles) {
 					if (!el) continue;
-					const on = data[key] !== false;
+					const on = key === 'cmpCookieInjectionEnabled' ? data[key] === true : data[key] !== false;
 					el.checked = on;
 					if (label) label.textContent = on ? 'Enabled' : 'Disabled';
 					el.addEventListener('change', () => {

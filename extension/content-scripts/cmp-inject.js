@@ -24,7 +24,8 @@
   try {
     stored = await chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString',
       'cmpAutoResponse', 'cmpEnabled', 'cmpCookieMaxAge', 'cmpCustomUuid',
-      'cmpCookieInjectionEnabled', 'cmpCosmeticEnabled', 'cmpScrollUnlockEnabled']);
+      'cmpCookieInjectionEnabled', 'cmpCosmeticEnabled', 'cmpScrollUnlockEnabled',
+      '_cmpDomainCache']);
   } catch (_) { return; }
   const sigs = stored._cmpSignatures;
   const prefs = stored._userPurposes;
@@ -119,9 +120,15 @@
     return;
   }
   const injectedCookies = [];
-  if (cmpCookieInjectionEnabled !== false) {
+  if (cmpCookieInjectionEnabled === true) {
+    const domainCache = stored._cmpDomainCache;
+    const cachedCmpIds = domainCache && domainCache[domain];
+    const sigsToInject = cachedCmpIds
+      ? Object.fromEntries(Object.entries(applicableSigs).filter(([id]) => cachedCmpIds.includes(id)))
+      : applicableSigs;
+
     const maxAge = Math.min(Math.max(Number(cmpCookieMaxAge) || CMP_DEFAULT_MAX_AGE, 60), 31536000);
-    for (const [cmpId, cmp] of Object.entries(applicableSigs)) {
+    for (const [cmpId, cmp] of Object.entries(sigsToInject)) {
       if (!cmp.cookie) continue;
       const fmt = cmp.format || { allow: '1', deny: '0' };
 
@@ -151,7 +158,7 @@
       }
     }
 
-    if (injectedCookies.length) {
+    if (injectedCookies.length && !cachedCmpIds) {
       setTimeout(() => {
         for (const name of injectedCookies) {
           try { document.cookie = `${name}=; path=/; domain=.${domain}; max-age=0`; } catch (_) {}
