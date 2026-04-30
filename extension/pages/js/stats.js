@@ -107,7 +107,9 @@ async function getBlockedRulesCount() {
       const wlHitDomains = domainsResp?.whitelistHitDomains || {};
       const wlHits = Object.values(wlHitDomains).reduce((s, c) => s + c, 0);
       var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + (c && typeof c === "object" ? c.count : (c || 0)), 0);
-      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: 0, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: wlHits, whitelistHitDomains: wlHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
+      const psData = domainsResp?.paramStrips || {};
+      const psTotal = Object.values(psData).reduce((s, d) => s + (d && typeof d === "object" ? d.count : (d || 0)), 0);
+      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: psTotal, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: wlHits, whitelistHitDomains: wlHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
     }
 
     // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)

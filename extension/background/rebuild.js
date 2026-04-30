@@ -422,20 +422,46 @@ async function _rebuildAllDynamicRulesImpl() {
           }
         }
 
+        const REGEX_BYTE_LIMIT = 1800;
         for (const [domain, paths] of byDomain) {
-          const rId = nextRuleId++;
-          newEnhancedMap[rId] = listId;
-          const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
-          if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
           if (paths.length === 1) {
-            condition.urlFilter = `||${domain}/${paths[0]}`;
+            const rId = nextRuleId++;
+            newEnhancedMap[rId] = listId;
+            const condition = { urlFilter: `||${domain}/${paths[0]}`, resourceTypes: BLOCK_RESOURCE_TYPES };
+            if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+            newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
           } else {
             const escaped = domain.replace(/\./g, "\\.");
-            const pathAlts = paths.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-            condition.regexFilter = `^https?://(.*\\.)?${escaped}/(${pathAlts})`;
-            condition.isUrlFilterCaseSensitive = false;
+            const prefix = `^https?://(.*\\.)?${escaped}/(`;
+            let chunk = [];
+            let chunkLen = prefix.length + 1;
+            for (const p of paths) {
+              const ep = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+              const added = chunk.length === 0 ? ep.length : ep.length + 1;
+              if (chunkLen + added > REGEX_BYTE_LIMIT && chunk.length > 0) {
+                const rId = nextRuleId++;
+                newEnhancedMap[rId] = listId;
+                const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
+                if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+                condition.regexFilter = prefix + chunk.join("|") + ")";
+                condition.isUrlFilterCaseSensitive = false;
+                newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+                chunk = [];
+                chunkLen = prefix.length + 1;
+              }
+              chunk.push(ep);
+              chunkLen += added;
+            }
+            if (chunk.length > 0) {
+              const rId = nextRuleId++;
+              newEnhancedMap[rId] = listId;
+              const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
+              if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+              condition.regexFilter = prefix + chunk.join("|") + ")";
+              condition.isUrlFilterCaseSensitive = false;
+              newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+            }
           }
-          newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
         }
 
         for (const pr of ungroupable) {
