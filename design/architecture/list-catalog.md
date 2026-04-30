@@ -182,11 +182,11 @@ Two additional cosmetic lists are available in the Full preset:
 | [EasyList Cookie Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~15K | ~17K | Cookie consent banners and overlays |
 | [Web Annoyances Cosmetic](https://github.com/LanikSJ/webannoyances) | CC BY-SA 4.0 | ~2K | ~8K | Cookie notices, newsletter popups, social widgets, annoyances |
 
-EasyList Cookie contains both cosmetic selectors and network blocking rules. Only cosmetic selectors are extracted - network rules that block CMP scripts are excluded because they conflict with ProtoConsent's CMP cookie injection approach (see [cmp-auto-response.md](cmp-auto-response.md)).
+EasyList Cookie contains both cosmetic selectors and network blocking rules. Only cosmetic selectors are extracted - network rules that block CMP scripts are excluded because they conflict with ProtoConsent's CMP auto-response approach (see [cmp-auto-response.md](cmp-auto-response.md)).
 
 ## 9. CMP auto-response signatures
 
-CMP signatures are an enhanced list containing templates for how consent platforms store consent. Unlike blocking lists, they produce no DNR rules. Instead, a content script reads signatures and injects consent cookies before CMP scripts load.
+CMP signatures are an enhanced list containing templates for how consent platforms store consent. Unlike blocking lists, they produce no DNR rules. Instead, a content script reads signatures and hides banners via cosmetic CSS. An experimental cookie injection layer can optionally pre-set consent cookies (disabled by default).
 
 The signature list is bundled for first-install availability and updated via CDN when sync is enabled. For the full architecture, see [cmp-auto-response.md](cmp-auto-response.md).
 

@@ -73,7 +73,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [15.2 Importing configuration](#152-importing-configuration)
     - [15.3 Partial imports and validation](#153-partial-imports-and-validation)
   - [16. Testing CMP auto-response](#16-testing-cmp-auto-response)
-    - [16.1 Verifying banner suppression](#161-verifying-banner-suppression)
+    - [16.1 Verifying banner hiding](#161-verifying-banner-hiding)
     - [16.2 Checking injected cookies](#162-checking-injected-cookies)
     - [16.3 Verifying cookie cleanup](#163-verifying-cookie-cleanup)
     - [16.4 Cosmetic CSS and scroll unlock](#164-cosmetic-css-and-scroll-unlock)
@@ -850,14 +850,14 @@ ProtoConsent allows exporting and importing the full configuration (site rules, 
 
 ## 16. Testing CMP auto-response
 
-CMP auto-response injects consent cookies before CMP scripts load, suppressing consent banners based on the user's purpose preferences. See [cmp-auto-response.md](architecture/cmp-auto-response.md) for the full design.
+CMP auto-response hides consent banners using cosmetic CSS and optionally pre-sets consent cookies (experimental, disabled by default). See [cmp-auto-response.md](architecture/cmp-auto-response.md) for the full design.
 
-### 16.1 Verifying banner suppression
+### 16.1 Verifying banner hiding
 
 1. Choose a site that uses a known CMP (for example, a site using OneTrust or Cookiebot).
 2. Clear the site's cookies in DevTools → **Application** → **Cookies** → right-click → **Clear**.
 3. Make sure ProtoConsent is loaded with a profile assigned (e.g. Balanced).
-4. Reload the page. The consent banner should **not** appear.
+4. Reload the page. The consent banner should be hidden by CSS (check for `<style data-pc-cmp>` in the page head).
 5. Disable ProtoConsent (toggle off or unload the extension), clear cookies again, and reload. The banner should appear.
 
 ### 16.2 Checking injected cookies
@@ -872,7 +872,7 @@ CMP auto-response injects consent cookies before CMP scripts load, suppressing c
 1. On a site where CMP cookies were injected, open DevTools → **Application** → **Cookies**.
 2. Note the CMP cookies immediately after page load (within 1-2 seconds).
 3. Wait 5 seconds. The injected cookies should be deleted automatically.
-4. Reload the page. The cookies are re-injected at `document_start` and the banner stays suppressed.
+4. Reload the page. The cookies are re-injected at `document_start` and the banner stays hidden.
 
 ### 16.4 Cosmetic CSS and scroll unlock
 
@@ -883,7 +883,7 @@ CMP auto-response injects consent cookies before CMP scripts load, suppressing c
 ### 16.5 Domain-scoped signatures (Bing/Microsoft)
 
 1. Visit `bing.com` (or any Microsoft property: `outlook.com`, `msn.com`).
-2. The Bing consent banner (`#bnp_container`) should not appear.
+2. The Bing consent banner (`#bnp_container`) should be hidden by CSS.
 3. Check cookies for `BCP`. With Balanced (ads and personalization denied), the value should be `AD=0&AL=1&SM=0` (analytics allowed, ads and personalization denied).
 4. Visit a non-Microsoft site. The `BCP` cookie should **not** be injected (the Bing signature is domain-scoped).
 

@@ -42,7 +42,7 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 - **Per-site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalization, third-party services, advanced tracking).
 - **Enhanced protection out of the box:** curated blocklists, cosmetic filtering, CNAME detection, URL parameter stripping, and regional filters for 30 languages - all enabled by default and kept up to date automatically.
 - **Two operating modes:** Blocking (default, full enforcement) or Monitoring (delegates blocking to your existing ad blocker while ProtoConsent adds purpose attribution, coverage metrics, and signal observability).
-- **Consent banner auto-response:** 31 CMP frameworks (including IAB TCF v2.2) answered automatically based on your purpose preferences. No DOM interaction, no click simulation - banners never appear.
+- **Consent banner auto-response:** 31 CMP frameworks (including IAB TCF v2.2) handled via cosmetic hiding, scroll unlock, and experimental cookie injection based on your purpose preferences. No DOM interaction, no click simulation.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/):** Sec-GPC sent only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.
 - **Site declarations and SDK:** websites can publish a `.well-known/protoconsent.json` to declare their data practices, or use the [SDK](sdk/protoconsent.js) (MIT) to read user preferences. Both optional.
 - **Inter-extension API:** other browser extensions can query the user's consent state. See the [protocol spec](design/spec/inter-extension-protocol.md).
@@ -122,7 +122,7 @@ See [architecture.md](design/architecture.md) for the full technical description
 
 **Implementation**
 - [Technical architecture](design/architecture.md) - components, data model, flows, design decisions
-- [CMP auto-response](design/architecture/cmp-auto-response.md) - consent banner suppression, CMP signatures, TC String generation
+- [CMP auto-response](design/architecture/cmp-auto-response.md) - consent banner handling, CMP signatures, TC String generation
 - [Operating modes](design/architecture/operating-modes.md) - Blocking vs Monitoring, capabilities, coverage metrics
 - [URL parameter stripping](design/architecture/param-stripping.md) - detection, data model, observability
 - [List catalog](design/architecture/list-catalog.md) - sources, curation, rule format, enhanced lists

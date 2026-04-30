@@ -19,9 +19,9 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 ## 1. Overview
 
-CMP auto-response is ProtoConsent's mechanism for translating the user's purpose preferences into the consent cookies that consent management platforms (CMPs) read on page load. When a page loads, ProtoConsent injects the appropriate consent cookies *before* any CMP script runs, so the CMP reads those cookies and skips the consent banner entirely. The user's preferences are enforced without interacting with the banner.
+CMP auto-response is ProtoConsent's mechanism for hiding consent banners and communicating the user's purpose preferences to consent management platforms (CMPs). When a page loads, a content script running at `document_start` hides known banner elements via CSS and unlocks scroll. An experimental cookie injection layer can optionally pre-set consent cookies that some CMPs read on initialization.
 
-This is a declarative approach: ProtoConsent writes the data that the CMP expects to find, and the CMP treats the user as already having responded. No DOM interaction, no click simulation, no waiting for the banner to render.
+This is a declarative approach: ProtoConsent hides the banner cosmetically and (when enabled) writes the data that the CMP expects to find. No DOM interaction, no click simulation, no waiting for the banner to render.
 
 ## 2. Architecture
 
@@ -31,8 +31,8 @@ The system has two components:
 
 **Content script** (runs at `document_start`, before any CMP script): reads signatures and purposes from storage, then executes three layers of response:
 
-1. **Cookie injection** - writes consent cookies using signature templates
-2. **Cosmetic CSS** - injects `display:none!important` rules targeting known banner selectors
+1. **Cookie injection** *(experimental, disabled by default)* - writes consent cookies using signature templates
+2. **Cosmetic CSS** - injects `display:none!important` rules targeting known banner selectors (primary mechanism)
 3. **Scroll unlock** - removes scroll lock (CSS classes or inline styles) that CMPs apply to prevent scrolling until consent is given
 
 ```mermaid
@@ -142,8 +142,8 @@ Signatures are defined in the bundled CMP signatures file (with metadata wrapper
 
 Based on cookie support, signatures fall into three categories:
 
-- **Full cookie injection**: Template produces a valid cookie that the CMP reads and accepts (OneTrust, Cookiebot, CookieYes, Complianz, Wix, Fides, Bing). Banner suppressed at the source.
-- **Presence/minimal injection**: Cookie signals "consent given" but lacks full purpose mapping (Sourcepoint, TrustArc, Quantcast, ConsentManager, Osano, Amasty). CMP may still initialize but skips the banner.
+- **Full cookie injection** *(experimental)*: Template produces a valid cookie that the CMP may read and accept (OneTrust, Cookiebot, CookieYes, Complianz, Wix, Fides, Bing). Effectiveness varies by CMP and site configuration; not verified to suppress banners reliably in production.
+- **Presence/minimal injection** *(experimental)*: Cookie signals "consent given" but lacks full purpose mapping (Sourcepoint, TrustArc, Quantcast, ConsentManager, Osano, Amasty). CMP may still initialize; banner hiding relies on cosmetic CSS.
 - **Cosmetic only**: No injectable cookie and no observable storage format. Banner is hidden via CSS. (Borlabs, Termly, Axeptio, Sirdata, Civic, Didomi).
 - **localStorage observation**: CMP stores consent in `localStorage` instead of cookies. A content script running in the page context reads and parses the storage entry, sending a compact summary to the background for decoding and conflict detection. Banner hiding via CSS selectors. (Usercentrics via `uc_settings`, CCM19 via `ccm_consent`).
 
@@ -189,7 +189,9 @@ Bits are packed manually (no dependencies) and encoded to base64url using the TC
 
 ## 5. Three-layer response
 
-### Layer 1: Cookie injection
+### Layer 1: Cookie injection *(experimental, disabled by default)*
+
+> **Status:** This layer is disabled by default. Manual testing confirmed that OneTrust reads synthetic cookies (validated on salesforce.com, April 2026), but in practice CMP scripts are often blocked by enhanced protection lists before they can read any cookies. Effectiveness is unverified for most CMPs in real browsing conditions. Enable manually in Purpose Settings for testing.
 
 For each applicable signature, the content script:
 1. Resolves template placeholders with user purposes (`{analytics}` -> `"1"` or `"0"`)
@@ -201,7 +203,7 @@ A fresh random UUID is generated for each page visit via `crypto.randomUUID()`, 
 
 **Cookie cleanup**: Injected cookies are deleted after 5 seconds. CMPs read their cookies synchronously during script initialization (first 1-2 seconds). Deleting the cookies afterwards reduces HTTP overhead on subsequent same-domain requests (images, XHR, lazy loads). Cookies are re-injected on the next page navigation.
 
-### Layer 2: Cosmetic CSS
+### Layer 2: Cosmetic CSS *(primary mechanism)*
 
 All applicable `selector` values are joined and injected as a `<style data-pc-cmp>` element:
 
@@ -209,7 +211,7 @@ All applicable `selector` values are joined and injected as a `<style data-pc-cm
 #onetrust-banner-sdk, .qc-cmp2-container, ... { display: none !important }
 ```
 
-This is a safety net for cases where cookie injection is late or incomplete.
+This is the primary mechanism for hiding consent banners. It works regardless of whether cookie injection is enabled or whether the CMP respects injected cookies.
 
 ### Layer 3: Scroll unlock
 
@@ -242,7 +244,11 @@ Signatures without `domains` apply to all sites (standard CMPs like OneTrust, Co
 
 CMP auto-response is configured from Purpose Settings:
 
-- **Master toggle**: enables or disables all CMP injection globally (on by default).
+- **Master toggle**: enables or disables all CMP auto-response globally (on by default).
+- **Layer sub-toggles**: enable or disable each layer independently:
+  - Cookie injection *(Experimental)* - off by default
+  - Cosmetic hiding - on by default
+  - Scroll unlock - on by default
 - **Per-CMP toggles**: disable specific CMPs individually (e.g., turn off OneTrust injection while keeping others active).
 - **Cookie expiration**: configurable max-age for injected cookies (default: 90 days).
 - **Custom UUID**: optional fixed UUID for consent cookies. When empty (default), a unique random UUID is generated per page visit so sites cannot correlate visits through this field.
@@ -253,11 +259,12 @@ For testing instructions, see [testing-guide.md, section 16](../testing-guide.md
 
 ### 8.1 Current limitations
 
+- **Cookie injection unverified in production**: When enhanced protection lists are active (default), CMP scripts are often blocked before they can read injected cookies, making cookie injection redundant. Cookie injection is disabled by default and marked experimental.
 - **No click simulation**: ProtoConsent does not simulate clicks on banner buttons. This is a deliberate design choice -- the extension declares consent via data, not interaction.
 - **CMP-specific cookies**: Some CMPs (like Didomi) use site-specific tokens that cannot be templated. These fall back to cosmetic hiding.
 - **Proprietary consent systems**: Sites with fully custom consent systems (not using any standard CMP) are not covered. The signature approach targets widely-deployed CMP frameworks.
 - **TC String vendor sections**: The generated TC String has empty vendor consent and disclosed vendor sections. CMPs that check for specific vendor IDs may not fully accept it, though in practice CMPs read the purpose bits.
-- **localStorage observation is read-only**: the page context script reads localStorage entries but does not write to them. It observes what the CMP stored, compares against user preferences, and reports conflicts. It cannot pre-empt localStorage-based CMPs the way cookie injection pre-empts cookie-based CMPs.
+- **localStorage observation is read-only**: the page context script reads localStorage entries but does not write to them. It observes what the CMP stored, compares against user preferences, and reports conflicts. It cannot write to localStorage-based CMPs (would require `world:MAIN` and site-specific data).
 
 ### 8.2 Page context integration
 
@@ -291,21 +298,21 @@ The following CMPs use server-side consent mechanisms that cannot be replicated 
 
 | | ProtoConsent | Click-based extensions | Content blockers (uBlock, etc.) |
 |---|---|---|---|
-| **Mechanism** | Cookie injection before CMP loads | DOM interaction (simulate clicks on banner buttons) | Block CMP script entirely |
+| **Mechanism** | Cosmetic CSS hiding + experimental cookie injection | DOM interaction (simulate clicks on banner buttons) | Block CMP script entirely |
 | **Timing** | Before CMP loads (preventive) | After banner renders (reactive) | Before CMP loads (preventive) |
-| **Banner appears** | No (cookie pre-empts it) | Briefly (until click fires) | No (script blocked) |
-| **CMP reads preferences** | Yes (from injected cookie) | Yes (via its own UI flow) | No (CMP never loads) |
+| **Banner appears** | No (hidden by CSS) | Briefly (until click fires) | No (script blocked) |
+| **CMP reads preferences** | Only if cookie injection is enabled and CMP respects it | Yes (via its own UI flow) | No (CMP never loads) |
 | **`__tcfapi` available** | Read-only (MAIN world observes it) | Yes (CMP creates it) | No (CMP blocked) |
 | **Purpose-level control** | Yes (per-purpose consent values) | Varies (most are all-or-nothing) | No (binary block/allow) |
 | **Maintenance model** | Signature JSON per CMP | CSS selectors + click targets per CMP | Filter lists (domain-based) |
-| **Breakage risk** | Low (CMP sees valid consent) | Medium (DOM changes break selectors) | High (consent wall, `__tcfapi` undefined) |
+| **Breakage risk** | Low (cosmetic only; cookie injection may cause unexpected state) | Medium (DOM changes break selectors) | High (consent wall, `__tcfapi` undefined) |
 | **Dark pattern risk** | None (no interaction to misinterpret) | A failed or partial click can be treated by the CMP as implicit consent | None (CMP never loads) |
 
 ## 10. Interaction with TCF detection and banner observation
 
 CMP auto-response and CMP observation are complementary systems:
 
-- **Auto-response** (content script, `document_start`): injects consent cookies before any CMP script loads. Preventive.
+- **Auto-response** (content script, `document_start`): hides banners via cosmetic CSS, unlocks scroll, and optionally injects consent cookies (experimental). Preventive.
 - **Banner detection** (content script, `document_idle`): detects CMP presence via CSS selectors (~290 CMPs). Reports `[banner]` lines in the Log tab. Includes a delayed recheck for async-loaded CMPs.
 - **Cookie observation** (delayed after page load): reads CMP cookies by name from the signature list. The background decodes cookie values (OneTrust, Cookiebot, CookieYes, Complianz, Wix) and compares against user purposes. Reports `[banner-consent]` lines showing conflicts or matches.
 - **localStorage observation** (page context, `document_idle`): reads localStorage entries for CMPs that store consent there (Usercentrics, CCM19). The background decodes the data and compares against user purposes. Reports `[banner-consent]` lines.
@@ -369,11 +376,10 @@ Full entry (cookie injection):
 ### 4. Test
 
 See [testing-guide.md, section 16](../testing-guide.md#16-testing-cmp-auto-response) for testing instructions. Key checks:
-- Visit a site using the CMP. Verify the banner does not appear.
+- Visit a site using the CMP. Verify the banner is hidden (check for `<style data-pc-cmp>` in the page head).
 - Check the Log tab Requests stream for a `[banner]` line showing the CMP ID and detection state.
 - Check Purpose Settings to verify the new CMP appears in the list.
-- If cookie injection: inspect cookies to verify the correct values were set and cleaned up after 5 seconds.
-- If cosmetic only: verify the banner is hidden via CSS (check for `<style data-pc-cmp>` in the page head).
+- If cookie injection enabled: inspect cookies to verify the correct values were set and cleaned up after 5 seconds.
 
 ### 5. No code changes needed
 
