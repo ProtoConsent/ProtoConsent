@@ -436,7 +436,7 @@ function displayPerPurposeStats() {
   for (const key in lastPurposeStats) {
     if (key.startsWith("enhanced:")) {
       const listId = key.slice(9);
-      const entry = enhancedCatalogConfig[listId];
+      const entry = (enhancedCatalogConfig.lists || enhancedCatalogConfig)[listId];
       const cat = entry && entry.category;
       if (cat && PURPOSES_TO_SHOW.includes(cat)) {
         mergedCounts[cat] = (mergedCounts[cat] || 0) + lastPurposeStats[key];
