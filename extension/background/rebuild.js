@@ -410,20 +410,40 @@ async function _rebuildAllDynamicRulesImpl() {
       }
 
       if (listData.pathRules?.length) {
+        const byDomain = new Map();
+        const ungroupable = [];
         for (const pr of listData.pathRules) {
+          const m = pr.urlFilter.match(/^\|\|([^/]+)\/(.*)/);
+          if (m) {
+            if (!byDomain.has(m[1])) byDomain.set(m[1], []);
+            byDomain.get(m[1]).push(m[2]);
+          } else {
+            ungroupable.push(pr);
+          }
+        }
+
+        for (const [domain, paths] of byDomain) {
           const rId = nextRuleId++;
           newEnhancedMap[rId] = listId;
-          const condition = {
-            urlFilter: pr.urlFilter,
-            resourceTypes: BLOCK_RESOURCE_TYPES,
-          };
+          const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
           if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-          newRules.push({
-            id: rId,
-            priority: 2,
-            action: { type: "block" },
-            condition,
-          });
+          if (paths.length === 1) {
+            condition.urlFilter = `||${domain}/${paths[0]}`;
+          } else {
+            const escaped = domain.replace(/\./g, "\\.");
+            const pathAlts = paths.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+            condition.regexFilter = `^https?://(.*\\.)?${escaped}/(${pathAlts})`;
+            condition.isUrlFilterCaseSensitive = false;
+          }
+          newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+        }
+
+        for (const pr of ungroupable) {
+          const rId = nextRuleId++;
+          newEnhancedMap[rId] = listId;
+          const condition = { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
+          if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+          newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
         }
       }
     }
@@ -716,6 +736,22 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     // 7. Apply changes: dynamic rules FIRST, then static rulesets.
+    // Safety cap: trim enhanced rules if over MAX_NUMBER_OF_DYNAMIC_RULES
+    const dynLimit = chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES || 5000;
+    if (newRules.length > dynLimit) {
+      const excess = newRules.length - dynLimit + DYNAMIC_RULE_RESERVE;
+      const enhancedRuleIds = new Set(Object.keys(newEnhancedMap).map(Number));
+      let trimmed = 0;
+      for (let i = newRules.length - 1; i >= 0 && trimmed < excess; i--) {
+        if (enhancedRuleIds.has(newRules[i].id)) {
+          delete newEnhancedMap[newRules[i].id];
+          newRules.splice(i, 1);
+          trimmed++;
+        }
+      }
+      if (DEBUG_RULES) console.warn("ProtoConsent: trimmed", trimmed, "enhanced rules to fit dynamic limit");
+    }
+
     try {
       await chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: existingIds,

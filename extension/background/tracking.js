@@ -8,8 +8,9 @@
 
 import {
   useDnrDebug,
-  tabBlockedDomains, tabGpcDomains, tabParamStrips,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits,
   dynamicBlockRuleMap, dynamicGpcSetIds, dynamicParamStripIds, dynamicEnhancedMap,
+  dynamicWhitelistMap,
   gpcGlobalActive, gpcAddDomains, gpcRemoveDomains,
   logPorts, _extEventLog,
   tabCoverageMetrics, unattributedBuffer, UNATTRIBUTED_BUFFER_CAP,
@@ -120,12 +121,17 @@ if (useDnrDebug) {
   });
 }
 
-// Standard data source: webRequest.onErrorOccurred for ERR_BLOCKED_BY_CLIENT.
+// Standard data source: webRequest.onErrorOccurred for extension-blocked requests.
 if (!useDnrDebug) {
+  const BLOCKED_ERRORS = new Set([
+    "net::ERR_BLOCKED_BY_CLIENT",
+    "NS_ERROR_ABORT",
+    "NS_ERROR_BLOCKED_URI",
+  ]);
   try {
     chrome.webRequest.onErrorOccurred.addListener(
     (details) => {
-      if (details.error !== "net::ERR_BLOCKED_BY_CLIENT") return;
+      if (!BLOCKED_ERRORS.has(details.error)) return;
       if (details.tabId < 0) return;
 
       let hostname;
@@ -263,6 +269,28 @@ if (!useDnrDebug) {
   );
   } catch (e) {
     console.warn("ProtoConsent: onSendHeaders listener not available:", e.message);
+  }
+
+  // Whitelist hit tracking: count successful requests to whitelisted domains
+  try {
+    chrome.webRequest.onCompleted.addListener(
+      (details) => {
+        if (details.tabId < 0) return;
+        let hostname;
+        try { hostname = new URL(details.url).hostname; } catch (_) { return; }
+        let matched = false;
+        for (const domains of Object.values(dynamicWhitelistMap)) {
+          if (domains.includes(hostname)) { matched = true; break; }
+        }
+        if (!matched) return;
+        if (!tabWhitelistHits.has(details.tabId)) tabWhitelistHits.set(details.tabId, {});
+        const hits = tabWhitelistHits.get(details.tabId);
+        hits[hostname] = (hits[hostname] || 0) + 1;
+      },
+      { urls: ["<all_urls>"] }
+    );
+  } catch (e) {
+    console.warn("ProtoConsent: onCompleted listener not available:", e.message);
   }
 }
 

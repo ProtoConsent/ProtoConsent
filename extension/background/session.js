@@ -6,7 +6,7 @@
 // chrome.storage.session (survives SW restarts). Badge text updates.
 
 import {
-  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabCoverageMetrics,
   blockerDetection, updateBlockerDetection,
@@ -173,6 +173,9 @@ export async function restoreTabDataFromSession() {
       }
       for (const tabId of tabParamStrips.keys()) {
         if (!existingTabs.has(tabId)) tabParamStrips.delete(tabId);
+      }
+      for (const tabId of tabWhitelistHits.keys()) {
+        if (!existingTabs.has(tabId)) tabWhitelistHits.delete(tabId);
       }
       for (const tabId of tabCosmeticData.keys()) {
         if (!existingTabs.has(tabId)) tabCosmeticData.delete(tabId);

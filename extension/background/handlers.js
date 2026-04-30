@@ -38,7 +38,7 @@ function resolveEnhancedPreset(lists, catalog) {
 import {
   PURPOSES_FOR_ENFORCEMENT,
   operatingMode, setOperatingMode,
-  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabTcfData, tabCosmeticData, tabCmpData,
+  tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits, tabTcfData, tabCosmeticData, tabCmpData,
   tabCmpDetectData, tabGppData,
   tabCoverageMetrics, unattributedBuffer, blockerDetection, tabHotfixHits, hotfixDomainSet,
   pathOnlyUrlFilters,
@@ -521,6 +521,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         gpcDomains: gpcDomains ? Object.keys(gpcDomains) : [],
         gpcDomainCounts: gpcDomains || {},
         whitelist,
+        whitelistHitDomains: tabWhitelistHits.get(message.tabId) || {},
         operatingMode,
         coverage: tabCoverageMetrics.get(message.tabId) || null,
         hotfixHits: tabHotfixHits.has(message.tabId) ? Array.from(tabHotfixHits.get(message.tabId)) : [],
