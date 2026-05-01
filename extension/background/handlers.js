@@ -136,6 +136,13 @@ export function fetchEnhancedList(listId) {
 }
 
 // Store fetched list data by type. Returns a Promise<result>.
+function _isUnchanged(existing, data) {
+  if (!existing) return false;
+  const remote = data.generated || data.version;
+  const local = existing.generated || existing.version;
+  return remote && local && remote === local;
+}
+
 function _storeEnhancedListData(listId, listDef, data) {
   if (listDef.type === "informational") {
     if (!data.map || typeof data.map !== "object" || !Array.isArray(data.trackers)) {
@@ -145,13 +152,14 @@ function _storeEnhancedListData(listId, listDef, data) {
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
+        if (_isUnchanged(existing, data)) {
           return { ok: true, skipped: true, domainCount: existing.domainCount };
         }
         return _resolveEnabled(existing, listDef).then(shouldEnable => {
           lists[listId] = {
             enabled: shouldEnable,
             version: data.version || null,
+            generated: data.generated || null,
             lastFetched: Date.now(),
             domainCount,
             pathRuleCount: 0,
@@ -180,13 +188,14 @@ function _storeEnhancedListData(listId, listDef, data) {
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
+        if (_isUnchanged(existing, data)) {
           return { ok: true, skipped: true, genericCount: existing.genericCount, domainCount: existing.domainCount };
         }
         return _resolveEnabled(existing, listDef).then(shouldEnable => {
           lists[listId] = {
             enabled: shouldEnable,
             version: data.version || null,
+            generated: data.generated || null,
             lastFetched: Date.now(),
             genericCount,
             domainCount,
@@ -214,13 +223,14 @@ function _storeEnhancedListData(listId, listDef, data) {
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
+        if (_isUnchanged(existing, data)) {
           return { ok: true, skipped: true, cmpCount: existing.cmpCount };
         }
         return _resolveEnabled(existing, listDef).then(shouldEnable => {
           lists[listId] = {
             enabled: shouldEnable,
             version: data.version || null,
+            generated: data.generated || null,
             lastFetched: Date.now(),
             cmpCount,
             type: "cmp",
@@ -246,13 +256,14 @@ function _storeEnhancedListData(listId, listDef, data) {
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
+        if (_isUnchanged(existing, data)) {
           return { ok: true, skipped: true, cmpCount: existing.cmpCount };
         }
         return _resolveEnabled(existing, listDef).then(shouldEnable => {
           lists[listId] = {
             enabled: shouldEnable,
             version: data.version || null,
+            generated: data.generated || null,
             lastFetched: Date.now(),
             cmpCount,
             type: "cmp_detectors",
@@ -276,13 +287,14 @@ function _storeEnhancedListData(listId, listDef, data) {
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
+        if (_isUnchanged(existing, data)) {
           return { ok: true, skipped: true, cmpCount: existing.cmpCount };
         }
         return _resolveEnabled(existing, listDef).then(shouldEnable => {
           lists[listId] = {
             enabled: shouldEnable,
             version: data.version || null,
+            generated: data.generated || null,
             lastFetched: Date.now(),
             cmpCount,
             type: "cmp_site",
@@ -310,13 +322,14 @@ function _storeEnhancedListData(listId, listDef, data) {
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
+        if (_isUnchanged(existing, data)) {
           return { ok: true, skipped: true, paramCount: existing.paramCount };
         }
         return _resolveEnabled(existing, listDef).then(shouldEnable => {
           lists[listId] = {
             enabled: shouldEnable,
             version: data.version || null,
+            generated: data.generated || null,
             lastFetched: Date.now(),
             paramCount,
             type: "tracking_params",
@@ -352,13 +365,14 @@ function _storeEnhancedListData(listId, listDef, data) {
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
+        if (_isUnchanged(existing, data)) {
           return { ok: true, skipped: true, paramCount: existing.paramCount, domainCount: existing.domainCount };
         }
         return _resolveEnabled(existing, listDef).then(shouldEnable => {
           lists[listId] = {
             enabled: shouldEnable,
             version: data.version || null,
+            generated: data.generated || null,
             lastFetched: Date.now(),
             paramCount,
             domainCount,
@@ -408,13 +422,14 @@ function _storeEnhancedListData(listId, listDef, data) {
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
+        if (_isUnchanged(existing, data)) {
           return { ok: true, skipped: true, hotfixCount: existing.hotfixCount };
         }
         return _resolveEnabled(existing, listDef).then(shouldEnable => {
           lists[listId] = {
             enabled: shouldEnable,
             version: data.version || null,
+            generated: data.generated || null,
             lastFetched: Date.now(),
             hotfixCount: domains.length,
             pathRuleCount: pathRules.length,
@@ -456,7 +471,7 @@ function _storeEnhancedListData(listId, listDef, data) {
       getEnhancedPresetFromStorage(),
     ]).then(([lists, preset]) => {
       const existing = lists[listId];
-      if (existing && data.version && existing.version === data.version) {
+      if (_isUnchanged(existing, data)) {
         return { ok: true, skipped: true, domainCount: existing.domainCount, pathRuleCount: existing.pathRuleCount };
       }
       const existingEnabled = existing?.enabled;
@@ -471,6 +486,7 @@ function _storeEnhancedListData(listId, listDef, data) {
       lists[listId] = {
         enabled: shouldEnable,
         version: data.version || null,
+        generated: data.generated || null,
         lastFetched: Date.now(),
         domainCount: domains.length,
         pathRuleCount: pathRules.length,
