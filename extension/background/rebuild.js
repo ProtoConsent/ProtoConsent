@@ -329,6 +329,21 @@ async function _rebuildAllDynamicRulesImpl() {
         }
         if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix path block rules:", hotfixData.pathRules.length);
       }
+      if (hotfixData?.pathExceptions?.length && can("enhancedDnr")) {
+        for (const pe of hotfixData.pathExceptions) {
+          if (!pe.urlFilter) continue;
+          const rId = nextRuleId++;
+          const condition = { urlFilter: pe.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
+          if (Array.isArray(pe.initiatorDomains) && pe.initiatorDomains.length > 0) {
+            condition.initiatorDomains = pe.initiatorDomains;
+          } else if (pe.firstParty) {
+            const hostMatch = pe.urlFilter.match(/^\|\|([a-z0-9][a-z0-9.-]*\.[a-z]{2,})\//i);
+            if (hostMatch) condition.initiatorDomains = [hostMatch[1]];
+          }
+          newRules.push({ id: rId, priority: 3, action: { type: "allow" }, condition });
+        }
+        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix path exception rules:", hotfixData.pathExceptions.length);
+      }
     } else {
       setHotfixDomainSet(new Set());
     }
@@ -838,6 +853,7 @@ async function _rebuildAllDynamicRulesImpl() {
           .map(([id]) => id),
         hotfixDomainCount,
         hotfixPathCount: enhancedData["protoconsent_hotfix"]?.pathRules?.length || 0,
+        hotfixPathExceptionCount: enhancedData["protoconsent_hotfix"]?.pathExceptions?.length || 0,
         pathAttrIndexSize: newPathAttrIndex.size,
         ts: Date.now(),
       });

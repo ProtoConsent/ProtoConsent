@@ -392,6 +392,19 @@ function _storeEnhancedListData(listId, listDef, data) {
         }
       }
     }
+    const pathExceptions = [];
+    if (Array.isArray(data.path_exceptions)) {
+      for (const pe of data.path_exceptions) {
+        if (pe && typeof pe.urlFilter === "string" && pe.urlFilter.length > 0) {
+          const entry = { urlFilter: pe.urlFilter };
+          if (Array.isArray(pe.initiatorDomains) && pe.initiatorDomains.length > 0) {
+            entry.initiatorDomains = pe.initiatorDomains;
+          }
+          if (pe.firstParty) entry.firstParty = true;
+          pathExceptions.push(entry);
+        }
+      }
+    }
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
@@ -405,17 +418,19 @@ function _storeEnhancedListData(listId, listDef, data) {
             lastFetched: Date.now(),
             hotfixCount: domains.length,
             pathRuleCount: pathRules.length,
+            pathExceptionCount: pathExceptions.length,
             type: "revoke",
           };
           const storeData = { domains };
           if (pathRules.length) storeData.pathRules = pathRules;
+          if (pathExceptions.length) storeData.pathExceptions = pathExceptions;
           return _writeStorage({
             enhancedLists: lists,
             ["enhancedData_" + listId]: storeData,
           }).then(err => {
             if (err) return { ok: false, error: err };
             rebuildAllDynamicRules();
-            return { ok: true, hotfixCount: domains.length, pathRuleCount: pathRules.length };
+            return { ok: true, hotfixCount: domains.length, pathRuleCount: pathRules.length, pathExceptionCount: pathExceptions.length };
           });
         });
       });
