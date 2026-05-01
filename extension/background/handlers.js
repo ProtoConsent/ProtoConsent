@@ -311,6 +311,7 @@ function _storeEnhancedListData(listId, listDef, data) {
           ...counts,
         };
         if (listDef.type) lists[listId].type = listDef.type;
+        if (listDef.category) lists[listId].category = listDef.category;
         const storageUpdate = {
           enhancedLists: lists,
           ["enhancedData_" + listId]: payload,
