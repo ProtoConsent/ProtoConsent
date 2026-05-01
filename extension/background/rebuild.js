@@ -877,7 +877,7 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     const regexRules = newRules.filter(r => r.condition?.regexFilter);
-    if (regexRules.length) {
+    if (regexRules.length && chrome.declarativeNetRequest.isRegexSupported) {
       const checks = await Promise.all(regexRules.map(r =>
         chrome.declarativeNetRequest.isRegexSupported({ regex: r.condition.regexFilter, isCaseSensitive: r.condition.isUrlFilterCaseSensitive ?? true })
       ));
