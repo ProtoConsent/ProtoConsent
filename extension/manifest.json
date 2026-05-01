@@ -90,6 +90,8 @@
       { "id": "protoconsent_personalization_paths", "enabled": false, "path": "rules/protoconsent_personalization_paths.json" },
       { "id": "protoconsent_third_parties_paths", "enabled": false, "path": "rules/protoconsent_third_parties_paths.json" },
       { "id": "protoconsent_advanced_tracking_paths", "enabled": false, "path": "rules/protoconsent_advanced_tracking_paths.json" },
+      { "id": "easyprivacy_paths", "enabled": false, "path": "rules/easyprivacy_paths.json" },
+      { "id": "easylist_paths", "enabled": false, "path": "rules/easylist_paths.json" },
       { "id": "strip_tracking_params", "enabled": false, "path": "rules/strip_tracking_params.json" },
       { "id": "strip_tracking_params_sites", "enabled": false, "path": "rules/strip_tracking_params_sites.json" }
     ]

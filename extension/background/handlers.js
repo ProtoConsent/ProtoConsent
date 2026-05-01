@@ -39,9 +39,9 @@ import {
   PURPOSES_FOR_ENFORCEMENT,
   operatingMode, setOperatingMode,
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits, tabTcfData, tabCosmeticData, tabCmpData,
-  tabCmpDetectData, tabGppData,
+  tabCmpDetectData, tabGppData, tabPathDetails,
   tabCoverageMetrics, unattributedBuffer, blockerDetection, tabHotfixHits, hotfixDomainSet,
-  pathOnlyUrlFilters,
+  pathOnlyUrlFilters, pathAttributionIndex,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -384,6 +384,14 @@ function _storeEnhancedListData(listId, listDef, data) {
     if (!domains.length) {
       throw new Error("Invalid revoke format: no valid domains");
     }
+    const pathRules = [];
+    if (Array.isArray(data.path_additions)) {
+      for (const pa of data.path_additions) {
+        if (pa && typeof pa.urlFilter === "string" && pa.urlFilter.length > 0) {
+          pathRules.push({ urlFilter: pa.urlFilter });
+        }
+      }
+    }
     return withEnhancedStorageLock(() => {
       return getEnhancedListsFromStorage().then(lists => {
         const existing = lists[listId];
@@ -396,15 +404,18 @@ function _storeEnhancedListData(listId, listDef, data) {
             version: data.version || null,
             lastFetched: Date.now(),
             hotfixCount: domains.length,
+            pathRuleCount: pathRules.length,
             type: "revoke",
           };
+          const storeData = { domains };
+          if (pathRules.length) storeData.pathRules = pathRules;
           return _writeStorage({
             enhancedLists: lists,
-            ["enhancedData_" + listId]: { domains },
+            ["enhancedData_" + listId]: storeData,
           }).then(err => {
             if (err) return { ok: false, error: err };
             rebuildAllDynamicRules();
-            return { ok: true, hotfixCount: domains.length };
+            return { ok: true, hotfixCount: domains.length, pathRuleCount: pathRules.length };
           });
         });
       });
@@ -514,8 +525,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         if (pLen) purposePathCounts[key] = pLen;
       }
       const gpcDomains = tabGpcDomains.get(message.tabId);
+      const rawPaths = tabPathDetails.get(message.tabId);
+      const pathDetails = {};
+      if (rawPaths) {
+        for (const [host, paths] of rawPaths) pathDetails[host] = Array.from(paths);
+      }
       sendResponse({
         data: tabBlockedDomains.get(message.tabId) || {},
+        pathDetails,
         purposeDomainCounts,
         purposePathCounts,
         gpcDomains: gpcDomains ? Object.keys(gpcDomains) : [],
@@ -999,6 +1016,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           liveCoverageEntries: tabCoverageMetrics.size,
           liveCoverageObserved: Array.from(tabCoverageMetrics.values()).reduce((s, m) => s + m.observed, 0),
           pathOnlyPatterns: pathOnlyUrlFilters.size,
+          pathAttrIndexSize: pathAttributionIndex.size,
         };
         sendResponse(debugData);
       }).catch(() => sendResponse(debugData));

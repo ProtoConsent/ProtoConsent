@@ -14,6 +14,7 @@
 
 let lastPurposeStats = {};
 let lastBlockedDomains = {};
+let lastPathDetails = {};
 let lastBlocked = 0;
 let lastLifetimeBlocked = 0;
 let displayRetries = 0;
@@ -49,7 +50,7 @@ function ensureBars() {
  // domainHitCount: purpose -> count (from static rulesets only)
  // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
 async function getBlockedRulesCount() {
-  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, whitelistHits: 0, whitelistHitDomains: {}, hotfixPending: false };
+  const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, pathDetails: {}, whitelistHits: 0, whitelistHitDomains: {}, hotfixPending: false };
   try {
     if (!chrome.declarativeNetRequest || !chrome.tabs) {
       return EMPTY_BLOCKED_RESULT;
@@ -73,6 +74,7 @@ async function getBlockedRulesCount() {
     const dynamicRules = dynamicResult.status === "fulfilled" ? dynamicResult.value : [];
 
     const blockedDomains = domainsResp?.data || {};
+    const pathDetails = domainsResp?.pathDetails || {};
     const gpcDomains = domainsResp?.gpcDomains || [];
     const gpcDomainCounts = domainsResp?.gpcDomainCounts || {};
     lastWhitelist = domainsResp?.whitelist || {};
@@ -109,7 +111,7 @@ async function getBlockedRulesCount() {
       var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + (c && typeof c === "object" ? c.count : (c || 0)), 0);
       const psData = domainsResp?.paramStrips || {};
       const psTotal = Object.values(psData).reduce((s, d) => s + (d && typeof d === "object" ? d.count : (d || 0)), 0);
-      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: psTotal, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, whitelistHits: wlHits, whitelistHitDomains: wlHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
+      return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: psTotal, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, pathDetails, whitelistHits: wlHits, whitelistHitDomains: wlHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
     }
 
     // Classify dynamic rules from Chrome's persistent store (reliable after SW restart)
@@ -198,7 +200,7 @@ async function getBlockedRulesCount() {
     const wlHitDomains = domainsResp?.whitelistHitDomains || {};
     const wlHits = Object.values(wlHitDomains).reduce((s, c) => s + c, 0);
 
-    return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHits: wlHits, whitelistHitDomains: wlHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
+    return { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, pathDetails, whitelistHits: wlHits, whitelistHitDomains: wlHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
   } catch (err) {
     console.error("ProtoConsent: error fetching matched rules count:", err);
     return EMPTY_BLOCKED_RESULT;
@@ -275,8 +277,9 @@ async function displayBlockedCount() {
   ensureBars();
 
   try {
-    const { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, whitelistHitDomains, hotfixPending, lifetimeBlocked } = await getBlockedRulesCount();
+    const { blocked, gpc, ch, paramStrips, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount, blockedDomains, pathDetails: pd, whitelistHitDomains, hotfixPending, lifetimeBlocked } = await getBlockedRulesCount();
     lastBlockedDomains = blockedDomains;
+    lastPathDetails = pd;
     lastBlocked = blocked;
     lastLifetimeBlocked = lifetimeBlocked || 0;
     lastGpcSignalsSent = gpc;

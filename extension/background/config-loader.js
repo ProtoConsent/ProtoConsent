@@ -28,6 +28,8 @@ import {
   CATALOG_TTL, CATALOG_REMOTE_URL, CATALOG_REMOTE_FALLBACK,
   SUPPORTED_MANIFEST_VERSION,
   setPathOnlyUrlFilters,
+  pathAttributionIndex,
+  bundledPathAttribution, setBundledPathAttribution,
   regionalLanguagesConfig, setRegionalLanguagesConfig,
 } from "./state.js";
 
@@ -140,6 +142,84 @@ export function resolvePurposesFromHostname(hostname) {
       h = h.slice(dot + 1);
     }
   }
+  return [];
+}
+
+// Extract hostname + path prefix from a urlFilter pattern for attribution.
+// Returns {hostname, prefix} or null if not attributable.
+export function parseUrlFilterForAttribution(urlFilter) {
+  if (!urlFilter || !urlFilter.startsWith("||")) return null;
+  const body = urlFilter.slice(2);
+  const slashIdx = body.indexOf("/");
+  if (slashIdx < 1) return null;
+  const hostname = body.slice(0, slashIdx);
+  if (hostname.includes("*")) return null;
+  let pathPart = "/" + body.slice(slashIdx + 1);
+  const starIdx = pathPart.indexOf("*");
+  if (starIdx >= 0) pathPart = pathPart.slice(0, starIdx);
+  const qIdx = pathPart.indexOf("?");
+  if (qIdx >= 0) pathPart = pathPart.slice(0, qIdx);
+  const caretIdx = pathPart.indexOf("^");
+  if (caretIdx >= 0) pathPart = pathPart.slice(0, caretIdx);
+  if (pathPart.length <= 1) return null;
+  return { hostname, prefix: pathPart };
+}
+
+// Load path attribution entries from bundled external path rulesets.
+// Populates bundledPathAttribution (Map<listId, Map<hostname, Array<{prefix, source}>>>).
+const BUNDLED_EXTERNAL_PATHS = [
+  { file: "easyprivacy_paths.json", listId: "easyprivacy", source: "enhanced:easyprivacy" },
+  { file: "easylist_paths.json", listId: "easylist", source: "enhanced:easylist" },
+];
+
+let _bundledPathLoaded = false;
+
+export async function loadBundledPathAttribution() {
+  if (_bundledPathLoaded) return;
+  _bundledPathLoaded = true;
+  const result = new Map();
+  for (const { file, listId, source } of BUNDLED_EXTERNAL_PATHS) {
+    try {
+      const url = chrome.runtime.getURL("rules/" + file);
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const rules = await res.json();
+      const hostMap = new Map();
+      for (const rule of rules) {
+        const parsed = parseUrlFilterForAttribution(rule.condition?.urlFilter);
+        if (!parsed) continue;
+        let arr = hostMap.get(parsed.hostname);
+        if (!arr) { arr = []; hostMap.set(parsed.hostname, arr); }
+        arr.push({ prefix: parsed.prefix, source });
+      }
+      if (hostMap.size > 0) result.set(listId, hostMap);
+    } catch (e) {
+      if (DEBUG_RULES) console.warn("loadBundledPathAttribution:", file, e.message);
+    }
+  }
+  setBundledPathAttribution(result);
+}
+
+// Resolve purposes from a full URL by checking path prefixes.
+// Used when hostname-only attribution fails for path-level blocks.
+export function resolvePurposesFromUrl(url) {
+  if (!pathAttributionIndex || pathAttributionIndex.size === 0) return [];
+  try {
+    const parsed = new URL(url);
+    let h = parsed.hostname;
+    const pathAndQuery = parsed.pathname + parsed.search;
+    while (h) {
+      const entries = pathAttributionIndex.get(h);
+      if (entries) {
+        for (const { prefix, source } of entries) {
+          if (pathAndQuery.startsWith(prefix)) return [source];
+        }
+      }
+      const dot = h.indexOf(".");
+      if (dot < 0) break;
+      h = h.slice(dot + 1);
+    }
+  } catch (_) {}
   return [];
 }
 

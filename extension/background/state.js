@@ -40,6 +40,11 @@ export function setBlocklistsConfig(v) { blocklistsConfig = v; }
 // Per-tab tracking of blocked domains for the popup detail view.
 export const tabBlockedDomains = new Map();
 
+// Per-tab path details for blocked requests (hostname -> Set<pathname>).
+// Only populated for path-attributed blocks (not domain-level).
+export const tabPathDetails = new Map();
+export const PATH_DETAIL_CAP = 20;
+
 // Per-tab TCF CMP detection data
 export const tabTcfData = new Map();
 
@@ -89,6 +94,16 @@ export function setReverseHostIndex(v) { reverseHostIndex = v; }
 // Enhanced reverse index: hostname -> listId
 export let enhancedReverseIndex = null;
 export function setEnhancedReverseIndex(v) { enhancedReverseIndex = v; }
+
+// Path attribution index: hostname -> Array<{prefix, source}>
+// Used by resolvePurposesFromUrl() for path-level attribution of enhanced blocks.
+export let pathAttributionIndex = new Map();
+export function setPathAttributionIndex(v) { pathAttributionIndex = v; }
+
+// Cached bundled external path entries (populated once at startup).
+// Map<listId, Map<hostname, Array<{prefix, source}>>>
+export let bundledPathAttribution = new Map();
+export function setBundledPathAttribution(v) { bundledPathAttribution = v; }
 
 // Path-only URL patterns that lack a real hostname (e.g. "matomo.js" from ||matomo.js).
 // Map<string, string[]>: pattern -> purpose keys. Used by tracking.js for secondary attribution.

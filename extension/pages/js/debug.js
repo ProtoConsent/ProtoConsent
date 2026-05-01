@@ -186,7 +186,17 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("  unattributedHostnames (accumulated): " + bd.unattributedHostnames);
       lines.push("  buffer: " + bd.bufferLength + " entries, " + bd.bufferUniqueHostnames + " unique hostnames");
       lines.push("  pathOnlyPatterns: " + (bd.pathOnlyPatterns || 0));
+      lines.push("  pathAttrIndex: " + (bd.pathAttrIndexSize || 0) + " hostnames");
       lines.push("  live coverage: " + bd.liveCoverageEntries + " tabs, " + bd.liveCoverageObserved + " observed");
+      lines.push("");
+    }
+
+    // Path details for current tab
+    if (typeof lastPathDetails !== "undefined" && Object.keys(lastPathDetails).length > 0) {
+      lines.push("— path blocks (this tab) —");
+      for (const [host, paths] of Object.entries(lastPathDetails).sort()) {
+        lines.push("  " + host + ": " + paths.join(", "));
+      }
       lines.push("");
     }
 

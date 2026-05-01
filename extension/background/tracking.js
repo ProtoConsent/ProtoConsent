@@ -9,6 +9,7 @@
 import {
   useDnrDebug,
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits,
+  tabPathDetails, PATH_DETAIL_CAP,
   dynamicBlockRuleMap, dynamicGpcSetIds, dynamicParamStripIds, dynamicEnhancedMap,
   dynamicWhitelistMap,
   gpcGlobalActive, gpcAddDomains, gpcRemoveDomains,
@@ -17,7 +18,7 @@ import {
   pathOnlyUrlFilters,
   hotfixDomainSet, tabHotfixHits,
 } from "./state.js";
-import { resolvePurposesFromHostname } from "./config-loader.js";
+import { resolvePurposesFromHostname, resolvePurposesFromUrl } from "./config-loader.js";
 import { guessHeuristicPurpose } from "./heuristic.js";
 import { scheduleSessionPersist, updateBadgeForTab } from "./session.js";
 
@@ -60,6 +61,9 @@ if (useDnrDebug) {
 
     if (rule.rulesetId && rule.rulesetId.startsWith("protoconsent_")) {
       purpose = rule.rulesetId.slice(13).replace(/_paths$/, "");
+    }
+    else if (rule.rulesetId && !rule.rulesetId.startsWith("_") && rule.rulesetId.endsWith("_paths")) {
+      purpose = "enhanced:" + rule.rulesetId.replace(/_paths$/, "");
     }
     else if (rule.rulesetId === "_dynamic" && dynamicBlockRuleMap[rule.ruleId]) {
       purpose = dynamicBlockRuleMap[rule.ruleId];
@@ -112,6 +116,16 @@ if (useDnrDebug) {
     if (!tabData[purpose]) tabData[purpose] = {};
     tabData[purpose][domain] = (tabData[purpose][domain] || 0) + 1;
     incrementLifetimeBlocked(1);
+    if (rule.rulesetId && rule.rulesetId.endsWith("_paths")) {
+      try {
+        const pathname = new URL(request.url).pathname;
+        if (!tabPathDetails.has(request.tabId)) tabPathDetails.set(request.tabId, new Map());
+        const hostPaths = tabPathDetails.get(request.tabId);
+        if (!hostPaths.has(domain)) hostPaths.set(domain, new Set());
+        const paths = hostPaths.get(domain);
+        if (paths.size < PATH_DETAIL_CAP) paths.add(pathname);
+      } catch (_) {}
+    }
     scheduleSessionPersist();
     updateBadgeForTab(request.tabId);
 
@@ -119,6 +133,34 @@ if (useDnrDebug) {
       try { port.postMessage({ type: "block", purpose, url: request.url, tabId: request.tabId }); } catch (_) {}
     }
   });
+}
+
+function attributeBlock(tabId, hostname, url, purposes, metrics, isPathBlock) {
+  metrics.attributed++;
+  incrementLifetimeBlocked(1);
+  if (!tabBlockedDomains.has(tabId)) tabBlockedDomains.set(tabId, {});
+  const tabData = tabBlockedDomains.get(tabId);
+  for (const p of purposes) {
+    if (!tabData[p]) tabData[p] = {};
+    tabData[p][hostname] = (tabData[p][hostname] || 0) + 1;
+  }
+  if (isPathBlock) {
+    try {
+      const pathname = new URL(url).pathname;
+      if (!tabPathDetails.has(tabId)) tabPathDetails.set(tabId, new Map());
+      const hostPaths = tabPathDetails.get(tabId);
+      if (!hostPaths.has(hostname)) hostPaths.set(hostname, new Set());
+      const paths = hostPaths.get(hostname);
+      if (paths.size < PATH_DETAIL_CAP) paths.add(pathname);
+    } catch (_) {}
+  }
+  scheduleSessionPersist();
+  updateBadgeForTab(tabId);
+  for (const p of purposes) {
+    for (const port of logPorts) {
+      try { port.postMessage({ type: "block", purpose: p, url, tabId }); } catch (_) {}
+    }
+  }
 }
 
 // Standard data source: webRequest.onErrorOccurred for extension-blocked requests.
@@ -146,6 +188,12 @@ if (!useDnrDebug) {
 
       const purposes = resolvePurposesFromHostname(hostname);
       if (!purposes.length) {
+        // Try URL path-level attribution for enhanced path blocks
+        const urlPurposes = resolvePurposesFromUrl(details.url);
+        if (urlPurposes.length) {
+          attributeBlock(details.tabId, hostname, details.url, urlPurposes, metrics, true);
+          return;
+        }
         // Secondary check: does the URL match a path-only pattern? (e.g. ||matomo.js)
         let pathPurposes = null;
         if (pathOnlyUrlFilters.size > 0) {
@@ -164,49 +212,11 @@ if (!useDnrDebug) {
           return;
         }
         // Path-only match: attribute to the matched purpose(s)
-        metrics.attributed++;
-        incrementLifetimeBlocked(1);
-        if (!tabBlockedDomains.has(details.tabId)) {
-          tabBlockedDomains.set(details.tabId, {});
-        }
-        const tabData = tabBlockedDomains.get(details.tabId);
-        for (const p of pathPurposes) {
-          if (!tabData[p]) tabData[p] = {};
-          tabData[p][hostname] = (tabData[p][hostname] || 0) + 1;
-        }
-        scheduleSessionPersist();
-        updateBadgeForTab(details.tabId);
-        for (const p of pathPurposes) {
-          for (const port of logPorts) {
-            try {
-              port.postMessage({ type: "block", purpose: p, url: details.url, tabId: details.tabId });
-            } catch (_) {}
-          }
-        }
+        attributeBlock(details.tabId, hostname, details.url, pathPurposes, metrics, true);
         return;
       }
 
-      metrics.attributed++;
-      incrementLifetimeBlocked(1);
-
-      if (!tabBlockedDomains.has(details.tabId)) {
-        tabBlockedDomains.set(details.tabId, {});
-      }
-      const tabData = tabBlockedDomains.get(details.tabId);
-      for (const purpose of purposes) {
-        if (!tabData[purpose]) tabData[purpose] = {};
-        tabData[purpose][hostname] = (tabData[purpose][hostname] || 0) + 1;
-      }
-      scheduleSessionPersist();
-      updateBadgeForTab(details.tabId);
-
-      for (const purpose of purposes) {
-        for (const port of logPorts) {
-          try {
-            port.postMessage({ type: "block", purpose, url: details.url, tabId: details.tabId });
-          } catch (_) {}
-        }
-      }
+      attributeBlock(details.tabId, hostname, details.url, purposes, metrics);
     },
     { urls: ["<all_urls>"] }
   );
