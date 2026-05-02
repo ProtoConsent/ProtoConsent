@@ -7,7 +7,7 @@
 
 import {
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits, tabTcfData, tabCosmeticData, tabCmpData,
-  tabCmpDetectData, tabGppData,
+  tabCmpDetectData, tabGppData, tabPathDetails,
   tabNavigating, tabLastUrl,
   tabCoverageMetrics,
   unattributedBuffer, tabHotfixHits,
@@ -26,6 +26,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
       tabNavigating.add(tabId);
       onNavigation(tabId, tabCoverageMetrics, changeInfo.url);
       tabBlockedDomains.delete(tabId);
+      tabPathDetails.delete(tabId);
       tabGpcDomains.delete(tabId);
       tabParamStrips.delete(tabId);
       tabWhitelistHits.delete(tabId);
@@ -63,6 +64,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabBlockedDomains.delete(tabId);
+  tabPathDetails.delete(tabId);
   tabGpcDomains.delete(tabId);
   tabParamStrips.delete(tabId);
   tabWhitelistHits.delete(tabId);

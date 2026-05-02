@@ -7,15 +7,17 @@
 
 import {
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits, tabTcfData, tabCosmeticData, tabCmpData,
-  tabCmpDetectData, tabGppData,
+  tabCmpDetectData, tabGppData, tabPathDetails,
   tabCoverageMetrics,
   blockerDetection, updateBlockerDetection,
   unattributedBuffer, UNATTRIBUTED_BUFFER_CAP,
   setOperatingMode,
   _extEventLog,
+  tabHotfixHits,
 } from "./state.js";
 import { restoreWarningBadge } from "./blocker-detection.js";
 import { getLifetimeTotal, setLifetimeTotal } from "./tracking.js";
+import { getBrowser } from "./config-bridge.js";
 
 // Throttled write to chrome.storage.session (max once per 2s)
 let sessionPersistTimer = null;
@@ -62,9 +64,15 @@ export function persistTabDataToSession() {
   for (const [tabId, data] of tabCoverageMetrics) {
     coverage[tabId] = data;
   }
+  const pathDets = {};
+  for (const [tabId, hostMap] of tabPathDetails) {
+    const obj = {};
+    for (const [host, paths] of hostMap) obj[host] = Array.from(paths);
+    pathDets[tabId] = obj;
+  }
   chrome.storage.session.set({
     _tabBlocked: blocked, _tabGpc: gpc, _tabParamStrips: paramStrips, _tabCosmetic: cosmetic, _tabCmp: cmp,
-    _tabCmpDetect: cmpDetect, _tabGpp: gpp, _tabCoverage: coverage,
+    _tabCmpDetect: cmpDetect, _tabGpp: gpp, _tabCoverage: coverage, _tabPathDetails: pathDets,
     _extEventLog: _extEventLog,
     _blockerDetect: {
       navCount: blockerDetection.navCount,
@@ -132,6 +140,13 @@ export async function restoreTabDataFromSession() {
         tabCoverageMetrics.set(Number(tabId), data);
       }
     }
+    if (result._tabPathDetails) {
+      for (const [tabId, hosts] of Object.entries(result._tabPathDetails)) {
+        const hostMap = new Map();
+        for (const [host, paths] of Object.entries(hosts)) hostMap.set(host, new Set(paths));
+        tabPathDetails.set(Number(tabId), hostMap);
+      }
+    }
     // Restore inter-extension event log
     if (Array.isArray(result._extEventLog)) {
       _extEventLog.length = 0;
@@ -168,6 +183,9 @@ export async function restoreTabDataFromSession() {
       for (const tabId of tabBlockedDomains.keys()) {
         if (!existingTabs.has(tabId)) tabBlockedDomains.delete(tabId);
       }
+      for (const tabId of tabPathDetails.keys()) {
+        if (!existingTabs.has(tabId)) tabPathDetails.delete(tabId);
+      }
       for (const tabId of tabGpcDomains.keys()) {
         if (!existingTabs.has(tabId)) tabGpcDomains.delete(tabId);
       }
@@ -191,6 +209,9 @@ export async function restoreTabDataFromSession() {
       }
       for (const tabId of tabCoverageMetrics.keys()) {
         if (!existingTabs.has(tabId)) tabCoverageMetrics.delete(tabId);
+      }
+      for (const tabId of tabHotfixHits.keys()) {
+        if (!existingTabs.has(tabId)) tabHotfixHits.delete(tabId);
       }
     }
     // Restore per-tab TCF detection data (keys: "tcf_<tabId>")
@@ -230,6 +251,7 @@ export function updateBadgeForTab(tabId) {
   }
   let text = "";
   if (total > 9999) text = "10K+";
+  else if (getBrowser() === "firefox" && total > 999) text = Math.floor(total / 1000) + "K+";
   else if (total > 0) text = String(total);
   chrome.action.setBadgeText({ tabId, text }).catch(() => {});
   chrome.action.setBadgeBackgroundColor({ tabId, color: "#1e3a8a" }).catch(() => {});

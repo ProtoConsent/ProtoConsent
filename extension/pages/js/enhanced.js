@@ -688,20 +688,40 @@ function renderEnhancedLists() {
         wrap.className = "ep-hotfix-domains";
         var desc = document.createElement("div");
         desc.className = "ep-hotfix-desc";
-        desc.textContent = "Domains excluded from blocking lists to prevent site breakage.";
+        desc.textContent = "Domains excluded from blocking lists to correct false positives or remove inactive entries.";
         wrap.appendChild(desc);
+        var limit = Math.min(domains.length, MAX_LISTED);
+        for (var i = 0; i < limit; i++) {
+          var entry = document.createElement("div");
+          entry.className = "ep-hotfix-domain-entry";
+          entry.textContent = domains[i];
+          wrap.appendChild(entry);
+        }
         if (domains.length > MAX_LISTED) {
-          var summary = document.createElement("div");
-          summary.className = "ep-hotfix-domain-entry";
-          summary.textContent = domains.length.toLocaleString() + " domains corrected since last release";
-          wrap.appendChild(summary);
-        } else {
-          for (var i = 0; i < domains.length; i++) {
-            var entry = document.createElement("div");
-            entry.className = "ep-hotfix-domain-entry";
-            entry.textContent = domains[i];
-            wrap.appendChild(entry);
+          var remaining = domains.length - MAX_LISTED;
+          var toggle = document.createElement("div");
+          toggle.className = "ep-hotfix-domain-entry ep-hotfix-toggle";
+          toggle.textContent = "and " + remaining.toLocaleString() + " more...";
+          toggle.style.cursor = "pointer";
+          toggle.style.opacity = "0.7";
+          var expanded = false;
+          var extra = document.createElement("div");
+          extra.style.display = "none";
+          for (var j = MAX_LISTED; j < domains.length; j++) {
+            var el = document.createElement("div");
+            el.className = "ep-hotfix-domain-entry";
+            el.textContent = domains[j];
+            extra.appendChild(el);
           }
+          toggle.addEventListener("click", function () {
+            expanded = !expanded;
+            extra.style.display = expanded ? "" : "none";
+            toggle.textContent = expanded
+              ? "show less"
+              : "and " + remaining.toLocaleString() + " more...";
+          });
+          wrap.appendChild(toggle);
+          wrap.appendChild(extra);
         }
         body.appendChild(wrap);
       });

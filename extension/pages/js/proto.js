@@ -246,6 +246,7 @@ function _renderProtoGrid(resp, wkData, tcfData) {
     var info = paramStrips[paramDomains[i]];
     paramTotal += (typeof info === "object" ? info.count : info) || 0;
   }
+  if (typeof lastParamStrips === "number" && lastParamStrips > paramTotal) paramTotal = lastParamStrips;
 
   var GRID_ICONS = "../icons/grid/";
   var cards = [
@@ -529,17 +530,34 @@ function _fillTrackersBody(body, resp) {
 function _fillCleanLinksBody(body, resp) {
   var strips = resp.paramStrips || {};
   var domains = Object.keys(strips);
-  if (domains.length === 0) { body.textContent = "No parameters stripped"; return; }
+  if (domains.length === 0) {
+    if (typeof lastParamStrips === "number" && lastParamStrips > 0) {
+      body.textContent = lastParamStrips + " tracking parameter" + (lastParamStrips > 1 ? "s" : "") + " stripped";
+    } else {
+      body.textContent = "No parameters stripped";
+    }
+    return;
+  }
   for (var i = 0; i < Math.min(domains.length, 10); i++) {
     var info = strips[domains[i]];
     var params = (typeof info === "object" && info.params) ? info.params : [];
-    var row = document.createElement("div"); row.className = "proto-purpose-domain";
-    var name = document.createElement("span"); name.className = "proto-purpose-domain-name";
-    name.textContent = domains[i];
-    if (params.length > 0) name.title = params.join(", ");
-    var count = document.createElement("span"); count.className = "proto-purpose-domain-count";
-    count.textContent = typeof info === "object" ? info.count : info;
-    row.appendChild(name); row.appendChild(count); body.appendChild(row);
+    if (params.length > 0) {
+      for (var k = 0; k < params.length; k++) {
+        var row = document.createElement("div"); row.className = "proto-purpose-domain";
+        var name = document.createElement("span"); name.className = "proto-purpose-domain-name";
+        name.textContent = domains[i];
+        var paramSpan = document.createElement("span"); paramSpan.className = "proto-purpose-domain-count";
+        paramSpan.textContent = params[k];
+        row.appendChild(name); row.appendChild(paramSpan); body.appendChild(row);
+      }
+    } else {
+      var row = document.createElement("div"); row.className = "proto-purpose-domain";
+      var name = document.createElement("span"); name.className = "proto-purpose-domain-name";
+      name.textContent = domains[i];
+      var count = document.createElement("span"); count.className = "proto-purpose-domain-count";
+      count.textContent = typeof info === "object" ? info.count : info;
+      row.appendChild(name); row.appendChild(count); body.appendChild(row);
+    }
   }
   if (domains.length > 10) {
     var more = document.createElement("button"); more.type = "button"; more.className = "pc-bar-link proto-card-more";

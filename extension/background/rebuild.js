@@ -6,7 +6,7 @@
 // declarativeNetRequest rules (static rulesets, dynamic overrides,
 // whitelist, enhanced lists, GPC headers, Client Hints stripping).
 
-import { DEBUG_RULES, loadDebugFlag, getChStrippingEnabled, HIGH_ENTROPY_CH } from "./config-bridge.js";
+import { DEBUG_RULES, loadDebugFlag, initBrowser, getChStrippingEnabled, HIGH_ENTROPY_CH } from "./config-bridge.js";
 import {
   BASE_RULE_ID, DYNAMIC_RULE_RESERVE, BLOCK_RESOURCE_TYPES, GPC_RESOURCE_TYPES,
   PURPOSES_FOR_ENFORCEMENT, gpcPurposes,
@@ -14,6 +14,8 @@ import {
   setDynamicBlockRuleMap, setDynamicGpcSetIds, setDynamicChRuleIds,
   setDynamicWhitelistMap, setDynamicEnhancedMap, setDynamicParamStripIds,
   setEnhancedReverseIndex,
+  setPathAttributionIndex,
+  bundledPathAttribution,
   setGpcGlobalActive, setGpcAddDomains, setGpcRemoveDomains,
   setLastRebuildDebug, lastRebuildDebug,
   setLastConsentLinkedListIds, setLastCelPendingDownload,
@@ -31,7 +33,8 @@ import {
 } from "./storage.js";
 import {
   loadBlocklistsConfig, loadPresetsConfig, loadPurposesConfig,
-  loadEnhancedListsCatalog,
+  loadEnhancedListsCatalog, loadBundledPathAttribution,
+  parseUrlFilterForAttribution,
 } from "./config-loader.js";
 import { updateCmpInjectionData } from "./cmp-injection.js";
 import { updateHotfixListener } from "./tracking.js";
@@ -46,6 +49,7 @@ export async function rebuildAllDynamicRules() {
   setRebuildRunning(true);
 
   await loadDebugFlag();
+  await initBrowser();
 
   try {
     await _rebuildAllDynamicRulesImpl();
@@ -81,6 +85,7 @@ async function _rebuildAllDynamicRulesImpl() {
       getWhitelistFromStorage(),
       getEnhancedListsFromStorage(),
     ]);
+    await loadBundledPathAttribution();
     const enhancedData = await getAllEnhancedDataFromStorage(enhancedListsMeta);
 
     const gpcEnabled = await new Promise(resolve => {
@@ -317,6 +322,29 @@ async function _rebuildAllDynamicRulesImpl() {
       } else {
         setHotfixDomainSet(new Set());
       }
+      if (hotfixData?.pathRules?.length && can("enhancedDnr")) {
+        for (const pr of hotfixData.pathRules) {
+          if (!pr.urlFilter) continue;
+          const rId = nextRuleId++;
+          newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition: { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES } });
+        }
+        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix path block rules:", hotfixData.pathRules.length);
+      }
+      if (hotfixData?.pathExceptions?.length && can("enhancedDnr")) {
+        for (const pe of hotfixData.pathExceptions) {
+          if (!pe.urlFilter) continue;
+          const rId = nextRuleId++;
+          const condition = { urlFilter: pe.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
+          if (Array.isArray(pe.initiatorDomains) && pe.initiatorDomains.length > 0) {
+            condition.initiatorDomains = pe.initiatorDomains;
+          } else if (pe.firstParty) {
+            const hostMatch = pe.urlFilter.match(/^\|\|([a-z0-9][a-z0-9.-]*\.[a-z]{2,})\//i);
+            if (hostMatch) condition.initiatorDomains = [hostMatch[1]];
+          }
+          newRules.push({ id: rId, priority: 3, action: { type: "allow" }, condition });
+        }
+        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix path exception rules:", hotfixData.pathExceptions.length);
+      }
     } else {
       setHotfixDomainSet(new Set());
     }
@@ -385,6 +413,9 @@ async function _rebuildAllDynamicRulesImpl() {
 
     const enhancedExclude = permissiveSites.length > 0 ? permissiveSites : undefined;
 
+    const useDirectUrlFilter = (chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES || 5000) >= 10000;
+    const BUNDLED_PATH_LISTS = ["easyprivacy", "easylist"];
+
     if (can("enhancedDnr")) {
     for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
       if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
@@ -409,81 +440,101 @@ async function _rebuildAllDynamicRulesImpl() {
         });
       }
 
-      if (listData.pathRules?.length) {
-        const byDomain = new Map();
-        const ungroupable = [];
-        for (const pr of listData.pathRules) {
-          const m = pr.urlFilter.match(/^\|\|([^/]+)\/(.*)/);
-          if (m) {
-            if (!byDomain.has(m[1])) byDomain.set(m[1], []);
-            byDomain.get(m[1]).push(m[2]);
-          } else {
-            ungroupable.push(pr);
-          }
-        }
-
-        const REGEX_BYTE_LIMIT = 1400;
-        for (const [domain, paths] of byDomain) {
-          if (paths.length === 1) {
+      if (listData.pathRules?.length && !BUNDLED_PATH_LISTS.includes(listId)) {
+        if (useDirectUrlFilter) {
+          for (const pr of listData.pathRules) {
+            if (!pr.urlFilter) continue;
             const rId = nextRuleId++;
             newEnhancedMap[rId] = listId;
-            const condition = { urlFilter: `||${domain}/${paths[0]}`, resourceTypes: BLOCK_RESOURCE_TYPES };
+            const condition = { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
             if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
             newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-          } else {
-            const escaped = domain.replace(/\./g, "\\.");
-            const prefix = `^https?://(.*\\.)?${escaped}/(`;
-            let chunk = [];
-            let chunkLen = prefix.length + 1;
-            for (const p of paths) {
-              const ep = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-              const added = chunk.length === 0 ? ep.length : ep.length + 1;
-              if (chunkLen + added > REGEX_BYTE_LIMIT) {
-                if (chunk.length > 0) {
-                  const rId = nextRuleId++;
-                  newEnhancedMap[rId] = listId;
-                  const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
-                  if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-                  condition.regexFilter = prefix + chunk.join("|") + ")";
-                  condition.isUrlFilterCaseSensitive = false;
-                  newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-                  chunk = [];
-                  chunkLen = prefix.length + 1;
-                }
-                if (prefix.length + 1 + ep.length > REGEX_BYTE_LIMIT) {
-                  const rId = nextRuleId++;
-                  newEnhancedMap[rId] = listId;
-                  const condition = { urlFilter: `||${domain}/${p}`, resourceTypes: BLOCK_RESOURCE_TYPES };
-                  if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-                  newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-                  continue;
-                }
-              }
-              chunk.push(ep);
-              chunkLen += added;
-            }
-            if (chunk.length > 0) {
-              const rId = nextRuleId++;
-              newEnhancedMap[rId] = listId;
-              const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
-              if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-              condition.regexFilter = prefix + chunk.join("|") + ")";
-              condition.isUrlFilterCaseSensitive = false;
-              newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+          }
+        } else {
+          const byDomain = new Map();
+          const ungroupable = [];
+          for (const pr of listData.pathRules) {
+            const m = pr.urlFilter.match(/^\|\|([^/]+)\/(.*)/);
+            if (m) {
+              if (!byDomain.has(m[1])) byDomain.set(m[1], []);
+              byDomain.get(m[1]).push(m[2]);
+            } else {
+              ungroupable.push(pr);
             }
           }
-        }
 
-        for (const pr of ungroupable) {
-          const rId = nextRuleId++;
-          newEnhancedMap[rId] = listId;
-          const condition = { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
-          if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-          newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+          const REGEX_BYTE_LIMIT = 1800;
+          for (const [domain, paths] of byDomain) {
+            if (paths.length === 1) {
+              const rId = nextRuleId++;
+              newEnhancedMap[rId] = listId;
+              const condition = { urlFilter: `||${domain}/${paths[0]}`, resourceTypes: BLOCK_RESOURCE_TYPES };
+              if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+              newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+            } else {
+              const escaped = domain.replace(/\./g, "\\.");
+              const prefix = `^https?://(.*\\.)?${escaped}/(`;
+              let chunk = [];
+              let chunkLen = prefix.length + 1;
+              for (const p of paths) {
+                const ep = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                const added = chunk.length === 0 ? ep.length : ep.length + 1;
+                if (chunkLen + added > REGEX_BYTE_LIMIT) {
+                  if (chunk.length > 0) {
+                    const rId = nextRuleId++;
+                    newEnhancedMap[rId] = listId;
+                    const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
+                    if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+                    condition.regexFilter = prefix + chunk.join("|") + ")";
+                    condition.isUrlFilterCaseSensitive = false;
+                    newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+                    chunk = [];
+                    chunkLen = prefix.length + 1;
+                  }
+                  if (prefix.length + 1 + ep.length > REGEX_BYTE_LIMIT) {
+                    const rId = nextRuleId++;
+                    newEnhancedMap[rId] = listId;
+                    const condition = { urlFilter: `||${domain}/${p}`, resourceTypes: BLOCK_RESOURCE_TYPES };
+                    if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+                    newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+                    continue;
+                  }
+                }
+                chunk.push(ep);
+                chunkLen += added;
+              }
+              if (chunk.length > 0) {
+                const rId = nextRuleId++;
+                newEnhancedMap[rId] = listId;
+                const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
+                if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+                condition.regexFilter = prefix + chunk.join("|") + ")";
+                condition.isUrlFilterCaseSensitive = false;
+                newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+              }
+            }
+          }
+
+          for (const pr of ungroupable) {
+            const rId = nextRuleId++;
+            newEnhancedMap[rId] = listId;
+            const condition = { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
+            if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
+            newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
+          }
         }
       }
     }
     } // end can("enhancedDnr")
+
+    // Enable/disable bundled external path rulesets alongside their domain rules
+    for (const listId of BUNDLED_PATH_LISTS) {
+      const rulesetId = listId + "_paths";
+      const listMeta = enhancedListsMeta[listId];
+      const isEnabled = can("enhancedDnr") && (listMeta?.enabled || consentLinkedListIds.has(listId));
+      if (isEnabled) enableIds.push(rulesetId);
+      else disableIds.push(rulesetId);
+    }
 
     // 5b. URL tracking parameter stripping — dynamic rules from CDN data
     // When CDN data is available and enabled, build dynamic redirect rules
@@ -504,12 +555,12 @@ async function _rebuildAllDynamicRulesImpl() {
         paramStripRuleIds.add(ruleId);
         newRules.push({
           id: ruleId,
-          priority: 1,
+          priority: 2,
           action: {
             type: "redirect",
             redirect: { transform: { queryTransform: { removeParams: listData.params } } },
           },
-          condition: { resourceTypes: ["main_frame", "sub_frame"] },
+          condition: { urlFilter: "*", resourceTypes: ["main_frame", "sub_frame"] },
         });
       }
     }
@@ -540,6 +591,7 @@ async function _rebuildAllDynamicRulesImpl() {
               redirect: { transform: { queryTransform: { removeParams: g.params } } },
             },
             condition: {
+              urlFilter: "*",
               requestDomains: g.domains,
               resourceTypes: ["main_frame", "sub_frame"],
             },
@@ -549,18 +601,6 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     setDynamicParamStripIds(paramStripRuleIds);
-
-    // Disable static rulesets when CDN data replaces them
-    if (hasDynamicGlobalParams) {
-      disableIds.push("strip_tracking_params");
-      const idx = enableIds.indexOf("strip_tracking_params");
-      if (idx !== -1) enableIds.splice(idx, 1);
-    }
-    if (hasDynamicSiteParams) {
-      disableIds.push("strip_tracking_params_sites");
-      const idx = enableIds.indexOf("strip_tracking_params_sites");
-      if (idx !== -1) enableIds.splice(idx, 1);
-    }
 
     // Build enhanced reverse index for onErrorOccurred attribution (always, both modes)
     // Prefer lists with a category (purpose) over uncategorized ones.
@@ -584,6 +624,40 @@ async function _rebuildAllDynamicRulesImpl() {
       }
     }
     setEnhancedReverseIndex(newEnhancedReverseIndex);
+
+    // Build path attribution index for URL-level attribution of path blocks.
+    const newPathAttrIndex = new Map();
+    function addPathEntry(host, prefix, source) {
+      let arr = newPathAttrIndex.get(host);
+      if (!arr) { arr = []; newPathAttrIndex.set(host, arr); }
+      arr.push({ prefix, source });
+    }
+    for (const [listId, hostMap] of bundledPathAttribution) {
+      const lm = enhancedListsMeta[listId];
+      if (!(can("enhancedDnr") && (lm?.enabled || consentLinkedListIds.has(listId)))) continue;
+      for (const [host, entries] of hostMap) {
+        for (const e of entries) addPathEntry(host, e.prefix, e.source);
+      }
+    }
+    for (const [listId, listData] of Object.entries(enhancedData)) {
+      const lm = enhancedListsMeta[listId];
+      if (lm?.type) continue;
+      if (BUNDLED_PATH_LISTS.includes(listId)) continue;
+      if (!lm?.enabled && !consentLinkedListIds.has(listId)) continue;
+      if (listData.pathRules?.length) {
+        for (const pr of listData.pathRules) {
+          const p = parseUrlFilterForAttribution(pr.urlFilter);
+          if (p) addPathEntry(p.hostname, p.prefix, "enhanced:" + listId);
+        }
+      }
+    }
+    if (enhancedData["protoconsent_hotfix"]?.pathRules?.length) {
+      for (const pr of enhancedData["protoconsent_hotfix"].pathRules) {
+        const p = parseUrlFilterForAttribution(pr.urlFilter);
+        if (p) addPathEntry(p.hostname, p.prefix, "enhanced:protoconsent_hotfix");
+      }
+    }
+    setPathAttributionIndex(newPathAttrIndex);
 
     // 6. GPC header rules
     const globalNeedsGPC = gpcEnabled && gpcPurposes.some(p => !globalPurposes[p]);
@@ -748,6 +822,7 @@ async function _rebuildAllDynamicRulesImpl() {
         enhancedListIds: Object.entries(enhancedListsMeta)
           .filter(([, l]) => l.enabled).map(([id]) => id),
         enhancedRules: Object.keys(newEnhancedMap).length,
+        enhancedPathRules: newRules.filter(r => newEnhancedMap[r.id] && r.condition.urlFilter?.startsWith("||")).length,
         chStripping: globalDeniesAT ? "global" : (chAddSites.length > 0 ? "per-site" : "off"),
         chEnabled: chStrippingEnabled,
         chRules: newChRuleIds.size,
@@ -767,6 +842,9 @@ async function _rebuildAllDynamicRulesImpl() {
           .filter(([id, m]) => m.type === "cmp" && (m.enabled || consentLinkedListIds.has(id)))
           .map(([id]) => id),
         hotfixDomainCount,
+        hotfixPathCount: enhancedData["protoconsent_hotfix"]?.pathRules?.length || 0,
+        hotfixPathExceptionCount: enhancedData["protoconsent_hotfix"]?.pathExceptions?.length || 0,
+        pathAttrIndexSize: newPathAttrIndex.size,
         ts: Date.now(),
       });
     }
@@ -789,7 +867,7 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     const regexRules = newRules.filter(r => r.condition?.regexFilter);
-    if (regexRules.length) {
+    if (regexRules.length && chrome.declarativeNetRequest.isRegexSupported) {
       const checks = await Promise.all(regexRules.map(r =>
         chrome.declarativeNetRequest.isRegexSupported({ regex: r.condition.regexFilter, isCaseSensitive: r.condition.isUrlFilterCaseSensitive ?? true })
       ));

@@ -2,13 +2,13 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// webRequest listeners (onErrorOccurred, onSendHeaders) and
-// onRuleMatchedDebug for blocked-request counting, GPC signal
-// detection and real-time streaming to the popup Log tab.
+// webRequest listeners (onErrorOccurred, onSendHeaders, onCompleted)
+// for blocked-request counting, GPC signal detection, whitelist hits
+// and real-time streaming to the popup Log tab.
 
 import {
-  useDnrDebug,
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits,
+  tabPathDetails, PATH_DETAIL_CAP,
   dynamicBlockRuleMap, dynamicGpcSetIds, dynamicParamStripIds, dynamicEnhancedMap,
   dynamicWhitelistMap,
   gpcGlobalActive, gpcAddDomains, gpcRemoveDomains,
@@ -17,7 +17,8 @@ import {
   pathOnlyUrlFilters,
   hotfixDomainSet, tabHotfixHits,
 } from "./state.js";
-import { resolvePurposesFromHostname } from "./config-loader.js";
+import { getBrowser } from "./config-bridge.js";
+import { resolvePurposesFromHostname, resolvePurposesFromUrl } from "./config-loader.js";
 import { guessHeuristicPurpose } from "./heuristic.js";
 import { scheduleSessionPersist, updateBadgeForTab } from "./session.js";
 
@@ -51,79 +52,36 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => logPorts.delete(port));
 });
 
-if (useDnrDebug) {
-  chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((info) => {
-    const { rule, request } = info;
-    if (request.tabId < 0) return;
-
-    let purpose = null;
-
-    if (rule.rulesetId && rule.rulesetId.startsWith("protoconsent_")) {
-      purpose = rule.rulesetId.slice(13).replace(/_paths$/, "");
-    }
-    else if (rule.rulesetId === "_dynamic" && dynamicBlockRuleMap[rule.ruleId]) {
-      purpose = dynamicBlockRuleMap[rule.ruleId];
-    }
-    else if (rule.rulesetId === "_dynamic" && dynamicEnhancedMap[rule.ruleId]) {
-      purpose = "enhanced:" + dynamicEnhancedMap[rule.ruleId];
-    }
-
-    // Param strip detection (static rulesets or dynamic CDN rules)
-    if (rule.rulesetId === "strip_tracking_params" || rule.rulesetId === "strip_tracking_params_sites" ||
-        (rule.rulesetId === "_dynamic" && dynamicParamStripIds.has(rule.ruleId))) {
-      let domain;
-      try { domain = new URL(request.url).hostname; } catch (_) { return; }
-      if (!tabParamStrips.has(request.tabId)) tabParamStrips.set(request.tabId, {});
-      const stripData = tabParamStrips.get(request.tabId);
-      if (typeof stripData[domain] !== "object") stripData[domain] = { count: 0, params: [] };
-      stripData[domain].count++;
-      scheduleSessionPersist();
-      for (const port of logPorts) {
-        try { port.postMessage({ type: "param_strip", domain, tabId: request.tabId }); } catch (_) {}
-      }
-      return;
-    }
-
-    if (!purpose) {
-      if (rule.rulesetId === "_dynamic" && dynamicGpcSetIds.has(rule.ruleId)) {
-        let domain;
-        try { domain = new URL(request.url).hostname; } catch (_) { return; }
-        if (!tabGpcDomains.has(request.tabId)) tabGpcDomains.set(request.tabId, {});
-        const gpcData = tabGpcDomains.get(request.tabId);
-        const now = Date.now();
-        if (!gpcData[domain]) gpcData[domain] = { count: 0, firstSeen: now };
-        gpcData[domain].count++;
-        gpcData[domain].lastSeen = now;
-        scheduleSessionPersist();
-        for (const port of logPorts) {
-          try { port.postMessage({ type: "gpc", domain, tabId: request.tabId }); } catch (_) {}
-        }
-      }
-      return;
-    }
-
-    let domain;
-    try { domain = new URL(request.url).hostname; } catch (_) { return; }
-
-    if (!tabBlockedDomains.has(request.tabId)) {
-      tabBlockedDomains.set(request.tabId, {});
-    }
-    const tabData = tabBlockedDomains.get(request.tabId);
-    if (!tabData[purpose]) tabData[purpose] = {};
-    tabData[purpose][domain] = (tabData[purpose][domain] || 0) + 1;
-    incrementLifetimeBlocked(1);
-    scheduleSessionPersist();
-    updateBadgeForTab(request.tabId);
-
+function attributeBlock(tabId, hostname, url, purposes, metrics, isPathBlock) {
+  metrics.attributed++;
+  incrementLifetimeBlocked(1);
+  if (!tabBlockedDomains.has(tabId)) tabBlockedDomains.set(tabId, {});
+  const tabData = tabBlockedDomains.get(tabId);
+  for (const p of purposes) {
+    if (!tabData[p]) tabData[p] = {};
+    tabData[p][hostname] = (tabData[p][hostname] || 0) + 1;
+  }
+  if (isPathBlock) {
+    try {
+      const pathname = new URL(url).pathname;
+      if (!tabPathDetails.has(tabId)) tabPathDetails.set(tabId, new Map());
+      const hostPaths = tabPathDetails.get(tabId);
+      if (!hostPaths.has(hostname)) hostPaths.set(hostname, new Set());
+      const paths = hostPaths.get(hostname);
+      if (paths.size < PATH_DETAIL_CAP) paths.add(pathname);
+    } catch (_) {}
+  }
+  scheduleSessionPersist();
+  updateBadgeForTab(tabId);
+  for (const p of purposes) {
     for (const port of logPorts) {
-      try { port.postMessage({ type: "block", purpose, url: request.url, tabId: request.tabId }); } catch (_) {}
+      try { port.postMessage({ type: "block", purpose: p, url, tabId }); } catch (_) {}
     }
-  });
+  }
 }
 
-// Standard data source: webRequest.onErrorOccurred for extension-blocked requests.
-if (!useDnrDebug) {
-  const BLOCKED_ERRORS = new Set([
+// webRequest.onErrorOccurred for extension-blocked requests.
+const BLOCKED_ERRORS = new Set([
     "net::ERR_BLOCKED_BY_CLIENT",
     "NS_ERROR_ABORT",
     "NS_ERROR_BLOCKED_URI",
@@ -146,6 +104,12 @@ if (!useDnrDebug) {
 
       const purposes = resolvePurposesFromHostname(hostname);
       if (!purposes.length) {
+        // Try URL path-level attribution for enhanced path blocks
+        const urlPurposes = resolvePurposesFromUrl(details.url);
+        if (urlPurposes.length) {
+          attributeBlock(details.tabId, hostname, details.url, urlPurposes, metrics, true);
+          return;
+        }
         // Secondary check: does the URL match a path-only pattern? (e.g. ||matomo.js)
         let pathPurposes = null;
         if (pathOnlyUrlFilters.size > 0) {
@@ -164,49 +128,11 @@ if (!useDnrDebug) {
           return;
         }
         // Path-only match: attribute to the matched purpose(s)
-        metrics.attributed++;
-        incrementLifetimeBlocked(1);
-        if (!tabBlockedDomains.has(details.tabId)) {
-          tabBlockedDomains.set(details.tabId, {});
-        }
-        const tabData = tabBlockedDomains.get(details.tabId);
-        for (const p of pathPurposes) {
-          if (!tabData[p]) tabData[p] = {};
-          tabData[p][hostname] = (tabData[p][hostname] || 0) + 1;
-        }
-        scheduleSessionPersist();
-        updateBadgeForTab(details.tabId);
-        for (const p of pathPurposes) {
-          for (const port of logPorts) {
-            try {
-              port.postMessage({ type: "block", purpose: p, url: details.url, tabId: details.tabId });
-            } catch (_) {}
-          }
-        }
+        attributeBlock(details.tabId, hostname, details.url, pathPurposes, metrics, true);
         return;
       }
 
-      metrics.attributed++;
-      incrementLifetimeBlocked(1);
-
-      if (!tabBlockedDomains.has(details.tabId)) {
-        tabBlockedDomains.set(details.tabId, {});
-      }
-      const tabData = tabBlockedDomains.get(details.tabId);
-      for (const purpose of purposes) {
-        if (!tabData[purpose]) tabData[purpose] = {};
-        tabData[purpose][hostname] = (tabData[purpose][hostname] || 0) + 1;
-      }
-      scheduleSessionPersist();
-      updateBadgeForTab(details.tabId);
-
-      for (const purpose of purposes) {
-        for (const port of logPorts) {
-          try {
-            port.postMessage({ type: "block", purpose, url: details.url, tabId: details.tabId });
-          } catch (_) {}
-        }
-      }
+      attributeBlock(details.tabId, hostname, details.url, purposes, metrics);
     },
     { urls: ["<all_urls>"] }
   );
@@ -292,71 +218,131 @@ if (!useDnrDebug) {
   } catch (e) {
     console.warn("ProtoConsent: onCompleted listener not available:", e.message);
   }
-}
 
-// Param strip detection via webNavigation.
-// DNR redirect rules (queryTransform.removeParams) are invisible to webRequest
-// (Chrome processes DNR before webRequest). webNavigation operates at navigation
-// level: onBeforeNavigate has the original URL, onCommitted has the final URL
-// after DNR redirect. Comparing the two detects stripped params.
-const _pendingNavUrls = new Map(); // tabId -> original URL string
+// Param strip detection via webRequest.onBeforeRedirect.
+// DNR redirect rules (queryTransform.removeParams) trigger onBeforeRedirect
+// with both the original URL and the redirect target, allowing direct comparison.
+const _pendingNavUrls = new Map();
 export function clearPendingNavUrl(tabId) { _pendingNavUrls.delete(tabId); }
 
-chrome.webNavigation.onBeforeNavigate.addListener((details) => {
-  if (details.frameId !== 0) return; // main frame only
-  if (details.tabId < 0) return;
-  _pendingNavUrls.set(details.tabId, details.url);
-});
-
-chrome.webNavigation.onCommitted.addListener((details) => {
-  if (details.frameId !== 0) return;
-  if (details.tabId < 0) return;
-  const originalUrl = _pendingNavUrls.get(details.tabId);
-  _pendingNavUrls.delete(details.tabId);
-  if (!originalUrl) return;
-
-  // Server-side redirects also change the committed URL; skip those.
-  const qualifiers = details.transitionQualifiers || [];
-  if (qualifiers.includes("server_redirect")) return;
-
-  let orig, final;
+if (getBrowser() === "firefox") {
   try {
-    orig = new URL(originalUrl);
-    final = new URL(details.url);
-  } catch (_) { return; }
+    chrome.webRequest.onBeforeRedirect.addListener(
+      (details) => {
+        if (details.tabId < 0) return;
+        if (!details.redirectUrl) return;
+        if (details.statusCode >= 300 && details.statusCode < 400) return;
 
-  // Only param strips: same origin + path, different query
-  if (orig.origin !== final.origin) return;
-  if (orig.pathname !== final.pathname) return;
-  if (orig.search === final.search) return;
+        let orig, final;
+        try {
+          orig = new URL(details.url);
+          final = new URL(details.redirectUrl);
+        } catch (_) { return; }
 
-  // Find which params were removed
-  const finalKeys = new Set(final.searchParams.keys());
-  const removed = [];
-  for (const key of orig.searchParams.keys()) {
-    if (!finalKeys.has(key)) removed.push(key);
+        if (orig.origin !== final.origin) return;
+        if (orig.pathname !== final.pathname) return;
+        if (orig.search === final.search) return;
+
+        const finalKeys = new Set(final.searchParams.keys());
+        const removed = [];
+        for (const key of orig.searchParams.keys()) {
+          if (!finalKeys.has(key)) removed.push(key);
+        }
+        if (removed.length === 0) return;
+
+        const domain = orig.hostname;
+
+        if (!tabParamStrips.has(details.tabId)) tabParamStrips.set(details.tabId, {});
+        const stripData = tabParamStrips.get(details.tabId);
+        if (typeof stripData[domain] !== "object") stripData[domain] = { count: 0, params: [] };
+        stripData[domain].count += removed.length;
+        for (const p of removed) {
+          if (!stripData[domain].params.includes(p)) stripData[domain].params.push(p);
+        }
+        scheduleSessionPersist();
+
+        for (const port of logPorts) {
+          try {
+            port.postMessage({ type: "param_strip", domain, params: removed, tabId: details.tabId });
+          } catch (_) {}
+        }
+      },
+      { urls: ["<all_urls>"], types: ["main_frame", "sub_frame"] }
+    );
+  } catch (e) {
+    console.warn("ProtoConsent: onBeforeRedirect listener not available:", e.message);
   }
-  if (removed.length === 0) return;
+}
 
-  const domain = orig.hostname;
+// Chrome/Brave: onBeforeRedirect doesn't fire for DNR redirects.
+// Capture original URL via onBeforeRequest (fires before DNR), then compare
+// with committed URL in onCommitted to find stripped params.
+if (getBrowser() !== "firefox") {
+  try {
+    chrome.webRequest.onBeforeRequest.addListener(
+      (details) => {
+        if (details.tabId < 0) return;
+        if (details.type !== "main_frame") return;
+        if (!_pendingNavUrls.has(details.tabId)) {
+          _pendingNavUrls.set(details.tabId, details.url);
+        }
+      },
+      { urls: ["<all_urls>"] }
+    );
+  } catch (_) {}
 
-  if (!tabParamStrips.has(details.tabId)) tabParamStrips.set(details.tabId, {});
-  const stripData = tabParamStrips.get(details.tabId);
-  // Backward compat: old session data may have domain -> number
-  if (typeof stripData[domain] !== "object") stripData[domain] = { count: 0, params: [] };
-  // In debug mode onRuleMatchedDebug already incremented count; only add param names here
-  if (!useDnrDebug) stripData[domain].count++;
-  for (const p of removed) {
-    if (!stripData[domain].params.includes(p)) stripData[domain].params.push(p);
+  if (chrome.declarativeNetRequest?.getMatchedRules) {
+    chrome.webNavigation.onCommitted.addListener(async (details) => {
+      if (details.frameId !== 0) return;
+      if (details.tabId < 0) return;
+      const existing = tabParamStrips.get(details.tabId);
+      if (existing && Object.keys(existing).length > 0) {
+        _pendingNavUrls.delete(details.tabId);
+        return;
+      }
+
+      try {
+        const matched = await chrome.declarativeNetRequest.getMatchedRules({ tabId: details.tabId, minTimeStamp: Date.now() - 3000 });
+        if (!matched?.rulesMatchedInfo?.length) { _pendingNavUrls.delete(details.tabId); return; }
+
+        const stripIds = dynamicParamStripIds;
+        const found = matched.rulesMatchedInfo.some(info =>
+          info.rule.rulesetId === "strip_tracking_params" ||
+          info.rule.rulesetId === "strip_tracking_params_sites" ||
+          (info.rule.rulesetId === "_dynamic" && stripIds.has(info.rule.ruleId))
+        );
+        if (!found) { _pendingNavUrls.delete(details.tabId); return; }
+
+        let hostname;
+        try { hostname = new URL(details.url).hostname; } catch (_) { _pendingNavUrls.delete(details.tabId); return; }
+
+        let removed = [];
+        const origUrl = _pendingNavUrls.get(details.tabId);
+        _pendingNavUrls.delete(details.tabId);
+
+        if (origUrl) {
+          try {
+            const orig = new URL(origUrl);
+            const final = new URL(details.url);
+            if (orig.origin === final.origin && orig.pathname === final.pathname && orig.search !== final.search) {
+              const finalKeys = new Set(final.searchParams.keys());
+              for (const key of orig.searchParams.keys()) {
+                if (!finalKeys.has(key)) removed.push(key);
+              }
+            }
+          } catch (_) {}
+        }
+
+        if (!tabParamStrips.has(details.tabId)) tabParamStrips.set(details.tabId, {});
+        const stripData = tabParamStrips.get(details.tabId);
+        if (!stripData[hostname]) {
+          stripData[hostname] = { count: removed.length || 1, params: removed };
+          scheduleSessionPersist();
+        }
+      } catch (_) { _pendingNavUrls.delete(details.tabId); }
+    });
   }
-  scheduleSessionPersist();
-
-  for (const port of logPorts) {
-    try {
-      port.postMessage({ type: "param_strip", domain, params: removed, tabId: details.tabId });
-    } catch (_) {}
-  }
-});
+}
 
 // --- Hotfix domain tracking via onCompleted ---
 // Registered dynamically by rebuild.js when hotfix domains exist.

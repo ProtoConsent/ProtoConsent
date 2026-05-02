@@ -39,9 +39,9 @@ import {
   PURPOSES_FOR_ENFORCEMENT,
   operatingMode, setOperatingMode,
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits, tabTcfData, tabCosmeticData, tabCmpData,
-  tabCmpDetectData, tabGppData,
+  tabCmpDetectData, tabGppData, tabPathDetails,
   tabCoverageMetrics, unattributedBuffer, blockerDetection, tabHotfixHits, hotfixDomainSet,
-  pathOnlyUrlFilters,
+  pathOnlyUrlFilters, pathAttributionIndex,
   lastRebuildDebug, lastConsentLinkedListIds, lastCelPendingDownload,
   tabNavigating, logPorts, sessionRestoreReady,
   _catalogSource, _catalogLastFetched, _catalogError,
@@ -136,207 +136,90 @@ export function fetchEnhancedList(listId) {
 }
 
 // Store fetched list data by type. Returns a Promise<result>.
-function _storeEnhancedListData(listId, listDef, data) {
-  if (listDef.type === "informational") {
-    if (!data.map || typeof data.map !== "object" || !Array.isArray(data.trackers)) {
+function _isUnchanged(existing, data) {
+  if (!existing) return false;
+  const remote = data.generated || data.version;
+  const local = existing.generated || existing.version;
+  return remote && local && remote === local;
+}
+
+const _listTypeHandlers = {
+  informational(data) {
+    if (!data.map || typeof data.map !== "object" || !Array.isArray(data.trackers))
       throw new Error("Invalid informational list format: missing map or trackers");
-    }
     const domainCount = data.domain_count || Object.keys(data.map).length;
-    return withEnhancedStorageLock(() => {
-      return getEnhancedListsFromStorage().then(lists => {
-        const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
-          return { ok: true, skipped: true, domainCount: existing.domainCount };
-        }
-        return _resolveEnabled(existing, listDef).then(shouldEnable => {
-          lists[listId] = {
-            enabled: shouldEnable,
-            version: data.version || null,
-            lastFetched: Date.now(),
-            domainCount,
-            pathRuleCount: 0,
-            type: "informational",
-          };
-          return _writeStorage({
-            enhancedLists: lists,
-            ["enhancedData_" + listId]: { map: data.map, trackers: data.trackers },
-          }).then(err => err
-            ? { ok: false, error: err }
-            : { ok: true, domainCount });
-        });
-      });
-    });
-  }
-  if (listDef.type === "cosmetic") {
-    if (!Array.isArray(data.generic) || !data.domains || typeof data.domains !== "object") {
+    return {
+      counts: { domainCount, pathRuleCount: 0 },
+      payload: { map: data.map, trackers: data.trackers },
+    };
+  },
+
+  cosmetic(data) {
+    if (!Array.isArray(data.generic) || !data.domains || typeof data.domains !== "object")
       throw new Error("Invalid cosmetic list format: missing generic or domains");
-    }
     const genericCount = data.generic_count || data.generic.length;
     const domainCount = data.domain_count || Object.keys(data.domains).length;
     let domainRuleCount = data.domain_rule_count || 0;
     if (!domainRuleCount) {
       for (const sels of Object.values(data.domains)) domainRuleCount += sels.length;
     }
-    return withEnhancedStorageLock(() => {
-      return getEnhancedListsFromStorage().then(lists => {
-        const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
-          return { ok: true, skipped: true, genericCount: existing.genericCount, domainCount: existing.domainCount };
-        }
-        return _resolveEnabled(existing, listDef).then(shouldEnable => {
-          lists[listId] = {
-            enabled: shouldEnable,
-            version: data.version || null,
-            lastFetched: Date.now(),
-            genericCount,
-            domainCount,
-            domainRuleCount,
-            pathRuleCount: 0,
-            type: "cosmetic",
-          };
-          return _writeStorage({
-            enhancedLists: lists,
-            ["enhancedData_" + listId]: { generic: data.generic, domains: data.domains, exceptions: data.exceptions || {} },
-          }).then(err => {
-            if (err) return { ok: false, error: err };
-            rebuildAllDynamicRules();
-            return { ok: true, genericCount, domainCount, domainRuleCount };
-          });
-        });
-      });
-    });
-  }
-  if (listDef.type === "cmp") {
-    if (!data.signatures || typeof data.signatures !== "object") {
+    return {
+      counts: { genericCount, domainCount, domainRuleCount, pathRuleCount: 0 },
+      payload: { generic: data.generic, domains: data.domains, exceptions: data.exceptions || {} },
+      afterWrite: rebuildAllDynamicRules,
+    };
+  },
+
+  cmp(data) {
+    if (!data.signatures || typeof data.signatures !== "object")
       throw new Error("Invalid CMP list format: missing signatures");
-    }
     const cmpCount = data.cmp_count || Object.keys(data.signatures).length;
-    return withEnhancedStorageLock(() => {
-      return getEnhancedListsFromStorage().then(lists => {
-        const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
-          return { ok: true, skipped: true, cmpCount: existing.cmpCount };
-        }
-        return _resolveEnabled(existing, listDef).then(shouldEnable => {
-          lists[listId] = {
-            enabled: shouldEnable,
-            version: data.version || null,
-            lastFetched: Date.now(),
-            cmpCount,
-            type: "cmp",
-          };
-          return _writeStorage({
-            enhancedLists: lists,
-            ["enhancedData_" + listId]: { signatures: data.signatures },
-            _cmpSignatures: data.signatures,
-          }).then(err => {
-            if (err) return { ok: false, error: err };
-            invalidateCmpSignaturesCache();
-            return { ok: true, cmpCount };
-          });
-        });
-      });
-    });
-  }
-  if (listDef.type === "cmp_detectors") {
-    if (!data.detectors || typeof data.detectors !== "object") {
+    return {
+      counts: { cmpCount },
+      payload: { signatures: data.signatures },
+      extraKeys: { _cmpSignatures: data.signatures },
+      afterWrite: invalidateCmpSignaturesCache,
+    };
+  },
+
+  cmp_detectors(data) {
+    if (!data.detectors || typeof data.detectors !== "object")
       throw new Error("Invalid CMP detectors list format: missing detectors");
-    }
     const cmpCount = data.cmp_count || Object.keys(data.detectors).length;
-    return withEnhancedStorageLock(() => {
-      return getEnhancedListsFromStorage().then(lists => {
-        const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
-          return { ok: true, skipped: true, cmpCount: existing.cmpCount };
-        }
-        return _resolveEnabled(existing, listDef).then(shouldEnable => {
-          lists[listId] = {
-            enabled: shouldEnable,
-            version: data.version || null,
-            lastFetched: Date.now(),
-            cmpCount,
-            type: "cmp_detectors",
-          };
-          return _writeStorage({
-            enhancedLists: lists,
-            ["enhancedData_" + listId]: { detectors: data.detectors },
-            _cmpDetectors: data.detectors,
-          }).then(err => err
-            ? { ok: false, error: err }
-            : { ok: true, cmpCount });
-        });
-      });
-    });
-  }
-  if (listDef.type === "cmp_site") {
-    if (!data.signatures || typeof data.signatures !== "object") {
+    return {
+      counts: { cmpCount },
+      payload: { detectors: data.detectors },
+      extraKeys: { _cmpDetectors: data.detectors },
+    };
+  },
+
+  cmp_site(data) {
+    if (!data.signatures || typeof data.signatures !== "object")
       throw new Error("Invalid CMP site list format: missing signatures");
-    }
     const cmpCount = data.cmp_count || Object.keys(data.signatures).length;
-    return withEnhancedStorageLock(() => {
-      return getEnhancedListsFromStorage().then(lists => {
-        const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
-          return { ok: true, skipped: true, cmpCount: existing.cmpCount };
-        }
-        return _resolveEnabled(existing, listDef).then(shouldEnable => {
-          lists[listId] = {
-            enabled: shouldEnable,
-            version: data.version || null,
-            lastFetched: Date.now(),
-            cmpCount,
-            type: "cmp_site",
-          };
-          return _writeStorage({
-            enhancedLists: lists,
-            ["enhancedData_" + listId]: { signatures: data.signatures },
-            _cmpSiteSignatures: data.signatures,
-          }).then(err => err
-            ? { ok: false, error: err }
-            : { ok: true, cmpCount });
-        });
-      });
-    });
-  }
-  if (listDef.type === "tracking_params") {
-    if (!Array.isArray(data.params) || !data.params.length) {
+    return {
+      counts: { cmpCount },
+      payload: { signatures: data.signatures },
+      extraKeys: { _cmpSiteSignatures: data.signatures },
+    };
+  },
+
+  tracking_params(data) {
+    if (!Array.isArray(data.params) || !data.params.length)
       throw new Error("Invalid tracking_params format: missing or empty params array");
-    }
     const params = data.params.filter(p => typeof p === "string" && p.length > 0);
-    if (!params.length) {
+    if (!params.length)
       throw new Error("Invalid tracking_params format: no valid string params");
-    }
-    const paramCount = params.length;
-    return withEnhancedStorageLock(() => {
-      return getEnhancedListsFromStorage().then(lists => {
-        const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
-          return { ok: true, skipped: true, paramCount: existing.paramCount };
-        }
-        return _resolveEnabled(existing, listDef).then(shouldEnable => {
-          lists[listId] = {
-            enabled: shouldEnable,
-            version: data.version || null,
-            lastFetched: Date.now(),
-            paramCount,
-            type: "tracking_params",
-          };
-          return _writeStorage({
-            enhancedLists: lists,
-            ["enhancedData_" + listId]: { params },
-          }).then(err => {
-            if (err) return { ok: false, error: err };
-            rebuildAllDynamicRules();
-            return { ok: true, paramCount };
-          });
-        });
-      });
-    });
-  }
-  if (listDef.type === "tracking_params_sites") {
-    if (!data.sites || typeof data.sites !== "object" || Array.isArray(data.sites)) {
+    return {
+      counts: { paramCount: params.length },
+      payload: { params },
+      afterWrite: rebuildAllDynamicRules,
+    };
+  },
+
+  tracking_params_sites(data) {
+    if (!data.sites || typeof data.sites !== "object" || Array.isArray(data.sites))
       throw new Error("Invalid tracking_params_sites format: missing sites object");
-    }
     const cleanSites = {};
     for (const [domain, vals] of Object.entries(data.sites)) {
       if (typeof domain !== "string" || !domain) continue;
@@ -344,76 +227,54 @@ function _storeEnhancedListData(listId, listDef, data) {
       const cleaned = vals.filter(p => typeof p === "string" && p.length > 0);
       if (cleaned.length) cleanSites[domain] = cleaned;
     }
-    if (!Object.keys(cleanSites).length) {
+    if (!Object.keys(cleanSites).length)
       throw new Error("Invalid tracking_params_sites format: no valid site entries");
-    }
-    const paramCount = new Set(Object.values(cleanSites).flat()).size;
-    const domainCount = Object.keys(cleanSites).length;
-    return withEnhancedStorageLock(() => {
-      return getEnhancedListsFromStorage().then(lists => {
-        const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
-          return { ok: true, skipped: true, paramCount: existing.paramCount, domainCount: existing.domainCount };
-        }
-        return _resolveEnabled(existing, listDef).then(shouldEnable => {
-          lists[listId] = {
-            enabled: shouldEnable,
-            version: data.version || null,
-            lastFetched: Date.now(),
-            paramCount,
-            domainCount,
-            type: "tracking_params_sites",
-          };
-          return _writeStorage({
-            enhancedLists: lists,
-            ["enhancedData_" + listId]: { sites: cleanSites },
-          }).then(err => {
-            if (err) return { ok: false, error: err };
-            rebuildAllDynamicRules();
-            return { ok: true, paramCount, domainCount };
-          });
-        });
-      });
-    });
-  }
-  if (listDef.type === "revoke") {
-    if (!data.revocations || !Array.isArray(data.revocations)) {
+    return {
+      counts: { paramCount: new Set(Object.values(cleanSites).flat()).size, domainCount: Object.keys(cleanSites).length },
+      payload: { sites: cleanSites },
+      afterWrite: rebuildAllDynamicRules,
+    };
+  },
+
+  revoke(data) {
+    if (!data.revocations || !Array.isArray(data.revocations))
       throw new Error("Invalid revoke format: missing revocations array");
-    }
     const domains = data.revocations.filter(d => typeof d === "string" && d.length > 0);
-    if (!domains.length) {
+    if (!domains.length)
       throw new Error("Invalid revoke format: no valid domains");
+    const pathRules = [];
+    if (Array.isArray(data.path_additions)) {
+      for (const pa of data.path_additions) {
+        if (pa && typeof pa.urlFilter === "string" && pa.urlFilter.length > 0)
+          pathRules.push({ urlFilter: pa.urlFilter });
+      }
     }
-    return withEnhancedStorageLock(() => {
-      return getEnhancedListsFromStorage().then(lists => {
-        const existing = lists[listId];
-        if (existing && data.version && existing.version === data.version) {
-          return { ok: true, skipped: true, hotfixCount: existing.hotfixCount };
+    const pathExceptions = [];
+    if (Array.isArray(data.path_exceptions)) {
+      for (const pe of data.path_exceptions) {
+        if (pe && typeof pe.urlFilter === "string" && pe.urlFilter.length > 0) {
+          const entry = { urlFilter: pe.urlFilter };
+          if (Array.isArray(pe.initiatorDomains) && pe.initiatorDomains.length > 0)
+            entry.initiatorDomains = pe.initiatorDomains;
+          if (pe.firstParty) entry.firstParty = true;
+          pathExceptions.push(entry);
         }
-        return _resolveEnabled(existing, listDef).then(shouldEnable => {
-          lists[listId] = {
-            enabled: shouldEnable,
-            version: data.version || null,
-            lastFetched: Date.now(),
-            hotfixCount: domains.length,
-            type: "revoke",
-          };
-          return _writeStorage({
-            enhancedLists: lists,
-            ["enhancedData_" + listId]: { domains },
-          }).then(err => {
-            if (err) return { ok: false, error: err };
-            rebuildAllDynamicRules();
-            return { ok: true, hotfixCount: domains.length };
-          });
-        });
-      });
-    });
-  }
-  // Default: blocking list (domain rules + optional path rules)
-  if (!data.rules || !Array.isArray(data.rules)) {
+      }
+    }
+    const payload = { domains };
+    if (pathRules.length) payload.pathRules = pathRules;
+    if (pathExceptions.length) payload.pathExceptions = pathExceptions;
+    return {
+      counts: { hotfixCount: domains.length, pathRuleCount: pathRules.length, pathExceptionCount: pathExceptions.length },
+      payload,
+      afterWrite: rebuildAllDynamicRules,
+    };
+  },
+};
+
+function _handleDefaultBlocking(data) {
+  if (!data.rules || !Array.isArray(data.rules))
     throw new Error("Invalid list format: missing rules array");
-  }
   const domains = [];
   const pathRules = [];
   for (const rule of data.rules) {
@@ -424,41 +285,43 @@ function _storeEnhancedListData(listId, listDef, data) {
       pathRules.push({ urlFilter: rule.condition.urlFilter });
     }
   }
+  return {
+    counts: { domainCount: domains.length, pathRuleCount: pathRules.length },
+    payload: { domains, pathRules: pathRules.length > 0 ? pathRules : undefined },
+    afterWrite: rebuildAllDynamicRules,
+  };
+}
+
+function _storeEnhancedListData(listId, listDef, data) {
+  const handler = _listTypeHandlers[listDef.type] || _handleDefaultBlocking;
+  const { counts, payload, extraKeys, afterWrite } = handler(data);
+
   return withEnhancedStorageLock(() => {
-    return Promise.all([
-      getEnhancedListsFromStorage(),
-      getEnhancedPresetFromStorage(),
-    ]).then(([lists, preset]) => {
+    return getEnhancedListsFromStorage().then(lists => {
       const existing = lists[listId];
-      if (existing && data.version && existing.version === data.version) {
-        return { ok: true, skipped: true, domainCount: existing.domainCount, pathRuleCount: existing.pathRuleCount };
+      if (_isUnchanged(existing, data)) {
+        return { ok: true, skipped: true, ...counts };
       }
-      const existingEnabled = existing?.enabled;
-      let shouldEnable;
-      if (existingEnabled !== undefined) {
-        shouldEnable = existingEnabled;
-      } else {
-        shouldEnable = true;
-        if (preset === "off") shouldEnable = false;
-        else if (preset === "basic") shouldEnable = listDef.preset === "basic";
-      }
-      lists[listId] = {
-        enabled: shouldEnable,
-        version: data.version || null,
-        lastFetched: Date.now(),
-        domainCount: domains.length,
-        pathRuleCount: pathRules.length,
-      };
-      return _writeStorage({
-        enhancedLists: lists,
-        ["enhancedData_" + listId]: {
-          domains,
-          pathRules: pathRules.length > 0 ? pathRules : undefined,
-        },
-      }).then(err => {
-        if (err) return { ok: false, error: err };
-        rebuildAllDynamicRules();
-        return { ok: true, domainCount: domains.length, pathRuleCount: pathRules.length };
+      return _resolveEnabled(existing, listDef).then(shouldEnable => {
+        lists[listId] = {
+          enabled: shouldEnable,
+          version: data.version || null,
+          generated: data.generated || null,
+          lastFetched: Date.now(),
+          ...counts,
+        };
+        if (listDef.type) lists[listId].type = listDef.type;
+        if (listDef.category) lists[listId].category = listDef.category;
+        const storageUpdate = {
+          enhancedLists: lists,
+          ["enhancedData_" + listId]: payload,
+          ...extraKeys,
+        };
+        return _writeStorage(storageUpdate).then(err => {
+          if (err) return { ok: false, error: err };
+          if (afterWrite) afterWrite();
+          return { ok: true, ...counts };
+        });
       });
     });
   });
@@ -514,8 +377,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         if (pLen) purposePathCounts[key] = pLen;
       }
       const gpcDomains = tabGpcDomains.get(message.tabId);
+      const rawPaths = tabPathDetails.get(message.tabId);
+      const pathDetails = {};
+      if (rawPaths) {
+        for (const [host, paths] of rawPaths) pathDetails[host] = Array.from(paths);
+      }
       sendResponse({
         data: tabBlockedDomains.get(message.tabId) || {},
+        pathDetails,
         purposeDomainCounts,
         purposePathCounts,
         gpcDomains: gpcDomains ? Object.keys(gpcDomains) : [],
@@ -999,6 +868,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           liveCoverageEntries: tabCoverageMetrics.size,
           liveCoverageObserved: Array.from(tabCoverageMetrics.values()).reduce((s, m) => s + m.observed, 0),
           pathOnlyPatterns: pathOnlyUrlFilters.size,
+          pathAttrIndexSize: pathAttributionIndex.size,
         };
         sendResponse(debugData);
       }).catch(() => sendResponse(debugData));

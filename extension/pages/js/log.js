@@ -440,6 +440,10 @@ function renderLogDomains(initialVisible) {
     const tdDomain = document.createElement("td");
     tdDomain.className = "pc-log-table-domain";
     if (row.domain) {
+      const paths = (typeof lastPathDetails !== "undefined" && lastPathDetails[row.domain]) || null;
+      tdDomain.title = paths && paths.length
+        ? row.domain + "\n" + paths.join("\n")
+        : row.domain;
       if (cnameBeforeDomain) tdDomain.appendChild(cnameBeforeDomain);
       tdDomain.appendChild(document.createTextNode(row.domain));
     } else {
@@ -667,6 +671,7 @@ function renderLogGpc() {
     const tdDomain = document.createElement("td");
     tdDomain.className = "pc-log-table-domain";
     tdDomain.textContent = domain;
+    tdDomain.title = domain;
     const tdCount = document.createElement("td");
     tdCount.textContent = count;
     tdCount.className = "pc-log-table-count";

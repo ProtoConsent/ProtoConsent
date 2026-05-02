@@ -11,8 +11,21 @@
 // Deactivate:          chrome.storage.local.remove("debug")
 export let DEBUG_RULES = false;
 
-// Prefer onRuleMatchedDebug (declarativeNetRequest debug API) when available.
-export const USE_DNR_DEBUG = false;
+// Browser detection: single source of truth.
+// "firefox" | "brave" | "chrome" (default, includes Edge/Opera/etc.)
+let _browser = typeof browser !== "undefined" && !!browser.runtime?.getBrowserInfo
+  ? "firefox" : "chrome";
+
+export async function initBrowser() {
+  if (_browser !== "chrome") return;
+  try {
+    if (navigator.brave && typeof navigator.brave.isBrave === "function") {
+      if (await navigator.brave.isBrave()) _browser = "brave";
+    }
+  } catch (_) {}
+}
+
+export function getBrowser() { return _browser; }
 
 // Inter-extension protocol version (independent of extension version).
 export const INTEREXT_PROTOCOL_VERSION = "0.1";
