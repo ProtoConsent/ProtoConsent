@@ -305,7 +305,7 @@ function _renderProtoGrid(resp, wkData, tcfData) {
 
 // Count CNAME-cloaked domains
 function _countCname(blocked) {
-  if (!blocked || typeof lookupCname !== "function") return 0;
+  if (!blocked || !cnameMap) return 0;
   var count = 0;
   var purposes = Object.keys(blocked);
   for (var i = 0; i < purposes.length; i++) {
@@ -493,7 +493,7 @@ function _fillCosmeticBody(body, resp) {
 }
 
 function _fillTrackersBody(body, resp) {
-  if (typeof lookupCname !== "function") { body.textContent = "Enable CNAME list in Protection"; return; }
+  if (!cnameMap) { body.textContent = "Enable CNAME list in Protection"; return; }
   var blocked = resp.blocked || {};
   var found = [];
   var purposes = Object.keys(blocked);
