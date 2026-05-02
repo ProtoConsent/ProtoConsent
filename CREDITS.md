@@ -65,7 +65,7 @@ cards to indicate active language regions:
 
 | Source | Authors | License | Files |
 |--------|---------|---------|-------|
-| [Autoconsent](https://github.com/duckduckgo/autoconsent) | DuckDuckGo, Inc. | MPL-2.0 | `protoconsent_cmp_detectors.json`, `protoconsent_cmp_signatures_site.json`, `protoconsent_cmp_signatures.json` (prehide selectors) |
+| [Autoconsent](https://github.com/duckduckgo/autoconsent) | DuckDuckGo, Inc. | MPL-2.0 | `autoconsent_cmp_detectors.json`, `autoconsent_cmp_signatures_site.json`, `protoconsent_cmp_signatures.json` (prehide selectors) |
 
 CMP detection selectors (detectCmp/detectPopup) and site-specific hiding
 selectors used in the bundled files below are derived from Autoconsent.
@@ -74,11 +74,11 @@ data repo (https://github.com/ProtoConsent/data).
 
 Files containing Autoconsent-derived data:
 
-    extension/rules/protoconsent_cmp_detectors.json
+    extension/rules/autoconsent_cmp_detectors.json
       CMP detection selectors (285 CMPs). Extracted from Autoconsent's
       detectCmp and detectPopup arrays, filtered through cmp-safelist.json.
 
-    extension/rules/protoconsent_cmp_signatures_site.json
+    extension/rules/autoconsent_cmp_signatures_site.json
       Site-specific CMP hiding selectors. Extracted from Autoconsent's
       site-specific prehide rules.
 

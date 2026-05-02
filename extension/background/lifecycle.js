@@ -18,6 +18,7 @@ import { onNavigation, applyWarningBadgeForTab } from "./blocker-detection.js";
 import { clearPendingNavUrl } from "./tracking.js";
 import { DEBUG_RULES } from "./config-bridge.js";
 import { setupAlarms, refreshLists, checkOverdueRefresh } from "./auto-refresh.js";
+import { runMigrations } from "./lifecycle-migrations.js";
 
 // Clear per-tab tracking on navigation and tab close.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
@@ -127,16 +128,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   // On install: Chrome may preserve storage across reinstall if extension ID
   // is unchanged (unpacked load from same folder), so clear stale entries.
   if (details.reason === 'update' || details.reason === 'install') {
-    await new Promise(resolve => {
-      chrome.storage.local.remove([
-        "enhancedData_protoconsent_cmp_signatures",
-        "enhancedData_protoconsent_cmp_detectors",
-        "enhancedData_protoconsent_cmp_signatures_site",
-        "_cmpSignatures",
-        "_cmpDetectors",
-        "_cmpSiteSignatures",
-      ], resolve);
-    });
+    await runMigrations();
   }
 
   // Load bundled cosmetic data if not yet downloaded remotely
@@ -249,17 +241,17 @@ async function initBundledCmpData() {
 // If remote data has already been fetched, this is a no-op.
 async function initBundledCmpDetectors() {
   const result = await new Promise(resolve => {
-    chrome.storage.local.get(["enhancedData_protoconsent_cmp_detectors", "enhancedLists"], resolve);
+    chrome.storage.local.get(["enhancedData_autoconsent_cmp_detectors", "enhancedLists"], resolve);
   });
-  if (chrome.runtime.lastError || result.enhancedData_protoconsent_cmp_detectors) return;
+  if (chrome.runtime.lastError || result.enhancedData_autoconsent_cmp_detectors) return;
 
   try {
-    const res = await fetch(chrome.runtime.getURL("rules/protoconsent_cmp_detectors.json"));
+    const res = await fetch(chrome.runtime.getURL("rules/autoconsent_cmp_detectors.json"));
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     if (!data.detectors || typeof data.detectors !== "object") return;
     const lists = result.enhancedLists || {};
-    lists.protoconsent_cmp_detectors = {
+    lists.autoconsent_cmp_detectors = {
       enabled: true,
       version: data.version || "bundled",
       lastFetched: Date.now(),
@@ -270,7 +262,7 @@ async function initBundledCmpDetectors() {
     await new Promise(resolve => {
       chrome.storage.local.set({
         enhancedLists: lists,
-        enhancedData_protoconsent_cmp_detectors: { detectors: data.detectors },
+        enhancedData_autoconsent_cmp_detectors: { detectors: data.detectors },
         _cmpDetectors: data.detectors,
       }, resolve);
     });
@@ -283,17 +275,17 @@ async function initBundledCmpDetectors() {
 // If remote data has already been fetched, this is a no-op.
 async function initBundledCmpSiteSignatures() {
   const result = await new Promise(resolve => {
-    chrome.storage.local.get(["enhancedData_protoconsent_cmp_signatures_site", "enhancedLists"], resolve);
+    chrome.storage.local.get(["enhancedData_autoconsent_cmp_signatures_site", "enhancedLists"], resolve);
   });
-  if (chrome.runtime.lastError || result.enhancedData_protoconsent_cmp_signatures_site) return;
+  if (chrome.runtime.lastError || result.enhancedData_autoconsent_cmp_signatures_site) return;
 
   try {
-    const res = await fetch(chrome.runtime.getURL("rules/protoconsent_cmp_signatures_site.json"));
+    const res = await fetch(chrome.runtime.getURL("rules/autoconsent_cmp_signatures_site.json"));
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     if (!data.signatures || typeof data.signatures !== "object") return;
     const lists = result.enhancedLists || {};
-    lists.protoconsent_cmp_signatures_site = {
+    lists.autoconsent_cmp_signatures_site = {
       enabled: true,
       version: data.version || "bundled",
       lastFetched: Date.now(),
@@ -304,7 +296,7 @@ async function initBundledCmpSiteSignatures() {
     await new Promise(resolve => {
       chrome.storage.local.set({
         enhancedLists: lists,
-        enhancedData_protoconsent_cmp_signatures_site: { signatures: data.signatures },
+        enhancedData_autoconsent_cmp_signatures_site: { signatures: data.signatures },
         _cmpSiteSignatures: data.signatures,
       }, resolve);
     });

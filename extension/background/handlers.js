@@ -240,8 +240,6 @@ const _listTypeHandlers = {
     if (!data.revocations || !Array.isArray(data.revocations))
       throw new Error("Invalid revoke format: missing revocations array");
     const domains = data.revocations.filter(d => typeof d === "string" && d.length > 0);
-    if (!domains.length)
-      throw new Error("Invalid revoke format: no valid domains");
     const pathRules = [];
     if (Array.isArray(data.path_additions)) {
       for (const pa of data.path_additions) {
@@ -261,6 +259,8 @@ const _listTypeHandlers = {
         }
       }
     }
+    if (!domains.length && !pathRules.length && !pathExceptions.length)
+      return { counts: { hotfixCount: 0 }, payload: null };
     const payload = { domains };
     if (pathRules.length) payload.pathRules = pathRules;
     if (pathExceptions.length) payload.pathExceptions = pathExceptions;
@@ -295,6 +295,7 @@ function _handleDefaultBlocking(data) {
 function _storeEnhancedListData(listId, listDef, data) {
   const handler = _listTypeHandlers[listDef.type] || _handleDefaultBlocking;
   const { counts, payload, extraKeys, afterWrite } = handler(data);
+  if (!payload) return Promise.resolve({ ok: true, skipped: true, ...counts });
 
   return withEnhancedStorageLock(() => {
     return getEnhancedListsFromStorage().then(lists => {

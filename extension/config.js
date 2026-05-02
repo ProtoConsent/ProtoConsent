@@ -53,11 +53,9 @@ const CORE_IDS = new Set([
   "protoconsent_advanced_tracking",
 ]);
 
-// CMP = the 3 banner-related lists shown as one "ProtoConsent Banners" card.
+// CMP = our hand-maintained cookie-injection list, shown as "ProtoConsent Banners" card.
 const CMP_IDS = new Set([
   "protoconsent_cmp_signatures",
-  "protoconsent_cmp_detectors",
-  "protoconsent_cmp_signatures_site",
 ]);
 
 // Regional = the 2 aggregated regional lists shown as individual Enhanced cards.

@@ -263,7 +263,7 @@
     },
     "protoconsent_cmp_signatures": {
       "name": "ProtoConsent Banners",
-      "description": "CMP auto-response templates - cookie injection, cosmetic hiding, scroll unlock",
+      "description": "CMP auto-response templates - cookie injection",
       "source": "https://github.com/ProtoConsent/data",
       "license": "GPL-3.0-or-later",
       "category": null,
@@ -277,14 +277,14 @@
       "path_rule_count": 0,
       "cmp_count": 31
     },
-    "protoconsent_cmp_detectors": {
-      "name": "ProtoConsent CMP Detectors",
-      "description": "CSS detection selectors for CMP presence and visibility",
-      "source": "https://github.com/ProtoConsent/data",
-      "license": "GPL-3.0-or-later",
+    "autoconsent_cmp_detectors": {
+      "name": "Autoconsent CMP Detectors",
+      "description": "CSS detection selectors for CMP presence and visibility (from DuckDuckGo Autoconsent)",
+      "source": "https://github.com/duckduckgo/autoconsent",
+      "license": "MPL-2.0",
       "category": null,
       "preset": "basic",
-      "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent/protoconsent_cmp_detectors.json",
+      "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/external/autoconsent_cmp_detectors.json",
       "type": "cmp_detectors",
       "order": 11,
       "version": "2026-04-21",
@@ -293,14 +293,14 @@
       "path_rule_count": 0,
       "cmp_count": 288
     },
-    "protoconsent_cmp_signatures_site": {
-      "name": "ProtoConsent Site Banners",
-      "description": "Site-specific CMP hiding selectors with detection",
-      "source": "https://github.com/ProtoConsent/data",
-      "license": "GPL-3.0-or-later",
+    "autoconsent_cmp_signatures_site": {
+      "name": "Autoconsent Site Banners",
+      "description": "Site-specific CMP hiding selectors with detection (from DuckDuckGo Autoconsent)",
+      "source": "https://github.com/duckduckgo/autoconsent",
+      "license": "MPL-2.0",
       "category": null,
       "preset": "basic",
-      "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/protoconsent/protoconsent_cmp_signatures_site.json",
+      "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/external/autoconsent_cmp_signatures_site.json",
       "type": "cmp_site",
       "order": 12,
       "version": "2026-04-21",

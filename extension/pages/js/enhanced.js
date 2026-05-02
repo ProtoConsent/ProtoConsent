@@ -471,7 +471,7 @@ function renderEnhancedLists() {
     if (listDef.type === "revoke") continue;
     if (listDef.type === "cosmetic" || listDef.type === "regional_cosmetic") {
       cosmeticLists.push(listId);
-    } else if (listDef.type === "cmp") {
+    } else if (listDef.type === "cmp" || listDef.type === "cmp_detectors" || listDef.type === "cmp_site") {
       bannerLists.push(listId);
     } else if (listDef.type === "informational" || listDef.type === "tracking_params" || listDef.type === "tracking_params_sites") {
       detectionLists.push(listId);
@@ -807,7 +807,7 @@ function _renderEpListCard(listId) {
     pill.setAttribute("aria-label", "Cosmetic filtering");
     pill.textContent = "\u25D0 Cosmetic";
     header.appendChild(pill);
-  } else if (listDef.type === "cmp") {
+  } else if (listDef.type === "cmp" || listDef.type === "cmp_detectors" || listDef.type === "cmp_site") {
     const pill = document.createElement("span");
     pill.className = "ep-category-pill ep-cmp-pill";
     pill.title = "CMP auto-response - handles cookie consent banners";
@@ -921,7 +921,7 @@ function _renderEpListCard(listId) {
     } else if (listData.type === "cosmetic") {
       if (listData.genericCount) parts.push(listData.genericCount.toLocaleString() + " generic rules");
       if (listData.domainRuleCount) parts.push(listData.domainRuleCount.toLocaleString() + " site rules");
-    } else if (listData.type === "cmp") {
+    } else if (listData.type === "cmp" || listData.type === "cmp_detectors" || listData.type === "cmp_site") {
       if (listData.cmpCount) parts.push(listData.cmpCount.toLocaleString() + " banner templates");
     } else if (listData.type === "tracking_params") {
       if (listData.paramCount) parts.push(listData.paramCount.toLocaleString() + " global params");
