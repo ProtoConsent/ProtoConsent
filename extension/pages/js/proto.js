@@ -493,7 +493,25 @@ function _fillCosmeticBody(body, resp) {
 }
 
 function _fillTrackersBody(body, resp) {
-  if (!cnameMap) { body.textContent = "Enable CNAME list in Protection"; return; }
+  if (!cnameMap) {
+    var link = document.createElement("a");
+    link.href = "#";
+    link.textContent = "Enable CNAME list in Protection \u203A Detection";
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (typeof setActiveMode === "function") setActiveMode("enhanced");
+      if (typeof initEnhancedTab === "function") initEnhancedTab();
+      setTimeout(function () {
+        var card = document.getElementById("ep-card-detection");
+        if (card && !card.classList.contains("is-expanded")) {
+          var toggle = card.querySelector(".pc-grid-card-toggle");
+          if (toggle) toggle.click();
+        }
+      }, 100);
+    });
+    body.appendChild(link);
+    return;
+  }
   var blocked = resp.blocked || {};
   var found = [];
   var purposes = Object.keys(blocked);
