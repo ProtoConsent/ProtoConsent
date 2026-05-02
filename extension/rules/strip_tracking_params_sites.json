@@ -3043,6 +3043,35 @@
         "transform": {
           "queryTransform": {
             "removeParams": [
+              "recruited_by_id",
+              "recruiter",
+              "share_id",
+              "source_location",
+              "user_flow"
+            ]
+          }
+        }
+      }
+    },
+    "condition": {
+      "requestDomains": [
+        "change.org"
+      ],
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame"
+      ]
+    }
+  },
+  {
+    "id": 87,
+    "priority": 2,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "removeParams": [
               "actBtn",
               "nid",
               "pd",
@@ -3064,7 +3093,7 @@
     }
   },
   {
-    "id": 87,
+    "id": 88,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3093,7 +3122,7 @@
     }
   },
   {
-    "id": 88,
+    "id": 89,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3122,7 +3151,7 @@
     }
   },
   {
-    "id": 89,
+    "id": 90,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3151,7 +3180,7 @@
     }
   },
   {
-    "id": 90,
+    "id": 91,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3180,7 +3209,7 @@
     }
   },
   {
-    "id": 91,
+    "id": 92,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3209,7 +3238,7 @@
     }
   },
   {
-    "id": 92,
+    "id": 93,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3238,7 +3267,7 @@
     }
   },
   {
-    "id": 93,
+    "id": 94,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3267,7 +3296,7 @@
     }
   },
   {
-    "id": 94,
+    "id": 95,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3296,7 +3325,7 @@
     }
   },
   {
-    "id": 95,
+    "id": 96,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3325,7 +3354,7 @@
     }
   },
   {
-    "id": 96,
+    "id": 97,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3354,7 +3383,7 @@
     }
   },
   {
-    "id": 97,
+    "id": 98,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3383,7 +3412,7 @@
     }
   },
   {
-    "id": 98,
+    "id": 99,
     "priority": 2,
     "action": {
       "type": "redirect",
@@ -3404,35 +3433,6 @@
     "condition": {
       "requestDomains": [
         "etsy.com"
-      ],
-      "resourceTypes": [
-        "main_frame",
-        "sub_frame"
-      ]
-    }
-  },
-  {
-    "id": 99,
-    "priority": 2,
-    "action": {
-      "type": "redirect",
-      "redirect": {
-        "transform": {
-          "queryTransform": {
-            "removeParams": [
-              "amp%3Btoken",
-              "amp%3Btrk",
-              "amp%3Butm_campaign",
-              "amp%3Butm_medium",
-              "amp%3Butm_source"
-            ]
-          }
-        }
-      }
-    },
-    "condition": {
-      "requestDomains": [
-        "wetransfer.zendesk.com"
       ],
       "resourceTypes": [
         "main_frame",
