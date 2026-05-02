@@ -218,43 +218,77 @@ const BLOCKED_ERRORS = new Set([
     console.warn("ProtoConsent: onCompleted listener not available:", e.message);
   }
 
-// Param strip detection via webNavigation.
-// DNR redirect rules (queryTransform.removeParams) are invisible to webRequest
-// (Chrome processes DNR before webRequest). webNavigation operates at navigation
-// level: onBeforeNavigate has the original URL, onCommitted has the final URL
-// after DNR redirect. Comparing the two detects stripped params.
-const _pendingNavUrls = new Map(); // tabId -> original URL string
-export function clearPendingNavUrl(tabId) { _pendingNavUrls.delete(tabId); }
+// Param strip detection via webRequest.onBeforeRedirect.
+// DNR redirect rules (queryTransform.removeParams) trigger onBeforeRedirect
+// with both the original URL and the redirect target, allowing direct comparison.
+export function clearPendingNavUrl(tabId) { /* no-op, kept for lifecycle.js compat */ }
 
-chrome.webNavigation.onBeforeNavigate.addListener((details) => {
-  if (details.frameId !== 0) return; // main frame only
-  if (details.tabId < 0) return;
-  _pendingNavUrls.set(details.tabId, details.url);
-});
+try {
+  chrome.webRequest.onBeforeRedirect.addListener(
+    (details) => {
+      if (details.tabId < 0) return;
+      if (!details.redirectUrl) return;
 
-chrome.webNavigation.onCommitted.addListener((details) => {
-  if (details.frameId !== 0) return;
-  if (details.tabId < 0) return;
-  const originalUrl = _pendingNavUrls.get(details.tabId);
-  _pendingNavUrls.delete(details.tabId);
-  if (!originalUrl) return;
+      let orig, final;
+      try {
+        orig = new URL(details.url);
+        final = new URL(details.redirectUrl);
+      } catch (_) { return; }
 
-  // Server-side redirects also change the committed URL; skip those.
-  const qualifiers = details.transitionQualifiers || [];
-  if (qualifiers.includes("server_redirect")) return;
+      if (orig.origin !== final.origin) return;
+      if (orig.pathname !== final.pathname) return;
+      if (orig.search === final.search) return;
+
+      const finalKeys = new Set(final.searchParams.keys());
+      const removed = [];
+      for (const key of orig.searchParams.keys()) {
+        if (!finalKeys.has(key)) removed.push(key);
+      }
+      if (removed.length === 0) return;
+
+      const domain = orig.hostname;
+
+      if (!tabParamStrips.has(details.tabId)) tabParamStrips.set(details.tabId, {});
+      const stripData = tabParamStrips.get(details.tabId);
+      if (typeof stripData[domain] !== "object") stripData[domain] = { count: 0, params: [] };
+      stripData[domain].count += removed.length;
+      for (const p of removed) {
+        if (!stripData[domain].params.includes(p)) stripData[domain].params.push(p);
+      }
+      scheduleSessionPersist();
+
+      for (const port of logPorts) {
+        try {
+          port.postMessage({ type: "param_strip", domain, params: removed, tabId: details.tabId });
+        } catch (_) {}
+      }
+    },
+    { urls: ["<all_urls>"], types: ["main_frame", "sub_frame"] }
+  );
+} catch (e) {
+  console.warn("ProtoConsent: onBeforeRedirect listener not available:", e.message);
+}
+
+// Fallback: tabs.onUpdated may fire with the original URL before DNR redirect,
+// then again with the stripped URL. Track consecutive URL changes per tab.
+const _tabUrlBefore = new Map();
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (!changeInfo.url) return;
+  const prev = _tabUrlBefore.get(tabId);
+  _tabUrlBefore.set(tabId, changeInfo.url);
+  if (!prev) return;
 
   let orig, final;
   try {
-    orig = new URL(originalUrl);
-    final = new URL(details.url);
+    orig = new URL(prev);
+    final = new URL(changeInfo.url);
   } catch (_) { return; }
 
-  // Only param strips: same origin + path, different query
   if (orig.origin !== final.origin) return;
   if (orig.pathname !== final.pathname) return;
   if (orig.search === final.search) return;
 
-  // Find which params were removed
   const finalKeys = new Set(final.searchParams.keys());
   const removed = [];
   for (const key of orig.searchParams.keys()) {
@@ -264,11 +298,10 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 
   const domain = orig.hostname;
 
-  if (!tabParamStrips.has(details.tabId)) tabParamStrips.set(details.tabId, {});
-  const stripData = tabParamStrips.get(details.tabId);
-  // Backward compat: old session data may have domain -> number
+  if (!tabParamStrips.has(tabId)) tabParamStrips.set(tabId, {});
+  const stripData = tabParamStrips.get(tabId);
   if (typeof stripData[domain] !== "object") stripData[domain] = { count: 0, params: [] };
-  stripData[domain].count++;
+  stripData[domain].count += removed.length;
   for (const p of removed) {
     if (!stripData[domain].params.includes(p)) stripData[domain].params.push(p);
   }
@@ -276,10 +309,45 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 
   for (const port of logPorts) {
     try {
-      port.postMessage({ type: "param_strip", domain, params: removed, tabId: details.tabId });
+      port.postMessage({ type: "param_strip", domain, params: removed, tabId });
     } catch (_) {}
   }
 });
+
+// Fallback for Chrome: onBeforeRedirect and tabs.onUpdated don't expose original
+// URL for DNR redirects. Use getMatchedRules to detect that stripping occurred,
+// then populate tabParamStrips with domain + count (no param names available).
+if (chrome.declarativeNetRequest?.getMatchedRules) {
+  chrome.webNavigation.onCommitted.addListener(async (details) => {
+    if (details.frameId !== 0) return;
+    if (details.tabId < 0) return;
+    const existing = tabParamStrips.get(details.tabId);
+    if (existing && Object.keys(existing).length > 0) return;
+
+    try {
+      const matched = await chrome.declarativeNetRequest.getMatchedRules({ tabId: details.tabId, minTimeStamp: Date.now() - 3000 });
+      if (!matched?.rulesMatchedInfo?.length) return;
+
+      const stripIds = dynamicParamStripIds;
+      const found = matched.rulesMatchedInfo.some(info =>
+        info.rule.rulesetId === "strip_tracking_params" ||
+        info.rule.rulesetId === "strip_tracking_params_sites" ||
+        (info.rule.rulesetId === "_dynamic" && stripIds.has(info.rule.ruleId))
+      );
+      if (!found) return;
+
+      let hostname;
+      try { hostname = new URL(details.url).hostname; } catch (_) { return; }
+
+      if (!tabParamStrips.has(details.tabId)) tabParamStrips.set(details.tabId, {});
+      const stripData = tabParamStrips.get(details.tabId);
+      if (!stripData[hostname]) {
+        stripData[hostname] = { count: 1, params: [] };
+        scheduleSessionPersist();
+      }
+    } catch (_) {}
+  });
+}
 
 // --- Hotfix domain tracking via onCompleted ---
 // Registered dynamically by rebuild.js when hotfix domains exist.

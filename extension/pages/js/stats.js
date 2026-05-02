@@ -197,6 +197,10 @@ async function getBlockedRulesCount() {
       if (webRequestTotal > blocked) blocked = webRequestTotal;
     }
 
+    const psData = domainsResp?.paramStrips || {};
+    const psFromNav = Object.values(psData).reduce((s, d) => s + (d && typeof d === "object" ? d.count : (d || 0)), 0);
+    if (psFromNav > paramStrips) paramStrips = psFromNav;
+
     const wlHitDomains = domainsResp?.whitelistHitDomains || {};
     const wlHits = Object.values(wlHitDomains).reduce((s, c) => s + c, 0);
 
@@ -284,6 +288,7 @@ async function displayBlockedCount() {
     lastLifetimeBlocked = lifetimeBlocked || 0;
     lastGpcSignalsSent = gpc;
     lastChStripped = ch;
+    lastParamStrips = paramStrips;
     lastGpcDomains = gpcDomains;
     lastGpcDomainCounts = gpcDomainCounts;
     lastWhitelistHitDomains = whitelistHitDomains || {};

@@ -555,12 +555,12 @@ async function _rebuildAllDynamicRulesImpl() {
         paramStripRuleIds.add(ruleId);
         newRules.push({
           id: ruleId,
-          priority: 1,
+          priority: 2,
           action: {
             type: "redirect",
             redirect: { transform: { queryTransform: { removeParams: listData.params } } },
           },
-          condition: { resourceTypes: ["main_frame", "sub_frame"] },
+          condition: { urlFilter: "*", resourceTypes: ["main_frame", "sub_frame"] },
         });
       }
     }
@@ -591,6 +591,7 @@ async function _rebuildAllDynamicRulesImpl() {
               redirect: { transform: { queryTransform: { removeParams: g.params } } },
             },
             condition: {
+              urlFilter: "*",
               requestDomains: g.domains,
               resourceTypes: ["main_frame", "sub_frame"],
             },
@@ -600,18 +601,6 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     setDynamicParamStripIds(paramStripRuleIds);
-
-    // Disable static rulesets when CDN data replaces them
-    if (hasDynamicGlobalParams) {
-      disableIds.push("strip_tracking_params");
-      const idx = enableIds.indexOf("strip_tracking_params");
-      if (idx !== -1) enableIds.splice(idx, 1);
-    }
-    if (hasDynamicSiteParams) {
-      disableIds.push("strip_tracking_params_sites");
-      const idx = enableIds.indexOf("strip_tracking_params_sites");
-      if (idx !== -1) enableIds.splice(idx, 1);
-    }
 
     // Build enhanced reverse index for onErrorOccurred attribution (always, both modes)
     // Prefer lists with a category (purpose) over uncategorized ones.

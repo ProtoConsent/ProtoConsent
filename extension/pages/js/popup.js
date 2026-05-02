@@ -28,6 +28,7 @@ let currentPurposesState = {};
 let allRules = {};
 let lastGpcSignalsSent = 0;
 let lastChStripped = 0;
+let lastParamStrips = 0;
 
 let lastGpcDomains = [];
 let lastGpcDomainCounts = {};
