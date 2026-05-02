@@ -14,7 +14,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
   - [5. Enhanced protection lists](#5-enhanced-protection-lists)
     - [Presets](#presets)
     - [Balanced preset lists](#balanced-preset-lists)
-    - [Full preset (adds 4 lists)](#full-preset-adds-4-lists)
+    - [Full preset (adds 8 lists)](#full-preset-adds-8-lists)
   - [6. Distribution and updates](#6-distribution-and-updates)
     - [Automated refresh](#automated-refresh)
     - [Format conversion](#format-conversion)
@@ -194,12 +194,12 @@ The signature list is bundled for first-install availability and updated via CDN
 | --- | --- | --- | --- |
 | [ProtoConsent Banners](https://github.com/ProtoConsent/data) | GPL-3.0+ | 31 | Global (most), domain-scoped (some) |
 
-**CMP detection lists** complement signatures by identifying banners on pages:
+**CMP detection lists** are shown as independent cards in the Banners section:
 
 | List | Source | License | Entries |
 | --- | --- | --- | --- |
-| `protoconsent_cmp_detectors.json` | [Autoconsent](https://github.com/duckduckgo/autoconsent) | MPL-2.0 | ~284 CMPs |
-| `protoconsent_cmp_signatures_site.json` | [Autoconsent](https://github.com/duckduckgo/autoconsent) | MPL-2.0 | ~235 entries |
+| Autoconsent CMP Detectors | [Autoconsent](https://github.com/duckduckgo/autoconsent) | MPL-2.0 | ~287 CMPs |
+| Autoconsent Site Banners | [Autoconsent](https://github.com/duckduckgo/autoconsent) | MPL-2.0 | ~233 entries |
 
 Detectors contain CSS selectors for banner presence/visibility. Site-specific signatures contain hiding selectors scoped to specific domains. Both are filtered through a safelist and bundled with CDN updates.
 

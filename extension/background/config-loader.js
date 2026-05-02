@@ -32,6 +32,7 @@ import {
   bundledPathAttribution, setBundledPathAttribution,
   regionalLanguagesConfig, setRegionalLanguagesConfig,
 } from "./state.js";
+import { DEPRECATED_LIST_IDS } from "./lifecycle-migrations.js";
 
 // Load domain and path-domain lists from static rulesets.
 // Subsequent calls return the cached in-memory version.
@@ -353,6 +354,7 @@ export function loadEnhancedListsCatalog(options) {
       merged[id] = local[id];
     }
     for (const id of Object.keys(remote)) {
+      if (DEPRECATED_LIST_IDS.has(id)) continue;
       if (merged[id]) {
         const entry = Object.create(null);
         Object.assign(entry, merged[id], remote[id]);

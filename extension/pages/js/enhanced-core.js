@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // ProtoConsent grouped card helpers: renders the 5 Core blocking sub-lists
-// as "ProtoConsent Core" and the 3 CMP sub-lists as "ProtoConsent Banners".
+// as "ProtoConsent Core" and the CMP signature list as "ProtoConsent Banners".
 // Loaded after config.js (which defines CORE_IDS and CMP_IDS) and before
 // enhanced.js - shares globals: epCatalog, epLists, epConsentLinkedIds,
 // ENHANCED_ICON, _epFocusListId, refreshEnhancedState,
@@ -347,7 +347,7 @@ function renderCmpCard(cmpIds) {
 
   const desc = document.createElement("span");
   desc.className = "ep-list-desc";
-  desc.textContent = "CMP auto-response, detection and site-specific banner hiding";
+  desc.textContent = "CMP auto-response - cookie injection, cosmetic hiding, scroll unlock";
   info.appendChild(desc);
 
   if (anyDownloaded) {
