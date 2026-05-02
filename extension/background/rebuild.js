@@ -12,7 +12,7 @@ import {
   PURPOSES_FOR_ENFORCEMENT, gpcPurposes,
   setEnabledBlockRulesets,
   setDynamicBlockRuleMap, setDynamicGpcSetIds, setDynamicChRuleIds,
-  setDynamicWhitelistMap, setDynamicEnhancedMap, setDynamicParamStripIds, setDynamicParamStripMap,
+  setDynamicWhitelistMap, setDynamicEnhancedMap, setDynamicParamStripIds,
   setEnhancedReverseIndex,
   setPathAttributionIndex,
   bundledPathAttribution,
@@ -542,7 +542,6 @@ async function _rebuildAllDynamicRulesImpl() {
     let hasDynamicGlobalParams = false;
     let hasDynamicSiteParams = false;
     const paramStripRuleIds = new Set();
-    const paramStripRuleMap = new Map();
 
     if (paramStrippingEnabled) {
       // Global params from CDN
@@ -554,7 +553,6 @@ async function _rebuildAllDynamicRulesImpl() {
         hasDynamicGlobalParams = true;
         const ruleId = nextRuleId++;
         paramStripRuleIds.add(ruleId);
-        paramStripRuleMap.set(ruleId, listData.params);
         newRules.push({
           id: ruleId,
           priority: 2,
@@ -585,7 +583,6 @@ async function _rebuildAllDynamicRulesImpl() {
         for (const g of groups.values()) {
           const ruleId = nextRuleId++;
           paramStripRuleIds.add(ruleId);
-          paramStripRuleMap.set(ruleId, g.params);
           newRules.push({
             id: ruleId,
             priority: 2,
@@ -604,7 +601,6 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     setDynamicParamStripIds(paramStripRuleIds);
-    setDynamicParamStripMap(paramStripRuleMap);
 
     // Build enhanced reverse index for onErrorOccurred attribution (always, both modes)
     // Prefer lists with a category (purpose) over uncategorized ones.

@@ -76,10 +76,6 @@ export function setDynamicChRuleIds(v) { dynamicChRuleIds = v; }
 export let dynamicParamStripIds = new Set();
 export function setDynamicParamStripIds(v) { dynamicParamStripIds = v; }
 
-// Maps dynamic param strip rule IDs to their removeParams array (for Chrome fallback detection)
-export let dynamicParamStripMap = new Map();
-export function setDynamicParamStripMap(v) { dynamicParamStripMap = v; }
-
 // Maps dynamic whitelist allow rule IDs to their requestDomains array
 export let dynamicWhitelistMap = {};
 export function setDynamicWhitelistMap(v) { dynamicWhitelistMap = v; }

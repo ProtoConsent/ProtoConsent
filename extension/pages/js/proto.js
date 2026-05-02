@@ -530,8 +530,13 @@ function _fillTrackersBody(body, resp) {
 function _fillCleanLinksBody(body, resp) {
   var strips = resp.paramStrips || {};
   var domains = Object.keys(strips);
-  if (domains.length === 0 && !(typeof lastParamStrips === "number" && lastParamStrips > 0)) {
-    body.textContent = "No parameters stripped"; return;
+  if (domains.length === 0) {
+    if (typeof lastParamStrips === "number" && lastParamStrips > 0) {
+      body.textContent = lastParamStrips + " tracking parameter" + (lastParamStrips > 1 ? "s" : "") + " stripped";
+    } else {
+      body.textContent = "No parameters stripped";
+    }
+    return;
   }
   for (var i = 0; i < Math.min(domains.length, 10); i++) {
     var info = strips[domains[i]];

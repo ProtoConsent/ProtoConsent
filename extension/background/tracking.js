@@ -222,7 +222,8 @@ const BLOCKED_ERRORS = new Set([
 // Param strip detection via webRequest.onBeforeRedirect.
 // DNR redirect rules (queryTransform.removeParams) trigger onBeforeRedirect
 // with both the original URL and the redirect target, allowing direct comparison.
-export function clearPendingNavUrl(tabId) { /* no-op, kept for lifecycle.js compat */ }
+const _pendingNavUrls = new Map();
+export function clearPendingNavUrl(tabId) { _pendingNavUrls.delete(tabId); }
 
 if (getBrowser() === "firefox") {
   try {
@@ -230,6 +231,7 @@ if (getBrowser() === "firefox") {
       (details) => {
         if (details.tabId < 0) return;
         if (!details.redirectUrl) return;
+        if (details.statusCode >= 300 && details.statusCode < 400) return;
 
         let orig, final;
         try {
@@ -276,8 +278,6 @@ if (getBrowser() === "firefox") {
 // Capture original URL via onBeforeRequest (fires before DNR), then compare
 // with committed URL in onCommitted to find stripped params.
 if (getBrowser() !== "firefox") {
-  const _pendingNavUrls = new Map();
-
   try {
     chrome.webRequest.onBeforeRequest.addListener(
       (details) => {
