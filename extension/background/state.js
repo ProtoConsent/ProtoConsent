@@ -263,6 +263,3 @@ export const logPorts = new Set();
 export const _extEventLog = [];
 export const EXT_EVENT_LOG_CAP = 50;
 
-// Resolved once at startup
-import { USE_DNR_DEBUG } from "./config-bridge.js";
-export const useDnrDebug = USE_DNR_DEBUG && !!chrome.declarativeNetRequest.onRuleMatchedDebug;

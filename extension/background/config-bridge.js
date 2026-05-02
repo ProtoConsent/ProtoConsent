@@ -11,9 +11,6 @@
 // Deactivate:          chrome.storage.local.remove("debug")
 export let DEBUG_RULES = false;
 
-// Prefer onRuleMatchedDebug (declarativeNetRequest debug API) when available.
-export const USE_DNR_DEBUG = false;
-
 // Inter-extension protocol version (independent of extension version).
 export const INTEREXT_PROTOCOL_VERSION = "0.1";
 

@@ -31,8 +31,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     // Extension version and data source
     const manifest = chrome.runtime.getManifest();
     lines.push("— ProtoConsent v" + manifest.version + " —");
-    const source = USE_DNR_DEBUG ? "onRuleMatchedDebug" : "webRequest";
-    lines.push("  data source: " + source);
+    lines.push("  data source: webRequest");
     let modeLabel = (typeof operatingMode !== "undefined" && operatingMode === "protoconsent") ? "Monitoring" : "Blocking";
     lines.push("  mode: " + modeLabel);
     lines.push("  lifetime blocked: " + (lastLifetimeBlocked || 0));

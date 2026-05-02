@@ -48,7 +48,7 @@ function ensureBars() {
 
  // @returns {Promise<{blocked, gpc, gpcDomains, domainHitCount, rulesetHitCount, blockedDomains}>}
  // domainHitCount: purpose -> count (from static rulesets only)
- // blockedDomains: purpose -> { domain -> count } (from onRuleMatchedDebug, covers both static + dynamic)
+ // blockedDomains: purpose -> { domain -> count } (from webRequest, covers both static + dynamic)
 async function getBlockedRulesCount() {
   const EMPTY_BLOCKED_RESULT = { blocked: 0, gpc: 0, ch: 0, paramStrips: 0, gpcDomains: [], gpcDomainCounts: {}, domainHitCount: {}, rulesetHitCount: {}, blockedDomains: {}, pathDetails: {}, whitelistHits: 0, whitelistHitDomains: {}, hotfixPending: false };
   try {
@@ -289,7 +289,7 @@ async function displayBlockedCount() {
     lastWhitelistHitDomains = whitelistHitDomains || {};
 
     // domainHitCount maps purpose -> count from static rulesets only.
-    // Supplement with blockedDomains (from onRuleMatchedDebug) to cover dynamic rule matches.
+    // Supplement with blockedDomains (from webRequest) to cover dynamic rule matches.
     lastPurposeStats = Object.assign({}, domainHitCount);
 
     // Merge with blockedDomains counts (event listener covers dynamic + static matches).

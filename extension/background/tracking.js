@@ -2,12 +2,11 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// webRequest listeners (onErrorOccurred, onSendHeaders) and
-// onRuleMatchedDebug for blocked-request counting, GPC signal
-// detection and real-time streaming to the popup Log tab.
+// webRequest listeners (onErrorOccurred, onSendHeaders, onCompleted)
+// for blocked-request counting, GPC signal detection, whitelist hits
+// and real-time streaming to the popup Log tab.
 
 import {
-  useDnrDebug,
   tabBlockedDomains, tabGpcDomains, tabParamStrips, tabWhitelistHits,
   tabPathDetails, PATH_DETAIL_CAP,
   dynamicBlockRuleMap, dynamicGpcSetIds, dynamicParamStripIds, dynamicEnhancedMap,
@@ -52,89 +51,6 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => logPorts.delete(port));
 });
 
-if (useDnrDebug) {
-  chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((info) => {
-    const { rule, request } = info;
-    if (request.tabId < 0) return;
-
-    let purpose = null;
-
-    if (rule.rulesetId && rule.rulesetId.startsWith("protoconsent_")) {
-      purpose = rule.rulesetId.slice(13).replace(/_paths$/, "");
-    }
-    else if (rule.rulesetId && !rule.rulesetId.startsWith("_") && rule.rulesetId.endsWith("_paths")) {
-      purpose = "enhanced:" + rule.rulesetId.replace(/_paths$/, "");
-    }
-    else if (rule.rulesetId === "_dynamic" && dynamicBlockRuleMap[rule.ruleId]) {
-      purpose = dynamicBlockRuleMap[rule.ruleId];
-    }
-    else if (rule.rulesetId === "_dynamic" && dynamicEnhancedMap[rule.ruleId]) {
-      purpose = "enhanced:" + dynamicEnhancedMap[rule.ruleId];
-    }
-
-    // Param strip detection (static rulesets or dynamic CDN rules)
-    if (rule.rulesetId === "strip_tracking_params" || rule.rulesetId === "strip_tracking_params_sites" ||
-        (rule.rulesetId === "_dynamic" && dynamicParamStripIds.has(rule.ruleId))) {
-      let domain;
-      try { domain = new URL(request.url).hostname; } catch (_) { return; }
-      if (!tabParamStrips.has(request.tabId)) tabParamStrips.set(request.tabId, {});
-      const stripData = tabParamStrips.get(request.tabId);
-      if (typeof stripData[domain] !== "object") stripData[domain] = { count: 0, params: [] };
-      stripData[domain].count++;
-      scheduleSessionPersist();
-      for (const port of logPorts) {
-        try { port.postMessage({ type: "param_strip", domain, tabId: request.tabId }); } catch (_) {}
-      }
-      return;
-    }
-
-    if (!purpose) {
-      if (rule.rulesetId === "_dynamic" && dynamicGpcSetIds.has(rule.ruleId)) {
-        let domain;
-        try { domain = new URL(request.url).hostname; } catch (_) { return; }
-        if (!tabGpcDomains.has(request.tabId)) tabGpcDomains.set(request.tabId, {});
-        const gpcData = tabGpcDomains.get(request.tabId);
-        const now = Date.now();
-        if (!gpcData[domain]) gpcData[domain] = { count: 0, firstSeen: now };
-        gpcData[domain].count++;
-        gpcData[domain].lastSeen = now;
-        scheduleSessionPersist();
-        for (const port of logPorts) {
-          try { port.postMessage({ type: "gpc", domain, tabId: request.tabId }); } catch (_) {}
-        }
-      }
-      return;
-    }
-
-    let domain;
-    try { domain = new URL(request.url).hostname; } catch (_) { return; }
-
-    if (!tabBlockedDomains.has(request.tabId)) {
-      tabBlockedDomains.set(request.tabId, {});
-    }
-    const tabData = tabBlockedDomains.get(request.tabId);
-    if (!tabData[purpose]) tabData[purpose] = {};
-    tabData[purpose][domain] = (tabData[purpose][domain] || 0) + 1;
-    incrementLifetimeBlocked(1);
-    if (rule.rulesetId && rule.rulesetId.endsWith("_paths")) {
-      try {
-        const pathname = new URL(request.url).pathname;
-        if (!tabPathDetails.has(request.tabId)) tabPathDetails.set(request.tabId, new Map());
-        const hostPaths = tabPathDetails.get(request.tabId);
-        if (!hostPaths.has(domain)) hostPaths.set(domain, new Set());
-        const paths = hostPaths.get(domain);
-        if (paths.size < PATH_DETAIL_CAP) paths.add(pathname);
-      } catch (_) {}
-    }
-    scheduleSessionPersist();
-    updateBadgeForTab(request.tabId);
-
-    for (const port of logPorts) {
-      try { port.postMessage({ type: "block", purpose, url: request.url, tabId: request.tabId }); } catch (_) {}
-    }
-  });
-}
-
 function attributeBlock(tabId, hostname, url, purposes, metrics, isPathBlock) {
   metrics.attributed++;
   incrementLifetimeBlocked(1);
@@ -163,9 +79,8 @@ function attributeBlock(tabId, hostname, url, purposes, metrics, isPathBlock) {
   }
 }
 
-// Standard data source: webRequest.onErrorOccurred for extension-blocked requests.
-if (!useDnrDebug) {
-  const BLOCKED_ERRORS = new Set([
+// webRequest.onErrorOccurred for extension-blocked requests.
+const BLOCKED_ERRORS = new Set([
     "net::ERR_BLOCKED_BY_CLIENT",
     "NS_ERROR_ABORT",
     "NS_ERROR_BLOCKED_URI",
@@ -302,7 +217,6 @@ if (!useDnrDebug) {
   } catch (e) {
     console.warn("ProtoConsent: onCompleted listener not available:", e.message);
   }
-}
 
 // Param strip detection via webNavigation.
 // DNR redirect rules (queryTransform.removeParams) are invisible to webRequest
@@ -354,8 +268,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
   const stripData = tabParamStrips.get(details.tabId);
   // Backward compat: old session data may have domain -> number
   if (typeof stripData[domain] !== "object") stripData[domain] = { count: 0, params: [] };
-  // In debug mode onRuleMatchedDebug already incremented count; only add param names here
-  if (!useDnrDebug) stripData[domain].count++;
+  stripData[domain].count++;
   for (const p of removed) {
     if (!stripData[domain].params.includes(p)) stripData[domain].params.push(p);
   }
