@@ -17,6 +17,7 @@ import {
 } from "./state.js";
 import { restoreWarningBadge } from "./blocker-detection.js";
 import { getLifetimeTotal, setLifetimeTotal } from "./tracking.js";
+import { getBrowser } from "./config-bridge.js";
 
 // Throttled write to chrome.storage.session (max once per 2s)
 let sessionPersistTimer = null;
@@ -250,6 +251,7 @@ export function updateBadgeForTab(tabId) {
   }
   let text = "";
   if (total > 9999) text = "10K+";
+  else if (getBrowser() === "firefox" && total > 999) text = Math.floor(total / 1000) + "K+";
   else if (total > 0) text = String(total);
   chrome.action.setBadgeText({ tabId, text }).catch(() => {});
   chrome.action.setBadgeBackgroundColor({ tabId, color: "#1e3a8a" }).catch(() => {});

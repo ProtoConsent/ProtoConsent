@@ -6,7 +6,7 @@
 // declarativeNetRequest rules (static rulesets, dynamic overrides,
 // whitelist, enhanced lists, GPC headers, Client Hints stripping).
 
-import { DEBUG_RULES, loadDebugFlag, getChStrippingEnabled, HIGH_ENTROPY_CH } from "./config-bridge.js";
+import { DEBUG_RULES, loadDebugFlag, initBrowser, getChStrippingEnabled, HIGH_ENTROPY_CH } from "./config-bridge.js";
 import {
   BASE_RULE_ID, DYNAMIC_RULE_RESERVE, BLOCK_RESOURCE_TYPES, GPC_RESOURCE_TYPES,
   PURPOSES_FOR_ENFORCEMENT, gpcPurposes,
@@ -49,6 +49,7 @@ export async function rebuildAllDynamicRules() {
   setRebuildRunning(true);
 
   await loadDebugFlag();
+  await initBrowser();
 
   try {
     await _rebuildAllDynamicRulesImpl();

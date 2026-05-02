@@ -15,17 +15,9 @@ import {
   tabCoverageMetrics,
   operatingMode,
 } from "./state.js";
+import { getBrowser } from "./config-bridge.js";
 
-// Brave detection: Shields blocks before webRequest, so monitoring mode
-// sees 0 blocks. Detected once at module load via navigator.brave.isBrave().
-let _isBrave = false;
-try {
-  if (navigator.brave && typeof navigator.brave.isBrave === "function") {
-    navigator.brave.isBrave().then(v => { _isBrave = !!v; }).catch(() => {});
-  }
-} catch (_) {}
-
-export function isBrave() { return _isBrave; }
+export function isBrave() { return getBrowser() === "brave"; }
 
 // Standalone: unique unattributed hostnames needed to trigger suggestion
 const SUGGEST_UNATTRIBUTED_THRESHOLD = 5;
@@ -198,7 +190,7 @@ export function getBlockerDetectionState(callback) {
       behavioralSignal: liveSignal,
       suggestMonitoring: shouldSuggest,
       warnNoBlocker: shouldWarn,
-      isBrave: _isBrave,
+      isBrave: isBrave(),
     });
   });
 }
