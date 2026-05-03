@@ -885,7 +885,8 @@ function _renderEpListCard(listId) {
     catIcon.onerror = function() { this.style.display = "none"; };
     pill.appendChild(catIcon);
     const catLabel = document.createElement("span");
-    catLabel.textContent = catInfo.label;
+    var pcfg = typeof purposesConfig !== "undefined" && listDef.category ? purposesConfig[listDef.category] : null;
+    catLabel.textContent = (pcfg && pcfg.short_label) || catInfo.label;
     pill.appendChild(catLabel);
     header.appendChild(pill);
   } else if (listDef.type === "informational") {
