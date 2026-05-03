@@ -177,8 +177,8 @@ body {
   gap: 3px;
   font-size: 10px;
   font-weight: 600;
-  color: var(--pc-accent, #2563eb);
-  border: 1px solid var(--pc-accent, #2563eb);
+  color: var(--pc-accent);
+  border: 1px solid var(--pc-accent);
   border-radius: 999px;
   padding: 1px 7px;
   vertical-align: middle;
@@ -401,7 +401,7 @@ body {
   text-underline-offset: 2px;
 }
 .ps-regional-source-link:hover {
-  color: var(--pc-accent, #2563eb);
+  color: var(--pc-accent);
 }
 
 .ps-regional-filter {
@@ -410,15 +410,15 @@ body {
   width: 100%;
   padding: 6px 10px;
   margin-bottom: 8px;
-  border: 1px solid var(--pc-line-strong, #d1d5db);
+  border: 1px solid var(--pc-line-strong);
   border-radius: 6px;
   font-size: 13px;
-  background: var(--pc-surface, #fff);
-  color: var(--pc-text, #1f2937);
+  background: var(--pc-surface);
+  color: var(--pc-text);
   outline: none;
 }
 .ps-regional-filter:focus {
-  border-color: var(--pc-accent, #2563eb);
+  border-color: var(--pc-accent);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
@@ -459,7 +459,7 @@ body {
 }
 
 .ps-cel-note-link {
-  color: var(--pc-accent, #c8850a);
+  color: var(--pc-accent);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -595,7 +595,7 @@ body {
 }
 
 .ps-gpc-toggle:checked {
-  background: var(--pc-accent, #2563eb);
+  background: var(--pc-accent);
 }
 
 .ps-gpc-toggle:checked::after {
@@ -923,7 +923,7 @@ body {
   display: flex;
   align-items: start;
   gap: 10px;
-  background: linear-gradient(180deg, var(--pc-surface-card, #ffffff) 0%, var(--pc-surface-soft, #fbfdff) 100%);
+  background: linear-gradient(180deg, var(--pc-surface-card) 0%, var(--pc-surface-soft) 100%);
   border: 1px solid var(--pc-line);
   border-radius: 12px;
   padding: 12px 14px;
@@ -1281,16 +1281,16 @@ details[open] > .ps-accordion-header::before {
   font-size: 12px;
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid var(--pc-line, #d1d5db);
-  color: var(--pc-accent, #2563eb);
+  border: 1px solid var(--pc-line);
+  color: var(--pc-accent);
   text-decoration: none;
-  background: var(--pc-surface, #fff);
+  background: var(--pc-surface);
 }
 
 .ps-about-link:hover,
 .ps-about-link:focus-visible {
-  background: var(--pc-accent-soft, #dbeafe);
-  border-color: var(--pc-line-strong, #bfd0e4);
+  background: var(--pc-accent-soft);
+  border-color: var(--pc-line-strong);
 }
 
 .ps-credit-entry {
@@ -1301,7 +1301,7 @@ details[open] > .ps-accordion-header::before {
 
 .ps-credit-name {
   font-weight: 600;
-  color: var(--pc-accent, #2563eb);
+  color: var(--pc-accent);
   text-decoration: none;
 }
 
@@ -1311,12 +1311,12 @@ details[open] > .ps-accordion-header::before {
 }
 
 .ps-credit-by {
-  color: var(--pc-text, #1f2937);
+  color: var(--pc-text);
 }
 
 .ps-credit-license,
 .ps-credit-usage {
-  color: var(--pc-text-muted, #64748b);
+  color: var(--pc-text-muted);
 }
 
 .ps-support-row {
@@ -1340,9 +1340,9 @@ details[open] > .ps-accordion-header::before {
   font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
   font-size: 11px;
   line-height: 1.5;
-  color: var(--pc-text, #1f2937);
-  background: var(--pc-surface, #fff);
-  border: 1px solid var(--pc-line, #d1d5db);
+  color: var(--pc-text);
+  background: var(--pc-surface);
+  border: 1px solid var(--pc-line);
   border-radius: 8px;
   white-space: pre-wrap;
   word-break: break-word;

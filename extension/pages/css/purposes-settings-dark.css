@@ -1,0 +1,341 @@
+/*
+ * ProtoConsent browser extension
+ * Copyright (C) 2026 ProtoConsent contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Dark mode overrides for purposes-settings.css.
+ * Activated by the html.pc-dark class (applied via theme.js).
+ */
+
+/* --- Base --- */
+html.pc-dark {
+  color-scheme: dark;
+  background-color: #12141D;
+}
+html.pc-dark body {
+  background:
+    radial-gradient(circle at top, rgba(30, 33, 43, 0.7) 0%, rgba(18, 20, 29, 0) 42%),
+    linear-gradient(180deg, #1a1d28 0%, #12141D 100%);
+}
+
+/* --- Focus --- */
+html.pc-dark *:focus-visible {
+  outline-color: #4DABF7;
+}
+
+/* --- Scrollbar --- */
+html.pc-dark ::-webkit-scrollbar-thumb {
+  background: #3D4250;
+}
+html.pc-dark ::-webkit-scrollbar-thumb:hover {
+  background: #4D5260;
+}
+
+/* --- Brand pill --- */
+html.pc-dark .ps-brand {
+  background: rgba(30, 33, 43, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #ADB5BD;
+}
+/* --- Hero --- */
+html.pc-dark .ps-hero {
+  border-color: #2D313E;
+  background: linear-gradient(180deg, #252830 0%, #1E212B 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* --- Sections --- */
+html.pc-dark .ps-section {
+  border-color: #3D4250;
+  background: linear-gradient(180deg, #1E212B 0%, #1a1d28 100%);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Status messages --- */
+html.pc-dark .ps-status-msg {
+  background: rgba(30, 33, 43, 0.76);
+}
+html.pc-dark .ps-status-msg.error {
+  border-color: #5a2020;
+  background: #2a1515;
+}
+
+/* --- Cards --- */
+html.pc-dark .ps-purpose-card,
+html.pc-dark .ps-preset-card {
+  background: linear-gradient(180deg, #252830 0%, #1E212B 100%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+html.pc-dark .ps-signal-card {
+  background: linear-gradient(180deg, #252830 0%, #1E212B 100%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+html.pc-dark .ps-dynamic-grid > .ps-gpc-toggle-row {
+  background: linear-gradient(180deg, #252830 0%, #1E212B 100%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+html.pc-dark .ps-autorefresh-card {
+  background: linear-gradient(180deg, #252830 0%, #1E212B 100%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Purpose short badge --- */
+html.pc-dark .ps-purpose-short {
+  background: linear-gradient(180deg, #1c3a5c 0%, #162d4a 100%);
+  color: #4DABF7;
+  border-color: #2b4a7a;
+}
+
+/* --- Purpose description --- */
+html.pc-dark .ps-purpose-desc {
+  color: #ADB5BD;
+}
+
+/* --- Pills & badges --- */
+html.pc-dark .ps-purpose-key,
+html.pc-dark .ps-footer-link {
+  background: #252830;
+}
+html.pc-dark .ps-preset-pill.allowed {
+  background: #1a3a22;
+  border-color: #2b5a35;
+  color: #51CF66;
+}
+html.pc-dark .ps-preset-pill.denied {
+  background: #3a1a1a;
+  border-color: #5a2020;
+  color: #FF6B6B;
+}
+html.pc-dark .ps-preset-pill.gpc {
+  background: linear-gradient(180deg, #1c3a5c 0%, #162d4a 100%);
+  border-color: #2b4a7a;
+  color: #4DABF7;
+}
+
+/* --- CEL active pill --- */
+html.pc-dark .ps-cel-active-pill {
+  background: #1a3a22;
+  border-color: #2b5a35;
+  color: #51CF66;
+}
+
+/* --- Toggle switch --- */
+html.pc-dark .ps-gpc-toggle {
+  background: #3D4250;
+}
+html.pc-dark .ps-gpc-toggle::after {
+  background: #CED4DA;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+html.pc-dark .ps-gpc-toggle:focus-visible {
+  outline-color: #4DABF7;
+}
+html.pc-dark .ps-gpc-toggle:checked {
+  background: #339AF0;
+}
+html.pc-dark .ps-gpc-toggle:checked::after {
+  background: #1a3a5c;
+}
+
+/* --- Checkbox accent --- */
+html.pc-dark .ps-custom-toggle-row input[type="checkbox"],
+html.pc-dark .ps-cmp-toggle-row input[type="checkbox"] {
+  accent-color: #4DABF7;
+}
+html.pc-dark .ps-cel-purpose-cb {
+  accent-color: #FFD43B;
+}
+
+/* --- Mode cards --- */
+html.pc-dark .ps-mode-card {
+  background: linear-gradient(180deg, #252830 0%, #1E212B 100%);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+html.pc-dark .ps-mode-card:hover {
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+}
+html.pc-dark .ps-mode-card.is-selected {
+  border-color: #2b4a7a;
+  background: linear-gradient(180deg, #1c3a5c 0%, #1E212B 100%);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3), 0 10px 24px rgba(77, 171, 247, 0.12);
+}
+
+/* --- Mode dots --- */
+html.pc-dark .ps-mode-dot-blocking {
+  background: #FF6B6B;
+}
+html.pc-dark .ps-mode-dot-monitoring {
+  background: #51CF66;
+}
+
+/* --- Default profile section --- */
+html.pc-dark .ps-default-profile-section {
+  background: linear-gradient(180deg, #1c3a5c 0%, #162d4a 100%);
+  border-color: #2b4a7a;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+html.pc-dark .ps-default-profile-desc {
+  color: #ADB5BD;
+}
+html.pc-dark .ps-default-profile-select {
+  background: #1E212B;
+}
+html.pc-dark .ps-reset-all-btn {
+  background: #1E212B;
+}
+html.pc-dark .ps-reset-all-btn:hover {
+  background: #3a1a1a;
+  border-color: #5a2020;
+}
+
+/* --- Enhanced current badge --- */
+html.pc-dark .ps-enhanced-current-badge {
+  color: #FFD43B;
+}
+
+/* --- Active preset highlights --- */
+html.pc-dark .ps-preset-active {
+  border-color: #d97706;
+  background: linear-gradient(180deg, #3a2f18 0%, #1E212B 100%);
+}
+html.pc-dark .ps-consent-preset-active {
+  background: linear-gradient(180deg, #1c3a5c 0%, #1E212B 100%);
+}
+
+/* --- Buttons --- */
+html.pc-dark .ps-data-btn {
+  background: linear-gradient(180deg, #252830 0%, #1E212B 100%);
+  border-color: #3D4250;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+html.pc-dark .ps-data-btn:hover {
+  background: linear-gradient(180deg, #1c3a5c 0%, #162d4a 100%);
+  border-color: #2b4a7a;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+html.pc-dark .ps-data-btn:active {
+  background: #1c3a5c;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Data status --- */
+html.pc-dark .ps-data-status {
+  color: #51CF66;
+}
+
+/* --- CEL mode buttons --- */
+html.pc-dark .ps-cel-mode-btn:hover {
+  background: #3a2f18;
+  border-color: #d97706;
+}
+html.pc-dark .ps-cel-mode-btn.is-active {
+  background: linear-gradient(180deg, #4a3a1a 0%, #3a2f18 100%);
+  color: #FFD43B;
+  border-color: #d97706;
+}
+
+/* --- CEL note --- */
+html.pc-dark .ps-cel-note {
+  color: #ADB5BD;
+}
+
+/* --- GPC info description --- */
+html.pc-dark .ps-gpc-info-desc {
+  color: #ADB5BD;
+}
+
+/* --- Inputs --- */
+html.pc-dark .ps-cmp-text-input {
+  background: #1E212B;
+}
+html.pc-dark .ps-cmp-input-saved {
+  border-color: #2b5a35 !important;
+  background: #1a3a22;
+}
+html.pc-dark .ps-cmp-field-saved {
+  color: #51CF66;
+}
+
+/* --- CMP layer row --- */
+html.pc-dark .ps-cmp-layer-row {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Badge experimental --- */
+html.pc-dark .ps-badge-experimental {
+  color: #FFD43B;
+  background: #3a2f18;
+}
+
+/* --- CMP advanced code --- */
+html.pc-dark .ps-cmp-advanced-row code {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* --- Accordion --- */
+html.pc-dark .ps-accordion {
+  border-color: #2D313E;
+}
+
+/* --- Inter-extension badges --- */
+html.pc-dark .ps-ext-badge-warn {
+  background: #3a2f18;
+  border-color: #6b5520;
+  color: #FFD43B;
+}
+html.pc-dark .ps-ext-badge-deny {
+  background: #3a1a1a;
+  border-color: #5a2020;
+}
+
+/* --- Extension rows --- */
+html.pc-dark .ps-ext-row:hover {
+  background: rgba(77, 171, 247, 0.05);
+}
+html.pc-dark .ps-ext-btn-allow {
+  border-color: #2b5a35;
+}
+html.pc-dark .ps-ext-btn-allow:hover {
+  background: #1a3a22;
+}
+html.pc-dark .ps-ext-btn-deny {
+  border-color: #5a2020;
+}
+html.pc-dark .ps-ext-btn-deny:hover {
+  background: #3a1a1a;
+}
+
+/* --- Extension note --- */
+html.pc-dark .ps-ext-note {
+  color: #ADB5BD;
+}
+
+/* --- Footer --- */
+html.pc-dark .ps-footer a {
+  color: #4DABF7;
+}
+html.pc-dark .ps-footer-link:hover,
+html.pc-dark .ps-footer a:hover {
+  background: #1c3a5c;
+}
+
+/* --- About / Support --- */
+html.pc-dark .ps-about-link {
+  background: var(--pc-surface);
+}
+html.pc-dark .ps-about-link:hover,
+html.pc-dark .ps-about-link:focus-visible {
+  background: var(--pc-accent-soft);
+}
+
+html.pc-dark .ps-troubleshoot-pre {
+  background: #12141D;
+}
+
+/* --- Icon inversion --- */
+html.pc-dark .ps-cel-icon[src$=".svg"] {
+  filter: brightness(0) invert(1);
+}
+html.pc-dark .ps-purpose-icon-img {
+  filter: brightness(0) invert(1);
+}

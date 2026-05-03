@@ -11,17 +11,16 @@
 (function () {
   var mq = window.matchMedia("(prefers-color-scheme: dark)");
 
-  // Only apply dark class in the popup; settings page stays light
-  var isPopup = /popup\.html/.test(location.pathname);
+  var isThemedPage = /popup\.html|purposes-settings\.html/.test(location.pathname);
 
   // Prevent light-mode flash while theme loads
-  if (isPopup) document.documentElement.style.visibility = "hidden";
+  if (isThemedPage) document.documentElement.style.visibility = "hidden";
 
   var lastDark;
 
   function apply(pref) {
     var dark = pref === "dark" || (pref !== "light" && mq.matches);
-    if (isPopup) {
+    if (isThemedPage) {
       document.documentElement.classList.toggle("pc-dark", dark);
       document.documentElement.style.visibility = "";
     }
