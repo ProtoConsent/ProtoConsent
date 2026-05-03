@@ -394,6 +394,34 @@ body {
   border-radius: 2px;
 }
 
+.ps-regional-source-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.ps-regional-source-link:hover {
+  color: var(--pc-accent, #2563eb);
+}
+
+.ps-regional-filter {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--pc-line-strong, #d1d5db);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--pc-surface, #fff);
+  color: var(--pc-text, #1f2937);
+  outline: none;
+}
+.ps-regional-filter:focus {
+  border-color: var(--pc-accent, #2563eb);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
 .ps-cel-icon {
   vertical-align: -2px;
   margin-right: 2px;

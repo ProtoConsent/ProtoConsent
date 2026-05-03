@@ -22,13 +22,14 @@
 			</div>
 			<div class="ps-hero">
 				<h1>Purpose Settings</h1>
-				<p class="ps-subtitle">Purpose profiles, protection settings, and advanced configuration. <a href="#regional-filters" class="ps-cel-note-link">Regional language filters</a> are in the Protection tab.</p>
+				<p class="ps-subtitle">Purpose profiles, protection settings, and advanced configuration.</p>
 			</div>
 		</header>
 
 		<nav class="ps-tabs" role="tablist" aria-label="Settings categories">
 			<button type="button" class="ps-tab is-active" id="ps-tab-consent" data-tab="consent" role="tab" aria-selected="true" aria-controls="ps-panel-consent" tabindex="0">Purposes</button>
 			<button type="button" class="ps-tab" id="ps-tab-protection" data-tab="protection" role="tab" aria-selected="false" aria-controls="ps-panel-protection" tabindex="-1">Protection</button>
+			<button type="button" class="ps-tab" id="ps-tab-regional" data-tab="regional" role="tab" aria-selected="false" aria-controls="ps-panel-regional" tabindex="-1">Regional</button>
 			<button type="button" class="ps-tab" id="ps-tab-advanced" data-tab="advanced" role="tab" aria-selected="false" aria-controls="ps-panel-advanced" tabindex="-1">Advanced</button>
 		</nav>
 
@@ -262,6 +263,9 @@
 			</div>
 		</section>
 
+		</div>
+
+		<div class="ps-panel" id="ps-panel-regional" data-panel="regional" role="tabpanel" aria-labelledby="ps-tab-regional" hidden>
 		<section id="regional-section" class="ps-section ps-hidden">
 			<div class="ps-section-head">
 				<h2 id="regional-filters">Regional Filters</h2>

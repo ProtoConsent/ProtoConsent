@@ -2,7 +2,7 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-const TAB_NAMES = ['consent', 'protection', 'advanced'];
+const TAB_NAMES = ['consent', 'protection', 'regional', 'advanced'];
 const SECTION_TAB_MAP = {
 	'default-profile-section': 'consent',
 	'presets-section': 'consent',
@@ -11,7 +11,7 @@ const SECTION_TAB_MAP = {
 	'enhanced-section': 'protection',
 	'cosmetic-section': 'protection',
 	'cmp-section': 'protection',
-	'regional-filters': 'protection',
+	'regional-filters': 'regional',
 	'inter-ext-section': 'advanced',
 	'data-section': 'advanced',
 };

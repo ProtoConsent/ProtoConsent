@@ -9,8 +9,6 @@
 //
 // Globals: REGIONAL_COSMETIC_ID, REGIONAL_BLOCKING_ID (config.js)
 
-/* global REGIONAL_COSMETIC_ID, REGIONAL_BLOCKING_ID */
-
 // Capture hash before applyHashRoute replaces it with the tab name
 var _regionalScrollTarget = location.hash === '#regional-filters' ? 'regional-filters' : null;
 
@@ -90,7 +88,23 @@ function initRegionalSection() {
 			}
 
 			grid.replaceChildren();
+
+			const filterInput = document.createElement('input');
+			filterInput.type = 'text';
+			filterInput.placeholder = 'Filter by language or list name...';
+			filterInput.className = 'ps-regional-filter';
+			filterInput.setAttribute('aria-label', 'Filter regional lists');
+			grid.parentNode.insertBefore(filterInput, grid);
+
 			regionCodes.sort();
+
+			filterInput.addEventListener('input', function () {
+				const q = filterInput.value.toLowerCase();
+				for (const row of grid.querySelectorAll('.ps-gpc-toggle-row')) {
+					row.style.display = q && row.dataset.search.indexOf(q) === -1 ? 'none' : '';
+				}
+			});
+
 			for (const code of regionCodes) {
 				const row = document.createElement('div');
 				row.className = 'ps-gpc-toggle-row';
@@ -129,11 +143,29 @@ function initRegionalSection() {
 				const descEl = document.createElement('div');
 				descEl.className = 'ps-gpc-info-desc';
 				descEl.id = 'rl-desc-' + code;
-				descEl.textContent = flagCodes.length > 0
-					? flagCodes.join('/')
-					: code.toUpperCase();
+				const sources = rlConfig[code].sources;
+				if (sources && sources.length > 0) {
+					for (let i = 0; i < sources.length; i++) {
+						if (i > 0) descEl.appendChild(document.createTextNode(', '));
+						const link = document.createElement('a');
+						link.href = sources[i].url;
+						link.target = '_blank';
+						link.rel = 'noopener noreferrer';
+						link.textContent = sources[i].name;
+						link.className = 'ps-regional-source-link';
+						descEl.appendChild(link);
+					}
+				} else {
+					descEl.textContent = flagCodes.length > 0
+						? flagCodes.join('/')
+						: code.toUpperCase();
+				}
 				info.appendChild(descEl);
 				row.appendChild(info);
+
+				const searchParts = [code, rlConfig[code].label];
+				if (sources) for (const s of sources) searchParts.push(s.name);
+				row.dataset.search = searchParts.join(' ').toLowerCase();
 
 				const cb = document.createElement('input');
 				cb.type = 'checkbox';
