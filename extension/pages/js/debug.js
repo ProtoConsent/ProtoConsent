@@ -386,13 +386,15 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       }
     });
 
-    // Tab match info (from Chrome's getMatchedRules — persisted counts, always accurate)
-    lines.push("— tab matches (getMatchedRules) —");
+    // Detect data source: rulesetHitCount is {} when getMatchedRules is unavailable (Firefox)
+    const hasMatchedRules = Object.keys(rulesetHitCount).length > 0;
+    const dataSource = hasMatchedRules ? "getMatchedRules" : "webRequest";
+
+    lines.push("— tab matches (" + dataSource + ") —");
     lines.push("  blocked: " + blocked + "  gpc: " + gpc + " (" + (gpcDomains?.length || 0) + " domains)");
     lines.push("");
 
-    // Ruleset breakdown (from Chrome's getMatchedRules — per rulesetId)
-    if (Object.keys(rulesetHitCount).length) {
+    if (hasMatchedRules) {
       lines.push("— ruleset hits (getMatchedRules) —");
       for (const [id, count] of Object.entries(rulesetHitCount).sort()) {
         const tag = id.endsWith("_paths") ? " (path)" : id === "_dynamic_block" ? " (dynamic)" : " (domain)";
@@ -401,9 +403,8 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
-    // Purpose breakdown (from Chrome's getMatchedRules — derived from rulesetId)
     if (Object.keys(domainHitCount).length) {
-      lines.push("— purpose hits (getMatchedRules) —");
+      lines.push("— purpose hits (" + dataSource + ") —");
       for (const [purpose, count] of Object.entries(domainHitCount).sort()) {
         lines.push("  " + purpose + ": " + count);
       }
@@ -457,12 +458,13 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_PROTO_DATA", tabId: tabs[0].id }, function (proto) {
         if (chrome.runtime.lastError || !proto) return;
         let prov = computeBlockProvenance(proto.coverage, proto.mode);
+        let provSource = prov.hasMatchedRules ? "getMatchedRules" : "webRequest";
         let pLines = [];
         pLines.push("— block provenance (this tab) —");
-        pLines.push("  own (getMatchedRules): " + prov.own);
+        pLines.push("  own (" + provSource + "): " + prov.own);
         pLines.push("  observed (ERR_BLOCKED): " + prov.observed);
         pLines.push("  attributed (reverse index): " + prov.attributed);
-        pLines.push("  other (observed - own): " + prov.other);
+        pLines.push("  other (observed - own): " + (prov.other < 0 ? "n/a" : prov.other));
         pLines.push("  unattributed buffer (this tab): " + (proto.unattributed ? proto.unattributed.length : 0));
         if (proto.unattributed && proto.unattributed.length > 0) {
           var heuristicCount = 0;

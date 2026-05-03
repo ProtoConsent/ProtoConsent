@@ -131,7 +131,8 @@ function _renderProtoBars(resp, tcfData) {
     var isMonitoring = resp.mode === "protoconsent";
     var collapsed;
     if (isMonitoring) {
-      collapsed = "Blocked by external: " + prov.other + " \u00b7 " +
+      var otherText = prov.other < 0 ? "n/a" : prov.other;
+      collapsed = "Blocked by external: " + otherText + " \u00b7 " +
         (resp.coverage ? Math.round((resp.coverage.attributed / Math.max(resp.coverage.observed, 1)) * 100) : 0) + "% purpose attributed";
     } else {
       collapsed = buildStatsCollapsed(lastBlocked || 0);
@@ -305,7 +306,7 @@ function _renderProtoGrid(resp, wkData, tcfData) {
 
 // Count CNAME-cloaked domains
 function _countCname(blocked) {
-  if (!blocked || typeof lookupCname !== "function") return 0;
+  if (!blocked || !cnameMap) return 0;
   var count = 0;
   var purposes = Object.keys(blocked);
   for (var i = 0; i < purposes.length; i++) {
@@ -346,7 +347,9 @@ function _fillCoverageBody(body, resp, wkData) {
 
   // Provenance + heuristic summary on one line
   var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
-  var provText = "<strong>Own:</strong> " + prov.own + " \u00b7 <strong>" + (resp.mode === "protoconsent" ? "External" : "Other") + ":</strong> " + prov.other;
+  var otherLabel = resp.mode === "protoconsent" ? "External" : "Other";
+  var provText = "<strong>Own:</strong> " + prov.own;
+  if (prov.other >= 0) provText += " \u00b7 <strong>" + otherLabel + ":</strong> " + prov.other;
   if (resp.unattributed && resp.unattributed.length > 0) {
     var heuristicCounts = {};
     var heuristicTotal = 0;
@@ -457,8 +460,21 @@ function _fillBannersBody(body, resp, tcfData) {
   // TCF consent status
   if (tcfData) {
     var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
-    provEl.innerHTML = (tcfData.cmpId && _protoCmpNames[tcfData.cmpId])
-      ? "<strong>Managed by</strong> " + _protoCmpNames[tcfData.cmpId] : "<strong>Consent banner detected</strong>";
+    var details = [];
+    if (tcfData.cmpId && _protoCmpNames[tcfData.cmpId]) {
+      details.push("<strong>Managed by</strong> " + _protoCmpNames[tcfData.cmpId]);
+    } else {
+      details.push("<strong>Consent banner detected</strong>");
+    }
+    // Concatenate auto-response actions if present
+    if (resp.cmp) {
+      var actions = [];
+      if (resp.cmp.selectorCount > 0) actions.push("Cosmetic hiding: " + resp.cmp.selectorCount + " selectors");
+      if (resp.cmp.scrollUnlock) actions.push("Scroll unlock: active");
+      if (resp.cmp.cookieCount > 0) actions.push("Cookies injected: " + resp.cmp.cookieCount);
+      if (actions.length > 0) details.push(actions.join(", "));
+    }
+    provEl.innerHTML = details.join(" - ");
     body.appendChild(provEl);
     var consents = tcfData.purposeConsents || {};
     var ids = Object.keys(consents).sort(function (a, b) { return Number(a) - Number(b); });
@@ -476,13 +492,6 @@ function _fillBannersBody(body, resp, tcfData) {
       body.appendChild(grid);
     }
   }
-  // CMP Auto-response
-  var cmpActive = !!(resp.cmp && resp.cmp.domain);
-  if (cmpActive) {
-    var autoEl = document.createElement("div"); autoEl.style.marginTop = "4px";
-    autoEl.innerHTML = "<strong>Auto-response:</strong> " + ((resp.cmp.cmpIds || []).length) + " templates on " + resp.cmp.domain;
-    body.appendChild(autoEl);
-  }
   if (!body.hasChildNodes()) body.textContent = "No banners detected";
 }
 
@@ -493,7 +502,25 @@ function _fillCosmeticBody(body, resp) {
 }
 
 function _fillTrackersBody(body, resp) {
-  if (typeof lookupCname !== "function") { body.textContent = "Enable CNAME list in Protection"; return; }
+  if (!cnameMap) {
+    var link = document.createElement("a");
+    link.href = "#";
+    link.textContent = "Enable CNAME list in Protection \u203A Detection";
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (typeof setActiveMode === "function") setActiveMode("enhanced");
+      if (typeof initEnhancedTab === "function") initEnhancedTab();
+      setTimeout(function () {
+        var card = document.getElementById("ep-card-detection");
+        if (card && !card.classList.contains("is-expanded")) {
+          var toggle = card.querySelector(".pc-grid-card-toggle");
+          if (toggle) toggle.click();
+        }
+      }, 100);
+    });
+    body.appendChild(link);
+    return;
+  }
   var blocked = resp.blocked || {};
   var found = [];
   var purposes = Object.keys(blocked);

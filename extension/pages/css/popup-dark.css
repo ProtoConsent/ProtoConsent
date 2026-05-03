@@ -416,6 +416,30 @@ html.pc-dark .pc-counter-enhanced {
 html.pc-dark .pc-counter-lifetime {
   color: #9ca3af;
 }
+html.pc-dark .pc-counter-lifetime:hover {
+  color: #d1d5db;
+}
+html.pc-dark .pc-lt-pill {
+  background-color: #1E212B;
+  border-color: #2D313E;
+}
+html.pc-dark .pc-lt-pill:hover {
+  border-color: #4D5260;
+  background-color: #252830;
+}
+html.pc-dark .pc-lt-pill:focus-visible,
+html.pc-dark .pc-counter-lifetime:focus-visible {
+  outline-color: #4DABF7;
+}
+html.pc-dark .pc-lt-pill img {
+  filter: invert(0.8);
+}
+html.pc-dark .pc-lt-pill .pc-lt-dot {
+  background-color: #4D5260;
+}
+html.pc-dark .pc-lt-pill.is-active .pc-lt-dot {
+  background-color: #38a169;
+}
 html.pc-dark .pc-enhanced-scope {
   color: #FFD43B;
 }

@@ -732,6 +732,22 @@ function renderEnhancedLists() {
 
   container.appendChild(grid);
 
+  var MASTER_OFF_TIP = "Disabled - enable via quick toggles in header";
+  chrome.storage.local.get(["enhancedCosmeticEnabled", "cmpAutoResponse", "paramStrippingEnabled"], function (r) {
+    if (r.enhancedCosmeticEnabled === false) {
+      var c = document.getElementById("ep-card-cosmetic");
+      if (c) { c.classList.add("is-master-off"); c.title = MASTER_OFF_TIP; }
+    }
+    if (r.cmpAutoResponse === false) {
+      var b = document.getElementById("ep-card-banners");
+      if (b) { b.classList.add("is-master-off"); b.title = MASTER_OFF_TIP; }
+    }
+    if (r.paramStrippingEnabled === false) {
+      container.querySelectorAll('.ep-list-card[data-list-type="tracking_params"], .ep-list-card[data-list-type="tracking_params_sites"]')
+        .forEach(function (el) { el.classList.add("is-master-off"); el.title = MASTER_OFF_TIP; });
+    }
+  });
+
   // Restore expanded card
   if (prevExpanded) {
     var card = document.getElementById(prevExpanded);
@@ -762,6 +778,7 @@ function _renderEpListCard(listId) {
   card.className = "ep-list-card";
   if (listId.startsWith("protoconsent_")) card.classList.add("is-own");
   card.dataset.listId = listId;
+  if (listDef) card.dataset.listType = listDef.type;
   if (listData?.enabled || isConsentLinked) card.classList.add("is-enabled");
 
   const header = document.createElement("div");
@@ -1258,3 +1275,22 @@ function formatRelativeTime(ts) {
   const days = Math.floor(hours / 24);
   return days + "d ago";
 }
+
+var _MASTER_OFF_TIP = "Disabled - enable via quick toggles in header";
+chrome.storage.onChanged.addListener(function (changes) {
+  if ("enhancedCosmeticEnabled" in changes) {
+    var off = changes.enhancedCosmeticEnabled.newValue === false;
+    var c = document.getElementById("ep-card-cosmetic");
+    if (c) { c.classList.toggle("is-master-off", off); c.title = off ? _MASTER_OFF_TIP : ""; }
+  }
+  if ("cmpAutoResponse" in changes) {
+    var off = changes.cmpAutoResponse.newValue === false;
+    var b = document.getElementById("ep-card-banners");
+    if (b) { b.classList.toggle("is-master-off", off); b.title = off ? _MASTER_OFF_TIP : ""; }
+  }
+  if ("paramStrippingEnabled" in changes) {
+    var off = changes.paramStrippingEnabled.newValue === false;
+    document.querySelectorAll('.ep-list-card[data-list-type="tracking_params"], .ep-list-card[data-list-type="tracking_params_sites"]')
+      .forEach(function (el) { el.classList.toggle("is-master-off", off); el.title = off ? _MASTER_OFF_TIP : ""; });
+  }
+});

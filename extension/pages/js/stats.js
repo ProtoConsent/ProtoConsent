@@ -16,6 +16,7 @@ let lastPurposeStats = {};
 let lastBlockedDomains = {};
 let lastPathDetails = {};
 let lastBlocked = 0;
+let lastBlockedFromMatchedRules = false;
 let lastLifetimeBlocked = 0;
 let displayRetries = 0;
 const MAX_DISPLAY_RETRIES = 2;
@@ -216,15 +217,21 @@ async function getBlockedRulesCount() {
 // Compute block provenance from getMatchedRules (own) vs webRequest (observed).
 // Single source of truth - used by proto.js and debug.js.
 // In monitoring mode, own is always 0 (ProtoConsent does not block).
-// In standalone mode, the difference (observed - own) is labelled "other" because
-// it may include CSP, Mixed Content, or request aborts from the site itself -
-// not necessarily an external blocker. In monitoring mode it is "external".
+// When getMatchedRules is unavailable (Firefox), own = blocked from webRequest
+// and other cannot be computed (same data source).
 function computeBlockProvenance(coverage, mode) {
   let own = (mode === "protoconsent") ? 0 : (lastBlocked || 0);
   let observed = (coverage && coverage.observed) || 0;
   let attributed = (coverage && coverage.attributed) || 0;
-  let other = (mode === "protoconsent") ? observed : Math.max(0, observed - own);
-  return { own: own, observed: observed, attributed: attributed, other: other };
+  let other;
+  if (mode === "protoconsent") {
+    other = observed;
+  } else if (!lastBlockedFromMatchedRules) {
+    other = -1;
+  } else {
+    other = Math.max(0, observed - own);
+  }
+  return { own, observed, attributed, other, hasMatchedRules: lastBlockedFromMatchedRules };
 }
 
 // --- Stats bar rendering ---
@@ -285,6 +292,7 @@ async function displayBlockedCount() {
     lastBlockedDomains = blockedDomains;
     lastPathDetails = pd;
     lastBlocked = blocked;
+    lastBlockedFromMatchedRules = Object.keys(rulesetHitCount).length > 0;
     lastLifetimeBlocked = lifetimeBlocked || 0;
     lastGpcSignalsSent = gpc;
     lastChStripped = ch;
@@ -335,12 +343,22 @@ async function displayBlockedCount() {
       // Lifetime total (persistent across sessions) - shown below profile/site row
       var ltEl = document.getElementById("pc-lifetime-counter");
       if (ltEl) {
-        if (lastLifetimeBlocked > 0) {
-          ltEl.textContent = compactNumber(lastLifetimeBlocked) + " total blocked";
-          ltEl.title = "Total blocked across all sites since install";
-          ltEl.hidden = false;
-        } else {
-          ltEl.hidden = true;
+        var ltText = lastLifetimeBlocked > 0
+          ? compactNumber(lastLifetimeBlocked) + " total blocked"
+          : "Quick toggles";
+        ltEl.textContent = ltText;
+        ltEl.title = "Quick toggles";
+        ltEl.hidden = false;
+        if (!ltEl._toggleBound) {
+          ltEl._toggleBound = true;
+          ltEl.setAttribute("role", "button");
+          ltEl.setAttribute("tabindex", "0");
+          ltEl.setAttribute("aria-expanded", "false");
+          ltEl.setAttribute("aria-controls", "pc-lifetime-toggles");
+          ltEl.addEventListener("click", toggleLifetimePanel);
+          ltEl.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleLifetimePanel(); }
+          });
         }
       }
 
@@ -530,3 +548,4 @@ function renderEnhancedScopeLine(el, blockingCount, totalDomains, infoCount, inf
   }
   el.style.display = "";
 }
+

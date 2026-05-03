@@ -9,6 +9,7 @@ const SECTION_TAB_MAP = {
 	'privacy-signals-section': 'consent',
 	'mode-section': 'consent',
 	'enhanced-section': 'protection',
+	'cosmetic-section': 'protection',
 	'cmp-section': 'protection',
 	'regional-filters': 'protection',
 	'inter-ext-section': 'advanced',
@@ -34,6 +35,7 @@ async function init() {
 		renderEnhancedPresets();
 		renderDynamicListsToggle(purposes);
 		initModeSection();
+		initCosmeticSection();
 		initCmpSection();
 		initRegionalSection();
 		initInterExt();
@@ -838,6 +840,28 @@ function initModeSection() {
 	});
 }
 
+function initCosmeticSection() {
+	const toggle = document.getElementById('cosmetic-master-toggle');
+	const label = document.getElementById('cosmetic-master-label');
+	if (!toggle) return;
+
+	chrome.storage.local.get('enhancedCosmeticEnabled', (data) => {
+		const on = data.enhancedCosmeticEnabled !== false;
+		toggle.checked = on;
+		if (label) label.textContent = on ? 'Enabled' : 'Disabled';
+	});
+
+	toggle.addEventListener('change', () => {
+		const v = toggle.checked;
+		if (label) label.textContent = v ? 'Enabled' : 'Disabled';
+		chrome.storage.local.set({ enhancedCosmeticEnabled: v });
+		chrome.runtime.sendMessage({ type: "PROTOCONSENT_RULES_UPDATED" });
+	});
+
+	const section = document.getElementById('cosmetic-section');
+	if (section) section.classList.remove('ps-hidden');
+}
+
 function initCmpSection() {
 	const section = document.getElementById('cmp-section');
 	const toggle = document.getElementById('cmp-auto-toggle');
@@ -1069,7 +1093,7 @@ function initThemeSection() {
 const EXPORT_KEYS = [
 	"defaultProfile", "defaultPurposes", "rules", "whitelist",
 	"gpcEnabled", "chStrippingEnabled", "paramStrippingEnabled", "paramStrippingSitesEnabled", "operatingMode",
-	"enhancedPreset", "enhancedLists",
+	"enhancedPreset", "enhancedLists", "enhancedCosmeticEnabled",
 	"interExtEnabled", "interExtAllowlist", "interExtDenylist", "interExtPending",
 	"dynamicListsConsent", "consentEnhancedLink",
 	"autoRefreshIntervalOwn", "autoRefreshIntervalExternal",
@@ -1153,6 +1177,10 @@ function validateImport(data) {
 		if (typeof el === "object" && el !== null && !Array.isArray(el)) {
 			clean.enhancedLists = sanitizeObjectKeys(el);
 		} else errors.push("enhancedLists: must be an object");
+	}
+	if ("enhancedCosmeticEnabled" in data) {
+		if (typeof data.enhancedCosmeticEnabled === "boolean") clean.enhancedCosmeticEnabled = data.enhancedCosmeticEnabled;
+		else errors.push("enhancedCosmeticEnabled: must be boolean");
 	}
 
 	if ("interExtEnabled" in data) {
@@ -1536,7 +1564,7 @@ function updateCelNote(celEnabled) {
 		const celMode = resp.celMode || 'profile';
 		const hasDownloadedWithCategory = Object.keys(lists).some(id => {
 			const def = catalog[id];
-			return def && def.category && def.category !== "security";
+			return def && def.category && CEL_PURPOSE_ORDER.includes(def.category);
 		});
 		note.innerHTML = '';
 		const noteLabel = document.createElement('span');

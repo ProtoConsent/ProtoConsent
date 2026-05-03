@@ -136,6 +136,10 @@ function formatPanelForCopy(panel) {
       const cells = row.querySelectorAll("th, td");
       const vals = [];
       for (const cell of cells) {
+        // Skip pure action columns (buttons only, no data content)
+        if (cell.querySelector("button") && !cell.querySelector(".pc-log-table-domain, .pc-log-scope-label")) {
+          continue;
+        }
         const img = cell.querySelector("img");
         vals.push(img ? (img.title || img.alt || "") : cell.textContent.trim());
       }

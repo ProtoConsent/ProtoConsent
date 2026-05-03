@@ -221,6 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const header = card.querySelector(".ep-list-header");
           if (header) header.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
         });
+        if (typeof setLifetimePanelState === "function") setLifetimePanelState(shouldExpand);
         toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
         toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
         return;
@@ -243,8 +244,18 @@ document.addEventListener("DOMContentLoaded", () => {
           var ch = c.querySelector(".proto-card-chevron");
           if (ch) ch.textContent = expand ? " \u25BE" : " \u25B8";
         });
+        if (typeof setLifetimePanelState === "function") setLifetimePanelState(expand);
         toggleDescBtn.textContent = expand ? "Hide details" : "Show details";
         toggleDescBtn.setAttribute("aria-expanded", expand ? "true" : "false");
+        return;
+      }
+
+      if (activeMode === "log") {
+        let ltEl = document.getElementById("pc-lifetime-counter");
+        let shouldExpand = ltEl && !ltEl.classList.contains("is-expanded");
+        if (typeof setLifetimePanelState === "function") setLifetimePanelState(shouldExpand);
+        toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
+        toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
         return;
       }
 
@@ -274,6 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
       leftEls.forEach((el) => {
         el.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
       });
+      if (typeof setLifetimePanelState === "function") setLifetimePanelState(shouldExpand);
       toggleDescBtn.textContent = shouldExpand ? "Hide details" : "Show details";
       toggleDescBtn.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
     });
