@@ -31,6 +31,8 @@
 			<button type="button" class="ps-tab" id="ps-tab-protection" data-tab="protection" role="tab" aria-selected="false" aria-controls="ps-panel-protection" tabindex="-1">Protection</button>
 			<button type="button" class="ps-tab" id="ps-tab-regional" data-tab="regional" role="tab" aria-selected="false" aria-controls="ps-panel-regional" tabindex="-1">Regional</button>
 			<button type="button" class="ps-tab" id="ps-tab-advanced" data-tab="advanced" role="tab" aria-selected="false" aria-controls="ps-panel-advanced" tabindex="-1">Advanced</button>
+			<button type="button" class="ps-tab" id="ps-tab-support" data-tab="support" role="tab" aria-selected="false" aria-controls="ps-panel-support" tabindex="-1">Support</button>
+			<button type="button" class="ps-tab" id="ps-tab-about" data-tab="about" role="tab" aria-selected="false" aria-controls="ps-panel-about" tabindex="-1">About</button>
 		</nav>
 
 		<main>
@@ -356,6 +358,74 @@
 		</section>
 		</div>
 
+		<div class="ps-panel" id="ps-panel-support" data-panel="support" role="tabpanel" aria-labelledby="ps-tab-support" hidden>
+		<section class="ps-section">
+			<div class="ps-section-head">
+				<h2>Extension bugs</h2>
+			</div>
+			<div class="ps-support-row">
+				<p class="ps-enhanced-desc">Report issues with ProtoConsent itself to the extension issue tracker. Requires a GitHub account.</p>
+				<a href="https://github.com/ProtoConsent/ProtoConsent/issues/new" class="ps-data-btn" target="_blank" rel="noopener noreferrer">Open</a>
+			</div>
+		</section>
+		<section class="ps-section">
+			<div class="ps-section-head">
+				<h2>Filter issues / website is broken</h2>
+			</div>
+			<div class="ps-support-row">
+				<p class="ps-enhanced-desc">Report filter issues with specific websites (wrong classification, broken site) to the data issue tracker. Requires a GitHub account.</p>
+				<a href="https://github.com/ProtoConsent/data/issues/new" class="ps-data-btn" target="_blank" rel="noopener noreferrer">Open</a>
+			</div>
+		</section>
+		<section class="ps-section">
+			<div class="ps-section-head">
+				<h2>Debug logging</h2>
+			</div>
+			<p class="ps-enhanced-desc">Enable debug logging to collect detailed diagnostics in the popup's Log tab. Useful when reproducing issues.</p>
+			<div class="ps-gpc-toggle-row">
+				<div>
+					<span class="ps-gpc-info-name">Debug mode</span>
+				</div>
+				<label class="ps-gpc-toggle-label" for="ps-debug-toggle" id="ps-debug-label">Disabled</label>
+				<input type="checkbox" id="ps-debug-toggle" class="ps-gpc-toggle" aria-label="Debug logging">
+			</div>
+		</section>
+		<section class="ps-section">
+			<div class="ps-section-head">
+				<h2>Troubleshooting information</h2>
+			</div>
+			<p class="ps-enhanced-desc">Technical information useful when reporting an issue. Click Copy to include it in your bug report.</p>
+			<div class="ps-about-links">
+				<button id="ps-troubleshoot-copy" class="ps-data-btn" type="button" aria-live="polite">Copy</button>
+			</div>
+			<pre id="ps-troubleshoot-info" class="ps-troubleshoot-pre" aria-label="Troubleshooting output" tabindex="0">Loading...</pre>
+		</section>
+		</div>
+
+		<div class="ps-panel" id="ps-panel-about" data-panel="about" role="tabpanel" aria-labelledby="ps-tab-about" hidden>
+		<section class="ps-section">
+			<div class="ps-section-head">
+				<h2 id="about-version">ProtoConsent</h2>
+			</div>
+			<p class="ps-enhanced-desc">Copyright (C) 2026 ProtoConsent contributors</p>
+			<div class="ps-about-links">
+				<a href="https://github.com/ProtoConsent/ProtoConsent" class="ps-about-link" target="_blank" rel="noopener noreferrer">Source code (GPL-3.0+)</a>
+				<a href="https://github.com/ProtoConsent/ProtoConsent/releases" class="ps-about-link" target="_blank" rel="noopener noreferrer">Changelog</a>
+				<a href="https://protoconsent.org/privacy" class="ps-about-link" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+				<a href="https://github.com/ProtoConsent/data" class="ps-about-link" target="_blank" rel="noopener noreferrer">Filter lists (open data)</a>
+				<a href="https://protoconsent.org" class="ps-about-link" target="_blank" rel="noopener noreferrer">Website</a>
+				<a href="https://github.com/ProtoConsent/ProtoConsent/blob/main/CREDITS.md" class="ps-about-link" target="_blank" rel="noopener noreferrer">Acknowledgments</a>
+			</div>
+		</section>
+		<section id="credits-section" class="ps-section ps-hidden">
+			<div class="ps-section-head">
+				<h2>Acknowledgments</h2>
+			</div>
+			<p class="ps-enhanced-desc">ProtoConsent uses third-party assets, data, and open-source projects. We are grateful to their maintainers and contributors.</p>
+			<div id="credits-list"></div>
+		</section>
+		</div>
+
 		</main>
 		<footer class="ps-footer">
 			<span id="viewer-version">ProtoConsent</span>
@@ -374,5 +444,7 @@
 	<script src="js/purposes-settings-protection.js"></script>
 	<script src="js/purposes-settings-regional.js"></script>
 	<script src="js/purposes-settings-advanced.js"></script>
+	<script src="js/purposes-settings-support.js"></script>
+	<script src="js/purposes-settings-about.js"></script>
 </body>
 </html>

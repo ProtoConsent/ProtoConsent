@@ -2,7 +2,7 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-const TAB_NAMES = ['consent', 'protection', 'regional', 'advanced'];
+const TAB_NAMES = ['consent', 'protection', 'regional', 'advanced', 'support', 'about'];
 const SECTION_TAB_MAP = {
 	'default-profile-section': 'consent',
 	'presets-section': 'consent',
@@ -39,6 +39,8 @@ async function init() {
 		initCmpSection();
 		initRegionalSection();
 		initInterExt();
+		initSupportSection();
+		initAboutSection();
 		initTabs();
 
 		const versionEl = document.getElementById('viewer-version');
