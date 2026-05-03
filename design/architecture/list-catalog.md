@@ -14,7 +14,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
   - [5. Enhanced protection lists](#5-enhanced-protection-lists)
     - [Presets](#presets)
     - [Balanced preset lists](#balanced-preset-lists)
-    - [Full preset (adds 8 lists)](#full-preset-adds-8-lists)
+    - [Full preset (adds 6 lists)](#full-preset-adds-6-lists)
   - [6. Distribution and updates](#6-distribution-and-updates)
     - [Automated refresh](#automated-refresh)
     - [Format conversion](#format-conversion)
@@ -125,13 +125,14 @@ When downloading with preset Off, the extension auto-switches to Balanced.
 
 *Regional lists only active when user has selected languages (see [section 12](#12-regional-lists)).
 
-### Full preset (adds 5 lists)
+### Full preset (adds 6 lists)
 
 | List | License | Domains | Category |
 | --- | --- | --- | --- |
 | [EasyList](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~56K | `ads` |
 | [OISD Small](https://oisd.nl/) | GPL-3.0 | ~56K | - |
 | [Phishing Army](https://phishing.army) | CC BY-NC 4.0 | ~65K | `security` |
+| [Fanboy Social](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | varies | `third_parties` |
 | [AdGuard CNAME Trackers](https://github.com/AdguardTeam/cname-trackers) | MIT | ~240K | - |
 | [EasyList Cookie Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | - | - |
 | [Web Annoyances Cosmetic](https://github.com/LanikSJ/webannoyances) | CC BY-SA 4.0 | - | - |

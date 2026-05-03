@@ -31,6 +31,7 @@
       "entries": [
         { "name": "EasyList", "url": "https://easylist.to/", "by": "EasyList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
         { "name": "EasyPrivacy", "url": "https://easylist.to/", "by": "EasyList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
+        { "name": "Fanboy Social", "url": "https://easylist.to/", "by": "EasyList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
         { "name": "AdGuard DNS Filter", "url": "https://github.com/AdguardTeam/AdGuardSDNSFilter", "by": "AdGuard Team", "license": "GPL-3.0" },
         { "name": "OISD", "url": "https://oisd.nl/", "by": "Stephan van Ruth", "license": "GPL-3.0" },
         { "name": "HaGeZi DNS Blocklists", "url": "https://github.com/hagezi/dns-blocklists", "by": "HaGeZi", "license": "GPL-3.0" },
