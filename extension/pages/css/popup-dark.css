@@ -566,3 +566,20 @@ html.pc-dark .pc-declaration-check.not-used {
 html.pc-dark .pc-declaration-check.not-declared {
   color: #4D5260;
 }
+
+/* Custom context menu */
+html.pc-dark .pc-ctx-menu {
+  background: #252830;
+  border-color: #3D4250;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+html.pc-dark .pc-ctx-item:hover {
+  background: rgba(77, 171, 247, 0.1);
+}
+html.pc-dark .pc-ctx-item:focus-visible {
+  background: rgba(77, 171, 247, 0.1);
+  outline-color: #4DABF7;
+}
+html.pc-dark .pc-ctx-check {
+  color: #4DABF7;
+}
