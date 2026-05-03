@@ -8,7 +8,7 @@
 import { REGIONAL_IDS, DEBUG_RULES } from "./config-bridge.js";
 import { loadRegionalLanguagesConfig } from "./config-loader.js";
 import {
-  getEnhancedListsFromStorage, withEnhancedStorageLock,
+  getEnhancedListsFromStorage, getEnhancedPresetFromStorage, withEnhancedStorageLock,
 } from "./storage.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
 import { fetchAndEnableRegionalList } from "./auto-refresh.js";
@@ -250,7 +250,10 @@ export function initRegionalStorageListener() {
       Promise.all([
         getEnhancedListsFromStorage(),
         new Promise(r => chrome.storage.local.get("dynamicListsConsent", d => r(d.dynamicListsConsent !== false))),
-      ]).then(([lists, syncEnabled]) => {
+        getEnhancedPresetFromStorage(),
+      ]).then(([lists, syncEnabled, preset]) => {
+        if (preset === "off") return;
+        const reEnabled = [];
         for (const id of REGIONAL_IDS) {
           if (lists[id] && lists[id].enabled) {
             // Already downloaded + enabled: re-fetch with new languages
@@ -259,11 +262,23 @@ export function initRegionalStorageListener() {
               type: "PROTOCONSENT_ENHANCED_FETCH",
               listId: id,
             }).catch(() => {});
+          } else if (lists[id] && !lists[id].enabled) {
+            // Downloaded but disabled: re-enable and re-fetch
+            lists[id].enabled = true;
+            reEnabled.push(id);
           } else if (!lists[id] && syncEnabled) {
             // Not yet downloaded + sync enabled: trigger initial download
             if (DEBUG_RULES) console.log("ProtoConsent regional: initial download of", id);
             fetchAndEnableRegionalList(id).catch(e => console.warn("ProtoConsent regional: download error for", id, e));
           }
+        }
+        if (reEnabled.length) {
+          chrome.storage.local.set({ enhancedLists: lists }, () => {
+            for (const id of reEnabled) {
+              chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId: id }).catch(() => {});
+            }
+            rebuildAllDynamicRules();
+          });
         }
       });
     }, 100);
