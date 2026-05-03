@@ -233,7 +233,7 @@
       "source": "https://easylist.to/",
       "license": "GPL-3.0+ / CC BY-SA 3.0+",
       "category": null,
-      "preset": "full",
+      "preset": "basic",
       "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/external/easylist_cookie_cosmetic.json",
       "type": "cosmetic",
       "order": 21,
@@ -243,6 +243,20 @@
       "path_rule_count": 0,
       "generic_count": 15273,
       "domain_rule_count": 16780
+    },
+    "easylist_cookie_network": {
+      "name": "EasyList Cookie Network",
+      "description": "Network blocking - blocks cookie consent banner scripts and resources",
+      "source": "https://easylist.to/",
+      "license": "GPL-3.0+ / CC BY-SA 3.0+",
+      "category": null,
+      "preset": "basic",
+      "fetch_url": "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/external/easylist_cookie_network.json",
+      "order": 112,
+      "version": null,
+      "generated": null,
+      "domain_count": 0,
+      "path_rule_count": 0
     },
     "webannoyances_cosmetic": {
       "name": "Web Annoyances Cosmetic",
