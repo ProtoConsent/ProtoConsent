@@ -270,6 +270,7 @@
 
 .pc-log-table th.is-sortable {
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
 }
 

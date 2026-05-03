@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/* --- Base --- */
 html, body {
   margin: 0;
   padding: 0;
@@ -25,6 +26,7 @@ body {
   outline-offset: 2px;
 }
 
+/* --- Layout --- */
 .ps-hidden {
   display: none;
 }
@@ -130,6 +132,7 @@ body {
   gap: 18px;
 }
 
+/* --- Sections & cards --- */
 .ps-status-msg {
   color: var(--pc-text-muted);
   font-size: 13px;
@@ -199,6 +202,7 @@ body {
   margin-bottom: 10px;
 }
 
+/* --- Purpose & preset cards --- */
 .ps-purpose-card,
 .ps-preset-card {
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
@@ -266,6 +270,7 @@ body {
   text-transform: uppercase;
 }
 
+/* --- Pills & badges --- */
 .ps-purpose-key,
 .ps-preset-pill,
 .ps-footer-link {
@@ -317,6 +322,7 @@ body {
 }
 
 
+/* --- Signal card --- */
 .ps-signal-card {
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   border: 1px solid var(--pc-line);
@@ -371,6 +377,7 @@ body {
   color: #1e3a8a;
 }
 
+/* --- Toggle rows --- */
 .ps-gpc-toggle-row {
   display: flex;
   align-items: center;
@@ -388,6 +395,7 @@ body {
   color: var(--pc-text);
 }
 
+/* --- Regional --- */
 .ps-regional-flag {
   vertical-align: -2px;
   margin-right: 4px;
@@ -422,6 +430,7 @@ body {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
+/* --- CEL (Consent Enforcement Layer) --- */
 .ps-cel-icon {
   vertical-align: -2px;
   margin-right: 2px;
@@ -534,6 +543,7 @@ body {
 }
 
 .ps-cel-purpose-text {
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -567,6 +577,7 @@ body {
   border: 0;
 }
 
+/* --- Toggle switch --- */
 .ps-gpc-toggle {
   -webkit-appearance: none;
   appearance: none;
@@ -607,6 +618,7 @@ body {
   outline-offset: 2px;
 }
 
+/* --- Dynamic grid --- */
 .ps-dynamic-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -715,6 +727,7 @@ body {
   line-height: 1.4;
 }
 
+/* --- Default profile --- */
 .ps-default-profile-section {
   background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
   border: 1px solid #93c5fd;
@@ -779,6 +792,7 @@ body {
   border-color: #f0b1b1;
 }
 
+/* --- Enhanced presets --- */
 .ps-enhanced-desc {
   color: var(--pc-text-muted);
   font-size: 12px;
@@ -836,6 +850,7 @@ body {
   height: 16px;
 }
 
+/* --- Footer --- */
 .ps-footer {
   margin-top: 24px;
   padding-top: 14px;
@@ -865,6 +880,7 @@ body {
   background: #e8f0ff;
 }
 
+/* --- Data actions & buttons --- */
 .ps-data-actions {
   display: flex;
   gap: 8px;
@@ -1056,6 +1072,7 @@ body {
   color: var(--pc-text);
   cursor: pointer;
   list-style: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -1203,6 +1220,7 @@ details[open] > .ps-accordion-header::before {
   text-decoration: underline;
 }
 
+/* --- Responsive --- */
 @media (max-width: 700px) {
   .ps-tab {
     flex: 1;
@@ -1348,5 +1366,6 @@ details[open] > .ps-accordion-header::before {
   word-break: break-word;
   max-height: 400px;
   overflow-y: auto;
+  -webkit-user-select: text;
   user-select: text;
 }
