@@ -65,6 +65,7 @@ import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
 import { scheduleSessionPersist } from "./session.js";
 import { getBlockerDetectionState, resetBehavioralCounters, dismissBlockerDetection, isBrave } from "./blocker-detection.js";
 import { refreshLists } from "./auto-refresh.js";
+import { whitelistAllForSite, removeWhitelistAllForSite } from "./context-menu.js";
 
 // Handle a bridge query from the content script.
 export async function handleBridgeQuery(message) {
@@ -996,6 +997,26 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           resolve();
         });
       });
+    });
+    return true;
+  }
+
+  // Whitelist: allow all blocked domains for a site
+  if (message.type === "PROTOCONSENT_WHITELIST_ALL_SITE") {
+    const { tabId, site } = message;
+    if (!site || !isValidHostname(site)) { sendResponse({ ok: false }); return; }
+    whitelistAllForSite(tabId, site).then(() => {
+      sendResponse({ ok: true });
+    });
+    return true;
+  }
+
+  // Whitelist: remove all per-site whitelist entries
+  if (message.type === "PROTOCONSENT_WHITELIST_REMOVE_ALL_SITE") {
+    const { site } = message;
+    if (!site || !isValidHostname(site)) { sendResponse({ ok: false }); return; }
+    removeWhitelistAllForSite(site).then(() => {
+      sendResponse({ ok: true });
     });
     return true;
   }

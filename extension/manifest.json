@@ -37,7 +37,8 @@
     "declarativeNetRequestFeedback",
     "webRequest",
     "webNavigation",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "contextMenus"
   ],
 
   "host_permissions": [

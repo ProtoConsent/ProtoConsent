@@ -292,6 +292,11 @@ function renderLogDomains(initialVisible) {
   const tableSum = rows.reduce((sum, r) => sum + r.count, 0);
   const totalBlocked = lastBlocked || tableSum;
   const uncaptured = totalBlocked - tableSum;
+
+  // Header row: label + whitelist-all button (same pattern as cosmetic header)
+  const headerRow = document.createElement("div");
+  headerRow.className = "pc-cosmetic-header-row";
+
   const header = document.createElement("div");
   header.className = "pc-log-purpose-label";
   let headerText = pluralize(totalBlocked, "blocked request") +
@@ -300,7 +305,27 @@ function renderLogDomains(initialVisible) {
     headerText += " (" + uncaptured + " not captured)";
   }
   header.textContent = headerText;
-  container.appendChild(header);
+  headerRow.appendChild(header);
+
+  if (currentDomain && rows.length > 0) {
+    const allWhitelisted = rows.every(r => !r.domain || isWhitelistedHere(r.domain));
+    const wlBtn = document.createElement("button");
+    wlBtn.type = "button";
+    if (allWhitelisted) {
+      wlBtn.className = "pc-log-allow-btn is-allowed";
+      wlBtn.textContent = "Site whitelisted";
+      wlBtn.title = "Remove all whitelist entries for " + currentDomain;
+      wlBtn.addEventListener("click", () => { handleWhitelistRemoveAll(); });
+    } else {
+      wlBtn.className = "pc-log-allow-btn";
+      wlBtn.textContent = "Whitelist site";
+      wlBtn.title = "Allow all blocked domains on " + currentDomain;
+      wlBtn.addEventListener("click", () => { handleWhitelistAllSite(); });
+    }
+    headerRow.appendChild(wlBtn);
+  }
+
+  container.appendChild(headerRow);
 
   // Filter input
   const filterInput = document.createElement("input");
@@ -1009,6 +1034,50 @@ function handleWhitelistRemove(domain, site) {
           if (Object.keys(lastWhitelist[domain]).length === 0) delete lastWhitelist[domain];
         }
         renderAndRestoreFocus(domain);
+      }
+    }
+  );
+}
+
+function handleWhitelistAllSite() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs || !tabs[0]) return;
+    chrome.runtime.sendMessage(
+      { type: "PROTOCONSENT_WHITELIST_ALL_SITE", tabId: tabs[0].id, site: currentDomain },
+      (resp) => {
+        void chrome.runtime.lastError;
+        if (resp?.ok) {
+          const domains = lastBlockedDomains || {};
+          for (const [purpose, purposeDomains] of Object.entries(domains)) {
+            for (const domain of Object.keys(purposeDomains)) {
+              if (!lastWhitelist[domain]) lastWhitelist[domain] = {};
+              lastWhitelist[domain][currentDomain] = purpose;
+            }
+          }
+          const tbody = document.querySelector("#pc-log-domains tbody");
+          const visibleRows = tbody ? tbody.children.length : 0;
+          renderLogDomains(visibleRows);
+          renderLogWhitelist();
+        }
+      }
+    );
+  });
+}
+
+function handleWhitelistRemoveAll() {
+  chrome.runtime.sendMessage(
+    { type: "PROTOCONSENT_WHITELIST_REMOVE_ALL_SITE", site: currentDomain },
+    (resp) => {
+      void chrome.runtime.lastError;
+      if (resp?.ok) {
+        for (const [domain, siteMap] of Object.entries(lastWhitelist)) {
+          delete siteMap[currentDomain];
+          if (Object.keys(siteMap).length === 0) delete lastWhitelist[domain];
+        }
+        const tbody = document.querySelector("#pc-log-domains tbody");
+        const visibleRows = tbody ? tbody.children.length : 0;
+        renderLogDomains(visibleRows);
+        renderLogWhitelist();
       }
     }
   );
