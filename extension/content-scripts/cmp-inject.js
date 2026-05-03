@@ -22,12 +22,12 @@
 
   let stored;
   try {
-    stored = await chrome.storage.local.get(['_cmpSignatures', '_userPurposes', '_tcString',
+    stored = await chrome.storage.local.get(['_cmpSignatures', '_cmpSiteSignatures', '_userPurposes', '_tcString',
       'cmpAutoResponse', 'cmpEnabled', 'cmpCookieMaxAge', 'cmpCustomUuid',
       'cmpCookieInjectionEnabled', 'cmpCosmeticEnabled', 'cmpScrollUnlockEnabled',
       '_cmpDomainCache']);
   } catch (_) { return; }
-  const sigs = stored._cmpSignatures;
+  const sigs = Object.assign({}, stored._cmpSignatures, stored._cmpSiteSignatures);
   const prefs = stored._userPurposes;
   const tcString = stored._tcString;
   const { cmpAutoResponse, cmpEnabled, cmpCookieMaxAge, cmpCustomUuid,
@@ -286,6 +286,7 @@
           type: "PROTOCONSENT_CMP_APPLIED",
           domain: domain,
           cmpIds: cmpIds,
+          cmpCount: cmpIds.length,
           cookieCount: injectedCookies.length,
           selectorCount: selectors.length,
           scrollUnlock: lockEntries.length > 0,

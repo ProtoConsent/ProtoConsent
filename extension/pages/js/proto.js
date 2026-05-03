@@ -457,8 +457,21 @@ function _fillBannersBody(body, resp, tcfData) {
   // TCF consent status
   if (tcfData) {
     var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
-    provEl.innerHTML = (tcfData.cmpId && _protoCmpNames[tcfData.cmpId])
-      ? "<strong>Managed by</strong> " + _protoCmpNames[tcfData.cmpId] : "<strong>Consent banner detected</strong>";
+    var details = [];
+    if (tcfData.cmpId && _protoCmpNames[tcfData.cmpId]) {
+      details.push("<strong>Managed by</strong> " + _protoCmpNames[tcfData.cmpId]);
+    } else {
+      details.push("<strong>Consent banner detected</strong>");
+    }
+    // Concatenate auto-response actions if present
+    if (resp.cmp) {
+      var actions = [];
+      if (resp.cmp.selectorCount > 0) actions.push("Cosmetic hiding: " + resp.cmp.selectorCount + " selectors");
+      if (resp.cmp.scrollUnlock) actions.push("Scroll unlock: active");
+      if (resp.cmp.cookieCount > 0) actions.push("Cookies injected: " + resp.cmp.cookieCount);
+      if (actions.length > 0) details.push(actions.join(", "));
+    }
+    provEl.innerHTML = details.join(" — ");
     body.appendChild(provEl);
     var consents = tcfData.purposeConsents || {};
     var ids = Object.keys(consents).sort(function (a, b) { return Number(a) - Number(b); });
@@ -475,13 +488,6 @@ function _fillBannersBody(body, resp, tcfData) {
       }
       body.appendChild(grid);
     }
-  }
-  // CMP Auto-response
-  var cmpActive = !!(resp.cmp && resp.cmp.domain);
-  if (cmpActive) {
-    var autoEl = document.createElement("div"); autoEl.style.marginTop = "4px";
-    autoEl.innerHTML = "<strong>Auto-response:</strong> " + ((resp.cmp.cmpIds || []).length) + " templates on " + resp.cmp.domain;
-    body.appendChild(autoEl);
   }
   if (!body.hasChildNodes()) body.textContent = "No banners detected";
 }
