@@ -18,8 +18,8 @@ function resolveEnhancedPreset(lists, catalog) {
   if (downloaded.length === 0) return "off";
   const allDisabled = downloaded.every(id => !lists[id]?.enabled);
   if (allDisabled) return "off";
-  // Exclude regional lists from preset resolution (they are user-managed)
-  const catalogIds = Object.keys(catalog).filter(id => !REGIONAL_IDS.has(id));
+  // Exclude regional and optional lists from preset resolution (they are user-managed)
+  const catalogIds = Object.keys(catalog).filter(id => !REGIONAL_IDS.has(id) && catalog[id].preset !== "optional" && catalog[id].version);
   if (catalogIds.length === 0) return "custom";
   const allDownloaded = catalogIds.every(id => !!lists[id]);
   const allEnabled = allDownloaded && catalogIds.every(id => !!lists[id]?.enabled);
@@ -1075,6 +1075,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                   lists[listId].enabled = true;
                 }
               }
+            } else if (listDef.preset === "optional") {
+              // Optional lists are never changed by preset switches
             } else if (preset === "basic") {
               lists[listId].enabled = listDef.preset === "basic";
             } else if (preset === "full") {

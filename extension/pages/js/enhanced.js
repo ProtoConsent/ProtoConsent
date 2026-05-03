@@ -84,9 +84,9 @@ function getEnhancedStats() {
     cosmeticRules,
     cmpTemplates,
     totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules + cmpTemplates,
-    downloadedCount: Object.keys(epLists).filter(id => epLists[id].type !== "revoke").length - coreExtraDownloaded - cmpExtraDownloaded,
-    catalogCount: Object.keys(epCatalog).filter(id => epCatalog[id].type !== "revoke").length - coreExtraCatalog - cmpExtraCatalog,
-    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id) && !(REGIONAL_IDS.has(id) && !epHasRegionalLanguages) && epCatalog[id].type !== "revoke")
+    downloadedCount: Object.keys(epLists).filter(id => epLists[id].type !== "revoke" && (!epCatalog[id] || epCatalog[id].preset !== "optional")).length - coreExtraDownloaded - cmpExtraDownloaded,
+    catalogCount: Object.keys(epCatalog).filter(id => epCatalog[id].type !== "revoke" && epCatalog[id].preset !== "optional").length - coreExtraCatalog - cmpExtraCatalog,
+    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id) && !(REGIONAL_IDS.has(id) && !epHasRegionalLanguages) && epCatalog[id].type !== "revoke" && epCatalog[id].preset !== "optional" && !(epPreset === "basic" && epCatalog[id].preset !== "basic"))
       .concat(coreCatalogIds.length > 0 && !coreDownloadedIds.length ? [coreCatalogIds[0]] : [])
       .concat(cmpCatalogIds.length > 0 && !cmpDownloadedIds.length ? [cmpCatalogIds[0]] : []),
     updatesAvailable,
@@ -425,6 +425,7 @@ function setEnhancedPreset(preset) {
           if (epLists[id]) return false;
           // Skip regional lists if no languages selected
           if (REGIONAL_IDS.has(id) && !hasLangs) return false;
+          if (epCatalog[id].preset === "optional") return false;
           if (preset === "basic") return epCatalog[id].preset === "basic";
           return true;
         });
@@ -462,6 +463,7 @@ function renderEnhancedLists() {
   const coreIds = getCoreIds();
   const cmpIds = getCmpIds();
   const blockingLists = [];   // non-core domain/path blocking + regional blocking
+  const enhancedLists = [];   // optional/enhanced editorial lists
   const cosmeticLists = [];   // cosmetic + regional cosmetic
   const bannerLists = [];     // non-grouped CMP
   const detectionLists = [];  // informational + tracking_params
@@ -469,7 +471,9 @@ function renderEnhancedLists() {
   for (const [listId, listDef] of catalogEntries) {
     if (CORE_IDS.has(listId) || CMP_IDS.has(listId)) continue;
     if (listDef.type === "revoke") continue;
-    if (listDef.type === "cosmetic" || listDef.type === "regional_cosmetic") {
+    if (listDef.preset === "optional") {
+      enhancedLists.push(listId);
+    } else if (listDef.type === "cosmetic" || listDef.type === "regional_cosmetic") {
       cosmeticLists.push(listId);
     } else if (listDef.type === "cmp" || listDef.type === "cmp_detectors" || listDef.type === "cmp_site") {
       bannerLists.push(listId);
@@ -487,6 +491,7 @@ function renderEnhancedLists() {
 
   // 1. Overview card (full-width)
   var stats = getEnhancedStats();
+  var enhancedEnabled = enhancedLists.filter(function (id) { return epLists[id] && epLists[id].enabled; }).length;
   var overviewMetric;
   if (stats.enabledCount > 0) {
     overviewMetric = stats.enabledCount + " active \u00b7 " + stats.totalRules.toLocaleString() + " rules";
@@ -543,6 +548,7 @@ function renderEnhancedLists() {
 
     var typeGroups = [
       { label: "Blocking", icon: GRID_ICONS + "blocking.svg", grouped: coreActive ? ["ProtoConsent Core"] : [], ids: blockingLists, detail: stats.totalDomains.toLocaleString() + " domains" },
+      { label: "Enhanced", icon: "../icons/purposes/enhanced.svg", grouped: [], ids: enhancedLists, detail: enhancedEnabled + " active" },
       { label: "Cosmetic", icon: GRID_ICONS + "cosmetic.svg", grouped: [], ids: cosmeticLists, detail: stats.cosmeticRules.toLocaleString() + " rules" },
       { label: "Banners", icon: GRID_ICONS + "banners.svg", grouped: cmpActive ? ["ProtoConsent Banners"] : [], ids: bannerLists, detail: stats.cmpTemplates.toLocaleString() + " templates" },
       { label: "Detection", icon: GRID_ICONS + "detection.svg", grouped: [], ids: detectionLists, detail: stats.paramsTotal.toLocaleString() + " params \u00b7 " + stats.infoDomains.toLocaleString() + " entries" },
@@ -637,7 +643,28 @@ function renderEnhancedLists() {
   grid.appendChild(bk.card);
   grid.appendChild(bk.body);
 
-  // 3. Cosmetic card
+  // 3. Enhanced card (optional editorial lists)
+  var enhancedMetric = enhancedEnabled > 0
+    ? enhancedEnabled + " active"
+    : "None active";
+  var en = createGridCard({ id: "ep-card-enhanced", iconSrc: "../icons/purposes/enhanced.svg", title: "Enhanced", metric: enhancedMetric });
+  var enBody = en.body;
+  var disclaimer = document.createElement("div");
+  disclaimer.className = "ep-optional-disclaimer";
+  disclaimer.textContent = "Community lists for advanced users. May increase blocking aggressiveness or overlap with existing lists.";
+  enBody.appendChild(disclaimer);
+  enhancedLists.sort(function (a, b) {
+    var ae = epLists[a] && epLists[a].enabled ? 0 : 1;
+    var be = epLists[b] && epLists[b].enabled ? 0 : 1;
+    return ae - be || (epCatalog[a].order || 0) - (epCatalog[b].order || 0);
+  });
+  for (var i = 0; i < enhancedLists.length; i++) {
+    enBody.appendChild(_renderEpListCard(enhancedLists[i]));
+  }
+  grid.appendChild(en.card);
+  grid.appendChild(en.body);
+
+  // 4. Cosmetic card
   var cm = createGridCard({ id: "ep-card-cosmetic", iconSrc: GRID_ICONS + "cosmetic.svg", title: "Cosmetic", metric: stats.cosmeticRules.toLocaleString() + " rules" });
   var cmBody = cm.body;
   for (var i = 0; i < cosmeticLists.length; i++) {
@@ -652,7 +679,7 @@ function renderEnhancedLists() {
   grid.appendChild(cm.card);
   grid.appendChild(cm.body);
 
-  // 4. Banners card
+  // 5. Banners card
   var bn = createGridCard({ id: "ep-card-banners", iconSrc: GRID_ICONS + "banners.svg", title: "Banners", metric: stats.cmpTemplates.toLocaleString() + " templates" });
   var bnBody = bn.body;
   if (cmpIds.length > 0) bnBody.appendChild(renderCmpCard(cmpIds));
@@ -662,7 +689,7 @@ function renderEnhancedLists() {
   grid.appendChild(bn.card);
   grid.appendChild(bn.body);
 
-  // 5. Detection card
+  // 6. Detection card
   var dt = createGridCard({ id: "ep-card-detection", iconSrc: GRID_ICONS + "detection.svg", title: "Detection", metric: stats.infoCount + " info \u00b7 " + stats.paramsTotal + " params" });
   var dtBody = dt.body;
   for (var i = 0; i < detectionLists.length; i++) {
@@ -671,64 +698,65 @@ function renderEnhancedLists() {
   grid.appendChild(dt.card);
   grid.appendChild(dt.body);
 
-  // 6. Exceptions card (hotfix domains)
-  if (hotfixActive && hotfixCount > 0) {
-    var ex = createGridCard({ id: "ep-card-exceptions", iconSrc: GRID_ICONS + "exception.svg", title: "Exceptions", metric: hotfixCount + " domain" + (hotfixCount !== 1 ? "s" : "") });
-    var exBody = ex.body;
-    (function (body) {
-      chrome.storage.local.get(["enhancedData_protoconsent_hotfix"], function (result) {
-        var data = result.enhancedData_protoconsent_hotfix;
-        if (!data || !data.domains || !data.domains.length) {
-          body.textContent = "No domains";
-          return;
+  // 7. Exceptions card (hotfix domains - always visible)
+  var exMetric = hotfixActive && hotfixCount > 0
+    ? hotfixCount + " domain" + (hotfixCount !== 1 ? "s" : "")
+    : "No corrections";
+  var ex = createGridCard({ id: "ep-card-exceptions", iconSrc: GRID_ICONS + "exception.svg", title: "Exceptions", metric: exMetric });
+  var exBody = ex.body;
+  (function (body) {
+    chrome.storage.local.get(["enhancedData_protoconsent_hotfix"], function (result) {
+      var data = result.enhancedData_protoconsent_hotfix;
+      if (!data || !data.domains || !data.domains.length) {
+        body.textContent = "No active corrections. Hotfix domains will appear here when blocking corrections are applied between extension releases.";
+        return;
+      }
+      var domains = data.domains;
+      var MAX_LISTED = 50;
+      var wrap = document.createElement("div");
+      wrap.className = "ep-hotfix-domains";
+      var desc = document.createElement("div");
+      desc.className = "ep-hotfix-desc";
+      desc.textContent = "Domains excluded from blocking lists to correct false positives or remove inactive entries.";
+      wrap.appendChild(desc);
+      var limit = Math.min(domains.length, MAX_LISTED);
+      for (var i = 0; i < limit; i++) {
+        var entry = document.createElement("div");
+        entry.className = "ep-hotfix-domain-entry";
+        entry.textContent = domains[i];
+        wrap.appendChild(entry);
+      }
+      if (domains.length > MAX_LISTED) {
+        var remaining = domains.length - MAX_LISTED;
+        var toggle = document.createElement("div");
+        toggle.className = "ep-hotfix-domain-entry ep-hotfix-toggle";
+        toggle.textContent = "and " + remaining.toLocaleString() + " more...";
+        toggle.style.cursor = "pointer";
+        toggle.style.opacity = "0.7";
+        var expanded = false;
+        var extra = document.createElement("div");
+        extra.style.display = "none";
+        for (var j = MAX_LISTED; j < domains.length; j++) {
+          var el = document.createElement("div");
+          el.className = "ep-hotfix-domain-entry";
+          el.textContent = domains[j];
+          extra.appendChild(el);
         }
-        var domains = data.domains;
-        var MAX_LISTED = 50;
-        var wrap = document.createElement("div");
-        wrap.className = "ep-hotfix-domains";
-        var desc = document.createElement("div");
-        desc.className = "ep-hotfix-desc";
-        desc.textContent = "Domains excluded from blocking lists to correct false positives or remove inactive entries.";
-        wrap.appendChild(desc);
-        var limit = Math.min(domains.length, MAX_LISTED);
-        for (var i = 0; i < limit; i++) {
-          var entry = document.createElement("div");
-          entry.className = "ep-hotfix-domain-entry";
-          entry.textContent = domains[i];
-          wrap.appendChild(entry);
-        }
-        if (domains.length > MAX_LISTED) {
-          var remaining = domains.length - MAX_LISTED;
-          var toggle = document.createElement("div");
-          toggle.className = "ep-hotfix-domain-entry ep-hotfix-toggle";
-          toggle.textContent = "and " + remaining.toLocaleString() + " more...";
-          toggle.style.cursor = "pointer";
-          toggle.style.opacity = "0.7";
-          var expanded = false;
-          var extra = document.createElement("div");
-          extra.style.display = "none";
-          for (var j = MAX_LISTED; j < domains.length; j++) {
-            var el = document.createElement("div");
-            el.className = "ep-hotfix-domain-entry";
-            el.textContent = domains[j];
-            extra.appendChild(el);
-          }
-          toggle.addEventListener("click", function () {
-            expanded = !expanded;
-            extra.style.display = expanded ? "" : "none";
-            toggle.textContent = expanded
-              ? "show less"
-              : "and " + remaining.toLocaleString() + " more...";
-          });
-          wrap.appendChild(toggle);
-          wrap.appendChild(extra);
-        }
-        body.appendChild(wrap);
-      });
-    })(exBody);
-    grid.appendChild(ex.card);
-    grid.appendChild(ex.body);
-  }
+        toggle.addEventListener("click", function () {
+          expanded = !expanded;
+          extra.style.display = expanded ? "" : "none";
+          toggle.textContent = expanded
+            ? "show less"
+            : "and " + remaining.toLocaleString() + " more...";
+        });
+        wrap.appendChild(toggle);
+        wrap.appendChild(extra);
+      }
+      body.appendChild(wrap);
+    });
+  })(exBody);
+  grid.appendChild(ex.card);
+  grid.appendChild(ex.body);
 
   container.appendChild(grid);
 
@@ -1038,6 +1066,8 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
       const notDownloaded = Object.keys(epCatalog).filter(id => {
         if (epLists[id]) return false;
         if (REGIONAL_IDS.has(id) && !hasLangs) return false;
+        if (epCatalog[id].preset === "optional") return false;
+        if (epPreset === "basic" && epCatalog[id].preset !== "basic") return false;
         return true;
       });
       _downloadEnhancedBatch(btnEl, notDownloaded);
@@ -1173,8 +1203,7 @@ function _downloadEnhancedBatch(btnEl, notDownloaded) {
 }
 
 function updateAllEnhancedLists(btnEl) {
-  const downloadedIds = Object.keys(epLists);
-  if (downloadedIds.length === 0) return;
+  if (Object.keys(epLists).length === 0) return;
 
   if (btnEl) {
     btnEl.disabled = true;
@@ -1190,11 +1219,16 @@ function updateAllEnhancedLists(btnEl) {
       epPreset = resp.preset || "off";
     }
 
+    const downloadedIds = Object.keys(epLists);
     // Also include undownloaded regional lists if languages are set
     const pendingRegional = epHasRegionalLanguages
       ? Object.keys(epCatalog).filter(id => REGIONAL_IDS.has(id) && !epLists[id])
       : [];
-    const allIds = downloadedIds.concat(pendingRegional);
+    // Skip downloaded regional lists when no languages are selected
+    const filtered = epHasRegionalLanguages
+      ? downloadedIds
+      : downloadedIds.filter(id => !REGIONAL_IDS.has(id));
+    const allIds = filtered.concat(pendingRegional);
     const total = allIds.length;
     if (btnEl) btnEl.textContent = "Checking…";
     let completed = 0;

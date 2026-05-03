@@ -123,7 +123,8 @@ function initRegionalSection() {
 					flagImg.src = chrome.runtime.getURL('icons/flags/' + fc.toLowerCase() + '.svg');
 					flagImg.width = 20;
 					flagImg.height = 15;
-					flagImg.alt = '';
+					flagImg.alt = fc;
+					flagImg.title = fc + ' - ' + rlConfig[code].label;
 					flagImg.className = 'ps-regional-flag';
 					flagImg.onerror = function() { this.style.display = 'none'; };
 					nameEl.appendChild(flagImg);

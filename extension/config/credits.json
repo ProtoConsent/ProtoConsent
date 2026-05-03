@@ -34,7 +34,10 @@
         { "name": "AdGuard DNS Filter", "url": "https://github.com/AdguardTeam/AdGuardSDNSFilter", "by": "AdGuard Team", "license": "GPL-3.0" },
         { "name": "OISD", "url": "https://oisd.nl/", "by": "Stephan van Ruth", "license": "GPL-3.0" },
         { "name": "HaGeZi DNS Blocklists", "url": "https://github.com/hagezi/dns-blocklists", "by": "HaGeZi", "license": "GPL-3.0" },
-        { "name": "Blocklist Project", "url": "https://github.com/blocklistproject/Lists", "by": "Blocklist Project", "license": "Unlicense" }
+        { "name": "Blocklist Project", "url": "https://github.com/blocklistproject/Lists", "by": "Blocklist Project", "license": "Unlicense" },
+        { "name": "Phishing Army", "url": "https://phishing.army", "by": "Andrea Draghetti", "license": "CC BY-NC 4.0" },
+        { "name": "Steven Black Unified Hosts", "url": "https://github.com/StevenBlack/hosts", "by": "Steven Black", "license": "MIT" },
+        { "name": "1Hosts Lite", "url": "https://github.com/badmojr/1Hosts", "by": "badmojr", "license": "MPL-2.0" }
       ]
     },
     {
@@ -49,7 +52,16 @@
       "title": "Regional lists",
       "entries": [
         { "name": "EasyList regional supplements", "url": "https://easylist.to/", "by": "EasyList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
-        { "name": "AdGuard language filters", "url": "https://github.com/AdguardTeam/AdguardFilters", "by": "AdGuard Team", "license": "GPL-3.0" }
+        { "name": "AdGuard language filters", "url": "https://github.com/AdguardTeam/AdguardFilters", "by": "AdGuard Team", "license": "GPL-3.0" },
+        { "name": "Greek AdBlock Filter", "url": "https://github.com/kargig/greek-adblockplus-filter", "by": "George Kargiotakis", "license": "CC-BY-SA-4.0" },
+        { "name": "ROad-Block", "url": "https://github.com/tcptomato/ROad-Block", "by": "tcptomato", "license": "MIT" },
+        { "name": "Slovenian List", "url": "https://github.com/betterwebleon/slovenian-list", "by": "betterwebleon", "license": "Unlicense" },
+        { "name": "Adblock List for Albania", "url": "https://github.com/AnXh3L0/blocklist", "by": "Anxhelo Lushka", "license": "CC BY-NC-SA 4.0" },
+        { "name": "Icelandic ABP List", "url": "https://github.com/brave/adblock-lists", "by": "Brave Software", "license": "MPL-2.0" },
+        { "name": "List-KR", "url": "https://github.com/List-KR/List-KR", "by": "List-KR contributors", "license": "GPL-3.0" },
+        { "name": "RU AdList", "url": "https://github.com/easylist/ruadlist", "by": "RU AdList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
+        { "name": "IndianList", "url": "https://github.com/mediumkreation/IndianList", "by": "IndianList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
+        { "name": "Dandelion Sprout's Nordic Filters", "url": "https://github.com/DandelionSprout/adfilt", "by": "Dandelion Sprout", "license": "Dandelicence v1.4" }
       ]
     },
     {

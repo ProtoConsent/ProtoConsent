@@ -106,9 +106,10 @@ Beyond the core rulesets, ProtoConsent supports optional third-party blocklists 
 | Preset | Behavior |
 | --- | --- |
 | Off | No enhanced lists active (core ProtoConsent only) |
-| Balanced | Enables 5 blocking lists + cosmetic + CMP; also enables regional if languages selected |
-| Full | Enables all 9 blocking lists + cosmetic + CMP; also enables regional if languages selected |
+| Balanced | Enables 19 blocking lists + cosmetic + CMP; also enables regional if languages selected |
+| Full | Enables all 24 blocking lists + cosmetic + CMP; also enables regional if languages selected |
 | Custom | User has toggled individual lists manually |
+| Optional | Never auto-enabled by any preset. Downloaded only when user manually clicks Download on the card. |
 
 When downloading with preset Off, the extension auto-switches to Balanced.
 
@@ -124,18 +125,38 @@ When downloading with preset Off, the extension auto-switches to Balanced.
 
 *Regional lists only active when user has selected languages (see [section 12](#12-regional-lists)).
 
-### Full preset (adds 8 lists)
+### Full preset (adds 5 lists)
 
 | List | License | Domains | Category |
 | --- | --- | --- | --- |
 | [EasyList](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | ~56K | `ads` |
 | [OISD Small](https://oisd.nl/) | GPL-3.0 | ~56K | - |
-| [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~190K | - |
-| [Blocklist Project - Crypto](https://github.com/blocklistproject/Lists) | Unlicense | ~24K | `advanced_tracking` |
-| [Blocklist Project - Phishing](https://github.com/blocklistproject/Lists) | Unlicense | ~87K | `security` |
+| [Phishing Army](https://phishing.army) | CC BY-NC 4.0 | ~65K | `security` |
 | [AdGuard CNAME Trackers](https://github.com/AdguardTeam/cname-trackers) | MIT | ~240K | - |
 | [EasyList Cookie Cosmetic](https://easylist.to/) | GPL-3.0+ / CC BY-SA 3.0+ | - | - |
 | [Web Annoyances Cosmetic](https://github.com/LanikSJ/webannoyances) | CC BY-SA 4.0 | - | - |
+
+### Optional lists (15 lists)
+
+Lists with `preset: "optional"` are never auto-enabled by any preset, never auto-downloaded by "Download all" or preset switches, and only downloaded when the user manually clicks Download. Once downloaded, they participate in auto-refresh like any other list. Enabled optional lists do not affect preset label resolution.
+
+| List | License | Domains | Category |
+| --- | --- | --- | --- |
+| [HaGeZi Pro](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~190K | - |
+| [HaGeZi Light](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~65K | - |
+| [HaGeZi Normal](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~130K | - |
+| [HaGeZi Ultimate](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~600K | - |
+| [HaGeZi TIF](https://github.com/hagezi/dns-blocklists) | GPL-3.0 | ~1M | `security` |
+| [OISD Big](https://oisd.nl/) | GPL-3.0 | ~230K | - |
+| [BLP Crypto](https://github.com/blocklistproject/Lists) | Unlicense | ~24K | `advanced_tracking` |
+| [BLP Phishing](https://github.com/blocklistproject/Lists) | Unlicense | ~87K | `security` |
+| [BLP Gambling](https://github.com/blocklistproject/Lists) | Unlicense | varies | - |
+| [BLP Malware](https://github.com/blocklistproject/Lists) | Unlicense | varies | `security` |
+| [BLP Fraud](https://github.com/blocklistproject/Lists) | Unlicense | varies | `security` |
+| [BLP Scam](https://github.com/blocklistproject/Lists) | Unlicense | varies | `security` |
+| [Phishing Army Extended](https://phishing.army) | CC BY-NC 4.0 | ~122K | `security` |
+| [Steven Black Unified](https://github.com/StevenBlack/hosts) | MIT | varies | - |
+| [1Hosts Lite](https://github.com/badmojr/1Hosts) | MPL-2.0 | varies | - |
 
 Domain counts are approximate and change with each upstream update.
 
@@ -221,37 +242,43 @@ Stripping is gated by the `advanced_tracking` purpose (active when denied, which
 
 ## 12. Regional lists
 
-Regional filter lists provide language-specific blocking and cosmetic rules from EasyList regional supplements and AdGuard language-specific filters. Each region produces two files: cosmetic (element hiding) and blocking (domains + paths). 30 regions are supported.
+Regional filter lists provide language-specific blocking and cosmetic rules from EasyList regional supplements and AdGuard language-specific filters. Each region produces two files: cosmetic (element hiding) and blocking (domains + paths). 36 regions are supported.
 
 ### Supported regions
 
 | Region | Code | Sources |
 | --- | --- | --- |
+| Albanian | `al` | Adblock List for Albania |
 | Arabic | `ar` | AdGuard Arabic |
 | Bulgarian | `bg` | AdGuard Bulgarian |
 | Chinese | `cn` | EasyList China + AdGuard Chinese |
 | Czech/Slovak | `cs` | AdGuard Czech/Slovak |
 | German | `de` | EasyList Germany + AdGuard German |
-| Spanish/Portuguese | `es` | EasyList Spanish + Portuguese + AdGuard Spanish/Portuguese |
+| Spanish | `es` | EasyList Spanish + AdGuard Spanish/Portuguese |
 | Estonian | `et` | AdGuard Estonian |
 | Persian | `fa` | AdGuard Persian |
 | Finnish | `fi` | AdGuard Finnish |
 | French | `fr` | AdGuard French |
+| Greek | `gr` | Greek AdBlock Filter |
 | Hebrew | `he` | EasyList Hebrew |
-| Hindi | `hi` | AdGuard Hindi |
+| Indian | `hi` | AdGuard Hindi + IndianList |
 | Serbo-Croatian | `hr` | AdGuard Serbo-Croatian |
 | Hungarian | `hu` | AdGuard Hungarian |
 | Indonesian | `id` | AdGuard Indonesian |
+| Icelandic | `is` | Icelandic ABP List |
 | Italian | `it` | EasyList Italy |
 | Japanese | `ja` | AdGuard Japanese |
-| Korean | `ko` | AdGuard Korean |
+| Korean | `ko` | AdGuard Korean + List-KR |
 | Lithuanian | `lt` | EasyList Lithuania |
 | Latvian | `lv` | AdGuard Latvian |
 | Macedonian | `mk` | AdGuard Macedonian |
 | Dutch | `nl` | EasyList Dutch + AdGuard Dutch |
-| Nordic | `no` | AdGuard Nordic |
+| Nordic | `no` | AdGuard Nordic + Dandelion Sprout's Nordic Filters |
 | Polish | `pl` | EasyList Polish |
-| Russian | `ru` | AdGuard Russian |
+| Portuguese | `pt` | EasyList Portuguese + AdGuard Spanish/Portuguese |
+| Romanian | `ro` | ROList (AdGuard) + ROad-Block |
+| Russian | `ru` | AdGuard Russian + RU AdList |
+| Slovenian | `si` | Slovenian List |
 | Swedish | `sv` | AdGuard Swedish |
 | Thai | `th` | AdGuard Thai |
 | Turkish | `tr` | AdGuard Turkish |
@@ -262,7 +289,7 @@ Regions with multiple sources merge and deduplicate rules from all sources.
 
 ### Distribution
 
-The catalog contains 2 regional entries (cosmetic and blocking). Each covers all 30 regions. Individual region files are fetched from CDN when the user downloads. Both entries have Balanced preset, gated by language selection.
+The catalog contains 2 regional entries (cosmetic and blocking). Each covers all 36 regions. Individual region files are fetched from CDN when the user downloads. Both entries have Balanced preset, gated by language selection.
 
 ### Language selection
 
