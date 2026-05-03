@@ -175,9 +175,10 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 8px;
+  column-gap: 8px;
+  row-gap: 0;
   margin: 0 0 6px 0;
-  padding: 34px 14px 6px 14px;
+  padding: 34px 14px 2px 14px;
   border-radius: 10px;
   background: linear-gradient(180deg, #eef3f8 0%, #f9fbfd 100%);
   border: 1px solid #cfd9e3;
@@ -844,7 +845,7 @@ body {
   font-weight: 500;
   text-align: center;
   cursor: pointer;
-  padding: 2px 0 0;
+  padding: 0;
   order: 10;
   transition: color 0.15s ease;
 }

@@ -131,7 +131,8 @@ function _renderProtoBars(resp, tcfData) {
     var isMonitoring = resp.mode === "protoconsent";
     var collapsed;
     if (isMonitoring) {
-      collapsed = "Blocked by external: " + prov.other + " \u00b7 " +
+      var otherText = prov.other < 0 ? "n/a" : prov.other;
+      collapsed = "Blocked by external: " + otherText + " \u00b7 " +
         (resp.coverage ? Math.round((resp.coverage.attributed / Math.max(resp.coverage.observed, 1)) * 100) : 0) + "% purpose attributed";
     } else {
       collapsed = buildStatsCollapsed(lastBlocked || 0);
@@ -473,7 +474,7 @@ function _fillBannersBody(body, resp, tcfData) {
       if (resp.cmp.cookieCount > 0) actions.push("Cookies injected: " + resp.cmp.cookieCount);
       if (actions.length > 0) details.push(actions.join(", "));
     }
-    provEl.innerHTML = details.join(" — ");
+    provEl.innerHTML = details.join(" - ");
     body.appendChild(provEl);
     var consents = tcfData.purposeConsents || {};
     var ids = Object.keys(consents).sort(function (a, b) { return Number(a) - Number(b); });
