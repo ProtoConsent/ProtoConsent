@@ -1,0 +1,68 @@
+{
+  "sections": [
+    {
+      "title": "Bundled assets",
+      "entries": [
+        {
+          "name": "Consent Commons",
+          "url": "https://consentcommons.com",
+          "by": "Consent Commons",
+          "license": "Free to use with attribution",
+          "usage": "Purpose icons, legal basis icons"
+        },
+        {
+          "name": "flag-icons",
+          "url": "https://github.com/lipis/flag-icons",
+          "by": "Panayiotis Lipiridis",
+          "license": "MIT",
+          "usage": "Regional filter language flags"
+        },
+        {
+          "name": "Autoconsent",
+          "url": "https://github.com/duckduckgo/autoconsent",
+          "by": "DuckDuckGo, Inc.",
+          "license": "MPL-2.0",
+          "usage": "CMP detection selectors, prehide selectors"
+        }
+      ]
+    },
+    {
+      "title": "Blocklists",
+      "entries": [
+        { "name": "EasyList", "url": "https://easylist.to/", "by": "EasyList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
+        { "name": "EasyPrivacy", "url": "https://easylist.to/", "by": "EasyList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
+        { "name": "AdGuard DNS Filter", "url": "https://github.com/AdguardTeam/AdGuardSDNSFilter", "by": "AdGuard Team", "license": "GPL-3.0" },
+        { "name": "OISD", "url": "https://oisd.nl/", "by": "Stephan van Ruth", "license": "GPL-3.0" },
+        { "name": "HaGeZi DNS Blocklists", "url": "https://github.com/hagezi/dns-blocklists", "by": "HaGeZi", "license": "GPL-3.0" },
+        { "name": "Blocklist Project", "url": "https://github.com/blocklistproject/Lists", "by": "Blocklist Project", "license": "Unlicense" }
+      ]
+    },
+    {
+      "title": "Tracking protection",
+      "entries": [
+        { "name": "AdGuard CNAME Trackers", "url": "https://github.com/AdguardTeam/cname-trackers", "by": "Adguard Software Ltd", "license": "MIT" },
+        { "name": "AdGuard TrackParamFilter", "url": "https://github.com/AdguardTeam/AdguardFilters", "by": "AdGuard Team", "license": "GPL-3.0" },
+        { "name": "Legitimate URL Shortener Tool", "url": "https://github.com/DandelionSprout/adfilt", "by": "Dandelion Sprout", "license": "Dandelicence v1.4" }
+      ]
+    },
+    {
+      "title": "Regional lists",
+      "entries": [
+        { "name": "EasyList regional supplements", "url": "https://easylist.to/", "by": "EasyList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
+        { "name": "AdGuard language filters", "url": "https://github.com/AdguardTeam/AdguardFilters", "by": "AdGuard Team", "license": "GPL-3.0" }
+      ]
+    },
+    {
+      "title": "Cosmetic filtering",
+      "entries": [
+        { "name": "Web Annoyances Ultralist", "url": "https://github.com/LanikSJ/webannoyances", "by": "yourduskquibbles, LanikSJ", "license": "CC BY-SA 4.0" }
+      ]
+    },
+    {
+      "title": "CDN",
+      "entries": [
+        { "name": "jsDelivr", "url": "https://www.jsdelivr.com/", "by": "jsDelivr", "usage": "Filter list hosting via GitHub CDN" }
+      ]
+    }
+  ]
+}

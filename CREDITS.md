@@ -124,11 +124,6 @@ in the extension but are compiled from upstream open-source projects.
 |--------|---------|---------|-------|
 | [EasyList regional supplements](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `regional/regional_*_*.json` |
 | [AdGuard language filters](https://github.com/AdguardTeam/AdguardFilters) | AdGuard Team | GPL-3.0 | `regional/regional_*_*.json` |
-| [ABPVN List](https://github.com/nickyhelper/nickyfilters) | nickyhelper | GPL-3.0 | `regional/regional_vi_*.json` |
-| [List-KR](https://github.com/nickyhelper/nickyfilters) | nickyhelper | GPL-3.0 | `regional/regional_ko_*.json` |
-| [Frellwit's Swedish Filter](https://github.com/nickyhelper/nickyfilters) | Frellwit | CC BY-SA 4.0 | `regional/regional_sv_*.json` |
-| [Dandelion Sprout's Nordic Filters](https://github.com/DandelionSprout/adfilt) | Dandelion Sprout | Dandelicence v1.4 | `regional/regional_no_*.json` |
-| [Dandelion Sprout's Serbo-Croatian List](https://github.com/DandelionSprout/adfilt) | Dandelion Sprout | Dandelicence v1.4 | `regional/regional_hr_*.json` |
 
 ### Cosmetic annoyance filtering
 

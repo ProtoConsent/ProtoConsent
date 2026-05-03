@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/* --- Base --- */
 html, body {
   margin: 0;
   padding: 0;
@@ -25,6 +26,7 @@ body {
   outline-offset: 2px;
 }
 
+/* --- Layout --- */
 .ps-hidden {
   display: none;
 }
@@ -130,6 +132,7 @@ body {
   gap: 18px;
 }
 
+/* --- Sections & cards --- */
 .ps-status-msg {
   color: var(--pc-text-muted);
   font-size: 13px;
@@ -177,8 +180,8 @@ body {
   gap: 3px;
   font-size: 10px;
   font-weight: 600;
-  color: var(--pc-accent, #2563eb);
-  border: 1px solid var(--pc-accent, #2563eb);
+  color: var(--pc-accent);
+  border: 1px solid var(--pc-accent);
   border-radius: 999px;
   padding: 1px 7px;
   vertical-align: middle;
@@ -199,6 +202,7 @@ body {
   margin-bottom: 10px;
 }
 
+/* --- Purpose & preset cards --- */
 .ps-purpose-card,
 .ps-preset-card {
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
@@ -266,6 +270,7 @@ body {
   text-transform: uppercase;
 }
 
+/* --- Pills & badges --- */
 .ps-purpose-key,
 .ps-preset-pill,
 .ps-footer-link {
@@ -317,6 +322,7 @@ body {
 }
 
 
+/* --- Signal card --- */
 .ps-signal-card {
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   border: 1px solid var(--pc-line);
@@ -371,6 +377,7 @@ body {
   color: #1e3a8a;
 }
 
+/* --- Toggle rows --- */
 .ps-gpc-toggle-row {
   display: flex;
   align-items: center;
@@ -388,12 +395,42 @@ body {
   color: var(--pc-text);
 }
 
+/* --- Regional --- */
 .ps-regional-flag {
   vertical-align: -2px;
   margin-right: 4px;
   border-radius: 2px;
 }
 
+.ps-regional-source-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.ps-regional-source-link:hover {
+  color: var(--pc-accent);
+}
+
+.ps-regional-filter {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--pc-line-strong);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--pc-surface);
+  color: var(--pc-text);
+  outline: none;
+}
+.ps-regional-filter:focus {
+  border-color: var(--pc-accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* --- CEL (Consent Enforcement Layer) --- */
 .ps-cel-icon {
   vertical-align: -2px;
   margin-right: 2px;
@@ -431,7 +468,7 @@ body {
 }
 
 .ps-cel-note-link {
-  color: var(--pc-accent, #c8850a);
+  color: var(--pc-accent);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -506,6 +543,7 @@ body {
 }
 
 .ps-cel-purpose-text {
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -539,6 +577,7 @@ body {
   border: 0;
 }
 
+/* --- Toggle switch --- */
 .ps-gpc-toggle {
   -webkit-appearance: none;
   appearance: none;
@@ -567,7 +606,7 @@ body {
 }
 
 .ps-gpc-toggle:checked {
-  background: var(--pc-accent, #2563eb);
+  background: var(--pc-accent);
 }
 
 .ps-gpc-toggle:checked::after {
@@ -579,6 +618,7 @@ body {
   outline-offset: 2px;
 }
 
+/* --- Dynamic grid --- */
 .ps-dynamic-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -687,6 +727,7 @@ body {
   line-height: 1.4;
 }
 
+/* --- Default profile --- */
 .ps-default-profile-section {
   background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
   border: 1px solid #93c5fd;
@@ -751,6 +792,7 @@ body {
   border-color: #f0b1b1;
 }
 
+/* --- Enhanced presets --- */
 .ps-enhanced-desc {
   color: var(--pc-text-muted);
   font-size: 12px;
@@ -808,6 +850,7 @@ body {
   height: 16px;
 }
 
+/* --- Footer --- */
 .ps-footer {
   margin-top: 24px;
   padding-top: 14px;
@@ -837,6 +880,7 @@ body {
   background: #e8f0ff;
 }
 
+/* --- Data actions & buttons --- */
 .ps-data-actions {
   display: flex;
   gap: 8px;
@@ -854,6 +898,7 @@ body {
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
   transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
+  text-decoration: none;
 }
 
 .ps-data-btn:hover {
@@ -894,7 +939,7 @@ body {
   display: flex;
   align-items: start;
   gap: 10px;
-  background: linear-gradient(180deg, var(--pc-surface-card, #ffffff) 0%, var(--pc-surface-soft, #fbfdff) 100%);
+  background: linear-gradient(180deg, var(--pc-surface-card) 0%, var(--pc-surface-soft) 100%);
   border: 1px solid var(--pc-line);
   border-radius: 12px;
   padding: 12px 14px;
@@ -1027,6 +1072,7 @@ body {
   color: var(--pc-text);
   cursor: pointer;
   list-style: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -1174,6 +1220,7 @@ details[open] > .ps-accordion-header::before {
   text-decoration: underline;
 }
 
+/* --- Responsive --- */
 @media (max-width: 700px) {
   .ps-tab {
     flex: 1;
@@ -1232,4 +1279,93 @@ details[open] > .ps-accordion-header::before {
     justify-content: flex-start;
     flex-wrap: wrap;
   }
+
+  .ps-support-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* --- About / Support / Credits --- */
+
+.ps-about-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ps-about-link {
+  display: inline-block;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--pc-line);
+  color: var(--pc-accent);
+  text-decoration: none;
+  background: var(--pc-surface);
+}
+
+.ps-about-link:hover,
+.ps-about-link:focus-visible {
+  background: var(--pc-accent-soft);
+  border-color: var(--pc-line-strong);
+}
+
+.ps-credit-entry {
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 4px 0;
+}
+
+.ps-credit-name {
+  font-weight: 600;
+  color: var(--pc-accent);
+  text-decoration: none;
+}
+
+.ps-credit-name:hover,
+.ps-credit-name:focus-visible {
+  text-decoration: underline;
+}
+
+.ps-credit-by {
+  color: var(--pc-text);
+}
+
+.ps-credit-license,
+.ps-credit-usage {
+  color: var(--pc-text-muted);
+}
+
+.ps-support-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ps-support-row .ps-enhanced-desc {
+  flex: 1;
+  margin: 0;
+}
+
+.ps-support-row .ps-data-btn {
+  flex-shrink: 0;
+}
+
+.ps-troubleshoot-pre {
+  margin: 10px 0 0;
+  padding: 12px;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--pc-text);
+  background: var(--pc-surface);
+  border: 1px solid var(--pc-line);
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+  -webkit-user-select: text;
+  user-select: text;
 }
