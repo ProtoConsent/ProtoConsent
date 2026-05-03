@@ -23,6 +23,13 @@
           "by": "DuckDuckGo, Inc.",
           "license": "MPL-2.0",
           "usage": "CMP detection selectors, prehide selectors"
+        },
+        {
+          "name": "Applications and Programming Glyphs",
+          "url": "https://www.svgrepo.com/collection/applications-and-programming-glyphs/",
+          "by": "wishforge.games",
+          "license": "CC BY 4.0",
+          "usage": "Debug icon"
         }
       ]
     },

@@ -67,6 +67,14 @@ cards to indicate active language regions:
 |--------|---------|---------|-------|
 | [Autoconsent](https://github.com/duckduckgo/autoconsent) | DuckDuckGo, Inc. | MPL-2.0 | `autoconsent_cmp_detectors.json`, `autoconsent_cmp_signatures_site.json`, `protoconsent_cmp_signatures.json` (prehide selectors) |
 
+### UI icons
+
+| Source | Authors | License | Usage |
+|--------|---------|---------|-------|
+| [Applications and Programming Glyphs](https://www.svgrepo.com/collection/applications-and-programming-glyphs/) | wishforge.games | CC BY 4.0 | Debug icon |
+
+    extension/icons/purposes/debug.svg
+
 CMP detection selectors (detectCmp/detectPopup) and site-specific hiding
 selectors used in the bundled files below are derived from Autoconsent.
 The extraction is performed by `convert-autoconsent.js` in the ProtoConsent
