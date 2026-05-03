@@ -1536,7 +1536,7 @@ function updateCelNote(celEnabled) {
 		const celMode = resp.celMode || 'profile';
 		const hasDownloadedWithCategory = Object.keys(lists).some(id => {
 			const def = catalog[id];
-			return def && def.category && def.category !== "security";
+			return def && def.category && CEL_PURPOSE_ORDER.includes(def.category);
 		});
 		note.innerHTML = '';
 		const noteLabel = document.createElement('span');

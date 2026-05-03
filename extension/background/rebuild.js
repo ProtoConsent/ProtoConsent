@@ -351,6 +351,8 @@ async function _rebuildAllDynamicRulesImpl() {
     updateHotfixListener();
 
     // 5. Enhanced Protection lists (dynamic block rules, priority 2)
+    // CEL only activates lists whose category is a consent purpose (not security, cosmetic, cmp, etc.)
+    const CEL_PURPOSES = new Set(["analytics", "ads", "personalization", "third_parties", "advanced_tracking"]);
     const consentLinkedListIds = new Set();
     const celPendingDownload = [];
     if (consentEnhancedLink.cel) {
@@ -359,23 +361,19 @@ async function _rebuildAllDynamicRulesImpl() {
         // Custom mode: use user-selected purposes; profile mode: derive from global profile
         const deniedCategories = new Set();
         if (consentEnhancedLink.mode === "custom") {
-          if (consentEnhancedLink.customPurposes) {
+          if (consentEnhancedLink.customPurposes && typeof consentEnhancedLink.customPurposes === "object") {
             for (const [purpose, denied] of Object.entries(consentEnhancedLink.customPurposes)) {
-              if (denied) deniedCategories.add(purpose);
-            }
-          } else {
-            // First time custom with no stored preferences: deny all (match UI defaults)
-            for (const key of ["analytics", "ads", "personalization", "third_parties", "advanced_tracking"]) {
-              deniedCategories.add(key);
+              if (denied && CEL_PURPOSES.has(purpose)) deniedCategories.add(purpose);
             }
           }
+          // No stored custom purposes = no CEL activation until user configures
         } else {
           for (const [purpose, allowed] of Object.entries(globalPurposes)) {
-            if (!allowed) deniedCategories.add(purpose);
+            if (!allowed && CEL_PURPOSES.has(purpose)) deniedCategories.add(purpose);
           }
         }
         for (const [listId, listDef] of Object.entries(celCatalog)) {
-          if (listDef.category && deniedCategories.has(listDef.category)) {
+          if (listDef.category && CEL_PURPOSES.has(listDef.category) && deniedCategories.has(listDef.category)) {
             if (enhancedListsMeta[listId]) {
               consentLinkedListIds.add(listId);
             } else if (listDef.fetch_url && consentEnhancedLink.sync) {
