@@ -136,6 +136,12 @@ function formatPanelForCopy(panel) {
       const cells = row.querySelectorAll("th, td");
       const vals = [];
       for (const cell of cells) {
+        // Skip action columns (buttons only, no data)
+        if (cell.querySelector("button") && !cell.querySelector(".pc-log-table-domain, .pc-log-scope-label")) {
+          const label = cell.querySelector(".pc-log-scope-label");
+          if (label) { vals.push(label.textContent.trim()); continue; }
+          continue;
+        }
         const img = cell.querySelector("img");
         vals.push(img ? (img.title || img.alt || "") : cell.textContent.trim());
       }
