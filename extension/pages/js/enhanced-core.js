@@ -282,7 +282,7 @@ function renderCmpCard(cmpIds) {
 
   const pill = document.createElement("span");
   pill.className = "ep-category-pill ep-core-pill";
-  pill.title = "CMP detection and auto-response";
+  pill.title = "Cookie banner management";
   pill.setAttribute("aria-label", "Banner handling");
   const cmpIcon = document.createElement("img");
   cmpIcon.src = "../icons/grid/banners.svg";
@@ -347,7 +347,7 @@ function renderCmpCard(cmpIds) {
 
   const desc = document.createElement("span");
   desc.className = "ep-list-desc";
-  desc.textContent = "CMP auto-response - cookie injection, cosmetic hiding, scroll unlock";
+  desc.textContent = "CMP detection and cookie consent injection";
   info.appendChild(desc);
 
   if (anyDownloaded) {

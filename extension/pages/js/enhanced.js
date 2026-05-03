@@ -827,8 +827,8 @@ function _renderEpListCard(listId) {
   } else if (listDef.type === "cmp" || listDef.type === "cmp_detectors" || listDef.type === "cmp_site") {
     const pill = document.createElement("span");
     pill.className = "ep-category-pill ep-cmp-pill";
-    pill.title = "CMP auto-response - handles cookie consent banners";
-    pill.setAttribute("aria-label", "Banner auto-response");
+    pill.title = "Cookie banner management";
+    pill.setAttribute("aria-label", "Cookie banner management");
     const cmpIcon = document.createElement("img");
     cmpIcon.src = "../icons/grid/banners.svg";
     cmpIcon.width = 12;

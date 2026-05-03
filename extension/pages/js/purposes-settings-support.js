@@ -138,7 +138,7 @@ function loadTroubleshootInfo(pre) {
 		}
 
 		if (bg.cmpLists) {
-			lines.push('CMP auto-response: ' + (bg.cmpLists.length > 0 ? bg.cmpLists.join(', ') : '(none)'));
+			lines.push('Cookie banner management: ' + (bg.cmpLists.length > 0 ? bg.cmpLists.join(', ') : '(none)'));
 			lines.push('');
 		}
 
