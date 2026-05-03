@@ -343,12 +343,22 @@ async function displayBlockedCount() {
       // Lifetime total (persistent across sessions) - shown below profile/site row
       var ltEl = document.getElementById("pc-lifetime-counter");
       if (ltEl) {
-        if (lastLifetimeBlocked > 0) {
-          ltEl.textContent = compactNumber(lastLifetimeBlocked) + " total blocked";
-          ltEl.title = "Total blocked across all sites since install";
-          ltEl.hidden = false;
-        } else {
-          ltEl.hidden = true;
+        var ltText = lastLifetimeBlocked > 0
+          ? compactNumber(lastLifetimeBlocked) + " total blocked"
+          : "Quick toggles";
+        ltEl.textContent = ltText;
+        ltEl.title = "Quick toggles";
+        ltEl.hidden = false;
+        if (!ltEl._toggleBound) {
+          ltEl._toggleBound = true;
+          ltEl.setAttribute("role", "button");
+          ltEl.setAttribute("tabindex", "0");
+          ltEl.setAttribute("aria-expanded", "false");
+          ltEl.setAttribute("aria-controls", "pc-lifetime-toggles");
+          ltEl.addEventListener("click", toggleLifetimePanel);
+          ltEl.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleLifetimePanel(); }
+          });
         }
       }
 
@@ -538,3 +548,4 @@ function renderEnhancedScopeLine(el, blockingCount, totalDomains, infoCount, inf
   }
   el.style.display = "";
 }
+

@@ -977,6 +977,13 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
   try {
     await chrome.scripting.unregisterContentScripts({ ids: [COSMETIC_SCRIPT_ID] }).catch(() => {});
 
+    const { enhancedCosmeticEnabled } = await new Promise(resolve =>
+      chrome.storage.local.get("enhancedCosmeticEnabled", resolve));
+    if (enhancedCosmeticEnabled === false) {
+      chrome.storage.local.remove(["_cosmeticCSS", "_cosmeticDomains", "_cosmeticExceptions"]);
+      return;
+    }
+
     // Collect all active cosmetic lists
     const activeCosmeticData = [];
     for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
