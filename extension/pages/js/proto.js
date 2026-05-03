@@ -346,7 +346,9 @@ function _fillCoverageBody(body, resp, wkData) {
 
   // Provenance + heuristic summary on one line
   var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
-  var provText = "<strong>Own:</strong> " + prov.own + " \u00b7 <strong>" + (resp.mode === "protoconsent" ? "External" : "Other") + ":</strong> " + prov.other;
+  var otherLabel = resp.mode === "protoconsent" ? "External" : "Other";
+  var provText = "<strong>Own:</strong> " + prov.own;
+  if (prov.other >= 0) provText += " \u00b7 <strong>" + otherLabel + ":</strong> " + prov.other;
   if (resp.unattributed && resp.unattributed.length > 0) {
     var heuristicCounts = {};
     var heuristicTotal = 0;
