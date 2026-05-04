@@ -423,7 +423,7 @@ function renderSiteDeclaration(container, declaration) {
     container.appendChild(shareEl);
   }
 
-  // Links (v0.2) — policy and rights URLs (also handles v0.1 rights_url via sanitizer fallback)
+  // Links (v0.2) - policy and rights URLs (also handles v0.1 rights_url via sanitizer fallback)
   if (declaration.links && typeof declaration.links === "object") {
     const linkDefs = [
       { key: "policy", heading: "Privacy policy" },
