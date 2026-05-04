@@ -350,8 +350,13 @@ function _fillCoverageBody(body, resp, wkData) {
   // Provenance + heuristic summary on one line
   var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
   var otherLabel = resp.mode === "protoconsent" ? "External" : "Other";
-  var provText = "<strong>Own:</strong> " + prov.own;
-  if (prov.other >= 0) provText += " \u00b7 <strong>" + otherLabel + ":</strong> " + prov.other;
+  function addSeg(el, needsDot, label, value) {
+    if (needsDot) el.appendChild(document.createTextNode(" \u00b7 "));
+    var b = document.createElement("strong"); b.textContent = label + ":";
+    el.appendChild(b); el.appendChild(document.createTextNode(" " + value));
+  }
+  addSeg(provEl, false, "Own", String(prov.own));
+  if (prov.other >= 0) addSeg(provEl, true, otherLabel, String(prov.other));
   if (resp.unattributed && resp.unattributed.length > 0) {
     var heuristicCounts = {};
     var heuristicTotal = 0;
@@ -359,15 +364,15 @@ function _fillCoverageBody(body, resp, wkData) {
       var hk = resp.unattributed[h].heuristic;
       if (hk) { heuristicTotal++; heuristicCounts[hk] = (heuristicCounts[hk] || 0) + 1; }
     }
-    provText += " \u00b7 <strong>Guess:</strong> " + heuristicTotal + "/" + resp.unattributed.length;
+    var guessVal = heuristicTotal + "/" + resp.unattributed.length;
     if (heuristicTotal > 0) {
       var parts = [];
       var sorted = Object.entries(heuristicCounts).sort(function(a,b){ return b[1]-a[1]; });
       for (var hi = 0; hi < sorted.length; hi++) parts.push(sorted[hi][1] + " " + sorted[hi][0]);
-      provText += " (" + parts.join(", ") + ")";
+      guessVal += " (" + parts.join(", ") + ")";
     }
+    addSeg(provEl, true, "Guess", guessVal);
   }
-  provEl.innerHTML = provText;
   body.appendChild(provEl);
 
   // Unattributed hostnames
