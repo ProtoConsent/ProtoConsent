@@ -134,25 +134,36 @@ function wireEvents() {
     }
   });
 
-  // Get Started -> save and go to done screen
+  // Get Started -> save profile and go to options screen
   document.getElementById('ob-save').addEventListener('click', () => {
-    save(() => goToScreen('ob-done-screen'));
+    saveProfile(() => goToScreen('ob-done-screen'));
   });
 
   // Skip -> save balanced defaults, open Settings, close onboarding
   document.getElementById('ob-skip').addEventListener('click', () => {
     selectedProfile = RECOMMENDED;
-    save(() => {
+    saveProfile(() => {
       chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-settings.html') });
       closeOnboardingTab();
     });
   });
 
-  // Done -> open Settings and close onboarding tab
+  // Done -> save step 2 options, open Settings and close onboarding tab
   document.getElementById('ob-done').addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-settings.html') });
-    closeOnboardingTab();
+    saveOptions(() => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('pages/purposes-settings.html') });
+      closeOnboardingTab();
+    });
   });
+
+  // Update confirmation text when monitoring toggle changes
+  const monToggle = document.getElementById('ob-monitoring-toggle');
+  if (monToggle) {
+    monToggle.addEventListener('change', () => {
+      const modeEl = document.getElementById('ob-chosen-mode');
+      if (modeEl) modeEl.textContent = monToggle.checked ? 'Monitoring' : 'Blocking';
+    });
+  }
 }
 
 function selectCard(card) {
@@ -180,9 +191,7 @@ function goToScreen(screenId) {
   }
 }
 
-function save(callback) {
-  const celChecked = document.getElementById('ob-cel-toggle')?.checked;
-
+function saveProfile(callback) {
   const data = {
     defaultProfile: selectedProfile,
     operatingMode: 'standalone',
@@ -191,25 +200,33 @@ function save(callback) {
   };
 
   chrome.storage.local.set(data, () => {
-    // Save CEL if checked
-    if (celChecked) {
-      setConsentEnhancedLink(true, () => { void 0; });
-    }
-
-    // Notify background to rebuild rules with new default + mode
-    chrome.runtime.sendMessage({ type: 'PROTOCONSENT_SET_OPERATING_MODE', mode: 'standalone' }, () => {
-      void chrome.runtime.lastError;
-    });
     chrome.runtime.sendMessage({ type: 'PROTOCONSENT_RULES_UPDATED' }, () => {
       void chrome.runtime.lastError;
     });
 
-    // Show chosen profile
+    // Show chosen profile in step 2
     const celProfileEl = document.getElementById('ob-cel-profile-name');
     if (celProfileEl) celProfileEl.textContent = presets[selectedProfile]?.label || selectedProfile;
     document.getElementById('ob-chosen-profile').textContent =
       presets[selectedProfile]?.label || selectedProfile;
 
+    if (callback) callback();
+  });
+}
+
+function saveOptions(callback) {
+  const celChecked = document.getElementById('ob-cel-toggle')?.checked;
+  const monitoringChecked = document.getElementById('ob-monitoring-toggle')?.checked;
+  const mode = monitoringChecked ? 'protoconsent' : 'standalone';
+
+  if (celChecked) {
+    setConsentEnhancedLink(true, () => { void 0; });
+  }
+
+  chrome.storage.local.set({ operatingMode: mode }, () => {
+    chrome.runtime.sendMessage({ type: 'PROTOCONSENT_SET_OPERATING_MODE', mode: mode }, () => {
+      void chrome.runtime.lastError;
+    });
     if (callback) callback();
   });
 }

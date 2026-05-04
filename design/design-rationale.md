@@ -55,7 +55,7 @@ The browser is the only place where you can block requests, emit privacy signals
 
 ProtoConsent uses curated blocklists to enforce user choices, but blocking is not the goal: it is the mechanism that makes consent meaningful.
 
-The current core set contains ~40,000 curated tracker domains and ~1,200 path‑based rules from public blocklists, organised by purpose. The architecture can scale significantly beyond this (Chrome's DNR API supports hundreds of thousands of rules), but the current size reflects a deliberate choice focused on **accuracy, explainability, and low false‑positive rates**. Cross‑source validation, an explicit safelist, and path‑based precision (blocking `google.com/pagead/` instead of all of `google.com`) prioritise correctness over exhaustiveness.
+The current core set contains ~100,000 curated tracker domains and ~5,900 path-based rules from public blocklists, organised by purpose. The architecture can scale significantly beyond this (Chrome's DNR API supports hundreds of thousands of rules), but the current size reflects a deliberate choice focused on **accuracy, explainability, and low false‑positive rates**. Cross‑source validation, an explicit safelist, and path‑based precision (blocking `google.com/pagead/` instead of all of `google.com`) prioritise correctness over exhaustiveness.
 
 Optional Enhanced Protection (curated third‑party lists with millions of additional domains) extends coverage for users who want it, without changing the core model.
 

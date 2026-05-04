@@ -109,7 +109,7 @@ html.pc-dark .pc-profile-label {
   color: #868E96;
 }
 html.pc-dark .pc-profile-chevron {
-  color: #868E96;
+  background: #868E96;
 }
 html.pc-dark .pc-profile-menu {
   background: #1E212B;
@@ -244,12 +244,17 @@ html.pc-dark .pc-tcf-provider {
   color: #CED4DA;
 }
 html.pc-dark .pc-tcf-pending {
-  color: #FFD43B;
-  background: #3a2f18;
-  border-color: #5a4520;
+  color: #868E96;
+}
+html.pc-dark .pc-tcf-info {
+  color: #868E96;
+  background: rgba(59, 130, 246, 0.12);
+  border-left-color: #3b82f6;
 }
 html.pc-dark .pc-tcf-note {
   color: #868E96;
+  background: rgba(212, 160, 23, 0.12);
+  border-left-color: #d4a017;
 }
 html.pc-dark .pc-tcf-accepted {
   color: #51CF66;
@@ -421,10 +426,10 @@ html.pc-dark .pc-counter-lifetime:hover {
 }
 html.pc-dark .pc-lt-pill {
   background-color: #1E212B;
-  border-color: #2D313E;
+  border-color: #4D5260;
 }
 html.pc-dark .pc-lt-pill:hover {
-  border-color: #4D5260;
+  border-color: #5E6374;
   background-color: #252830;
 }
 html.pc-dark .pc-lt-pill:focus-visible,

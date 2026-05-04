@@ -1083,6 +1083,29 @@ function handleWhitelistRemoveAll() {
   );
 }
 
+function handleWhitelistRemoveAllGlobal() {
+  chrome.runtime.sendMessage(
+    { type: "PROTOCONSENT_WHITELIST_CLEAR" },
+    function (resp) {
+      void chrome.runtime.lastError;
+      if (resp && resp.ok) {
+        for (var domain in lastWhitelist) {
+          var siteMap = lastWhitelist[domain];
+          for (var key in siteMap) {
+            if (key === "_hotfix") continue;
+            delete siteMap[key];
+          }
+          if (Object.keys(siteMap).length === 0) delete lastWhitelist[domain];
+        }
+        var tbody = document.querySelector("#pc-log-domains tbody");
+        var visibleRows = tbody ? tbody.children.length : 0;
+        renderLogDomains(visibleRows);
+        renderLogWhitelist();
+      }
+    }
+  );
+}
+
 function handleWhitelistToggleScope(domain, site) {
   if (site === "*") {
     // Global → per-site: replace "*" entry with current site
@@ -1180,10 +1203,26 @@ function renderLogWhitelist() {
     entries.sort((a, b) => wDir * a.domain.localeCompare(b.domain));
   }
 
+  const headerRow = document.createElement("div");
+  headerRow.className = "pc-cosmetic-header-row";
+
   const header = document.createElement("div");
   header.className = "pc-log-purpose-label";
   header.textContent = pluralize(entries.length, "whitelisted domain");
-  container.appendChild(header);
+  headerRow.appendChild(header);
+
+  const hasRemovable = entries.some(e => e.site !== "_hotfix");
+  if (hasRemovable) {
+    const removeAllBtn = document.createElement("button");
+    removeAllBtn.type = "button";
+    removeAllBtn.className = "pc-log-remove-btn";
+    removeAllBtn.textContent = "Remove All";
+    removeAllBtn.title = "Remove all whitelist entries";
+    removeAllBtn.addEventListener("click", () => { handleWhitelistRemoveAllGlobal(); });
+    headerRow.appendChild(removeAllBtn);
+  }
+
+  container.appendChild(headerRow);
 
   // Filter input
   const filterInput = document.createElement("input");

@@ -1,0 +1,70 @@
+name: Bug report
+description: Report a bug with the ProtoConsent browser extension
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      description: Find it in Settings > About
+      placeholder: "0.7"
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Edge
+        - Brave
+        - Firefox
+        - Vivaldi
+        - Arc
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: browser_version
+    attributes:
+      label: Browser version
+      placeholder: "126.0.6478.126"
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Operating mode
+      options:
+        - Blocking
+        - Monitoring
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug clearly
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the steps to reproduce the issue
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: troubleshoot
+    attributes:
+      label: Troubleshoot info
+      description: "Optional: paste the output from Settings > Support > Copy"
+      render: text

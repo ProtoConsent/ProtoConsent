@@ -61,6 +61,45 @@ cards to indicate active language regions:
 
     extension/icons/flags/{bg,cn,cz,de,dk,ee,es,fi,fr,hr,hu,id,il,in,ir,is,it,jp,kr,lt,lv,mk,nl,no,pl,pt,rs,ru,sa,se,sk,th,tr,ua,vn}.svg
 
+### UXWing Icons
+
+| Source | Authors | License | Usage |
+|--------|---------|---------|-------|
+| [UXWing](https://uxwing.com) | UXWing | Free (no attribution required) | Grid card icons, navigation chevrons |
+
+Icons from UXWing are free for personal, commercial, and client projects
+without attribution. Credit is given voluntarily.
+See https://uxwing.com/license/ for full terms.
+
+Grid card icons:
+
+    extension/icons/grid/api.svg
+    extension/icons/grid/banners.svg
+    extension/icons/grid/blocking.svg
+    extension/icons/grid/cleanlinks.svg
+    extension/icons/grid/cosmetic.svg
+    extension/icons/grid/coverage.svg
+    extension/icons/grid/detection.svg
+    extension/icons/grid/exception.svg
+    extension/icons/grid/gpc.svg
+    extension/icons/grid/optional.svg
+    extension/icons/grid/overview.svg
+    extension/icons/grid/theme-auto.svg
+    extension/icons/grid/theme-dark.svg
+    extension/icons/grid/theme-light.svg
+    extension/icons/grid/trackers.svg
+
+Navigation chevrons:
+
+    extension/icons/nav/chevron-down.svg
+    extension/icons/nav/chevron-left.svg
+    extension/icons/nav/chevron-right.svg
+    extension/icons/nav/chevron-up.svg
+
+Other UI icons:
+
+    extension/icons/nav/gear.svg
+
 ### CMP banner handling (Autoconsent)
 
 | Source | Authors | License | Files |
@@ -100,10 +139,14 @@ in the extension but are compiled from upstream open-source projects.
 |--------|---------|---------|-------|
 | [EasyList](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `easylist.json`, `easylist_cosmetic.json`, `easylist_cookie_cosmetic.json` |
 | [EasyPrivacy](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `easyprivacy.json` |
+| [Fanboy Social](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `fanboy_social.json` |
 | [AdGuard DNS Filter](https://github.com/AdguardTeam/AdGuardSDNSFilter) | AdGuard Team | GPL-3.0 | `adguard_dns.json` |
-| [OISD](https://oisd.nl/) | Stephan van Ruth | GPL-3.0 | `oisd_small.json` |
-| [HaGeZi DNS Blocklists](https://github.com/hagezi/dns-blocklists) | HaGeZi | GPL-3.0 | `hagezi_pro.json` |
-| [Blocklist Project](https://github.com/blocklistproject/Lists) | Blocklist Project | Unlicense | `blp_crypto.json`, `blp_phishing.json` |
+| [OISD](https://oisd.nl/) | Stephan van Ruth | GPL-3.0 | `oisd_small.json`, `oisd_big.json` |
+| [HaGeZi DNS Blocklists](https://github.com/hagezi/dns-blocklists) | HaGeZi | GPL-3.0 | `hagezi_pro.json`, `hagezi_light.json`, `hagezi_normal.json`, `hagezi_ultimate.json`, `hagezi_tif.json` |
+| [Blocklist Project](https://github.com/blocklistproject/Lists) | Blocklist Project | Unlicense | `blp_crypto.json`, `blp_phishing.json`, `blp_gambling.json`, `blp_malware.json`, `blp_fraud.json`, `blp_scam.json` |
+| [Phishing Army](https://phishing.army) | Andrea Draghetti | CC BY-NC 4.0 | `phishing_army.json`, `phishing_army_extended.json` |
+| [Steven Black Unified Hosts](https://github.com/StevenBlack/hosts) | Steven Black | MIT | `stevenblack.json` |
+| [1Hosts Lite](https://github.com/badmojr/1Hosts) | badmojr | MPL-2.0 | `onehosts_lite.json` |
 
 ### CNAME tracker detection
 
@@ -129,12 +172,15 @@ in the extension but are compiled from upstream open-source projects.
 
 | Source | Authors | License | Files |
 |--------|---------|---------|-------|
+| [EasyList](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `easylist_cosmetic.json` |
+| [EasyList Cookie](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `easylist_cookie_cosmetic.json` |
 | [Web Annoyances Ultralist](https://github.com/LanikSJ/webannoyances) | yourduskquibbles, LanikSJ | CC BY-SA 4.0 | `webannoyances_cosmetic.json` |
 
-30 regions: Arabic, Bulgarian, Chinese, Czech/Slovak, German, Spanish/Portuguese, Estonian,
-Persian, Finnish, French, Hebrew, Hindi, Serbo-Croatian, Hungarian, Indonesian, Italian,
-Japanese, Korean, Lithuanian, Latvian, Macedonian, Dutch, Nordic, Polish, Russian, Swedish,
-Thai, Turkish, Ukrainian, Vietnamese. Each region produces two files (cosmetic + blocking).
+36 regions: Albanian, Arabic, Bulgarian, Chinese, Czech/Slovak, German, Spanish, Estonian,
+Persian, Finnish, French, Greek, Hebrew, Indian, Serbo-Croatian, Hungarian, Icelandic,
+Indonesian, Italian, Japanese, Korean, Lithuanian, Latvian, Macedonian, Dutch, Nordic,
+Polish, Portuguese, Romanian, Russian, Slovenian, Swedish, Thai, Turkish, Ukrainian,
+Vietnamese. Each region produces two files (cosmetic + blocking).
 Regional lists are remote-catalog only and not bundled in the extension.
 
 AdGuard's TrackParamFilter general section provides the global parameter list (~304 params).
@@ -209,3 +255,11 @@ Attribution-ShareAlike 4.0 International license.
 The full license text is available at: https://creativecommons.org/licenses/by-sa/4.0/
 
 > Copyright (c) 2016-2024 by yourduskquibbles and LanikSJ
+
+### CC BY-NC 4.0 (Phishing Army)
+
+Phishing Army blocklists are distributed under the Creative Commons
+Attribution-NonCommercial 4.0 International license.
+The full license text is available at: https://creativecommons.org/licenses/by-nc/4.0/
+
+> Copyright (c) Andrea Draghetti

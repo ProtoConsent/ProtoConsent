@@ -196,10 +196,12 @@
 }
 
 .proto-card-chevron {
-  font-size: 16px;
-  line-height: 1;
-  color: var(--pc-text-soft);
-  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+
+.proto-card.is-expanded .proto-card-chevron {
+  transform: rotate(90deg);
 }
 
 .proto-card-icon {

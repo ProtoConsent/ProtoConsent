@@ -236,8 +236,9 @@ function buildRegionalFlags(container, opts) {
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (rlConfig) {
         var labels = [];
-        var shown = Math.min(codes.length, maxFlags);
-        for (var i = 0; i < shown; i++) {
+        var iconCount = 0;
+        for (var i = 0; i < codes.length; i++) {
+          if (iconCount >= maxFlags) break;
           var c = codes[i];
           var entry = rlConfig && rlConfig[c];
           var flagCodes = entry && entry.flag
@@ -245,6 +246,7 @@ function buildRegionalFlags(container, opts) {
             : [];
           if (flagCodes.length > 0) {
             for (var f = 0; f < flagCodes.length; f++) {
+              if (iconCount >= maxFlags) break;
               var img = document.createElement("img");
               img.src = chrome.runtime.getURL("icons/flags/" + flagCodes[f].toLowerCase() + ".svg");
               img.width = 16;
@@ -259,18 +261,26 @@ function buildRegionalFlags(container, opts) {
                 this.replaceWith(abbr);
               };
               container.appendChild(img);
+              iconCount++;
             }
           } else {
             var abbr = document.createElement("span");
             abbr.className = "ep-regional-flag-text";
             abbr.textContent = c.toUpperCase();
             container.appendChild(abbr);
+            iconCount++;
           }
         }
-        if (codes.length > maxFlags) {
+        var totalIcons = 0;
+        for (var t = 0; t < codes.length; t++) {
+          var e = rlConfig && rlConfig[codes[t]];
+          var fc = e && e.flag ? (Array.isArray(e.flag) ? e.flag : [e.flag]) : [codes[t]];
+          totalIcons += fc.length;
+        }
+        if (totalIcons > maxFlags) {
           var more = document.createElement("span");
           more.className = "ep-regional-flag-text";
-          more.textContent = "+" + (codes.length - maxFlags);
+          more.textContent = "+" + (totalIcons - iconCount);
           container.appendChild(more);
         }
         for (var j = 0; j < codes.length; j++) {

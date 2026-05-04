@@ -73,8 +73,17 @@
 }
 
 .ep-preset-chevron {
-  font-size: var(--pc-font-sm);
-  color: #3d5165;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #3d5165;
+  -webkit-mask-image: url(../../icons/nav/chevron-down.svg);
+  mask-image: url(../../icons/nav/chevron-down.svg);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  vertical-align: middle;
 }
 
 .ep-preset-menu {
@@ -278,9 +287,12 @@
 }
 
 .ep-active-card-chevron {
-  font-size: 14px;
-  line-height: 1;
-  color: var(--pc-text-soft);
+  width: 10px;
+  height: 10px;
+}
+
+.ep-active-card.is-expanded .ep-active-card-chevron {
+  transform: rotate(90deg);
 }
 
 .ep-active-card-name {
@@ -359,16 +371,12 @@
 }
 
 .ep-list-chevron {
-  font-size: 16px;
-  line-height: 1;
-  display: inline-block;
-  color: var(--pc-text-soft);
-  transition: transform 0.15s ease;
-  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
 }
 
 .ep-list-card.is-expanded .ep-list-chevron {
-  transform: rotate(0deg);
+  transform: rotate(90deg);
 }
 
 .ep-category-pill {
@@ -776,6 +784,16 @@ a.ep-regional-langs:hover {
   font-size: var(--pc-font-sm);
   color: var(--pc-text-muted);
   margin-bottom: 6px;
+}
+
+.ep-optional-disclaimer {
+  font-size: 11px;
+  color: var(--pc-text-muted);
+  padding: 6px 10px;
+  border-left: 3px solid #d4a017;
+  background: rgba(212, 160, 23, 0.08);
+  margin-bottom: 8px;
+  border-radius: 2px;
 }
 
 .ep-hotfix-domain-entry {

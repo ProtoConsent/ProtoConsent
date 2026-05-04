@@ -2,15 +2,19 @@
 
 This document is part of the ProtoConsent project and is licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. See the repository README and the [LICENSE-CC-BY-SA](../../LICENSE-CC-BY-SA) file for details.
 
-ProtoConsent strips tracking parameters (e.g. `utm_source`, `fbclid`, `gclid`) from URLs using Chrome's declarativeNetRequest redirect rules. Two static rulesets handle this: one for global parameters and one for site-specific parameters. See [list-catalog.md](list-catalog.md) for the parameter lists and sources.
+ProtoConsent strips tracking parameters (e.g. `utm_source`, `fbclid`, `gclid`) from URLs using declarativeNetRequest redirect rules. Two static rulesets handle this: one for global parameters and one for site-specific parameters. See [list-catalog.md](list-catalog.md) for the parameter lists and sources.
 
 ## Detection
 
-DNR redirect rules are invisible to `webRequest` because Chrome processes them before any request events fire. The extension detects strips using the `webNavigation` API instead:
+DNR redirect rules are invisible to standard request events, so the extension uses browser-specific strategies to detect when parameters have been stripped.
 
-1. `onBeforeNavigate` captures the original URL (with tracking params)
-2. `onCommitted` provides the final URL after DNR has stripped params
-3. The extension compares the two: same origin and path, different query means params were stripped
+### Chromium (Chrome, Edge, Brave)
+
+DNR redirects do not fire `onBeforeRedirect`. The extension captures the original URL via `webRequest.onBeforeRequest` (which fires before DNR processes the request), then compares it with the committed URL in `webNavigation.onCommitted`. Same origin and path with different query string means parameters were stripped. A secondary check via `declarativeNetRequest.getMatchedRules` confirms the strip came from a param ruleset.
+
+### Firefox
+
+Firefox fires `webRequest.onBeforeRedirect` for DNR redirects, providing both the original URL and redirect target directly. The extension compares the two URLs in the listener, filtering out server-side redirects (status 300-399). No `webNavigation` or `getMatchedRules` fallback is needed.
 
 Only main-frame navigations are tracked. Server-side redirects are filtered out to avoid false positives.
 

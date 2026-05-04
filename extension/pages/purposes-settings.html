@@ -230,13 +230,13 @@
 						<input type="checkbox" id="cmp-scroll-toggle" class="ps-gpc-toggle" aria-label="Scroll unlock" checked>
 					</div>
 				</div>
-				<details class="ps-accordion">
+				<details id="cmp-list-accordion" class="ps-accordion ps-hidden">
 					<summary class="ps-accordion-header">CMP list</summary>
 					<div class="ps-accordion-body">
 						<div id="cmp-list" class="ps-cmp-list"></div>
 					</div>
 				</details>
-				<details class="ps-accordion">
+				<details id="cmp-advanced-accordion" class="ps-accordion ps-hidden">
 					<summary class="ps-accordion-header">Advanced</summary>
 					<div class="ps-accordion-body">
 						<div class="ps-cmp-advanced-row">
@@ -362,20 +362,26 @@
 		<div class="ps-panel" id="ps-panel-support" data-panel="support" role="tabpanel" aria-labelledby="ps-tab-support" hidden>
 		<section class="ps-section">
 			<div class="ps-section-head">
-				<h2>Extension bugs</h2>
+				<h2>Extension</h2>
 			</div>
 			<div class="ps-support-row">
-				<p class="ps-enhanced-desc">Report issues with ProtoConsent itself to the extension issue tracker. Requires a GitHub account.</p>
-				<a href="https://github.com/ProtoConsent/ProtoConsent/issues/new" class="ps-data-btn" target="_blank" rel="noopener noreferrer">Open</a>
+				<p class="ps-enhanced-desc">Report a bug or suggest a feature. Requires a GitHub account.</p>
+				<div class="ps-support-btns">
+					<a href="https://github.com/ProtoConsent/ProtoConsent/issues/new?template=bug_report.yml" class="ps-data-btn" target="_blank" rel="noopener noreferrer">Bug report</a>
+					<a href="https://github.com/ProtoConsent/ProtoConsent/issues/new?template=feature_request.yml" class="ps-data-btn" target="_blank" rel="noopener noreferrer">Feature request</a>
+				</div>
 			</div>
 		</section>
 		<section class="ps-section">
 			<div class="ps-section-head">
-				<h2>Filter issues / website is broken</h2>
+				<h2>Filter lists</h2>
 			</div>
 			<div class="ps-support-row">
-				<p class="ps-enhanced-desc">Report filter issues with specific websites (wrong classification, broken site) to the data issue tracker. Requires a GitHub account.</p>
-				<a href="https://github.com/ProtoConsent/data/issues/new" class="ps-data-btn" target="_blank" rel="noopener noreferrer">Open</a>
+				<p class="ps-enhanced-desc">Report wrong classification, broken website, or a pipeline bug. Requires a GitHub account.</p>
+				<div class="ps-support-btns">
+					<a href="https://github.com/ProtoConsent/data/issues/new?template=filter_issue.yml" class="ps-data-btn" target="_blank" rel="noopener noreferrer">Filter issue</a>
+					<a href="https://github.com/ProtoConsent/data/issues/new?template=bug_report.yml" class="ps-data-btn" target="_blank" rel="noopener noreferrer">Bug report</a>
+				</div>
 			</div>
 		</section>
 		<section class="ps-section">
@@ -409,6 +415,7 @@
 				<h2 id="about-version">ProtoConsent</h2>
 			</div>
 			<p class="ps-enhanced-desc">Copyright (C) 2026 ProtoConsent contributors</p>
+			<p class="ps-enhanced-desc">ProtoConsent does not collect, store, or share any personal data. Everything runs in your browser. There is no backend, no analytics, no tracking.</p>
 			<div class="ps-about-links">
 				<a href="https://github.com/ProtoConsent/ProtoConsent" class="ps-about-link" target="_blank" rel="noopener noreferrer">Source code (GPL-3.0+)</a>
 				<a href="https://github.com/ProtoConsent/ProtoConsent/releases" class="ps-about-link" target="_blank" rel="noopener noreferrer">Changelog</a>

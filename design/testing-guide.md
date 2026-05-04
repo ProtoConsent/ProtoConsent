@@ -59,6 +59,7 @@ This document is part of the ProtoConsent project and is licensed under the Crea
     - [13.8 Consent-enhanced link](#138-consent-enhanced-link)
     - [13.9 ProtoConsent Core lists](#139-protoconsent-core-lists)
     - [13.10 Regional filter lists](#1310-regional-filter-lists)
+    - [13.11 Optional lists](#1311-optional-lists)
   - [14. Testing the inter-extension API](#14-testing-the-inter-extension-api)
     - [14.1 Enabling the API](#141-enabling-the-api)
     - [14.2 Sending a test query](#142-sending-a-test-query)
@@ -103,9 +104,11 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 ## 1. Requirements
 
-- **A Chromium‑based browser** (for example, Chrome, Edge or Brave)
-- **Ability to load an unpacked extension** in developer mode
+- **A Chromium-based browser** (for example, Chrome, Edge or Brave) or **Mozilla Firefox**
+- **Ability to load an unpacked extension** in developer mode (Chromium) or as a temporary add-on (Firefox via `about:debugging`)
 - **A few test sites** that use common analytics or ads/advertising services (for example, news sites)
+
+> **Firefox note:** ProtoConsent supports Firefox with a separate `manifest.json` (Manifest V2 + V3 hybrid). All test scenarios in this guide apply to Firefox unless noted otherwise. To load the extension in Firefox, open `about:debugging#/runtime/this-firefox`, click *Load Temporary Add-on*, and select the `manifest.json` inside `extension/`.
 
 ## 2. Installing the Extension (Developer Mode)
 
@@ -120,9 +123,8 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 2.2. **Load the extension in your browser:**
 
-- Open the extensions page (for example `chrome://extensions/` or `edge://extensions/`).
-- Enable **Developer mode**.
-- Click **Load unpacked** and select the `extension/` folder inside the cloned repository (the one that contains `manifest.json`).
+- **Chromium (Chrome, Edge, Brave):** Open the extensions page (for example `chrome://extensions/` or `edge://extensions/`). Enable **Developer mode**. Click **Load unpacked** and select the `extension/` folder inside the cloned repository (the one that contains `manifest.json`).
+- **Firefox:** Open `about:debugging#/runtime/this-firefox`. Click **Load Temporary Add-on** and select the `manifest.json` file inside the `extension/` folder.
 - Confirm that an extension called **ProtoConsent** appears in the extensions list and that it is enabled. Pin it in the toolbar if your browser supports pinning.
 
 ## 3. Basic Test: Per‑Site Profile
@@ -576,10 +578,10 @@ Enhanced Protection adds optional third‑party blocklists that are fetched on d
 ### 13.1 Activating a preset
 
 1. Open the ProtoConsent popup and click the **Enhanced** tab in the mode rail.
-2. The preset bar shows four options: **Off**, **Balanced**, **Full**, and **Custom** (disabled until you toggle individual lists).
+2. The preset bar shows four options: **Off**, **Balanced**, **Full**, and **Custom** (disabled until you toggle individual lists). A separate **Optional** section below the main grid shows community lists that are never auto-enabled by any preset.
 3. Select **Balanced**. The extension will prompt you to download the Balanced lists (EasyPrivacy, EasyList, AdGuard DNS, cosmetic, banners). If you have regional languages selected in Purpose Settings, Regional Cosmetic and Regional Blocking are also included.
 4. Wait for all downloads to complete - each card shows a progress indicator, then switches to an enabled state with a domain count.
-5. Select **Full** to enable all lists including HaGeZi Pro and OISD Small. Lists not yet downloaded will start downloading automatically.
+5. Select **Full** to enable all basic+full lists including OISD Small, Phishing Army, and Fanboy Social. Lists not yet downloaded will start downloading automatically. Optional lists are not affected by preset switches.
 
 Enhanced Protection tab with the Balanced preset active:
 
@@ -587,7 +589,7 @@ Enhanced Protection tab with the Balanced preset active:
 
 ### 13.2 Downloading and toggling lists
 
-1. With the **Balanced** preset active, find a Full-only list (for example, HaGeZi Pro) and click its **Download** button.
+1. With the **Balanced** preset active, find a Full-only list (for example, OISD Small) and click its **Download** button.
 2. Once downloaded, the list appears with a toggle switch. Toggle it on - the preset switches to **Custom** automatically.
 3. Toggle it off again. The preset remains **Custom** because the state no longer matches Balanced or Full exactly.
 4. To remove a downloaded list entirely, click its **Remove** (×) button. The list reverts to the not‑downloaded state.
@@ -708,7 +710,9 @@ Category mapping:
 |----------------|------------------------|
 | analytics | EasyPrivacy |
 | ads | EasyList, EasyList Cosmetic |
-| advanced_tracking | Blocklist Project Crypto |
+| third_parties | Fanboy Social |
+| advanced_tracking | (none currently) |
+| security | Phishing Army |
 
 To verify via the service worker console:
 
@@ -751,6 +755,20 @@ chrome.storage.local.get(["enhancedLists", "enhancedData_protoconsent_core"], r 
 7. **Preset integration**: select Balanced. Both regional lists should be enabled (if languages are selected). Select Off. Both should disable.
 8. **Language removal**: uncheck all regional languages in Purpose Settings. Regional lists should auto-disable (storage listener). The regional cards should show no flags.
 9. **Rapid toggle**: check and uncheck several languages quickly. Verify no language selections are lost (serialized writes prevent race conditions).
+10. **Re-enable on language selection**: with Balanced or Full preset active, download regional lists, then disable them via the toggle. Go to Purpose Settings and select a language. The disabled regional lists should re-enable automatically (the storage listener detects the language change and re-enables downloaded lists when the preset is not Off).
+
+### 13.11 Optional lists
+
+Optional lists (`preset: "optional"`) are community lists for advanced users. They are never auto-enabled by any preset, never included in "Download all", and excluded from preset resolution.
+
+1. Open the Protection tab. An **Optional** section should appear below the main grid cards with a disclaimer about increased blocking aggressiveness.
+2. Select any preset (Balanced, Full). Verify that no optional lists are enabled or downloaded.
+3. Click **Download all**. Verify that only basic/full lists are downloaded. Optional lists should remain in not-downloaded state.
+4. Click **Download** on an individual optional list (e.g. HaGeZi Pro). It should download and enable.
+5. After downloading an optional list, check that the preset label does not change (stays Balanced or Full, not Custom).
+6. Toggle the optional list off/on. The preset label should remain unchanged.
+7. Switch to Off preset. The optional list should remain in its current state (enabled stays enabled).
+8. Verify that auto-refresh updates downloaded optional lists alongside other lists.
 
 ## 14. Testing the inter-extension API
 

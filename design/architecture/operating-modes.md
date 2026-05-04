@@ -24,10 +24,11 @@ A capabilities model gates all mode-dependent behavior. Each feature is either a
 | Whitelist allow rules | Yes | No | No own blocks to override |
 | Enhanced Protection DNR rules | Yes | No | |
 | Attribution indexes | Yes | Yes | Lists serve as classification dictionaries in both modes |
-| GPC signaling | Yes | Yes | Subject to its own toggle in settings |
-| Client Hints stripping | Yes | Yes | Subject to its own toggle in settings |
-| CMP auto-response | Yes | Yes | Subject to signatures being loaded |
-| Cosmetic filtering | Yes | Yes | Subject to list being enabled |
+| GPC signaling | Yes | Yes | Quick toggle: Signals |
+| Client Hints stripping | Yes | Yes | Quick toggle: Signals |
+| URL parameter stripping | Yes | Yes | Quick toggle: Signals |
+| Cookie banner management | Yes | Yes | Quick toggle: Banners |
+| Cosmetic filtering | Yes | Yes | Quick toggle: Cosmetic |
 
 The key insight: Monitoring mode disables all network-level enforcement but keeps signaling, consent automation, and purpose attribution active. This makes it useful alongside a dedicated ad blocker.
 
@@ -61,12 +62,24 @@ Layout (top to bottom):
 3. **Signal status**: GPC domain/request counts, cosmetic rule count
 4. **CMP Detection**: detected banner name and state (present/showing)
 5. **Purpose cards**: per-purpose blocked domain counts with Consent Commons icons, expandable with top domains
-6. **CMP Auto-response**: template count and matched domain
+6. **Cookie banner management**: template count and matched domain
 7. **Param Stripping**: stripped parameter names per domain (only visible when strips detected)
 8. **Unattributed hostnames**: collapsible diagnostic list
 
 ## UI gating
 
 - **Mode indicator**: a semaphore pill in the popup header shows the active mode. Clicking it navigates to the Overview tab.
+- **Quick toggles**: an expandable pill row under the lifetime counter provides one-click master switches for major features. Each pill controls one or more storage keys and reflects on/off/mixed state. Available toggles:
+
+  | Pill | Controls | Default |
+  |---|---|---|
+  | Banners | Cookie banner management | On |
+  | Cosmetic | Cosmetic filtering | On |
+  | Signals | GPC, Client Hints stripping, URL param stripping (grouped) | On |
+  | API | Inter-extension API | Off |
+  | Theme | Auto / Light / Dark (cycles) | Auto |
+
+  Quick toggles work in both modes. When a feature is disabled via its quick toggle, related grid cards in the Protection and Overview tabs are visually dimmed (`is-master-off`) with a tooltip indicating the feature is off.
+
 - **Whitelist**: hidden in Monitoring mode (no own blocks to override), with an explanatory message.
 - **Settings toggle**: the Purpose Settings page includes an Operating Mode toggle. The mode choice is included in export/import.

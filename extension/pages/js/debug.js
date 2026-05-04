@@ -2,7 +2,7 @@
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// debug.js — Debug panel rendering for the Log > Debug tab.
+// debug.js - Debug panel rendering for the Log > Debug tab.
 // Renders directly into #pc-log-debug (only called when DEBUG_RULES = true).
 // Loaded after popup.js; uses globals: currentDomain, currentProfile, currentPurposesState.
 
@@ -160,7 +160,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
 
     // CMP auto-response lists
     if (bg && bg.cmpLists) {
-      lines.push("— CMP auto-response —");
+      lines.push("— Cookie banner management —");
       lines.push("  CMP lists: " + (bg.cmpLists.length > 0 ? bg.cmpLists.join(", ") : "(none)"));
       lines.push("");
     }
@@ -294,7 +294,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
             content.textContent += "\n\n" + tcfLines.join("\n");
           }
         });
-        // CMP auto-response injection (current tab)
+        // Cookie banner management injection (current tab)
         chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_CMP", tabId: tabs[0].id }, (resp) => {
           if (chrome.runtime.lastError) { void chrome.runtime.lastError; }
           if (resp && resp.cmp) {
@@ -312,7 +312,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
             if (pre) pre.textContent += "\n" + cmpLines.join("\n");
           }
         });
-        // CMP detection (2.B.1 — CSS detectors + cookie observation)
+        // CMP detection (CSS detectors + cookie observation)
         chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_CMP_DETECT", tabId: tabs[0].id }, (resp) => {
           if (chrome.runtime.lastError) { void chrome.runtime.lastError; }
           if (resp && resp.cmpDetect) {
@@ -411,7 +411,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
-    // Blocked domains detail (from our event listener — may have gaps if service worker was idle)
+    // Blocked domains detail (from our event listener - may have gaps if service worker was idle)
     if (Object.keys(blockedDomains).length) {
       lines.push("— blocked domains (event listener) —");
       for (const [purpose, domains] of Object.entries(blockedDomains).sort()) {
@@ -452,14 +452,14 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
 
     content.textContent = lines.join("\n");
 
-    // Block provenance (async append — uses popup.js globals + PROTO_DATA)
+    // Block provenance (async append - uses popup.js globals + PROTO_DATA)
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (!tabs || !tabs[0]) return;
       chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_PROTO_DATA", tabId: tabs[0].id }, function (proto) {
         if (chrome.runtime.lastError || !proto) return;
         let prov = computeBlockProvenance(proto.coverage, proto.mode);
         let provSource = prov.hasMatchedRules ? "getMatchedRules" : "webRequest";
-        let pLines = [];
+        let pLines = [];   
         pLines.push("— block provenance (this tab) —");
         pLines.push("  own (" + provSource + "): " + prov.own);
         pLines.push("  observed (ERR_BLOCKED): " + prov.observed);

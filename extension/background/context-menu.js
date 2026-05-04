@@ -220,4 +220,23 @@ export function removeWhitelistAllForSite(site) {
   });
 }
 
+export function clearWhitelistAll() {
+  return withWhitelist(whitelist => {
+    for (const [domain, siteMap] of Object.entries(whitelist)) {
+      for (const key of Object.keys(siteMap)) {
+        if (key === "_hotfix") continue;
+        delete siteMap[key];
+      }
+      if (Object.keys(siteMap).length === 0) delete whitelist[domain];
+    }
+    return new Promise(resolve => {
+      chrome.storage.local.set({ whitelist }, () => {
+        if (chrome.runtime.lastError) { resolve(); return; }
+        rebuildAllDynamicRules();
+        resolve();
+      });
+    });
+  });
+}
+
 setupMenus();

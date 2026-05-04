@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Filter issue or broken website
+    url: https://github.com/ProtoConsent/data/issues/new?template=filter_issue.yml
+    about: Report wrong classification, missing domains, or broken websites in the data repo

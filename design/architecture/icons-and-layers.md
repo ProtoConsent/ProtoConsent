@@ -69,7 +69,7 @@ SVG originals at 18×18. The `enhanced` shield (orange) appears as primary icon 
 
 ## 7. Grid card icons (Overview and Protection tabs)
 
-The Overview and Protection tabs use a shared set of SVG icons for their metric grid cards. All icons are 20×20 outline SVGs using `stroke="currentColor"`, stored in `icons/grid/`.
+The Overview and Protection tabs use a shared set of SVG icons for their metric grid cards. All icons are 20x20 outline SVGs stored in `icons/grid/`.
 
 ### Overview tab grid cards
 
@@ -92,5 +92,18 @@ The Overview and Protection tabs use a shared set of SVG icons for their metric 
 | Banners | <img src="../../extension/icons/grid/banners.svg" width="60"> | Cookie with bite | `icons/grid/banners.svg` | Banner/CMP lists summary |
 | Detection | <img src="../../extension/icons/grid/detection.svg" width="60"> | Antenna with signal | `icons/grid/detection.svg` | Detection lists summary |
 | Exceptions | <img src="../../extension/icons/grid/exception.svg" width="60"> | Shield with checkmark | `icons/grid/exception.svg` | Hotfix safelist domains |
+| Optional | <img src="../../extension/icons/grid/optional.svg" width="60"> | Globe with shield | `icons/grid/optional.svg` | Optional (non-preset) lists |
 
-Cosmetic and Banners icons are shared between both tabs. All icons inherit text color via `currentColor` and scale cleanly at 20×20 and smaller sizes.
+Cosmetic and Banners icons are shared between both tabs. All icons inherit text color via `currentColor` and scale cleanly at 20x20 and smaller sizes. Grid and navigation icons are sourced from [UXWing](https://uxwing.com) (free, no attribution required).
+
+## 8. Navigation and UI icons
+
+Small SVG icons used for navigation controls and UI elements. Stored in `icons/nav/`.
+
+| Icon | | Description | File | Usage |
+|------|------|-------------|------|-------|
+| Chevron right | <img src="../../extension/icons/nav/chevron-right.svg" height="30" align="center" valign="center"> | Right-pointing arrow | `icons/nav/chevron-right.svg` | Expand/collapse indicator |
+| Chevron down | <img src="../../extension/icons/nav/chevron-down.svg" width="30" align="center" valign="center"> | Down-pointing arrow | `icons/nav/chevron-down.svg` | Dropdown indicators (profile, preset) |
+| Chevron left | <img src="../../extension/icons/nav/chevron-left.svg" height="30" align="center" valign="center"> | Left-pointing arrow | `icons/nav/chevron-left.svg` | Side panel tab toggle |
+| Chevron up | <img src="../../extension/icons/nav/chevron-up.svg" width="30" align="center" valign="center"> | Up-pointing arrow | `icons/nav/chevron-up.svg` | Reserved |
+| Gear | <img src="../../extension/icons/nav/gear.svg" width="30" align="center" valign="center"> | Settings cog | `icons/nav/gear.svg` | Purpose Settings footer link |

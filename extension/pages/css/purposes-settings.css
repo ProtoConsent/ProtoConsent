@@ -1081,10 +1081,20 @@ body {
 }
 
 .ps-accordion-header::before {
-  content: "\25B6";
-  font-size: 9px;
-  color: var(--pc-text-soft);
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  background: var(--pc-text-soft);
+  -webkit-mask-image: url(../../icons/nav/chevron-right.svg);
+  mask-image: url(../../icons/nav/chevron-right.svg);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   transition: transform 0.15s;
+  margin-right: 6px;
+  flex-shrink: 0;
 }
 
 details[open] > .ps-accordion-header::before {
@@ -1349,6 +1359,12 @@ details[open] > .ps-accordion-header::before {
 }
 
 .ps-support-row .ps-data-btn {
+  flex-shrink: 0;
+}
+
+.ps-support-btns {
+  display: flex;
+  gap: 8px;
   flex-shrink: 0;
 }
 

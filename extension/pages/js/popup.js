@@ -241,8 +241,6 @@ document.addEventListener("DOMContentLoaded", () => {
           c.classList.toggle("is-expanded", expand);
           var h = c.querySelector(".proto-card-header");
           if (h) h.setAttribute("aria-expanded", expand ? "true" : "false");
-          var ch = c.querySelector(".proto-card-chevron");
-          if (ch) ch.textContent = expand ? " \u25BE" : " \u25B8";
         });
         if (typeof setLifetimePanelState === "function") setLifetimePanelState(expand);
         toggleDescBtn.textContent = expand ? "Hide details" : "Show details";
@@ -263,7 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
       _toggleBars();
       // Consent tab: toggle .pc-purpose-description is-collapsed (bars already toggled above)
       const descriptions = document.querySelectorAll(".pc-purpose-description");
-      const chevrons = document.querySelectorAll(".pc-purpose-chevron");
       const leftEls = document.querySelectorAll(".pc-purpose-left");
       // Expand all if majority are collapsed, collapse all otherwise
       let collapsedCount = 0;
@@ -278,9 +275,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           desc.classList.add("is-collapsed");
         }
-      });
-      chevrons.forEach((ch) => {
-        ch.textContent = shouldExpand ? " ▾" : " ▸";
       });
       leftEls.forEach((el) => {
         el.setAttribute("aria-expanded", shouldExpand ? "true" : "false");

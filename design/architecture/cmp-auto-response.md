@@ -54,14 +54,14 @@ sequenceDiagram
     CI->>Page: Unlock scroll
 
     Note over CD: document_idle
-    CD->>Page: Query CSS selectors (~290 CMPs)
+    CD->>Page: Query CSS selectors (~287 CMPs)
     CD->>Page: Read consent cookies
     CD->>B: Report detected CMPs
 ```
 
 ## 3. CMP signatures
 
-Signatures are defined in the bundled CMP signatures file (with metadata wrapper). Each entry in the `signatures` object describes how a specific CMP stores and displays consent:
+ProtoConsent maintains its own CMP signatures in `extension/rules/protoconsent_cmp_signatures.json`. Each entry in the `signatures` object describes how a specific CMP stores and displays consent:
 
 ```json
 {
@@ -313,7 +313,7 @@ The following CMPs use server-side consent mechanisms that cannot be replicated 
 CMP auto-response and CMP observation are complementary systems:
 
 - **Auto-response** (content script, `document_start`): hides banners via cosmetic CSS, unlocks scroll, and optionally injects consent cookies (experimental). Preventive.
-- **Banner detection** (content script, `document_idle`): detects CMP presence via CSS selectors (~290 CMPs). Reports `[banner]` lines in the Log tab. Includes a delayed recheck for async-loaded CMPs.
+- **Banner detection** (content script, `document_idle`): detects CMP presence via CSS selectors (~287 CMPs). Reports `[banner]` lines in the Log tab. Includes a delayed recheck for async-loaded CMPs.
 - **Cookie observation** (delayed after page load): reads CMP cookies by name from the signature list. The background decodes cookie values (OneTrust, Cookiebot, CookieYes, Complianz, Wix) and compares against user purposes. Reports `[banner-consent]` lines showing conflicts or matches.
 - **localStorage observation** (page context, `document_idle`): reads localStorage entries for CMPs that store consent there (Usercentrics, CCM19). The background decodes the data and compares against user purposes. Reports `[banner-consent]` lines.
 - **TCF/GPP detection** (page context): calls `__tcfapi` and `__gpp` APIs. The TCF pill in the popup shows the site's own consent status as reported by its CMP.
@@ -322,7 +322,17 @@ The `[banner]` and `[banner-consent]` tags in the Log distinguish detection (CSS
 
 ## 11. Distribution
 
-CMP signatures are bundled with the extension for first-install availability and updated via CDN when the user enables list sync. They are integrated into the Enhanced Protection system as a list type alongside blocking, cosmetic, and informational lists. The UI shows them as **ProtoConsent Banners** in the Protection tab.
+CMP data is split across three JSON files in `extension/rules/`, each with its own provenance:
+
+| File | Entries | Source | License |
+|------|---------|--------|---------|
+| `protoconsent_cmp_signatures.json` | 31 signatures | ProtoConsent (hand-maintained) | GPL-3.0+ |
+| `autoconsent_cmp_detectors.json` | ~287 detectors | Derived from [Autoconsent](https://github.com/nicedayfor/AiConsent) | MPL-2.0 |
+| `autoconsent_cmp_signatures_site.json` | ~233 site-specific selectors | Derived from [Autoconsent](https://github.com/nicedayfor/AiConsent) | MPL-2.0 |
+
+The ProtoConsent signatures file contains cookie templates, purpose maps, and cosmetic selectors for 31 CMPs (the entries documented in [section 3](#3-cmp-signatures)). The two Autoconsent-derived files provide broader detection coverage and site-specific hiding selectors, converted from the Autoconsent rule format by the data pipeline.
+
+All three files are bundled with the extension for first-install availability and updated via CDN when the user enables list sync. They are integrated into the Enhanced Protection system as a list type alongside blocking, cosmetic, and informational lists. The UI shows them as **ProtoConsent Banners** in the Protection tab.
 
 For the full CDN distribution model and automated refresh workflow, see [list-catalog.md, section 9](list-catalog.md#9-cmp-auto-response-signatures).
 
@@ -342,7 +352,7 @@ Identify:
 
 ### 2. Create the signature entry
 
-Add a JSON entry to the bundled CMP signatures file in the extension and to the enhanced version in the data repo. See [section 3](#3-cmp-signatures) for the full field reference.
+Add a JSON entry to `extension/rules/protoconsent_cmp_signatures.json` (and to the enhanced version in the data repo). See [section 3](#3-cmp-signatures) for the full field reference.
 
 Minimal entry (cosmetic only, no injectable cookie):
 ```json

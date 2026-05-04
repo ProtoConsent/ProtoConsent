@@ -280,9 +280,8 @@ function createPurposeItemElement(purposeKey, cfg) {
 
   const nameTxt = document.createTextNode(cfg.label || purposeKey);
   const chevronEl = document.createElement("span");
-  chevronEl.className = "pc-purpose-chevron";
+  chevronEl.className = "pc-purpose-chevron pc-chevron";
   chevronEl.setAttribute("aria-hidden", "true");
-  chevronEl.textContent = " \u25BE";
   nameEl.appendChild(nameTxt);
 
   leftEl.appendChild(chevronEl);
@@ -366,11 +365,9 @@ function createPurposeItemElement(purposeKey, cfg) {
   function updateDescriptionVisibility(collapsed) {
     if (collapsed) {
       descEl.classList.add("is-collapsed");
-      chevronEl.textContent = " \u25B8";
       leftEl.setAttribute("aria-expanded", "false");
     } else {
       descEl.classList.remove("is-collapsed");
-      chevronEl.textContent = " \u25BE";
       leftEl.setAttribute("aria-expanded", "true");
     }
   }
