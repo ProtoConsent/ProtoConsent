@@ -52,6 +52,8 @@ The main user-facing element. When opened on a site, it shows the active profile
 - **Protection view**: optional third-party blocklists with preset selection and per-list controls
 - **Log view**: real-time request monitoring, blocked domains grouped by purpose, GPC signal tracking per domain, and URL parameter strip events
 - **Site declaration panel**: when a site publishes a `.well-known/protoconsent.json`, a collapsible side panel shows its declared purposes, legal basis, sharing and international transfers
+- **Contextual menus**: a right-click menu on the extension badge icon provides quick access to operating mode, banner hiding, cosmetic filtering, GPC signal, whitelist site, and settings. A custom right-click menu inside the popup replaces the native context menu, providing the same quick-toggle actions with ARIA roles and keyboard navigation (Tab/Arrow/Enter/Escape)
+- **Accessibility quick-toggles**: quick-toggle menus accessible via keyboard for cosmetic filtering, banner hiding, and card dimming, with focus management and ARIA roles across all popup views
 
 ### 2.2 Background script (service worker)
 
@@ -74,7 +76,7 @@ All configuration lives in the browser’s extension storage. No remote server i
 
 - **Site rules**: mapping from domains to rules (profile plus purpose overrides) and predefined profiles
 - **Domain whitelist**: per-site and global allow entries
-- **Enhanced Protection**: list metadata, domain/path data, active preset, and selected regional languages. 15 non-regional lists: 6 ProtoConsent Core (one per blocking purpose plus security, maintained by the project) and 9 third-party from open-source projects, plus 2 regional catalog entries (30 regions x 2 types, language-gated). Core lists are bundled for first-install availability and updated weekly via CDN from the [data repository](https://github.com/ProtoConsent/data), where a GitHub Actions workflow refreshes all sources every Tuesday.
+- **Enhanced Protection**: list metadata, domain/path data, active preset, and selected regional languages. 40 lists total organised in three tiers: 19 basic (auto-enabled with Balanced), 6 full (added by Full preset), and 15 optional (community lists, never auto-enabled or auto-downloaded, user must download individually). Sources include 6 ProtoConsent Core lists (one per blocking purpose plus security, maintained by the project) and third-party lists from EasyList, AdGuard, HaGeZi, OISD, Phishing Army, Blocklist Project, Steven Black, 1Hosts, and Fanboy. Two regional catalog entries cover 36 regions x 2 types, language-gated. Core lists are bundled for first-install availability and updated weekly via CDN from the [data repository](https://github.com/ProtoConsent/data), where a GitHub Actions workflow refreshes all sources every Tuesday.
 - **Cosmetic filtering**: compiled CSS for generic selectors and per-domain selectors
 - **Opt-in flags**: consent-enhanced link toggle, remote sync toggle (on by default)
 
@@ -156,11 +158,11 @@ Per-site GPC overrides use `requestDomains` (the destination URL), not `initiato
 
 **Onboarding** - Opens on first install and guides new users through two steps: (1) default profile selection and (2) confirmation with active feature summary. Enhanced protection lists are enabled by default.
 
-**Purpose settings** - Lets users customise the global default profile by toggling individual purposes, manage Enhanced lists (sync toggle and consent-enhanced link toggle), and shows the active Enhanced Protection preset alongside the consent presets. Accessible from the popup or the browser’s extensions page.
+**Purpose settings** - Lets users customise the global default profile by toggling individual purposes, manage Enhanced lists (sync toggle and consent-enhanced link toggle), and shows the active Enhanced Protection preset alongside the consent presets. Organised into five collapsible modules: Consent Presets, Enhanced Lists, Privacy Signals (GPC and Client Hints), Operating Mode, and Regional Filters. Includes a Support tab with links and a CMP suggestion form, and an About tab with version, credits, and license information. Accessible from the popup or the browser’s extensions page.
 
 ### 2.8 Cosmetic filtering
 
-Hides ad containers and empty banners left after network-level blocking. Purely visual cleanup - does not block requests or affect privacy. Part of the Balanced preset, can be disabled independently.
+Hides ad containers and empty banners left after network-level blocking. Purely visual cleanup - does not block requests or affect privacy. Part of the Balanced preset, controlled by a master switch (`enhancedCosmeticEnabled`) in the background that gates all cosmetic injection. Can be disabled independently from the Protection tab or via the accessibility quick-toggle menu.
 
 - **Source**: a converter in the data repo extracts element-hiding rules from EasyList into generic and domain-specific CSS selectors
 - **Distribution**: bundled with the extension for first-install; also hosted on CDN for updates
@@ -321,7 +323,7 @@ New purposes can be added as fields in the site rule without breaking existing p
 
 The inter-extension provider API (§12) is a concrete example: other extensions can query ProtoConsent's consent state without any coupling to its internal data model.
 
-Firefox support is planned as the next browser target. The extension architecture (popup, background, local storage, enforcement) maps directly to Firefox's WebExtensions API, with adaptations mainly in `declarativeNetRequest` availability and manifest format. The same popup UI, data model, and SDK work across browsers.
+Firefox support is in progress. The extension architecture (popup, background, local storage, enforcement) maps directly to Firefox's WebExtensions API, with adaptations in manifest format (`browser_specific_settings`, webext polyfills), DNR regex chunking (Firefox limits regex complexity per rule), and side panel replacement (Firefox does not support `chrome.sidePanel`). The same popup UI, data model, and SDK work across browsers.
 
 The optional SDK and purpose-signalling protocol are documented layers on top of the extension, not hard dependencies. Websites can adopt them at their own pace while the extension continues to work on its own. This lets others adopt parts of ProtoConsent independently.
 

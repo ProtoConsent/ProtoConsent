@@ -40,7 +40,7 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 ## Key features
 
 - **Per-site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalization, third-party services, advanced tracking).
-- **Enhanced protection out of the box:** curated blocklists, cosmetic filtering, CNAME detection, URL parameter stripping, and regional filters for 30 languages - all enabled by default and kept up to date automatically.
+- **Enhanced protection out of the box:** curated blocklists, cosmetic filtering, CNAME detection, URL parameter stripping, and regional filters for 36 languages - all enabled by default and kept up to date automatically.
 - **Two operating modes:** Blocking (default, full enforcement) or Monitoring (delegates blocking to your existing ad blocker while ProtoConsent adds purpose attribution, coverage metrics, and signal observability).
 - **Consent banner auto-response:** 31 CMP frameworks (including IAB TCF v2.2) handled via cosmetic hiding, scroll unlock, and experimental cookie injection based on your purpose preferences. No DOM interaction, no click simulation.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/):** Sec-GPC sent only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.
