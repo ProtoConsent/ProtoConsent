@@ -65,7 +65,7 @@ import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
 import { scheduleSessionPersist } from "./session.js";
 import { getBlockerDetectionState, resetBehavioralCounters, dismissBlockerDetection, isBrave } from "./blocker-detection.js";
 import { refreshLists } from "./auto-refresh.js";
-import { whitelistAllForSite, removeWhitelistAllForSite } from "./context-menu.js";
+import { whitelistAllForSite, removeWhitelistAllForSite, clearWhitelistAll } from "./context-menu.js";
 
 // Handle a bridge query from the content script.
 export async function handleBridgeQuery(message) {
@@ -1016,6 +1016,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const { site } = message;
     if (!site || !isValidHostname(site)) { sendResponse({ ok: false }); return; }
     removeWhitelistAllForSite(site).then(() => {
+      sendResponse({ ok: true });
+    });
+    return true;
+  }
+
+  // Whitelist: clear all entries (except hotfixes)
+  if (message.type === "PROTOCONSENT_WHITELIST_CLEAR") {
+    clearWhitelistAll().then(() => {
       sendResponse({ ok: true });
     });
     return true;
