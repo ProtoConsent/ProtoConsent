@@ -20,7 +20,7 @@ const TARGETS = {
   firefox: {
     background: { scripts: ["background.js"], type: "module" },
     browser_specific_settings: {
-      gecko: { id: "contact@protoconsent.org", strict_min_version: "133.0" },
+      gecko: { id: "contact@protoconsent.org", strict_min_version: "133.0", data_collection_permissions: { required: ["none"] } },
     },
   },
 };
