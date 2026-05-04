@@ -22,9 +22,9 @@ async function loadDebugFlag() {
 // Operating mode & capabilities
 // =============================================================================
 
-var operatingMode = "standalone";
+let operatingMode = "standalone";
 
-var CAPABILITIES = {
+const CAPABILITIES = {
   standalone:   { ownBlocking: true,  observeExternalBlocks: true, whitelistOverrides: true,  enhancedDnr: true  },
   protoconsent: { ownBlocking: false, observeExternalBlocks: true, whitelistOverrides: false, enhancedDnr: false },
 };
@@ -225,9 +225,9 @@ function getEnhancedCategoryInfo(listId) {
 // If container.hidden is true, it will be set to false once flags are rendered.
 function buildRegionalFlags(container, opts) {
   opts = opts || {};
-  var maxFlags = opts.maxFlags || 2;
+  const maxFlags = opts.maxFlags || 2;
   chrome.storage.local.get(["regionalLanguages"], function (stored) {
-    var codes = Array.isArray(stored.regionalLanguages) ? stored.regionalLanguages : [];
+    const codes = Array.isArray(stored.regionalLanguages) ? stored.regionalLanguages : [];
     if (codes.length === 0) {
       if (opts.emptyText) container.textContent = opts.emptyText;
       return;
@@ -235,19 +235,19 @@ function buildRegionalFlags(container, opts) {
     fetch(chrome.runtime.getURL("config/regional-languages.json"))
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (rlConfig) {
-        var labels = [];
-        var iconCount = 0;
-        for (var i = 0; i < codes.length; i++) {
+        const labels = [];
+        let iconCount = 0;
+        for (let i = 0; i < codes.length; i++) {
           if (iconCount >= maxFlags) break;
-          var c = codes[i];
-          var entry = rlConfig && rlConfig[c];
-          var flagCodes = entry && entry.flag
+          const c = codes[i];
+          const entry = rlConfig && rlConfig[c];
+          const flagCodes = entry && entry.flag
             ? (Array.isArray(entry.flag) ? entry.flag : [entry.flag])
             : [];
           if (flagCodes.length > 0) {
-            for (var f = 0; f < flagCodes.length; f++) {
+            for (let f = 0; f < flagCodes.length; f++) {
               if (iconCount >= maxFlags) break;
-              var img = document.createElement("img");
+              const img = document.createElement("img");
               img.src = chrome.runtime.getURL("icons/flags/" + flagCodes[f].toLowerCase() + ".svg");
               img.width = 16;
               img.height = 12;
@@ -255,7 +255,7 @@ function buildRegionalFlags(container, opts) {
               img.className = "ep-regional-flag";
               img.dataset.fc = flagCodes[f];
               img.onerror = function () {
-                var abbr = document.createElement("span");
+                const abbr = document.createElement("span");
                 abbr.className = "ep-regional-flag-text";
                 abbr.textContent = this.dataset.fc || this.alt.substring(0, 2).toUpperCase();
                 this.replaceWith(abbr);
@@ -264,27 +264,27 @@ function buildRegionalFlags(container, opts) {
               iconCount++;
             }
           } else {
-            var abbr = document.createElement("span");
+            const abbr = document.createElement("span");
             abbr.className = "ep-regional-flag-text";
             abbr.textContent = c.toUpperCase();
             container.appendChild(abbr);
             iconCount++;
           }
         }
-        var totalIcons = 0;
-        for (var t = 0; t < codes.length; t++) {
-          var e = rlConfig && rlConfig[codes[t]];
-          var fc = e && e.flag ? (Array.isArray(e.flag) ? e.flag : [e.flag]) : [codes[t]];
+        let totalIcons = 0;
+        for (let t = 0; t < codes.length; t++) {
+          const e = rlConfig && rlConfig[codes[t]];
+          const fc = e && e.flag ? (Array.isArray(e.flag) ? e.flag : [e.flag]) : [codes[t]];
           totalIcons += fc.length;
         }
         if (totalIcons > maxFlags) {
-          var more = document.createElement("span");
+          const more = document.createElement("span");
           more.className = "ep-regional-flag-text";
           more.textContent = "+" + (totalIcons - iconCount);
           container.appendChild(more);
         }
-        for (var j = 0; j < codes.length; j++) {
-          var entry2 = rlConfig && rlConfig[codes[j]];
+        for (let j = 0; j < codes.length; j++) {
+          const entry2 = rlConfig && rlConfig[codes[j]];
           labels.push(entry2 ? entry2.label : codes[j].toUpperCase());
         }
         container.title = labels.join(", ");

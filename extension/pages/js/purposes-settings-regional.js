@@ -10,10 +10,10 @@
 // Globals: REGIONAL_COSMETIC_ID, REGIONAL_BLOCKING_ID (config.js)
 
 // Capture hash before applyHashRoute replaces it with the tab name
-var _regionalScrollTarget = location.hash === '#regional-filters' ? 'regional-filters' : null;
+const _regionalScrollTarget = location.hash === '#regional-filters' ? 'regional-filters' : null;
 
 // Serialized storage writes — each toggle waits for the previous to finish
-var _regionalLangQueue = Promise.resolve();
+let _regionalLangQueue = Promise.resolve();
 
 function initRegionalSection() {
 	const section = document.getElementById('regional-section');
@@ -37,7 +37,7 @@ function initRegionalSection() {
 		// so we check for the section ID being in the URL at load time
 		if (_regionalScrollTarget) {
 			setTimeout(function() {
-				var target = document.getElementById(_regionalScrollTarget);
+				const target = document.getElementById(_regionalScrollTarget);
 				if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 			}, 50);
 		}

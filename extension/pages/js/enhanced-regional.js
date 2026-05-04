@@ -50,7 +50,7 @@ function renderRegionalCard(listId) {
 
   // Active languages indicator (shown in header, visible when collapsed)
   // Always a link to regional settings for easy language configuration
-  var langBadge = document.createElement("a");
+  const langBadge = document.createElement("a");
   langBadge.href = "purposes-settings.html#regional-filters";
   langBadge.target = "_blank";
   langBadge.className = "ep-regional-langs";

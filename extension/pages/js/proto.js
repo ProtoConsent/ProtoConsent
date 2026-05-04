@@ -115,8 +115,8 @@ function refreshProtoView() {
 // --- Proto shared bars (stats + signals) ---
 
 function _renderProtoBars(resp, tcfData) {
-  var statsContainer = document.getElementById("proto-bar-stats");
-  var signalsContainer = document.getElementById("proto-bar-signals");
+  const statsContainer = document.getElementById("proto-bar-stats");
+  const signalsContainer = document.getElementById("proto-bar-signals");
 
   // Save expanded state before re-rendering
   _protoExpandedBars.forEach(function (id) {
@@ -126,12 +126,12 @@ function _renderProtoBars(resp, tcfData) {
   // Stats bar
   if (statsContainer) {
     statsContainer.textContent = "";
-    var bar = createCollapsibleBar("proto-stats-bar", { ariaLabel: "Blocking stats" });
-    var prov = computeBlockProvenance(resp.coverage, resp.mode);
-    var isMonitoring = resp.mode === "protoconsent";
-    var collapsed;
+    const bar = createCollapsibleBar("proto-stats-bar", { ariaLabel: "Blocking stats" });
+    const prov = computeBlockProvenance(resp.coverage, resp.mode);
+    const isMonitoring = resp.mode === "protoconsent";
+    let collapsed;
     if (isMonitoring) {
-      var otherText = prov.other < 0 ? "n/a" : prov.other;
+      const otherText = prov.other < 0 ? "n/a" : prov.other;
       collapsed = "Blocked by external: " + otherText + " \u00b7 " +
         (resp.coverage ? Math.round((resp.coverage.attributed / Math.max(resp.coverage.observed, 1)) * 100) : 0) + "% purpose attributed";
     } else {
@@ -140,22 +140,22 @@ function _renderProtoBars(resp, tcfData) {
     bar.setCollapsed(collapsed);
 
     // Expanded: provenance detail + link
-    var expDiv = document.createElement("div");
-    var d1 = document.createElement("div");
-    var d1Label = document.createElement("strong"); d1Label.textContent = "Blocked by ProtoConsent: ";
+    const expDiv = document.createElement("div");
+    const d1 = document.createElement("div");
+    const d1Label = document.createElement("strong"); d1Label.textContent = "Blocked by ProtoConsent: ";
     d1.appendChild(d1Label); d1.appendChild(document.createTextNode(prov.own)); expDiv.appendChild(d1);
     if (prov.other > 0) {
-      var d2 = document.createElement("div");
-      var d2Label = document.createElement("strong");
+      const d2 = document.createElement("div");
+      const d2Label = document.createElement("strong");
       d2Label.textContent = isMonitoring ? "Blocked by external: " : "Other: ";
       d2.appendChild(d2Label); d2.appendChild(document.createTextNode(prov.other)); expDiv.appendChild(d2);
     }
     if (resp.coverage) {
-      var d3 = document.createElement("div");
-      var d3Label = document.createElement("strong"); d3Label.textContent = "Purpose attribution: ";
+      const d3 = document.createElement("div");
+      const d3Label = document.createElement("strong"); d3Label.textContent = "Purpose attribution: ";
       d3.appendChild(d3Label); d3.appendChild(document.createTextNode((resp.coverage.attributed || 0) + " / " + (resp.coverage.observed || 0) + " matched")); expDiv.appendChild(d3);
     }
-    var link = document.createElement("button"); link.type = "button"; link.className = "pc-bar-link";
+    const link = document.createElement("button"); link.type = "button"; link.className = "pc-bar-link";
     link.textContent = "\u2192 View blocked domains";
     link.addEventListener("click", function () { navigateToLog("domains"); });
     expDiv.appendChild(link);
@@ -172,18 +172,18 @@ function _renderProtoBars(resp, tcfData) {
   // Signals bar (reuse consent signals bar pattern)
   if (signalsContainer) {
     signalsContainer.textContent = "";
-    var sBar = createCollapsibleBar("proto-signals-bar", { ariaLabel: "Privacy signals", tint: "signals" });
-    var summary = (typeof buildSignalSummary === "function") ? buildSignalSummary(lastGpcSignalsSent) : "Privacy signals";
+    const sBar = createCollapsibleBar("proto-signals-bar", { ariaLabel: "Privacy signals", tint: "signals" });
+    const summary = (typeof buildSignalSummary === "function") ? buildSignalSummary(lastGpcSignalsSent) : "Privacy signals";
     sBar.setCollapsed(summary, "Global Privacy Control (GPC), Client Hints stripping, .well-known declaration, TCF banner detection");
 
-    var pillsDiv = document.createElement("div");
+    const pillsDiv = document.createElement("div");
     pillsDiv.className = "pc-scope-indicators";
     pillsDiv.style.gap = "4px 6px";
     pillsDiv.appendChild(buildPill("GPC", computeGpcState(lastGpcSignalsSent), function () { navigateToLog("gpc"); }));
     pillsDiv.appendChild(buildPill("CH", computeChState()));
     pillsDiv.appendChild(buildPill("WK", computeWkState(), function () { if (typeof toggleSidePanel === "function" && computeWkState().state === "active") toggleSidePanel(); }));
     // TCF pill with async update
-    var tcfState = tcfData && tcfData.detected
+    const tcfState = tcfData && tcfData.detected
       ? { state: "active", title: "Cookie banner detected" }
       : { state: "disabled", title: "TCF CMP not detected" };
     pillsDiv.appendChild(buildPill("TCF", tcfState, navigateToProtoTcf));
@@ -199,7 +199,7 @@ function _renderProtoBars(resp, tcfData) {
 }
 
 function _hookProtoBarToggle(bar) {
-  var toggle = bar.querySelector(".pc-bar-toggle");
+  const toggle = bar.querySelector(".pc-bar-toggle");
   if (!toggle) return;
   toggle.addEventListener("click", function () {
     if (bar.classList.contains("is-expanded")) _protoExpandedBars.add(bar.id);
@@ -210,47 +210,47 @@ function _hookProtoBarToggle(bar) {
 // --- 6-card grid ---
 
 function _renderProtoGrid(resp, wkData, tcfData) {
-  var grid = document.getElementById("proto-grid");
+  const grid = document.getElementById("proto-grid");
   if (!grid) return;
 
   // Preserve expanded card
-  var prevExpanded = _protoExpandedCard;
+  const prevExpanded = _protoExpandedCard;
   // Preserve open <details> inside grid cards
   grid.querySelectorAll("details[open]").forEach(function (d) {
-    var card = d.closest(".pc-grid-card-body");
-    var gc = card ? card.previousElementSibling : null;
+    const card = d.closest(".pc-grid-card-body");
+    const gc = card ? card.previousElementSibling : null;
     if (gc && gc.id) _protoOpenDetails.add(gc.id);
   });
   grid.textContent = "";
 
   // Compute metrics for card displays
-  var coverage = resp.coverage || {};
-  var coverageRatio = coverage.observed > 0 ? Math.round((coverage.attributed / coverage.observed) * 100) : 0;
+  const coverage = resp.coverage || {};
+  const coverageRatio = coverage.observed > 0 ? Math.round((coverage.attributed / coverage.observed) * 100) : 0;
 
-  var gpcDomains = resp.gpcDomains ? Object.keys(resp.gpcDomains) : [];
-  var popupGpcDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
-  var gpcCount = gpcDomains.length > 0 ? gpcDomains.length : popupGpcDomains.length;
-  var gpcRequests = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
-  var gpcMetric = gpcCount > 0 ? gpcCount + " domains" : (gpcRequests > 0 ? gpcRequests + " requests" : "0 domains");
+  const gpcDomains = resp.gpcDomains ? Object.keys(resp.gpcDomains) : [];
+  const popupGpcDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
+  const gpcCount = gpcDomains.length > 0 ? gpcDomains.length : popupGpcDomains.length;
+  const gpcRequests = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
+  const gpcMetric = gpcCount > 0 ? gpcCount + " domains" : (gpcRequests > 0 ? gpcRequests + " requests" : "0 domains");
 
-  var cmpDetected = !!(resp.cmpDetect && resp.cmpDetect.detected && resp.cmpDetect.detected.length > 0);
-  var cmpCount = cmpDetected ? resp.cmpDetect.detected.length : 0;
+  const cmpDetected = !!(resp.cmpDetect && resp.cmpDetect.detected && resp.cmpDetect.detected.length > 0);
+  const cmpCount = cmpDetected ? resp.cmpDetect.detected.length : 0;
 
-  var cosmActive = !!(resp.cosmetic && resp.cosmetic.domain);
-  var cosmRules = cosmActive ? (resp.cosmetic.siteRules || 0) : 0;
+  const cosmActive = !!(resp.cosmetic && resp.cosmetic.domain);
+  const cosmRules = cosmActive ? (resp.cosmetic.siteRules || 0) : 0;
 
-  var cnameCount = _countCname(resp.blocked);
-  var paramStrips = resp.paramStrips || {};
-  var paramDomains = Object.keys(paramStrips);
-  var paramTotal = 0;
-  for (var i = 0; i < paramDomains.length; i++) {
-    var info = paramStrips[paramDomains[i]];
+  const cnameCount = _countCname(resp.blocked);
+  const paramStrips = resp.paramStrips || {};
+  const paramDomains = Object.keys(paramStrips);
+  let paramTotal = 0;
+  for (let i = 0; i < paramDomains.length; i++) {
+    const info = paramStrips[paramDomains[i]];
     paramTotal += (typeof info === "object" ? info.count : info) || 0;
   }
   if (typeof lastParamStrips === "number" && lastParamStrips > paramTotal) paramTotal = lastParamStrips;
 
-  var GRID_ICONS = "../icons/grid/";
-  var cards = [
+  const GRID_ICONS = "../icons/grid/";
+  const cards = [
     { id: "proto-card-coverage", iconSrc: GRID_ICONS + "coverage.svg", title: "Coverage", metric: coverageRatio + "%" },
     { id: "proto-card-gpc", iconSrc: GRID_ICONS + "gpc.svg", title: "GPC", metric: gpcMetric },
     { id: "proto-card-banners", iconSrc: GRID_ICONS + "banners.svg", title: "Banners", metric: cmpCount > 0 ? cmpCount + " detected" : "None" },
@@ -259,9 +259,9 @@ function _renderProtoGrid(resp, wkData, tcfData) {
     { id: "proto-card-cleanlinks", iconSrc: GRID_ICONS + "cleanlinks.svg", title: "URL Cleanup", metric: paramTotal + " stripped" },
   ];
 
-  for (var c = 0; c < cards.length; c++) {
-    var def = cards[c];
-    var gc = createGridCard(def);
+  for (let c = 0; c < cards.length; c++) {
+    const def = cards[c];
+    const gc = createGridCard(def);
     grid.appendChild(gc.card);
     grid.appendChild(gc.body);
 
@@ -282,7 +282,7 @@ function _renderProtoGrid(resp, wkData, tcfData) {
       gc.body.hidden = false;
       // Restore open <details> inside this card
       if (_protoOpenDetails.has(def.id)) {
-        var det = gc.body.querySelector("details");
+        const det = gc.body.querySelector("details");
         if (det) det.open = true;
       }
     }
@@ -290,14 +290,14 @@ function _renderProtoGrid(resp, wkData, tcfData) {
 
   // Track which card gets expanded
   grid.addEventListener("click", function (e) {
-    var card = e.target.closest(".pc-grid-card");
+    const card = e.target.closest(".pc-grid-card");
     if (card) _protoExpandedCard = card.classList.contains("is-expanded") ? card.id : null;
   });
   // Track <details> open/close
   grid.addEventListener("toggle", function (e) {
     if (e.target.tagName !== "DETAILS") return;
-    var body = e.target.closest(".pc-grid-card-body");
-    var gc = body ? body.previousElementSibling : null;
+    const body = e.target.closest(".pc-grid-card-body");
+    const gc = body ? body.previousElementSibling : null;
     if (!gc || !gc.id) return;
     if (e.target.open) _protoOpenDetails.add(gc.id);
     else _protoOpenDetails.delete(gc.id);
@@ -307,13 +307,13 @@ function _renderProtoGrid(resp, wkData, tcfData) {
 // Count CNAME-cloaked domains
 function _countCname(blocked) {
   if (!blocked || !cnameMap) return 0;
-  var count = 0;
-  var purposes = Object.keys(blocked);
-  for (var i = 0; i < purposes.length; i++) {
-    var domains = blocked[purposes[i]];
+  let count = 0;
+  const purposes = Object.keys(blocked);
+  for (let i = 0; i < purposes.length; i++) {
+    const domains = blocked[purposes[i]];
     if (!domains) continue;
-    var hosts = Object.keys(domains);
-    for (var j = 0; j < hosts.length; j++) {
+    const hosts = Object.keys(domains);
+    for (let j = 0; j < hosts.length; j++) {
       if (lookupCname(hosts[j])) count++;
     }
   }
@@ -323,7 +323,7 @@ function _countCname(blocked) {
 // --- Card body content builders ---
 
 function _fillCoverageBody(body, resp, wkData) {
-  var coverage = resp.coverage || {};
+  const coverage = resp.coverage || {};
   if (!coverage.observed) {
     if (resp.isBrave && resp.mode === "protoconsent") {
       body.textContent = "Brave Shields blocks before ProtoConsent can monitor";
@@ -332,43 +332,43 @@ function _fillCoverageBody(body, resp, wkData) {
     }
     return;
   }
-  var prov = computeBlockProvenance(coverage, resp.mode);
-  var ratio = coverage.observed > 0 ? Math.round((coverage.attributed / coverage.observed) * 100) : 0;
+  const prov = computeBlockProvenance(coverage, resp.mode);
+  const ratio = coverage.observed > 0 ? Math.round((coverage.attributed / coverage.observed) * 100) : 0;
 
   // Attribution bar
-  var barEl = document.createElement("div"); barEl.className = "proto-coverage-bar";
+  const barEl = document.createElement("div"); barEl.className = "proto-coverage-bar";
   barEl.setAttribute("role", "progressbar"); barEl.setAttribute("aria-valuenow", String(ratio));
-  var fillEl = document.createElement("div"); fillEl.className = "proto-coverage-fill";
+  const fillEl = document.createElement("div"); fillEl.className = "proto-coverage-fill";
   fillEl.style.width = ratio + "%"; barEl.appendChild(fillEl); body.appendChild(barEl);
 
-  var textEl = document.createElement("div"); textEl.className = "proto-coverage-text";
-  var s1 = document.createElement("span"); var b1 = document.createElement("strong"); b1.textContent = ratio + "%"; s1.appendChild(b1); s1.appendChild(document.createTextNode(" purposes attributed"));
-  var s2 = document.createElement("span"); var b2 = document.createElement("strong"); b2.textContent = String(coverage.observed - (coverage.attributed || 0)); s2.appendChild(b2); s2.appendChild(document.createTextNode(" unmatched"));
+  const textEl = document.createElement("div"); textEl.className = "proto-coverage-text";
+  const s1 = document.createElement("span"); const b1 = document.createElement("strong"); b1.textContent = ratio + "%"; s1.appendChild(b1); s1.appendChild(document.createTextNode(" purposes attributed"));
+  const s2 = document.createElement("span"); const b2 = document.createElement("strong"); b2.textContent = String(coverage.observed - (coverage.attributed || 0)); s2.appendChild(b2); s2.appendChild(document.createTextNode(" unmatched"));
   textEl.appendChild(s1); textEl.appendChild(s2);
   body.appendChild(textEl);
 
   // Provenance + heuristic summary on one line
-  var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
-  var otherLabel = resp.mode === "protoconsent" ? "External" : "Other";
+  const provEl = document.createElement("div"); provEl.style.marginTop = "4px";
+  const otherLabel = resp.mode === "protoconsent" ? "External" : "Other";
   function addSeg(el, needsDot, label, value) {
     if (needsDot) el.appendChild(document.createTextNode(" \u00b7 "));
-    var b = document.createElement("strong"); b.textContent = label + ":";
+    const b = document.createElement("strong"); b.textContent = label + ":";
     el.appendChild(b); el.appendChild(document.createTextNode(" " + value));
   }
   addSeg(provEl, false, "Own", String(prov.own));
   if (prov.other >= 0) addSeg(provEl, true, otherLabel, String(prov.other));
   if (resp.unattributed && resp.unattributed.length > 0) {
-    var heuristicCounts = {};
-    var heuristicTotal = 0;
-    for (var h = 0; h < resp.unattributed.length; h++) {
-      var hk = resp.unattributed[h].heuristic;
+    const heuristicCounts = {};
+    let heuristicTotal = 0;
+    for (let h = 0; h < resp.unattributed.length; h++) {
+      const hk = resp.unattributed[h].heuristic;
       if (hk) { heuristicTotal++; heuristicCounts[hk] = (heuristicCounts[hk] || 0) + 1; }
     }
-    var guessVal = heuristicTotal + "/" + resp.unattributed.length;
+    let guessVal = heuristicTotal + "/" + resp.unattributed.length;
     if (heuristicTotal > 0) {
-      var parts = [];
-      var sorted = Object.entries(heuristicCounts).sort(function(a,b){ return b[1]-a[1]; });
-      for (var hi = 0; hi < sorted.length; hi++) parts.push(sorted[hi][1] + " " + sorted[hi][0]);
+      const parts = [];
+      const sorted = Object.entries(heuristicCounts).sort(function(a,b){ return b[1]-a[1]; });
+      for (let hi = 0; hi < sorted.length; hi++) parts.push(sorted[hi][1] + " " + sorted[hi][0]);
       guessVal += " (" + parts.join(", ") + ")";
     }
     addSeg(provEl, true, "Guess", guessVal);
@@ -377,23 +377,23 @@ function _fillCoverageBody(body, resp, wkData) {
 
   // Unattributed hostnames
   if (resp.unattributed && resp.unattributed.length > 0) {
-    var toggle = document.createElement("div"); toggle.className = "ep-active-card"; toggle.style.marginTop = "4px";
-    var sumHeader = document.createElement("div"); sumHeader.className = "ep-active-card-header";
+    const toggle = document.createElement("div"); toggle.className = "ep-active-card"; toggle.style.marginTop = "4px";
+    const sumHeader = document.createElement("div"); sumHeader.className = "ep-active-card-header";
     sumHeader.setAttribute("role", "button"); sumHeader.setAttribute("tabindex", "0");
     sumHeader.setAttribute("aria-expanded", "false");
     sumHeader.setAttribute("aria-label", "Unmatched hostnames, " + resp.unattributed.length + " entries");
-    var sumChevron = document.createElement("span"); sumChevron.className = "ep-active-card-chevron pc-chevron"; sumChevron.setAttribute("aria-hidden", "true");
-    var sumName = document.createElement("span"); sumName.className = "ep-active-card-name"; sumName.textContent = "Unmatched hostnames";
-    var sumCount = document.createElement("span"); sumCount.className = "ep-active-card-count"; sumCount.textContent = resp.unattributed.length;
+    const sumChevron = document.createElement("span"); sumChevron.className = "ep-active-card-chevron pc-chevron"; sumChevron.setAttribute("aria-hidden", "true");
+    const sumName = document.createElement("span"); sumName.className = "ep-active-card-name"; sumName.textContent = "Unmatched hostnames";
+    const sumCount = document.createElement("span"); sumCount.className = "ep-active-card-count"; sumCount.textContent = resp.unattributed.length;
     sumHeader.appendChild(sumChevron); sumHeader.appendChild(sumName); sumHeader.appendChild(sumCount);
-    var toggleBody = document.createElement("div"); toggleBody.className = "ep-active-card-body";
-    for (var i = 0; i < Math.min(resp.unattributed.length, 10); i++) {
-      var d = document.createElement("div"); d.className = "proto-unmatched-row";
-      var hostSpan = document.createElement("span"); hostSpan.className = "proto-unmatched-host";
+    const toggleBody = document.createElement("div"); toggleBody.className = "ep-active-card-body";
+    for (let i = 0; i < Math.min(resp.unattributed.length, 10); i++) {
+      const d = document.createElement("div"); d.className = "proto-unmatched-row";
+      const hostSpan = document.createElement("span"); hostSpan.className = "proto-unmatched-host";
       hostSpan.textContent = resp.unattributed[i].hostname;
       d.appendChild(hostSpan);
       if (resp.unattributed[i].heuristic) {
-        var badge = document.createElement("span");
+        const badge = document.createElement("span");
         badge.className = "pc-heuristic-badge";
         badge.textContent = resp.unattributed[i].heuristic;
         badge.title = "Best-guess classification from hostname pattern";
@@ -402,12 +402,12 @@ function _fillCoverageBody(body, resp, wkData) {
       toggleBody.appendChild(d);
     }
     if (resp.unattributed.length > 10) {
-      var more = document.createElement("div"); more.className = "proto-card-more";
+      const more = document.createElement("div"); more.className = "proto-card-more";
       more.textContent = "+" + (resp.unattributed.length - 10) + " more";
       toggleBody.appendChild(more);
     }
-    var toggleFn = function() {
-      var expanded = toggle.classList.toggle("is-expanded");
+    const toggleFn = function() {
+      const expanded = toggle.classList.toggle("is-expanded");
       sumHeader.setAttribute("aria-expanded", expanded ? "true" : "false");
     };
     sumHeader.addEventListener("click", toggleFn);
@@ -420,34 +420,34 @@ function _fillCoverageBody(body, resp, wkData) {
 }
 
 function _fillGpcBody(body, resp) {
-  var bgDomains = resp.gpcDomains ? Object.keys(resp.gpcDomains) : [];
-  var popupDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
-  var domains = bgDomains.length > 0 ? bgDomains : popupDomains;
+  const bgDomains = resp.gpcDomains ? Object.keys(resp.gpcDomains) : [];
+  const popupDomains = (typeof lastGpcDomains !== "undefined") ? lastGpcDomains : [];
+  const domains = bgDomains.length > 0 ? bgDomains : popupDomains;
 
-  var gpcRequests = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
+  const gpcRequests = (typeof lastGpcSignalsSent !== "undefined") ? lastGpcSignalsSent : 0;
 
   if (domains.length === 0 && gpcRequests > 0) {
     body.textContent = "Sec-GPC: 1 sent to " + gpcRequests + " requests (domain names not captured)";
     return;
   }
   if (domains.length === 0) { body.textContent = "No GPC signals sent yet"; return; }
-  var note = document.createElement("div");
+  const note = document.createElement("div");
   note.textContent = "GPC is sent on requests that reach the server. Blocked requests never leave your browser.";
   note.style.opacity = "0.7";
   note.style.marginBottom = "4px";
   body.appendChild(note);
-  var header = document.createElement("div");
-  var hStrong = document.createElement("strong"); hStrong.textContent = String(domains.length) + " domains";
+  const header = document.createElement("div");
+  const hStrong = document.createElement("strong"); hStrong.textContent = String(domains.length) + " domains";
   header.appendChild(hStrong); header.appendChild(document.createTextNode(" received GPC signal"));
   header.style.marginBottom = "4px";
   body.appendChild(header);
-  for (var i = 0; i < Math.min(domains.length, 10); i++) {
-    var row = document.createElement("div"); row.className = "proto-purpose-domain";
-    var name = document.createElement("span"); name.className = "proto-purpose-domain-name"; name.textContent = domains[i];
+  for (let i = 0; i < Math.min(domains.length, 10); i++) {
+    const row = document.createElement("div"); row.className = "proto-purpose-domain";
+    const name = document.createElement("span"); name.className = "proto-purpose-domain-name"; name.textContent = domains[i];
     row.appendChild(name); body.appendChild(row);
   }
   if (domains.length > 10) {
-    var more = document.createElement("button"); more.type = "button"; more.className = "pc-bar-link proto-card-more";
+    const more = document.createElement("button"); more.type = "button"; more.className = "pc-bar-link proto-card-more";
     more.textContent = "+" + (domains.length - 10) + " more \u2192 Log";
     more.addEventListener("click", function () { navigateToLog("gpc"); });
     body.appendChild(more);
@@ -455,28 +455,28 @@ function _fillGpcBody(body, resp) {
 }
 
 function _fillBannersBody(body, resp, tcfData) {
-  var cd = resp.cmpDetect;
-  var hasCmpDetect = cd && cd.detected && cd.detected.length > 0;
-  var hasActions = resp.cmp && (resp.cmp.selectorCount > 0 || resp.cmp.scrollUnlock || resp.cmp.cookieCount > 0);
+  const cd = resp.cmpDetect;
+  const hasCmpDetect = cd && cd.detected && cd.detected.length > 0;
+  const hasActions = resp.cmp && (resp.cmp.selectorCount > 0 || resp.cmp.scrollUnlock || resp.cmp.cookieCount > 0);
 
   // Block 1: Blue info (CMP detection + auto-response actions)
   if (hasCmpDetect || hasActions) {
-    var infoBlock = document.createElement("div");
+    const infoBlock = document.createElement("div");
     infoBlock.className = "pc-tcf-info";
     if (hasCmpDetect) {
-      for (var i = 0; i < cd.detected.length; i++) {
-        var line = document.createElement("div");
+      for (let i = 0; i < cd.detected.length; i++) {
+        const line = document.createElement("div");
         line.style.fontWeight = "600";
         line.textContent = cd.detected[i].cmpId + " (" + (cd.detected[i].showing ? "showing" : "present") + ")";
         infoBlock.appendChild(line);
       }
     }
     if (hasActions) {
-      var actions = [];
+      const actions = [];
       if (resp.cmp.selectorCount > 0) actions.push("Cosmetic hiding: " + resp.cmp.selectorCount + " selectors");
       if (resp.cmp.scrollUnlock) actions.push("Scroll unlock: active");
       if (resp.cmp.cookieCount > 0) actions.push("Cookies injected: " + resp.cmp.cookieCount);
-      var actLine = document.createElement("div");
+      const actLine = document.createElement("div");
       actLine.textContent = actions.join(", ");
       infoBlock.appendChild(actLine);
     }
@@ -485,13 +485,13 @@ function _fillBannersBody(body, resp, tcfData) {
 
   // Block 2: Yellow note (TCF provider + enforcement)
   if (tcfData) {
-    var consents = tcfData.purposeConsents || {};
-    var ids = Object.keys(consents).sort(function (a, b) { return Number(a) - Number(b); });
-    var hasPurposes = ids.length > 0;
+    const consents = tcfData.purposeConsents || {};
+    const ids = Object.keys(consents).sort(function (a, b) { return Number(a) - Number(b); });
+    const hasPurposes = ids.length > 0;
 
-    var note = document.createElement("div");
+    const note = document.createElement("div");
     note.className = "pc-tcf-note";
-    var provLine = document.createElement("div");
+    const provLine = document.createElement("div");
     provLine.style.fontWeight = "600";
     if (tcfData.cmpId && _protoCmpNames[tcfData.cmpId]) {
       provLine.textContent = "Managed by " + _protoCmpNames[tcfData.cmpId];
@@ -499,7 +499,7 @@ function _fillBannersBody(body, resp, tcfData) {
       provLine.textContent = "Consent banner detected";
     }
     note.appendChild(provLine);
-    var noteLine = document.createElement("div");
+    const noteLine = document.createElement("div");
     noteLine.textContent = hasPurposes
       ? "ProtoConsent enforces your preferences at the network level regardless of CMP consent state."
       : "Banner not responded. ProtoConsent enforces your preferences at the network level regardless.";
@@ -507,26 +507,26 @@ function _fillBannersBody(body, resp, tcfData) {
     body.appendChild(note);
 
     // Block 3: Purpose grid
-    var grid = document.createElement("div");
+    const grid = document.createElement("div");
     grid.className = "pc-tcf-purposes";
     if (hasPurposes) {
-      for (var j = 0; j < ids.length; j++) {
-        var row = document.createElement("div"); row.className = "pc-tcf-purpose-row";
-        var check = document.createElement("span");
+      for (let j = 0; j < ids.length; j++) {
+        const row = document.createElement("div"); row.className = "pc-tcf-purpose-row";
+        const check = document.createElement("span");
         check.className = consents[ids[j]] ? "pc-tcf-accepted" : "pc-tcf-denied";
         check.textContent = consents[ids[j]] ? "\u2713" : "\u2717";
-        var label = document.createElement("span");
+        const label = document.createElement("span");
         label.textContent = _iabPurposeNames[ids[j]] || ("Purpose " + ids[j]);
         row.appendChild(check); row.appendChild(label); grid.appendChild(row);
       }
     } else {
-      for (var k = 1; k <= 11; k++) {
-        var pRow = document.createElement("div"); pRow.className = "pc-tcf-purpose-row";
-        var pCheck = document.createElement("span");
+      for (let k = 1; k <= 11; k++) {
+        const pRow = document.createElement("div"); pRow.className = "pc-tcf-purpose-row";
+        const pCheck = document.createElement("span");
         pCheck.className = "pc-tcf-pending";
         pCheck.textContent = "?";
         pCheck.setAttribute("aria-label", "Pending");
-        var pLabel = document.createElement("span");
+        const pLabel = document.createElement("span");
         pLabel.textContent = _iabPurposeNames[k] || ("Purpose " + k);
         pRow.appendChild(pCheck); pRow.appendChild(pLabel); grid.appendChild(pRow);
       }
@@ -539,10 +539,10 @@ function _fillBannersBody(body, resp, tcfData) {
 
 function _fillCosmeticBody(body, resp) {
   if (!resp.cosmetic || !resp.cosmetic.domain) { body.textContent = "No cosmetic filters applied"; return; }
-  var c = resp.cosmetic;
-  var info = document.createElement("div");
+  const c = resp.cosmetic;
+  const info = document.createElement("div");
   info.className = "pc-tcf-info";
-  var strong = document.createElement("strong");
+  const strong = document.createElement("strong");
   strong.textContent = (c.siteRules || 0) + " rules";
   info.appendChild(strong);
   info.appendChild(document.createTextNode(" applied on " + c.domain));
@@ -551,7 +551,7 @@ function _fillCosmeticBody(body, resp) {
 
 function _fillTrackersBody(body, resp) {
   if (!cnameMap) {
-    var link = document.createElement("a");
+    const link = document.createElement("a");
     link.href = "#";
     link.textContent = "Enable CNAME list in Protection \u203A Detection";
     link.addEventListener("click", function (e) {
@@ -559,9 +559,9 @@ function _fillTrackersBody(body, resp) {
       if (typeof setActiveMode === "function") setActiveMode("enhanced");
       if (typeof initEnhancedTab === "function") initEnhancedTab();
       setTimeout(function () {
-        var card = document.getElementById("ep-card-detection");
+        const card = document.getElementById("ep-card-detection");
         if (card && !card.classList.contains("is-expanded")) {
-          var toggle = card.querySelector(".pc-grid-card-toggle");
+          const toggle = card.querySelector(".pc-grid-card-toggle");
           if (toggle) toggle.click();
         }
       }, 100);
@@ -569,27 +569,27 @@ function _fillTrackersBody(body, resp) {
     body.appendChild(link);
     return;
   }
-  var blocked = resp.blocked || {};
-  var found = [];
-  var purposes = Object.keys(blocked);
-  for (var i = 0; i < purposes.length; i++) {
-    var domains = blocked[purposes[i]];
+  const blocked = resp.blocked || {};
+  const found = [];
+  const purposes = Object.keys(blocked);
+  for (let i = 0; i < purposes.length; i++) {
+    const domains = blocked[purposes[i]];
     if (!domains) continue;
-    var hosts = Object.keys(domains);
-    for (var j = 0; j < hosts.length; j++) {
-      var cname = lookupCname(hosts[j]);
+    const hosts = Object.keys(domains);
+    for (let j = 0; j < hosts.length; j++) {
+      const cname = lookupCname(hosts[j]);
       if (cname) found.push({ host: hosts[j], tracker: cname });
     }
   }
   if (found.length === 0) {
-    var empty = document.createElement("div"); empty.className = "pc-tcf-info";
+    const empty = document.createElement("div"); empty.className = "pc-tcf-info";
     empty.textContent = "No CNAME-cloaked trackers detected"; body.appendChild(empty); return;
   }
-  var info = document.createElement("div"); info.className = "pc-tcf-info";
-  for (var k = 0; k < Math.min(found.length, 10); k++) {
-    var row = document.createElement("div"); row.className = "proto-purpose-domain";
-    var name = document.createElement("span"); name.className = "proto-purpose-domain-name";
-    var cnameIcon = document.createElement("span");
+  const info = document.createElement("div"); info.className = "pc-tcf-info";
+  for (let k = 0; k < Math.min(found.length, 10); k++) {
+    const row = document.createElement("div"); row.className = "proto-purpose-domain";
+    const name = document.createElement("span"); name.className = "proto-purpose-domain-name";
+    const cnameIcon = document.createElement("span");
     cnameIcon.className = "pc-log-cname-icon";
     cnameIcon.textContent = "\u21C9";
     cnameIcon.title = "CNAME cloaked\n" + found[k].host + " \u2192 " + found[k].tracker;
@@ -600,7 +600,7 @@ function _fillTrackersBody(body, resp) {
   }
   body.appendChild(info);
   if (found.length > 10) {
-    var more = document.createElement("button"); more.type = "button"; more.className = "pc-bar-link proto-card-more";
+    const more = document.createElement("button"); more.type = "button"; more.className = "pc-bar-link proto-card-more";
     more.textContent = "+" + (found.length - 10) + " more \u2192 Log";
     more.addEventListener("click", function () { navigateToLog("domains"); });
     body.appendChild(more);
@@ -608,10 +608,10 @@ function _fillTrackersBody(body, resp) {
 }
 
 function _fillCleanLinksBody(body, resp) {
-  var strips = resp.paramStrips || {};
-  var domains = Object.keys(strips);
+  const strips = resp.paramStrips || {};
+  const domains = Object.keys(strips);
   if (domains.length === 0) {
-    var empty = document.createElement("div"); empty.className = "pc-tcf-info";
+    const empty = document.createElement("div"); empty.className = "pc-tcf-info";
     if (typeof lastParamStrips === "number" && lastParamStrips > 0) {
       empty.textContent = lastParamStrips + " tracking parameter" + (lastParamStrips > 1 ? "s" : "") + " stripped";
     } else {
@@ -620,31 +620,31 @@ function _fillCleanLinksBody(body, resp) {
     body.appendChild(empty);
     return;
   }
-  var infoBlock = document.createElement("div"); infoBlock.className = "pc-tcf-info";
-  for (var i = 0; i < Math.min(domains.length, 10); i++) {
-    var info = strips[domains[i]];
-    var params = (typeof info === "object" && info.params) ? info.params : [];
+  const infoBlock = document.createElement("div"); infoBlock.className = "pc-tcf-info";
+  for (let i = 0; i < Math.min(domains.length, 10); i++) {
+    const info = strips[domains[i]];
+    const params = (typeof info === "object" && info.params) ? info.params : [];
     if (params.length > 0) {
-      for (var k = 0; k < params.length; k++) {
-        var row = document.createElement("div"); row.className = "proto-purpose-domain";
-        var name = document.createElement("span"); name.className = "proto-purpose-domain-name";
+      for (let k = 0; k < params.length; k++) {
+        let row = document.createElement("div"); row.className = "proto-purpose-domain";
+        let name = document.createElement("span"); name.className = "proto-purpose-domain-name";
         name.textContent = domains[i];
-        var paramSpan = document.createElement("span"); paramSpan.className = "proto-purpose-domain-count";
+        const paramSpan = document.createElement("span"); paramSpan.className = "proto-purpose-domain-count";
         paramSpan.textContent = params[k];
         row.appendChild(name); row.appendChild(paramSpan); infoBlock.appendChild(row);
       }
     } else {
-      var row = document.createElement("div"); row.className = "proto-purpose-domain";
-      var name = document.createElement("span"); name.className = "proto-purpose-domain-name";
+      let row = document.createElement("div"); row.className = "proto-purpose-domain";
+      let name = document.createElement("span"); name.className = "proto-purpose-domain-name";
       name.textContent = domains[i];
-      var count = document.createElement("span"); count.className = "proto-purpose-domain-count";
+      const count = document.createElement("span"); count.className = "proto-purpose-domain-count";
       count.textContent = typeof info === "object" ? info.count : info;
       row.appendChild(name); row.appendChild(count); infoBlock.appendChild(row);
     }
   }
   body.appendChild(infoBlock);
   if (domains.length > 10) {
-    var more = document.createElement("button"); more.type = "button"; more.className = "pc-bar-link proto-card-more";
+    const more = document.createElement("button"); more.type = "button"; more.className = "pc-bar-link proto-card-more";
     more.textContent = "+" + (domains.length - 10) + " more \u2192 Log";
     more.addEventListener("click", function () { navigateToLog("domains"); });
     body.appendChild(more);
@@ -674,9 +674,9 @@ function navigateToProtoTcf() {
   if (typeof setActiveMode === "function") setActiveMode("proto");
   if (typeof initProtoTab === "function") initProtoTab();
   setTimeout(function () {
-    var card = document.getElementById("proto-card-banners");
+    const card = document.getElementById("proto-card-banners");
     if (card && !card.classList.contains("is-expanded")) {
-      var toggle = card.querySelector(".pc-grid-card-toggle");
+      const toggle = card.querySelector(".pc-grid-card-toggle");
       if (toggle) toggle.click();
     }
   }, 100);

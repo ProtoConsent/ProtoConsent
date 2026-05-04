@@ -128,8 +128,8 @@ async function evictOldCacheEntries() {
 }
 
 // Global WK indicator state (read by popup.js renderSignalsBar)
-var _wkIndicatorState = "disabled";
-var _wkIndicatorTitle = "ProtoConsent .well-known status unavailable";
+let _wkIndicatorState = "disabled";
+let _wkIndicatorTitle = "ProtoConsent .well-known status unavailable";
 
 function setWellKnownIndicator(state, titleText) {
   _wkIndicatorState = state;
@@ -218,8 +218,8 @@ async function loadSiteDeclaration() {
 }
 
 // Clear cached .well-known for current domain and re-fetch
-var _wkRecheckStatus = null;
-var _wkRecheckPending = false;
+let _wkRecheckStatus = null;
+let _wkRecheckPending = false;
 
 async function refreshWellKnown() {
   if (!currentDomain || _wkRecheckPending) return;

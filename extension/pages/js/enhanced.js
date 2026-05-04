@@ -213,8 +213,8 @@ function renderEnhancedPresets() {
   // Close on outside click (use capture to avoid accumulating listeners)
   if (!renderEnhancedPresets._outsideClick) {
     renderEnhancedPresets._outsideClick = (e) => {
-      var openMenu = document.querySelector(".ep-preset-menu:not([hidden])");
-      var openBtn = document.querySelector(".ep-preset-btn");
+      const openMenu = document.querySelector(".ep-preset-menu:not([hidden])");
+      const openBtn = document.querySelector(".ep-preset-btn");
       if (openMenu && openBtn && !openBtn.contains(e.target) && !openMenu.contains(e.target)) {
         openMenu.hidden = true;
         openBtn.setAttribute("aria-expanded", "false");
@@ -446,8 +446,8 @@ function renderEnhancedLists() {
   if (!container) return;
 
   // Preserve which grid card was expanded
-  var prevExpanded = null;
-  var prev = container.querySelector(".pc-grid-card.is-expanded");
+  let prevExpanded = null;
+  const prev = container.querySelector(".pc-grid-card.is-expanded");
   if (prev) prevExpanded = prev.id;
   container.innerHTML = "";
 
@@ -485,13 +485,13 @@ function renderEnhancedLists() {
   }
 
   // Build 2-column grid
-  var grid = document.createElement("div");
+  const grid = document.createElement("div");
   grid.className = "pc-grid-2col ep-grid";
 
   // 1. Overview card (full-width)
-  var stats = getEnhancedStats();
-  var enhancedEnabled = enhancedLists.filter(function (id) { return epLists[id] && epLists[id].enabled; }).length;
-  var overviewMetric;
+  const stats = getEnhancedStats();
+  const enhancedEnabled = enhancedLists.filter(function (id) { return epLists[id] && epLists[id].enabled; }).length;
+  let overviewMetric;
   if (stats.enabledCount > 0) {
     overviewMetric = stats.enabledCount + " active \u00b7 " + stats.totalRules.toLocaleString() + " rules";
     if (stats.infoDomains > 0) {
@@ -500,32 +500,35 @@ function renderEnhancedLists() {
   } else {
     overviewMetric = "Off";
   }
-  var GRID_ICONS = "../icons/grid/";
-  var ov = createGridCard({ id: "ep-card-overview", iconSrc: GRID_ICONS + "overview.svg", title: "Overview", metric: overviewMetric, full: true });
-  var ovBody = ov.body;
+  const GRID_ICONS = "../icons/grid/";
+  const ov = createGridCard({ id: "ep-card-overview", iconSrc: GRID_ICONS + "overview.svg", title: "Overview", metric: overviewMetric, full: true });
+  const ovBody = ov.body;
   if (stats.updatesAvailable > 0) {
-    var ovLines = document.createElement("div");
+    const ovLines = document.createElement("div");
     ovLines.className = "ep-overview-lines";
-    var updRow = document.createElement("div");
+    const updRow = document.createElement("div");
     updRow.className = "ep-overview-stat ep-overview-stat-update";
-    var updStrong = document.createElement("strong"); updStrong.textContent = stats.updatesAvailable + " update" + (stats.updatesAvailable !== 1 ? "s" : "");
-    var updDetail = document.createElement("span"); updDetail.className = "ep-overview-detail"; updDetail.textContent = "available";
+    const updStrong = document.createElement("strong"); updStrong.textContent = stats.updatesAvailable + " update" + (stats.updatesAvailable !== 1 ? "s" : "");
+    const updDetail = document.createElement("span"); updDetail.className = "ep-overview-detail"; updDetail.textContent = "available";
     updRow.appendChild(updStrong); updRow.appendChild(updDetail);
     ovLines.appendChild(updRow);
     ovBody.appendChild(ovLines);
   }
 
   // Active lists: proto-card style accordions by type
+  const hotfixActive = !!epLists["protoconsent_hotfix"];
+  const hotfixCount = hotfixActive ? (epLists["protoconsent_hotfix"].hotfixCount || 0) : 0;
+
   if (stats.enabledCount > 0) {
-    var activeWrap = document.createElement("div");
+    const activeWrap = document.createElement("div");
     activeWrap.className = "ep-overview-active";
 
-    var activeTitle = document.createElement("div");
+    const activeTitle = document.createElement("div");
     activeTitle.className = "ep-overview-active-title";
-    var activeTitleText = document.createElement("span");
+    const activeTitleText = document.createElement("span");
     activeTitleText.textContent = "Active lists \u00b7 " + stats.downloadedCount + "/" + stats.catalogCount + " downloaded";
     activeTitle.appendChild(activeTitleText);
-    var activeTitleFlags = document.createElement("a");
+    const activeTitleFlags = document.createElement("a");
     activeTitleFlags.href = "purposes-settings.html#regional-filters";
     activeTitleFlags.target = "_blank";
     activeTitleFlags.className = "ep-overview-active-flags";
@@ -536,17 +539,14 @@ function renderEnhancedLists() {
     activeTitle.appendChild(activeTitleFlags);
     activeWrap.appendChild(activeTitle);
 
-    var coreActive = coreIds.some(function (id) {
+    const coreActive = coreIds.some(function (id) {
       return epLists[id] && (epLists[id].enabled || epConsentLinkedIds.has(id));
     });
-    var cmpActive = cmpIds.some(function (id) {
+    const cmpActive = cmpIds.some(function (id) {
       return epLists[id] && (epLists[id].enabled || epConsentLinkedIds.has(id));
     });
 
-    var hotfixActive = !!epLists["protoconsent_hotfix"];
-    var hotfixCount = hotfixActive ? (epLists["protoconsent_hotfix"].hotfixCount || 0) : 0;
-
-    var typeGroups = [
+    const typeGroups = [
       { label: "Blocking", icon: GRID_ICONS + "blocking.svg", grouped: coreActive ? ["ProtoConsent Core"] : [], ids: blockingLists, detail: stats.totalDomains.toLocaleString() + " domains" },
       { label: "Optional", icon: GRID_ICONS + "optional.svg", grouped: [], ids: enhancedLists, detail: enhancedEnabled + " active" },
       { label: "Cosmetic", icon: GRID_ICONS + "cosmetic.svg", grouped: [], ids: cosmeticLists, detail: stats.cosmeticRules.toLocaleString() + " rules" },
@@ -554,37 +554,37 @@ function renderEnhancedLists() {
       { label: "Detection", icon: GRID_ICONS + "detection.svg", grouped: [], ids: detectionLists, detail: stats.paramsTotal.toLocaleString() + " params \u00b7 " + stats.infoDomains.toLocaleString() + " entries" },
       { label: "Exceptions", icon: GRID_ICONS + "exception.svg", grouped: hotfixActive ? ["ProtoConsent Hotfix"] : [], ids: [], detail: hotfixCount + " domain" + (hotfixCount !== 1 ? "s" : "") },
     ];
-    for (var g = 0; g < typeGroups.length; g++) {
-      var group = typeGroups[g];
-      var activeNames = group.grouped.slice();
-      for (var a = 0; a < group.ids.length; a++) {
-        var aid = group.ids[a];
-        var aData = epLists[aid];
+    for (let g = 0; g < typeGroups.length; g++) {
+      const group = typeGroups[g];
+      const activeNames = group.grouped.slice();
+      for (let a = 0; a < group.ids.length; a++) {
+        const aid = group.ids[a];
+        const aData = epLists[aid];
         if (aData && (aData.enabled || epConsentLinkedIds.has(aid))) {
           activeNames.push(epCatalog[aid] ? epCatalog[aid].name : aid);
         }
       }
       if (activeNames.length === 0) continue;
 
-      var card = document.createElement("div");
+      let card = document.createElement("div");
       card.className = "ep-active-card";
-      var cardHeader = document.createElement("div");
+      const cardHeader = document.createElement("div");
       cardHeader.className = "ep-active-card-header";
       cardHeader.setAttribute("role", "button");
       cardHeader.setAttribute("tabindex", "0");
       cardHeader.setAttribute("aria-expanded", "false");
-      var chevron = document.createElement("span");
+      const chevron = document.createElement("span");
       chevron.className = "ep-active-card-chevron pc-chevron";
       chevron.setAttribute("aria-hidden", "true");
-      var iconEl = document.createElement("img");
+      const iconEl = document.createElement("img");
       iconEl.src = group.icon;
       iconEl.width = 18;
       iconEl.height = 18;
       iconEl.alt = "";
-      var nameEl = document.createElement("span");
+      const nameEl = document.createElement("span");
       nameEl.className = "ep-active-card-name";
       nameEl.textContent = group.label;
-      var countEl = document.createElement("span");
+      const countEl = document.createElement("span");
       countEl.className = "ep-active-card-count";
       countEl.textContent = activeNames.length + " lists \u00b7 " + group.detail;
       cardHeader.appendChild(chevron);
@@ -592,19 +592,19 @@ function renderEnhancedLists() {
       cardHeader.appendChild(nameEl);
       cardHeader.appendChild(countEl);
 
-      var cardBody = document.createElement("div");
+      const cardBody = document.createElement("div");
       cardBody.className = "ep-active-card-body";
       cardBody.hidden = true;
-      for (var n = 0; n < activeNames.length; n++) {
-        var entry = document.createElement("div");
+      for (let n = 0; n < activeNames.length; n++) {
+        const entry = document.createElement("div");
         entry.className = "ep-active-card-entry";
         entry.textContent = activeNames[n];
         cardBody.appendChild(entry);
       }
 
-      var toggle = (function (c, h, b) {
+      const toggle = (function (c, h, b) {
         return function () {
-          var exp = c.classList.toggle("is-expanded");
+          const exp = c.classList.toggle("is-expanded");
           h.setAttribute("aria-expanded", exp ? "true" : "false");
           b.hidden = !exp;
         };
@@ -625,15 +625,15 @@ function renderEnhancedLists() {
   grid.appendChild(ov.body);
 
   // 2. Blocking card
-  var blockTotal = coreIds.length > 0 ? 1 : 0;
+  let blockTotal = coreIds.length > 0 ? 1 : 0;
   blockTotal += blockingLists.length;
-  var bk = createGridCard({ id: "ep-card-blocking", iconSrc: GRID_ICONS + "blocking.svg", title: "Blocking", metric: stats.blockingCount + " lists \u00b7 " + stats.totalDomains.toLocaleString() + " domains" });
-  var bkBody = bk.body;
+  const bk = createGridCard({ id: "ep-card-blocking", iconSrc: GRID_ICONS + "blocking.svg", title: "Blocking", metric: stats.blockingCount + " lists \u00b7 " + stats.totalDomains.toLocaleString() + " domains" });
+  const bkBody = bk.body;
   if (coreIds.length > 0) bkBody.appendChild(renderCoreCard(coreIds));
-  for (var i = 0; i < blockingLists.length; i++) {
-    var lid = blockingLists[i];
+  for (let i = 0; i < blockingLists.length; i++) {
+    let lid = blockingLists[i];
     if (REGIONAL_IDS.has(lid) && typeof renderRegionalCard === "function") {
-      var rc = renderRegionalCard(lid);
+      let rc = renderRegionalCard(lid);
       if (rc) bkBody.appendChild(rc);
     } else {
       bkBody.appendChild(_renderEpListCard(lid));
@@ -643,33 +643,33 @@ function renderEnhancedLists() {
   grid.appendChild(bk.body);
 
   // 3. Optional card (optional editorial lists)
-  var enhancedMetric = enhancedEnabled > 0
+  const enhancedMetric = enhancedEnabled > 0
     ? enhancedEnabled + " active"
     : "None active";
-  var en = createGridCard({ id: "ep-card-enhanced", iconSrc: GRID_ICONS + "optional.svg", title: "Optional", metric: enhancedMetric });
-  var enBody = en.body;
-  var disclaimer = document.createElement("div");
+  const en = createGridCard({ id: "ep-card-enhanced", iconSrc: GRID_ICONS + "optional.svg", title: "Optional", metric: enhancedMetric });
+  const enBody = en.body;
+  const disclaimer = document.createElement("div");
   disclaimer.className = "ep-optional-disclaimer";
   disclaimer.textContent = "Community lists for advanced users. May increase blocking aggressiveness or overlap with existing lists.";
   enBody.appendChild(disclaimer);
   enhancedLists.sort(function (a, b) {
-    var ae = epLists[a] && epLists[a].enabled ? 0 : 1;
-    var be = epLists[b] && epLists[b].enabled ? 0 : 1;
+    const ae = epLists[a] && epLists[a].enabled ? 0 : 1;
+    const be = epLists[b] && epLists[b].enabled ? 0 : 1;
     return ae - be || (epCatalog[a].order || 0) - (epCatalog[b].order || 0);
   });
-  for (var i = 0; i < enhancedLists.length; i++) {
+  for (let i = 0; i < enhancedLists.length; i++) {
     enBody.appendChild(_renderEpListCard(enhancedLists[i]));
   }
   grid.appendChild(en.card);
   grid.appendChild(en.body);
 
   // 4. Cosmetic card
-  var cm = createGridCard({ id: "ep-card-cosmetic", iconSrc: GRID_ICONS + "cosmetic.svg", title: "Cosmetic", metric: stats.cosmeticRules.toLocaleString() + " rules" });
-  var cmBody = cm.body;
-  for (var i = 0; i < cosmeticLists.length; i++) {
-    var lid = cosmeticLists[i];
+  const cm = createGridCard({ id: "ep-card-cosmetic", iconSrc: GRID_ICONS + "cosmetic.svg", title: "Cosmetic", metric: stats.cosmeticRules.toLocaleString() + " rules" });
+  const cmBody = cm.body;
+  for (let i = 0; i < cosmeticLists.length; i++) {
+    let lid = cosmeticLists[i];
     if (REGIONAL_IDS.has(lid) && typeof renderRegionalCard === "function") {
-      var rc = renderRegionalCard(lid);
+      let rc = renderRegionalCard(lid);
       if (rc) cmBody.appendChild(rc);
     } else {
       cmBody.appendChild(_renderEpListCard(lid));
@@ -679,64 +679,64 @@ function renderEnhancedLists() {
   grid.appendChild(cm.body);
 
   // 5. Banners card
-  var bn = createGridCard({ id: "ep-card-banners", iconSrc: GRID_ICONS + "banners.svg", title: "Banners", metric: stats.cmpTemplates.toLocaleString() + " templates" });
-  var bnBody = bn.body;
+  const bn = createGridCard({ id: "ep-card-banners", iconSrc: GRID_ICONS + "banners.svg", title: "Banners", metric: stats.cmpTemplates.toLocaleString() + " templates" });
+  const bnBody = bn.body;
   if (cmpIds.length > 0) bnBody.appendChild(renderCmpCard(cmpIds));
-  for (var i = 0; i < bannerLists.length; i++) {
+  for (let i = 0; i < bannerLists.length; i++) {
     bnBody.appendChild(_renderEpListCard(bannerLists[i]));
   }
   grid.appendChild(bn.card);
   grid.appendChild(bn.body);
 
   // 6. Detection card
-  var dt = createGridCard({ id: "ep-card-detection", iconSrc: GRID_ICONS + "detection.svg", title: "Detection", metric: stats.infoCount + " info \u00b7 " + stats.paramsTotal + " params" });
-  var dtBody = dt.body;
-  for (var i = 0; i < detectionLists.length; i++) {
+  const dt = createGridCard({ id: "ep-card-detection", iconSrc: GRID_ICONS + "detection.svg", title: "Detection", metric: stats.infoCount + " info \u00b7 " + stats.paramsTotal + " params" });
+  const dtBody = dt.body;
+  for (let i = 0; i < detectionLists.length; i++) {
     dtBody.appendChild(_renderEpListCard(detectionLists[i]));
   }
   grid.appendChild(dt.card);
   grid.appendChild(dt.body);
 
   // 7. Exceptions card (hotfix domains - always visible)
-  var exMetric = hotfixActive && hotfixCount > 0
+  const exMetric = hotfixActive && hotfixCount > 0
     ? hotfixCount + " domain" + (hotfixCount !== 1 ? "s" : "")
     : "No corrections";
-  var ex = createGridCard({ id: "ep-card-exceptions", iconSrc: GRID_ICONS + "exception.svg", title: "Exceptions", metric: exMetric });
-  var exBody = ex.body;
+  const ex = createGridCard({ id: "ep-card-exceptions", iconSrc: GRID_ICONS + "exception.svg", title: "Exceptions", metric: exMetric });
+  const exBody = ex.body;
   (function (body) {
     chrome.storage.local.get(["enhancedData_protoconsent_hotfix"], function (result) {
-      var data = result.enhancedData_protoconsent_hotfix;
+      const data = result.enhancedData_protoconsent_hotfix;
       if (!data || !data.domains || !data.domains.length) {
         body.textContent = "No active corrections. Hotfix domains will appear here when blocking corrections are applied between extension releases.";
         return;
       }
-      var domains = data.domains;
-      var MAX_LISTED = 50;
-      var wrap = document.createElement("div");
+      const domains = data.domains;
+      const MAX_LISTED = 50;
+      const wrap = document.createElement("div");
       wrap.className = "ep-hotfix-domains";
-      var desc = document.createElement("div");
+      const desc = document.createElement("div");
       desc.className = "ep-hotfix-desc";
       desc.textContent = "Domains excluded from blocking lists to correct false positives or remove inactive entries.";
       wrap.appendChild(desc);
-      var limit = Math.min(domains.length, MAX_LISTED);
-      for (var i = 0; i < limit; i++) {
-        var entry = document.createElement("div");
+      const limit = Math.min(domains.length, MAX_LISTED);
+      for (let i = 0; i < limit; i++) {
+        const entry = document.createElement("div");
         entry.className = "ep-hotfix-domain-entry";
         entry.textContent = domains[i];
         wrap.appendChild(entry);
       }
       if (domains.length > MAX_LISTED) {
-        var remaining = domains.length - MAX_LISTED;
-        var toggle = document.createElement("div");
+        const remaining = domains.length - MAX_LISTED;
+        const toggle = document.createElement("div");
         toggle.className = "ep-hotfix-domain-entry ep-hotfix-toggle";
         toggle.textContent = "and " + remaining.toLocaleString() + " more...";
         toggle.style.cursor = "pointer";
         toggle.style.opacity = "0.7";
-        var expanded = false;
-        var extra = document.createElement("div");
+        let expanded = false;
+        const extra = document.createElement("div");
         extra.style.display = "none";
-        for (var j = MAX_LISTED; j < domains.length; j++) {
-          var el = document.createElement("div");
+        for (let j = MAX_LISTED; j < domains.length; j++) {
+          const el = document.createElement("div");
           el.className = "ep-hotfix-domain-entry";
           el.textContent = domains[j];
           extra.appendChild(el);
@@ -759,14 +759,14 @@ function renderEnhancedLists() {
 
   container.appendChild(grid);
 
-  var MASTER_OFF_TIP = "Disabled - enable via quick toggles in header";
+  const MASTER_OFF_TIP = "Disabled - enable via quick toggles in header";
   chrome.storage.local.get(["enhancedCosmeticEnabled", "cmpAutoResponse", "paramStrippingEnabled"], function (r) {
     if (r.enhancedCosmeticEnabled === false) {
-      var c = document.getElementById("ep-card-cosmetic");
+      const c = document.getElementById("ep-card-cosmetic");
       if (c) { c.classList.add("is-master-off"); c.title = MASTER_OFF_TIP; }
     }
     if (r.cmpAutoResponse === false) {
-      var b = document.getElementById("ep-card-banners");
+      const b = document.getElementById("ep-card-banners");
       if (b) { b.classList.add("is-master-off"); b.title = MASTER_OFF_TIP; }
     }
     if (r.paramStrippingEnabled === false) {
@@ -777,9 +777,9 @@ function renderEnhancedLists() {
 
   // Restore expanded card
   if (prevExpanded) {
-    var card = document.getElementById(prevExpanded);
+    let card = document.getElementById(prevExpanded);
     if (card) {
-      var toggle = card.querySelector(".pc-grid-card-toggle");
+      let toggle = card.querySelector(".pc-grid-card-toggle");
       if (toggle) toggle.click();
     }
   }
@@ -883,7 +883,7 @@ function _renderEpListCard(listId) {
     catIcon.onerror = function() { this.style.display = "none"; };
     pill.appendChild(catIcon);
     const catLabel = document.createElement("span");
-    var pcfg = typeof purposesConfig !== "undefined" && listDef.category ? purposesConfig[listDef.category] : null;
+    const pcfg = typeof purposesConfig !== "undefined" && listDef.category ? purposesConfig[listDef.category] : null;
     catLabel.textContent = (pcfg && pcfg.short_label) || catInfo.label;
     pill.appendChild(catLabel);
     header.appendChild(pill);
@@ -1309,20 +1309,20 @@ function formatRelativeTime(ts) {
   return days + "d ago";
 }
 
-var _MASTER_OFF_TIP = "Disabled - enable via quick toggles in header";
+const _MASTER_OFF_TIP = "Disabled - enable via quick toggles in header";
 chrome.storage.onChanged.addListener(function (changes) {
   if ("enhancedCosmeticEnabled" in changes) {
-    var off = changes.enhancedCosmeticEnabled.newValue === false;
-    var c = document.getElementById("ep-card-cosmetic");
+    let off = changes.enhancedCosmeticEnabled.newValue === false;
+    const c = document.getElementById("ep-card-cosmetic");
     if (c) { c.classList.toggle("is-master-off", off); c.title = off ? _MASTER_OFF_TIP : ""; }
   }
   if ("cmpAutoResponse" in changes) {
-    var off = changes.cmpAutoResponse.newValue === false;
-    var b = document.getElementById("ep-card-banners");
+    let off = changes.cmpAutoResponse.newValue === false;
+    const b = document.getElementById("ep-card-banners");
     if (b) { b.classList.toggle("is-master-off", off); b.title = off ? _MASTER_OFF_TIP : ""; }
   }
   if ("paramStrippingEnabled" in changes) {
-    var off = changes.paramStrippingEnabled.newValue === false;
+    let off = changes.paramStrippingEnabled.newValue === false;
     document.querySelectorAll('.ep-list-card[data-list-type="tracking_params"], .ep-list-card[data-list-type="tracking_params_sites"]')
       .forEach(function (el) { el.classList.toggle("is-master-off", off); el.title = off ? _MASTER_OFF_TIP : ""; });
   }

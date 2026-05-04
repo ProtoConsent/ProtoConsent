@@ -9,33 +9,33 @@
 
 function createCollapsibleBar(id, opts) {
   // opts: { collapsedContent, expandedContent, tint, ariaLabel }
-  var bar = document.createElement("div");
+  const bar = document.createElement("div");
   bar.className = "pc-bar" + (opts.tint ? " pc-bar-" + opts.tint : "");
   bar.id = id;
 
-  var toggle = document.createElement("button");
+  const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.className = "pc-bar-toggle";
   toggle.setAttribute("aria-expanded", "false");
   if (opts.ariaLabel) toggle.setAttribute("aria-label", opts.ariaLabel);
 
-  var chevron = document.createElement("span");
+  const chevron = document.createElement("span");
   chevron.className = "pc-bar-chevron pc-chevron";
   chevron.setAttribute("aria-hidden", "true");
 
-  var label = document.createElement("span");
+  const label = document.createElement("span");
   label.className = "pc-bar-label";
   toggle.appendChild(chevron);
   toggle.appendChild(label);
   bar.appendChild(toggle);
 
-  var body = document.createElement("div");
+  const body = document.createElement("div");
   body.className = "pc-bar-body";
   body.hidden = true;
   bar.appendChild(body);
 
   toggle.addEventListener("click", function () {
-    var expanded = bar.classList.toggle("is-expanded");
+    const expanded = bar.classList.toggle("is-expanded");
     toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
     body.hidden = !expanded;
   });
@@ -62,20 +62,20 @@ function createGridCard(opts) {
   // opts: { id, icon, iconSrc, title, metric, tint, full }
   // Returns { card, body, setMetric(text), setTitle(text) }
   // body is a separate element placed AFTER card in the grid to span full-width
-  var card = document.createElement("div");
+  const card = document.createElement("div");
   card.className = "pc-grid-card" + (opts.full ? " pc-grid-card-full" : "");
   if (opts.id) card.id = opts.id;
 
-  var toggle = document.createElement("button");
+  const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.className = "pc-grid-card-toggle";
   toggle.setAttribute("aria-expanded", "false");
 
   if (opts.iconSrc) {
-    var iconEl = document.createElement("span");
+    let iconEl = document.createElement("span");
     iconEl.className = "pc-grid-card-icon";
     iconEl.setAttribute("aria-hidden", "true");
-    var img = document.createElement("img");
+    const img = document.createElement("img");
     img.src = opts.iconSrc;
     img.width = 20;
     img.height = 20;
@@ -84,32 +84,32 @@ function createGridCard(opts) {
     iconEl.appendChild(img);
     toggle.appendChild(iconEl);
   } else if (opts.icon) {
-    var iconEl = document.createElement("span");
+    let iconEl = document.createElement("span");
     iconEl.className = "pc-grid-card-icon";
     iconEl.textContent = opts.icon;
     iconEl.setAttribute("aria-hidden", "true");
     toggle.appendChild(iconEl);
   }
 
-  var titleEl = document.createElement("span");
+  const titleEl = document.createElement("span");
   titleEl.className = "pc-grid-card-title";
   titleEl.textContent = opts.title || "";
   toggle.appendChild(titleEl);
 
-  var metricEl = document.createElement("span");
+  const metricEl = document.createElement("span");
   metricEl.className = "pc-grid-card-metric";
   metricEl.textContent = opts.metric || "";
   toggle.appendChild(metricEl);
   card.appendChild(toggle);
 
-  var body = document.createElement("div");
+  const body = document.createElement("div");
   body.className = "pc-grid-card-body";
   body.hidden = true;
   if (opts.id) body.id = opts.id + "-body";
 
   toggle.addEventListener("click", function () {
-    var grid = card.parentElement;
-    var wasExpanded = card.classList.contains("is-expanded");
+    const grid = card.parentElement;
+    const wasExpanded = card.classList.contains("is-expanded");
 
     // Accordion: collapse all siblings
     if (grid) {

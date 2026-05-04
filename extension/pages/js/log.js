@@ -50,9 +50,9 @@ function initLogTab() {
     initLogInnerTabs();
     initLogCopyButton();
     // Regional flags: built once (they don't change with domain)
-    var strip = document.getElementById("pc-log-dot-strip");
+    const strip = document.getElementById("pc-log-dot-strip");
     if (strip && typeof buildRegionalFlags === "function") {
-      var flagsLink = document.createElement("a");
+      const flagsLink = document.createElement("a");
       flagsLink.href = "purposes-settings.html#regional-filters";
       flagsLink.target = "_blank";
       flagsLink.className = "pc-log-dot-flags";
@@ -169,42 +169,42 @@ function setActiveLogTab(name) {
 // --- Header: dot strip showing purpose states for site + global ---
 
 function renderLogHeader() {
-  var strip = document.getElementById("pc-log-dot-strip");
+  const strip = document.getElementById("pc-log-dot-strip");
   if (!strip) return;
   // Preserve regional flags (appended once in initLogTab); only clear dot rows
-  var existing = strip.querySelector(".pc-log-dot-row");
+  const existing = strip.querySelector(".pc-log-dot-row");
   if (existing) existing.remove();
 
   // Single row: SITE dots · ALL dots
-  var row = document.createElement("div");
+  const row = document.createElement("div");
   row.className = "pc-log-dot-row";
 
-  var siteLabel = document.createElement("span");
+  const siteLabel = document.createElement("span");
   siteLabel.className = "pc-log-dot-label";
   siteLabel.textContent = "SITE";
   siteLabel.title = "Profile: " + (currentProfile || "balanced");
   row.appendChild(siteLabel);
-  for (var i = 0; i < PURPOSES_TO_SHOW.length; i++) {
-    var key = PURPOSES_TO_SHOW[i];
-    var state = currentPurposesState[key];
-    var isReq = requiredPurposeKeys.has(key);
+  for (let i = 0; i < PURPOSES_TO_SHOW.length; i++) {
+    let key = PURPOSES_TO_SHOW[i];
+    let state = currentPurposesState[key];
+    let isReq = requiredPurposeKeys.has(key);
     row.appendChild(_logDot(key, state, isReq));
   }
 
-  var sep = document.createElement("span");
+  const sep = document.createElement("span");
   sep.className = "pc-log-dot-sep";
   sep.textContent = "\u2014";
   row.appendChild(sep);
 
-  var globalLabel = document.createElement("span");
+  const globalLabel = document.createElement("span");
   globalLabel.className = "pc-log-dot-label";
   globalLabel.textContent = "ALL";
   globalLabel.title = "Default profile: " + (defaultProfile || "balanced");
   row.appendChild(globalLabel);
-  for (var i = 0; i < PURPOSES_TO_SHOW.length; i++) {
-    var key = PURPOSES_TO_SHOW[i];
-    var state = defaultPurposes ? defaultPurposes[key] : null;
-    var isReq = requiredPurposeKeys.has(key);
+  for (let i = 0; i < PURPOSES_TO_SHOW.length; i++) {
+    let key = PURPOSES_TO_SHOW[i];
+    let state = defaultPurposes ? defaultPurposes[key] : null;
+    let isReq = requiredPurposeKeys.has(key);
     row.appendChild(_logDot(key, state, isReq));
   }
 
@@ -212,7 +212,7 @@ function renderLogHeader() {
 }
 
 function _logDot(purposeKey, allowed, isRequired) {
-  var dot = document.createElement("span");
+  const dot = document.createElement("span");
   dot.className = "pc-log-dot";
   if (isRequired) {
     dot.classList.add("is-required");
@@ -222,7 +222,7 @@ function _logDot(purposeKey, allowed, isRequired) {
     dot.classList.add("is-blocked");
   }
   // else null/undefined = unknown, no extra class (gray)
-  var label = getPurposeLabel(purposeKey, "short");
+  const label = getPurposeLabel(purposeKey, "short");
   dot.title = label + (isRequired ? " (required)" : allowed ? " (allowed)" : allowed === false ? " (blocked)" : " (unknown)");
   dot.setAttribute("aria-label", dot.title);
   return dot;
@@ -1092,16 +1092,16 @@ function handleWhitelistRemoveAllGlobal() {
     function (resp) {
       void chrome.runtime.lastError;
       if (resp && resp.ok) {
-        for (var domain in lastWhitelist) {
-          var siteMap = lastWhitelist[domain];
-          for (var key in siteMap) {
+        for (const domain in lastWhitelist) {
+          const siteMap = lastWhitelist[domain];
+          for (const key in siteMap) {
             if (key === "_hotfix") continue;
             delete siteMap[key];
           }
           if (Object.keys(siteMap).length === 0) delete lastWhitelist[domain];
         }
-        var tbody = document.querySelector("#pc-log-domains tbody");
-        var visibleRows = tbody ? tbody.children.length : 0;
+        const tbody = document.querySelector("#pc-log-domains tbody");
+        const visibleRows = tbody ? tbody.children.length : 0;
         renderLogDomains(visibleRows);
         renderLogWhitelist();
       }

@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function _toggleBars() {
     [_statsBar, _signalsBar].forEach(bar => {
       if (!bar) return;
-      var toggle = bar.querySelector(".pc-bar-toggle");
+      const toggle = bar.querySelector(".pc-bar-toggle");
       if (toggle) toggle.click();
     });
   }
@@ -230,16 +230,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (activeMode === "proto") {
         // Proto tab: toggle its own collapsible bars + purpose accordions
         document.querySelectorAll("#pc-view-proto .pc-bar").forEach(bar => {
-          var toggle = bar.querySelector(".pc-bar-toggle");
+          const toggle = bar.querySelector(".pc-bar-toggle");
           if (toggle) toggle.click();
         });
-        var cards = document.querySelectorAll("#proto-purposes .proto-card");
-        var collapsed = 0;
+        const cards = document.querySelectorAll("#proto-purposes .proto-card");
+        let collapsed = 0;
         cards.forEach(c => { if (!c.classList.contains("is-expanded")) collapsed++; });
-        var expand = collapsed > cards.length / 2;
+        const expand = collapsed > cards.length / 2;
         cards.forEach(c => {
           c.classList.toggle("is-expanded", expand);
-          var h = c.querySelector(".proto-card-header");
+          const h = c.querySelector(".proto-card-header");
           if (h) h.setAttribute("aria-expanded", expand ? "true" : "false");
         });
         if (typeof setLifetimePanelState === "function") setLifetimePanelState(expand);
@@ -342,7 +342,7 @@ function isSupportedWebUrl(urlStr) {
 function expectedGpcEnabled() {
   if (!gpcGlobalEnabled) { if (DEBUG_RULES) console.log("[GPC-debug] gpcGlobalEnabled=false"); return false; }
   if (!currentDomain || !Array.isArray(gpcPurposeKeys) || gpcPurposeKeys.length === 0) { if (DEBUG_RULES) console.log("[GPC-debug] early exit: domain=%s, keys=%o", currentDomain, gpcPurposeKeys); return false; }
-  var result = gpcPurposeKeys.some((key) => currentPurposesState[key] === false);
+  const result = gpcPurposeKeys.some((key) => currentPurposesState[key] === false);
   if (!result && DEBUG_RULES) console.log("[GPC-debug] no denied purpose: state=%o, keys=%o", currentPurposesState, gpcPurposeKeys);
   return result;
 }
