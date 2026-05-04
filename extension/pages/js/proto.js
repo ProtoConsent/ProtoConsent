@@ -342,14 +342,21 @@ function _fillCoverageBody(body, resp, wkData) {
   fillEl.style.width = ratio + "%"; barEl.appendChild(fillEl); body.appendChild(barEl);
 
   var textEl = document.createElement("div"); textEl.className = "proto-coverage-text";
-  textEl.innerHTML = "<span><strong>" + ratio + "%</strong> purposes attributed</span><span><strong>" + (coverage.observed - (coverage.attributed || 0)) + "</strong> unmatched</span>";
+  var s1 = document.createElement("span"); var b1 = document.createElement("strong"); b1.textContent = ratio + "%"; s1.appendChild(b1); s1.appendChild(document.createTextNode(" purposes attributed"));
+  var s2 = document.createElement("span"); var b2 = document.createElement("strong"); b2.textContent = String(coverage.observed - (coverage.attributed || 0)); s2.appendChild(b2); s2.appendChild(document.createTextNode(" unmatched"));
+  textEl.appendChild(s1); textEl.appendChild(s2);
   body.appendChild(textEl);
 
   // Provenance + heuristic summary on one line
   var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
   var otherLabel = resp.mode === "protoconsent" ? "External" : "Other";
-  var provText = "<strong>Own:</strong> " + prov.own;
-  if (prov.other >= 0) provText += " \u00b7 <strong>" + otherLabel + ":</strong> " + prov.other;
+  function addSeg(el, needsDot, label, value) {
+    if (needsDot) el.appendChild(document.createTextNode(" \u00b7 "));
+    var b = document.createElement("strong"); b.textContent = label + ":";
+    el.appendChild(b); el.appendChild(document.createTextNode(" " + value));
+  }
+  addSeg(provEl, false, "Own", String(prov.own));
+  if (prov.other >= 0) addSeg(provEl, true, otherLabel, String(prov.other));
   if (resp.unattributed && resp.unattributed.length > 0) {
     var heuristicCounts = {};
     var heuristicTotal = 0;
@@ -357,15 +364,15 @@ function _fillCoverageBody(body, resp, wkData) {
       var hk = resp.unattributed[h].heuristic;
       if (hk) { heuristicTotal++; heuristicCounts[hk] = (heuristicCounts[hk] || 0) + 1; }
     }
-    provText += " \u00b7 <strong>Guess:</strong> " + heuristicTotal + "/" + resp.unattributed.length;
+    var guessVal = heuristicTotal + "/" + resp.unattributed.length;
     if (heuristicTotal > 0) {
       var parts = [];
       var sorted = Object.entries(heuristicCounts).sort(function(a,b){ return b[1]-a[1]; });
       for (var hi = 0; hi < sorted.length; hi++) parts.push(sorted[hi][1] + " " + sorted[hi][0]);
-      provText += " (" + parts.join(", ") + ")";
+      guessVal += " (" + parts.join(", ") + ")";
     }
+    addSeg(provEl, true, "Guess", guessVal);
   }
-  provEl.innerHTML = provText;
   body.appendChild(provEl);
 
   // Unattributed hostnames
@@ -430,7 +437,8 @@ function _fillGpcBody(body, resp) {
   note.style.marginBottom = "4px";
   body.appendChild(note);
   var header = document.createElement("div");
-  header.innerHTML = "<strong>" + domains.length + " domains</strong> received GPC signal";
+  var hStrong = document.createElement("strong"); hStrong.textContent = String(domains.length) + " domains";
+  header.appendChild(hStrong); header.appendChild(document.createTextNode(" received GPC signal"));
   header.style.marginBottom = "4px";
   body.appendChild(header);
   for (var i = 0; i < Math.min(domains.length, 10); i++) {

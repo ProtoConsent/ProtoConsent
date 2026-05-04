@@ -309,7 +309,11 @@ function initInterExt() {
 	if (!section || !toggle || !container) return;
 
 	const idEl = document.getElementById('inter-ext-id');
-	if (idEl) idEl.innerHTML = '<span class="ps-info-pill" title="Other extensions need this ID to connect">&#x2139; Info</span> <strong>Extension ID:</strong> ' + chrome.runtime.id;
+	if (idEl) {
+		var pill = document.createElement("span"); pill.className = "ps-info-pill"; pill.title = "Other extensions need this ID to connect"; pill.textContent = "\u2139 Info";
+		var label = document.createElement("strong"); label.textContent = "Extension ID:";
+		idEl.appendChild(pill); idEl.appendChild(document.createTextNode(" ")); idEl.appendChild(label); idEl.appendChild(document.createTextNode(" " + chrome.runtime.id));
+	}
 
 	function renderLists(data) {
 		const enabled = data.interExtEnabled === true;

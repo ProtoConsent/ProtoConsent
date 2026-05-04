@@ -508,8 +508,9 @@ function renderEnhancedLists() {
     ovLines.className = "ep-overview-lines";
     var updRow = document.createElement("div");
     updRow.className = "ep-overview-stat ep-overview-stat-update";
-    updRow.innerHTML = '<strong>' + stats.updatesAvailable + ' update' + (stats.updatesAvailable !== 1 ? 's' : '') + '</strong>' +
-      '<span class="ep-overview-detail">available</span>';
+    var updStrong = document.createElement("strong"); updStrong.textContent = stats.updatesAvailable + " update" + (stats.updatesAvailable !== 1 ? "s" : "");
+    var updDetail = document.createElement("span"); updDetail.className = "ep-overview-detail"; updDetail.textContent = "available";
+    updRow.appendChild(updStrong); updRow.appendChild(updDetail);
     ovLines.appendChild(updRow);
     ovBody.appendChild(ovLines);
   }
