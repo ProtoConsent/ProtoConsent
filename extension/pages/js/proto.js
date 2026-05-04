@@ -513,10 +513,11 @@ function _fillBannersBody(body, resp, tcfData) {
       }
     } else {
       for (var k = 1; k <= 11; k++) {
-        var pRow = document.createElement("div"); pRow.className = "pc-tcf-purpose-row pc-tcf-pending-row";
+        var pRow = document.createElement("div"); pRow.className = "pc-tcf-purpose-row";
         var pCheck = document.createElement("span");
         pCheck.className = "pc-tcf-pending";
         pCheck.textContent = "?";
+        pCheck.setAttribute("aria-label", "Pending");
         var pLabel = document.createElement("span");
         pLabel.textContent = _iabPurposeNames[k] || ("Purpose " + k);
         pRow.appendChild(pCheck); pRow.appendChild(pLabel); grid.appendChild(pRow);
@@ -533,7 +534,10 @@ function _fillCosmeticBody(body, resp) {
   var c = resp.cosmetic;
   var info = document.createElement("div");
   info.className = "pc-tcf-info";
-  info.innerHTML = "<strong>" + (c.siteRules || 0) + " rules</strong> applied on " + c.domain;
+  var strong = document.createElement("strong");
+  strong.textContent = (c.siteRules || 0) + " rules";
+  info.appendChild(strong);
+  info.appendChild(document.createTextNode(" applied on " + c.domain));
   body.appendChild(info);
 }
 

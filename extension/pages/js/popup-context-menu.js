@@ -199,6 +199,8 @@
       menu.style.left = x + "px";
       menu.style.top = y + "px";
       menu.style.visibility = "visible";
+      var first = menu.querySelector(".pc-ctx-item");
+      if (first) first.focus();
     });
   }
 
