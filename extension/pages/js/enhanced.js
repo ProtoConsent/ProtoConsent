@@ -171,7 +171,6 @@ function renderEnhancedPresets() {
   const chevron = document.createElement("span");
   chevron.className = "ep-preset-chevron";
   chevron.setAttribute("aria-hidden", "true");
-  chevron.textContent = "\u25BE";
   btn.appendChild(chevron);
   dropdown.appendChild(btn);
 
@@ -548,7 +547,7 @@ function renderEnhancedLists() {
 
     var typeGroups = [
       { label: "Blocking", icon: GRID_ICONS + "blocking.svg", grouped: coreActive ? ["ProtoConsent Core"] : [], ids: blockingLists, detail: stats.totalDomains.toLocaleString() + " domains" },
-      { label: "Enhanced", icon: GRID_ICONS + "optional.svg", grouped: [], ids: enhancedLists, detail: enhancedEnabled + " active" },
+      { label: "Optional", icon: GRID_ICONS + "optional.svg", grouped: [], ids: enhancedLists, detail: enhancedEnabled + " active" },
       { label: "Cosmetic", icon: GRID_ICONS + "cosmetic.svg", grouped: [], ids: cosmeticLists, detail: stats.cosmeticRules.toLocaleString() + " rules" },
       { label: "Banners", icon: GRID_ICONS + "banners.svg", grouped: cmpActive ? ["ProtoConsent Banners"] : [], ids: bannerLists, detail: stats.cmpTemplates.toLocaleString() + " templates" },
       { label: "Detection", icon: GRID_ICONS + "detection.svg", grouped: [], ids: detectionLists, detail: stats.paramsTotal.toLocaleString() + " params \u00b7 " + stats.infoDomains.toLocaleString() + " entries" },
@@ -574,8 +573,8 @@ function renderEnhancedLists() {
       cardHeader.setAttribute("tabindex", "0");
       cardHeader.setAttribute("aria-expanded", "false");
       var chevron = document.createElement("span");
-      chevron.className = "ep-active-card-chevron";
-      chevron.textContent = "\u25B8";
+      chevron.className = "ep-active-card-chevron pc-chevron";
+      chevron.setAttribute("aria-hidden", "true");
       var iconEl = document.createElement("img");
       iconEl.src = group.icon;
       iconEl.width = 18;
@@ -602,14 +601,13 @@ function renderEnhancedLists() {
         cardBody.appendChild(entry);
       }
 
-      var toggle = (function (c, h, ch, b) {
+      var toggle = (function (c, h, b) {
         return function () {
           var exp = c.classList.toggle("is-expanded");
           h.setAttribute("aria-expanded", exp ? "true" : "false");
-          ch.textContent = exp ? "\u25BE" : "\u25B8";
           b.hidden = !exp;
         };
-      })(card, cardHeader, chevron, cardBody);
+      })(card, cardHeader, cardBody);
       cardHeader.addEventListener("click", toggle);
       cardHeader.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
@@ -643,11 +641,11 @@ function renderEnhancedLists() {
   grid.appendChild(bk.card);
   grid.appendChild(bk.body);
 
-  // 3. Enhanced card (optional editorial lists)
+  // 3. Optional card (optional editorial lists)
   var enhancedMetric = enhancedEnabled > 0
     ? enhancedEnabled + " active"
     : "None active";
-  var en = createGridCard({ id: "ep-card-enhanced", iconSrc: GRID_ICONS + "optional.svg", title: "Enhanced", metric: enhancedMetric });
+  var en = createGridCard({ id: "ep-card-enhanced", iconSrc: GRID_ICONS + "optional.svg", title: "Optional", metric: enhancedMetric });
   var enBody = en.body;
   var disclaimer = document.createElement("div");
   disclaimer.className = "ep-optional-disclaimer";
@@ -813,9 +811,8 @@ function _renderEpListCard(listId) {
   header.className = "ep-list-header";
 
   const chevron = document.createElement("span");
-  chevron.className = "ep-list-chevron";
+  chevron.className = "ep-list-chevron pc-chevron";
   chevron.setAttribute("aria-hidden", "true");
-  chevron.textContent = "\u25BE";
   header.appendChild(chevron);
 
   const icon = document.createElement("img");

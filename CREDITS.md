@@ -61,6 +61,45 @@ cards to indicate active language regions:
 
     extension/icons/flags/{bg,cn,cz,de,dk,ee,es,fi,fr,hr,hu,id,il,in,ir,is,it,jp,kr,lt,lv,mk,nl,no,pl,pt,rs,ru,sa,se,sk,th,tr,ua,vn}.svg
 
+### UXWing Icons
+
+| Source | Authors | License | Usage |
+|--------|---------|---------|-------|
+| [UXWing](https://uxwing.com) | UXWing | Free (no attribution required) | Grid card icons, navigation chevrons |
+
+Icons from UXWing are free for personal, commercial, and client projects
+without attribution. Credit is given voluntarily.
+See https://uxwing.com/license/ for full terms.
+
+Grid card icons:
+
+    extension/icons/grid/api.svg
+    extension/icons/grid/banners.svg
+    extension/icons/grid/blocking.svg
+    extension/icons/grid/cleanlinks.svg
+    extension/icons/grid/cosmetic.svg
+    extension/icons/grid/coverage.svg
+    extension/icons/grid/detection.svg
+    extension/icons/grid/exception.svg
+    extension/icons/grid/gpc.svg
+    extension/icons/grid/optional.svg
+    extension/icons/grid/overview.svg
+    extension/icons/grid/theme-auto.svg
+    extension/icons/grid/theme-dark.svg
+    extension/icons/grid/theme-light.svg
+    extension/icons/grid/trackers.svg
+
+Navigation chevrons:
+
+    extension/icons/nav/chevron-down.svg
+    extension/icons/nav/chevron-left.svg
+    extension/icons/nav/chevron-right.svg
+    extension/icons/nav/chevron-up.svg
+
+Other UI icons:
+
+    extension/icons/nav/gear.svg
+
 ### CMP banner handling (Autoconsent)
 
 | Source | Authors | License | Files |

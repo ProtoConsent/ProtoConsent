@@ -291,8 +291,17 @@ body {
 }
 
 .pc-profile-chevron {
-  font-size: var(--pc-font-sm);
-  color: #3d5165;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #3d5165;
+  -webkit-mask-image: url(../../icons/nav/chevron-down.svg);
+  mask-image: url(../../icons/nav/chevron-down.svg);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  vertical-align: middle;
 }
 
 .pc-profile-menu {
@@ -663,10 +672,13 @@ body {
 }
 
 .pc-purpose-chevron {
-  font-size: 16px;
-  line-height: 1;
-  color: var(--pc-text-soft);
-  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 2px;
+}
+
+[aria-expanded="true"] > .pc-purpose-chevron {
+  transform: rotate(90deg);
 }
 
 /* Toggle area clickable for Allowed/Blocked */
@@ -858,12 +870,20 @@ body {
 }
 
 .pc-counter-lifetime::before {
-  content: "\25B8";
-  font-size: 11px;
+  content: "";
   display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  -webkit-mask-image: url(../../icons/nav/chevron-right.svg);
+  mask-image: url(../../icons/nav/chevron-right.svg);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   transition: transform 0.15s ease;
   margin-right: 3px;
-  vertical-align: -0.5px;
+  vertical-align: 0.5px;
 }
 
 .pc-counter-lifetime.is-expanded::before {
@@ -1005,11 +1025,18 @@ body {
   box-shadow: none;
 }
 .pc-footer-cta-icon {
-  margin-right: 3px;
-  font-size: 0.85em;
-  vertical-align: middle;
-  position: relative;
-  top: -0.5px;
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+  -webkit-mask-image: url(../../icons/nav/gear.svg);
+  mask-image: url(../../icons/nav/gear.svg);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  margin-right: 2px;
+  vertical-align: -1px;
 }
 .pc-footer-cta:hover {
   background: #dbeafe;
@@ -1212,13 +1239,21 @@ body {
 
 .pc-side-tab-icon {
   display: block;
+  font-size: 14px;
 }
 
 .pc-side-tab-chevron {
   display: block;
-  font-size: 16px;
-  line-height: 1;
+  width: 10px;
+  height: 10px;
   margin-top: 2px;
+  background: currentColor;
+  -webkit-mask-image: url(../../icons/nav/chevron-left.svg);
+  mask-image: url(../../icons/nav/chevron-left.svg);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   transition: transform 0.2s ease;
 }
 
@@ -1452,11 +1487,28 @@ body {
   white-space: nowrap;
 }
 
-.pc-bar-chevron {
-  font-size: 10px;
-  color: var(--pc-text-soft);
+/* SVG chevron base (shared) */
+.pc-chevron {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+  -webkit-mask-image: url(../../icons/nav/chevron-right.svg);
+  mask-image: url(../../icons/nav/chevron-right.svg);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.15s ease;
   flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.pc-bar-chevron {
+  width: 8px;
+  height: 8px;
 }
 
 .pc-bar.is-expanded .pc-bar-chevron { transform: rotate(90deg); }

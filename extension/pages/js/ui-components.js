@@ -20,9 +20,8 @@ function createCollapsibleBar(id, opts) {
   if (opts.ariaLabel) toggle.setAttribute("aria-label", opts.ariaLabel);
 
   var chevron = document.createElement("span");
-  chevron.className = "pc-bar-chevron";
+  chevron.className = "pc-bar-chevron pc-chevron";
   chevron.setAttribute("aria-hidden", "true");
-  chevron.textContent = "\u25B8";
 
   var label = document.createElement("span");
   label.className = "pc-bar-label";

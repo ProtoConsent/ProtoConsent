@@ -375,7 +375,7 @@ function _fillCoverageBody(body, resp, wkData) {
     sumHeader.setAttribute("role", "button"); sumHeader.setAttribute("tabindex", "0");
     sumHeader.setAttribute("aria-expanded", "false");
     sumHeader.setAttribute("aria-label", "Unmatched hostnames, " + resp.unattributed.length + " entries");
-    var sumChevron = document.createElement("span"); sumChevron.className = "ep-active-card-chevron"; sumChevron.textContent = "\u25B8";
+    var sumChevron = document.createElement("span"); sumChevron.className = "ep-active-card-chevron pc-chevron"; sumChevron.setAttribute("aria-hidden", "true");
     var sumName = document.createElement("span"); sumName.className = "ep-active-card-name"; sumName.textContent = "Unmatched hostnames";
     var sumCount = document.createElement("span"); sumCount.className = "ep-active-card-count"; sumCount.textContent = resp.unattributed.length;
     sumHeader.appendChild(sumChevron); sumHeader.appendChild(sumName); sumHeader.appendChild(sumCount);
@@ -402,7 +402,6 @@ function _fillCoverageBody(body, resp, wkData) {
     var toggleFn = function() {
       var expanded = toggle.classList.toggle("is-expanded");
       sumHeader.setAttribute("aria-expanded", expanded ? "true" : "false");
-      sumChevron.textContent = expanded ? "\u25BE" : "\u25B8";
     };
     sumHeader.addEventListener("click", toggleFn);
     sumHeader.addEventListener("keydown", function(e) {
@@ -700,8 +699,8 @@ function _makeMismatchCard(mismatches, wasExpanded) {
   header.setAttribute("aria-expanded", wasExpanded.has("mismatch") ? "true" : "false");
 
   let chevron = document.createElement("span");
-  chevron.className = "proto-card-chevron";
-  chevron.textContent = wasExpanded.has("mismatch") ? " \u25BE" : " \u25B8";
+  chevron.className = "proto-card-chevron pc-chevron";
+  chevron.setAttribute("aria-hidden", "true");
 
   let dot = document.createElement("span");
   dot.className = "proto-signal-dot proto-mismatch-dot";
@@ -745,7 +744,6 @@ function _makeMismatchCard(mismatches, wasExpanded) {
   let toggle = function () {
     let expanded = card.classList.toggle("is-expanded");
     header.setAttribute("aria-expanded", expanded ? "true" : "false");
-    chevron.textContent = expanded ? " \u25BE" : " \u25B8";
     body.hidden = !expanded;
   };
   header.addEventListener("click", toggle);
@@ -829,8 +827,8 @@ function renderProtoPurposes(blocked, wkData) {
     header.setAttribute("aria-expanded", wasExpanded.has(category) ? "true" : "false");
 
     const chevron = document.createElement("span");
-    chevron.className = "proto-card-chevron";
-    chevron.textContent = wasExpanded.has(category) ? " \u25BE" : " \u25B8";
+    chevron.className = "proto-card-chevron pc-chevron";
+    chevron.setAttribute("aria-hidden", "true");
     header.appendChild(chevron);
 
     if (display.icon) {
@@ -918,7 +916,6 @@ function renderProtoPurposes(blocked, wkData) {
     const toggle = () => {
       const expanded = card.classList.toggle("is-expanded");
       header.setAttribute("aria-expanded", expanded ? "true" : "false");
-      chevron.textContent = expanded ? " \u25BE" : " \u25B8";
       body.hidden = !expanded;
     };
     header.addEventListener("click", toggle);

@@ -18,6 +18,13 @@
           "usage": "Regional filter language flags"
         },
         {
+          "name": "UXWing Icons",
+          "url": "https://uxwing.com",
+          "by": "UXWing",
+          "license": "Free (no attribution required)",
+          "usage": "Grid card icons, navigation chevrons"
+        },
+        {
           "name": "Autoconsent",
           "url": "https://github.com/duckduckgo/autoconsent",
           "by": "DuckDuckGo, Inc.",

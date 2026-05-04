@@ -36,9 +36,8 @@ function renderCoreCard(coreIds) {
   header.className = "ep-list-header";
 
   const chevron = document.createElement("span");
-  chevron.className = "ep-list-chevron";
+  chevron.className = "ep-list-chevron pc-chevron";
   chevron.setAttribute("aria-hidden", "true");
-  chevron.textContent = "\u25BE";
   header.appendChild(chevron);
 
   const icon = document.createElement("img");
@@ -260,9 +259,8 @@ function renderCmpCard(cmpIds) {
   header.className = "ep-list-header";
 
   const chevron = document.createElement("span");
-  chevron.className = "ep-list-chevron";
+  chevron.className = "ep-list-chevron pc-chevron";
   chevron.setAttribute("aria-hidden", "true");
-  chevron.textContent = "\u25BE";
   header.appendChild(chevron);
 
   const icon = document.createElement("img");
