@@ -1362,6 +1362,12 @@ details[open] > .ps-accordion-header::before {
   flex-shrink: 0;
 }
 
+.ps-support-btns {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .ps-troubleshoot-pre {
   margin: 10px 0 0;
   padding: 12px;
