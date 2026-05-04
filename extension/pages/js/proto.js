@@ -342,7 +342,9 @@ function _fillCoverageBody(body, resp, wkData) {
   fillEl.style.width = ratio + "%"; barEl.appendChild(fillEl); body.appendChild(barEl);
 
   var textEl = document.createElement("div"); textEl.className = "proto-coverage-text";
-  textEl.innerHTML = "<span><strong>" + ratio + "%</strong> purposes attributed</span><span><strong>" + (coverage.observed - (coverage.attributed || 0)) + "</strong> unmatched</span>";
+  var s1 = document.createElement("span"); var b1 = document.createElement("strong"); b1.textContent = ratio + "%"; s1.appendChild(b1); s1.appendChild(document.createTextNode(" purposes attributed"));
+  var s2 = document.createElement("span"); var b2 = document.createElement("strong"); b2.textContent = String(coverage.observed - (coverage.attributed || 0)); s2.appendChild(b2); s2.appendChild(document.createTextNode(" unmatched"));
+  textEl.appendChild(s1); textEl.appendChild(s2);
   body.appendChild(textEl);
 
   // Provenance + heuristic summary on one line
@@ -430,7 +432,8 @@ function _fillGpcBody(body, resp) {
   note.style.marginBottom = "4px";
   body.appendChild(note);
   var header = document.createElement("div");
-  header.innerHTML = "<strong>" + domains.length + " domains</strong> received GPC signal";
+  var hStrong = document.createElement("strong"); hStrong.textContent = String(domains.length) + " domains";
+  header.appendChild(hStrong); header.appendChild(document.createTextNode(" received GPC signal"));
   header.style.marginBottom = "4px";
   body.appendChild(header);
   for (var i = 0; i < Math.min(domains.length, 10); i++) {

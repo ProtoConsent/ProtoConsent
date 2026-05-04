@@ -361,14 +361,14 @@ function renderLogDomains(initialVisible) {
   const thead = document.createElement("thead");
   const headTr = document.createElement("tr");
   const cols = [
-    { key: "purpose", label: '<span class="visually-hidden">Purpose</span>', style: "" },
+    { key: "purpose", label: "Purpose", srOnly: true, style: "" },
     { key: "domain", label: "Domain", style: "" },
     { key: "count", label: "Blocked", style: "text-align:right" },
     { key: null, label: "Whitelist", style: "" },
   ];
   for (const col of cols) {
     const th = document.createElement("th");
-    th.innerHTML = col.label;
+    if (col.srOnly) { const sp = document.createElement("span"); sp.className = "visually-hidden"; sp.textContent = col.label; th.appendChild(sp); } else { th.textContent = col.label; }
     if (col.style) th.style.cssText = col.style;
     if (col.key) {
       const isSorted = sd.col === col.key;
@@ -571,10 +571,13 @@ function renderLogGpc() {
 
   if (domains.length === 0) {
     if (lastGpcSignalsSent > 0) {
-      container.innerHTML = '<div class="pc-log-empty">Sec-GPC: 1 sent to ' +
-        pluralize(lastGpcSignalsSent, "request") + ' (domain names not captured)</div>';
+      const emptyDiv = document.createElement("div"); emptyDiv.className = "pc-log-empty";
+      emptyDiv.textContent = "Sec-GPC: 1 sent to " + pluralize(lastGpcSignalsSent, "request") + " (domain names not captured)";
+      container.appendChild(emptyDiv);
     } else {
-      container.innerHTML = '<div class="pc-log-empty">No GPC signals sent for this tab.</div>';
+      const emptyDiv = document.createElement("div"); emptyDiv.className = "pc-log-empty";
+      emptyDiv.textContent = "No GPC signals sent for this tab.";
+      container.appendChild(emptyDiv);
     }
     return;
   }
@@ -1260,15 +1263,15 @@ function renderLogWhitelist() {
   const thead = document.createElement("thead");
   const headTr = document.createElement("tr");
   const wlCols = [
-    { key: null, label: '<span class="visually-hidden">Purpose</span>', style: "" },
+    { key: null, label: "Purpose", srOnly: true, style: "" },
     { key: "domain", label: "Domain", style: "" },
-    { key: null, label: '<span class="visually-hidden">Remove</span>', style: "" },
+    { key: null, label: "Remove", srOnly: true, style: "" },
     { key: "scope", label: "Scope", style: "" },
-    { key: null, label: '<span class="visually-hidden">Change scope</span>', style: "" },
+    { key: null, label: "Change scope", srOnly: true, style: "" },
   ];
   for (const col of wlCols) {
     const th = document.createElement("th");
-    th.innerHTML = col.label;
+    if (col.srOnly) { const sp = document.createElement("span"); sp.className = "visually-hidden"; sp.textContent = col.label; th.appendChild(sp); } else { th.textContent = col.label; }
     if (col.style) th.style.cssText = col.style;
     if (col.key) {
       const isSorted = sw.col === col.key;
