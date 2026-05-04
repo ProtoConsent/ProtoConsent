@@ -49,7 +49,7 @@ The main user-facing element. When opened on a site, it shows the active profile
 
 - **Purposes view**: purpose toggles and per-purpose blocked stats
 - **Overview view**: operating mode dashboard showing signal status (GPC, CMP detection, cosmetic filtering), purpose-attributed blocks as accordion cards, CMP auto-response state, URL parameter stripping summary, and unattributed hostnames. Auto-refreshes while active.
-- **Protection view**: optional third-party blocklists with preset selection and per-list controls
+- **Protection view**: curated blocklists in three tiers (core, third-party, optional) with preset selection and per-list controls
 - **Log view**: real-time request monitoring, blocked domains grouped by purpose, GPC signal tracking per domain, and URL parameter strip events
 - **Site declaration panel**: when a site publishes a `.well-known/protoconsent.json`, a collapsible side panel shows its declared purposes, legal basis, sharing and international transfers
 - **Contextual menus**: a right-click menu on the extension badge icon provides quick access to operating mode, banner hiding, cosmetic filtering, GPC signal, whitelist site, and settings. A custom right-click menu inside the popup replaces the native context menu, providing the same quick-toggle actions with ARIA roles and keyboard navigation (Tab/Arrow/Enter/Escape)
@@ -285,8 +285,8 @@ The `initiatorDomains` condition matches the **origin that initiated the request
 
 | Limit | Value | ProtoConsent usage |
 | --- | --- | --- |
-| Static rulesets (max declared) | 100 | 12 (5 domain + 5 path + 2 param strip) |
-| Static rulesets (max enabled) | 50 | Up to 12 |
+| Static rulesets (max declared) | 100 | 14 (5 domain + 5 path + 2 bundled path + 2 param strip) |
+| Static rulesets (max enabled) | 50 | Up to 14 |
 | Static rules (total) | 30,000 | Domain rules + path rules (see [list-catalog.md](architecture/list-catalog.md) for current counts) |
 | Dynamic + session rules | 5,000 | Base rules (overrides + GPC + CH strip) + enhanced list rules + whitelist rules |
 | `getMatchedRules` calls | 20 per 10 min | 1 per popup open |
@@ -323,7 +323,7 @@ New purposes can be added as fields in the site rule without breaking existing p
 
 The inter-extension provider API (§12) is a concrete example: other extensions can query ProtoConsent's consent state without any coupling to its internal data model.
 
-Firefox support is in progress. The extension architecture (popup, background, local storage, enforcement) maps directly to Firefox's WebExtensions API, with adaptations in manifest format (`browser_specific_settings`, webext polyfills), DNR regex chunking (Firefox limits regex complexity per rule), and side panel replacement (Firefox does not support `chrome.sidePanel`). The same popup UI, data model, and SDK work across browsers.
+Firefox support is available (submitted to Mozilla Add-ons, in review). The extension architecture (popup, background, local storage, enforcement) maps directly to Firefox's WebExtensions API, with adaptations in manifest format (`browser_specific_settings`, webext polyfills), DNR regex chunking (Firefox limits regex complexity per rule), and side panel replacement (Firefox does not support `chrome.sidePanel`). The same popup UI, data model, and SDK work across browsers.
 
 The optional SDK and purpose-signalling protocol are documented layers on top of the extension, not hard dependencies. Websites can adopt them at their own pace while the extension continues to work on its own. This lets others adopt parts of ProtoConsent independently.
 

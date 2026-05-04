@@ -9,14 +9,20 @@
 <p align="center"><em>User‑side, purpose‑based consent for the web</em></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.6-blue" alt="version 0.6">
+  <a href="https://github.com/ProtoConsent/ProtoConsent"><strong>Browser extension</strong></a> &middot;
+  <a href="https://github.com/ProtoConsent/data"><strong>Blocklists</strong></a> &middot;
+  <a href="https://protoconsent.org"><strong>Website</strong></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/version-0.7-blue" alt="version 0.7">
   <img src="https://img.shields.io/github/license/ProtoConsent/ProtoConsent" alt="GPL-3.0+">
   <img src="https://img.shields.io/badge/manifest-v3-green" alt="Manifest V3">
   <img src="https://img.shields.io/badge/chromium-supported-brightgreen?logo=googlechrome&logoColor=white" alt="Chromium">
-  <img src="https://img.shields.io/badge/firefox-planned-lightgrey?logo=firefox&logoColor=white" alt="Firefox planned">
+  <img src="https://img.shields.io/badge/firefox-in_review-orange?logo=firefox&logoColor=white" alt="Firefox in review">
 </p>
 
-ProtoConsent is a browser extension that lets you control how websites may use your data. You set your preferences once - by purpose (functional, analytics, ads, personalization, third-party services, advanced tracking) - and the extension enforces them across every site you visit.
+ProtoConsent is a browser extension that lets you control how websites may use your data. You set your preferences once - by purpose - and the extension enforces them across every site you visit.
 
 A personal consent control panel that lives in the browser. Purpose-based blocking, tracker detection, and signal management in one place - can coexist with existing blockers and consent tools. Works out of the box with no configuration needed.
 
@@ -27,10 +33,12 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/protoconsent/dkcdkdcclhofocmkecccmikkfmfgfdlb"><img src="design/assets/icons/chrome-badge.png" alt="Available in the Chrome Web Store" height="56"></a>
   &nbsp;
-  <a href="https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo"><img src="design/assets/icons/microsoft-edge-add-ons-badge.png" alt="Get it from Microsoft Edge" height="56"></a>
+  <a href="https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo"><img src="design/assets/icons/edge-addon.png" alt="Get it from Microsoft Edge" height="56"></a>
 </p>
 <p align="center">
-  <img src="design/assets/icons/brave.png" alt="Brave" height="28"> <em>via Chrome Web Store</em>
+  <img src="design/assets/icons/brave.svg" alt="Brave" height="28"> <em>Brave via Chrome Web Store</em>
+  &nbsp;&nbsp;
+  <img src="design/assets/icons/firefox-logo.svg" alt="Firefox" height="28"> <em>Mozilla Firefox - in review</em>
   &nbsp;&nbsp;
   <img src="design/assets/icons/opera.svg" alt="Opera" height="18"> <em>Opera Addons - in review</em>
 </p>
@@ -39,10 +47,10 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 
 ## Key features
 
-- **Per-site profiles and purpose toggles:** assign a trust level (Strict, Balanced, Permissive) to each website and refine individual purposes (functional, analytics, ads, personalization, third-party services, advanced tracking).
+- **Per-site profiles and purpose toggles:** choose a default privacy profile (Strict, Balanced, Permissive) that applies everywhere, then feel free to override per site and refine individual purposes (functional, analytics, ads, personalization, third-party services, advanced tracking).
 - **Enhanced protection out of the box:** curated blocklists, cosmetic filtering, CNAME detection, URL parameter stripping, and regional filters for 36 languages - all enabled by default and kept up to date automatically.
 - **Two operating modes:** Blocking (default, full enforcement) or Monitoring (delegates blocking to your existing ad blocker while ProtoConsent adds purpose attribution, coverage metrics, and signal observability).
-- **Consent banner auto-response:** 31 CMP frameworks (including IAB TCF v2.2) handled via cosmetic hiding, scroll unlock, and experimental cookie injection based on your purpose preferences. No DOM interaction, no click simulation.
+- **Consent banner handling:** cosmetic hiding, scroll unlock, and experimental cookie injection to auto-respond to consent banners based on your purpose preferences. No DOM interaction, no click simulation.
 - **Conditional [Global Privacy Control](https://globalprivacycontrol.org/):** Sec-GPC sent only when privacy-relevant purposes are denied, per site, with legal weight under CCPA/CPRA.
 - **Site declarations and SDK:** websites can publish a `.well-known/protoconsent.json` to declare their data practices, or use the [SDK](sdk/protoconsent.js) (MIT) to read user preferences. Both optional.
 - **Inter-extension API:** other browser extensions can query the user's consent state. See the [protocol spec](design/spec/inter-extension-protocol.md).
@@ -68,16 +76,16 @@ For step‑by‑step instructions and test scenarios, see [testing-guide.md](des
 
 <table>
 <tr>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-profile-dark.png" alt="ProtoConsent popup (dark mode)" width="400" height="560"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-overview-monitoring.png" alt="Overview tab dashboard" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-profile-dark.png" alt="ProtoConsent popup (dark mode)" width="400"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-overview-monitoring.png" alt="Overview tab dashboard" width="400"></td>
 </tr>
 <tr>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-protection-balanced.png" alt="Enhanced Protection tab" width="400" height="560"></td>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-domains-dark.png" alt="Log tab with blocked domains (dark mode)" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-protection-balanced.png" alt="Enhanced Protection tab" width="400"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-domains-dark.png" alt="Log tab with blocked domains (dark mode)" width="400"></td>
 </tr>
 <tr>
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-requests-dark.png" alt="Request log with inter-extension API and GPC signals" width="400" height="560"></td>  
-<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-banners.png" alt="CMP banner detection and consent observation" width="400" height="560"></td>
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-requests-dark.png" alt="Request log with inter-extension API and GPC signals" width="400"></td>  
+<td align="center" width="50%"><img src="design/assets/screenshots/popup-log-banners.png" alt="CMP banner detection and consent observation" width="400"></td>
 </tr>
 </table>
 
@@ -95,7 +103,7 @@ Websites can publish a `.well-known/protoconsent.json` to declare their data pra
 
 ProtoConsent offers two ways for websites to participate, both optional:
 
-- **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, retention, sharing scope). No SDK, no code changes, just a JSON file. See the [spec](design/spec/protoconsent-well-known.md), the [JSON Schema](docs/schema/v0.2.json), the [demo site source](https://github.com/ProtoConsent/demo) for a complete example, or use the online tools: [generator](https://protoconsent.org/generate.html), [validator](https://protoconsent.org/validate.html), [CI action](https://github.com/ProtoConsent/validate-action).
+- **Publish a site declaration:** serve a static `.well-known/protoconsent.json` file to declare your data practices (purposes, legal bases, providers, retention, sharing scope). No SDK, no code changes, just a JSON file. See the [spec](design/spec/protoconsent-well-known.md), the [JSON Schema](design/spec/protoconsent.schema.json), the [demo site source](https://github.com/ProtoConsent/demo) for a complete example, or use the online tools: [generator](https://protoconsent.org/generate.html), [validator](https://protoconsent.org/validate.html), [CI action](https://github.com/ProtoConsent/validate-action).
 - **Integrate the SDK:** import `sdk/protoconsent.js` (MIT) and call `get('analytics')` to read the user's preferences. Returns `true`, `false`, or `null` (extension not installed). See the [quick example](design/spec/signalling-protocol.md#quick-example) and [SDK source](sdk/protoconsent.js).
 - **List your site in the directory:** if your site already serves a declaration, [add it to the public directory](https://github.com/ProtoConsent/protoconsent.org/issues/new?template=add-site.yml) — your file will be validated automatically. Browse the [directory](https://protoconsent.org/directory.html).
 
@@ -103,7 +111,17 @@ For a visual walkthrough of both paths, see [protoconsent.org/developers](https:
 
 ## Architecture
 
-![ProtoConsent technical diagram](design/assets/diagrams/protoconsent-technical-diagram.png)
+```mermaid
+flowchart LR
+    P[Page request] --> DNR{DNR rules}
+    DNR -->|Allowed| N[Network]
+    DNR -->|Blocked| E[ERR_BLOCKED_BY_CLIENT]
+    E --> WR[webRequest.onErrorOccurred]
+    WR --> RI[Reverse hostname index]
+    RI --> A[Purpose attribution]
+    A --> Badge[Badge counter]
+    A --> Log[Log port -> Popup]
+```
 
 See [architecture.md](design/architecture.md) for the full technical description and flow diagrams.
 
@@ -118,7 +136,7 @@ See [architecture.md](design/architecture.md) for the full technical description
 - [Data model](design/spec/data-model.md) - purpose taxonomy, profiles, consent state
 - [Site declaration spec](design/spec/protoconsent-well-known.md) - `.well-known/protoconsent.json` format
 - [Inter-extension protocol](design/spec/inter-extension-protocol.md) - cross-extension consent queries, TOFU trust model
-- [JSON Schema](docs/schema/v0.2.json) - machine-readable schema for `protoconsent.json` (v0.2)
+- [JSON Schema](design/spec/protoconsent.schema.json) - machine-readable schema for `protoconsent.json`
 
 **Implementation**
 - [Technical architecture](design/architecture.md) - components, data model, flows, design decisions

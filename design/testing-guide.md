@@ -104,9 +104,11 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 ## 1. Requirements
 
-- **A Chromium‑based browser** (for example, Chrome, Edge or Brave)
-- **Ability to load an unpacked extension** in developer mode
+- **A Chromium-based browser** (for example, Chrome, Edge or Brave) or **Mozilla Firefox**
+- **Ability to load an unpacked extension** in developer mode (Chromium) or as a temporary add-on (Firefox via `about:debugging`)
 - **A few test sites** that use common analytics or ads/advertising services (for example, news sites)
+
+> **Firefox note:** ProtoConsent supports Firefox with a separate `manifest.json` (Manifest V2 + V3 hybrid). All test scenarios in this guide apply to Firefox unless noted otherwise. To load the extension in Firefox, open `about:debugging#/runtime/this-firefox`, click *Load Temporary Add-on*, and select the `manifest.json` inside `extension/`.
 
 ## 2. Installing the Extension (Developer Mode)
 
@@ -121,9 +123,8 @@ This document is part of the ProtoConsent project and is licensed under the Crea
 
 2.2. **Load the extension in your browser:**
 
-- Open the extensions page (for example `chrome://extensions/` or `edge://extensions/`).
-- Enable **Developer mode**.
-- Click **Load unpacked** and select the `extension/` folder inside the cloned repository (the one that contains `manifest.json`).
+- **Chromium (Chrome, Edge, Brave):** Open the extensions page (for example `chrome://extensions/` or `edge://extensions/`). Enable **Developer mode**. Click **Load unpacked** and select the `extension/` folder inside the cloned repository (the one that contains `manifest.json`).
+- **Firefox:** Open `about:debugging#/runtime/this-firefox`. Click **Load Temporary Add-on** and select the `manifest.json` file inside the `extension/` folder.
 - Confirm that an extension called **ProtoConsent** appears in the extensions list and that it is enabled. Pin it in the toolbar if your browser supports pinning.
 
 ## 3. Basic Test: Per‑Site Profile
