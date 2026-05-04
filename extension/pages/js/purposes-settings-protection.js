@@ -222,6 +222,8 @@ function initCmpSection() {
 	const cosmeticLabel = document.getElementById('cmp-cosmetic-label');
 	const scrollToggle = document.getElementById('cmp-scroll-toggle');
 	const scrollLabel = document.getElementById('cmp-scroll-label');
+	const cmpListAccordion = document.getElementById('cmp-list-accordion');
+	const cmpAdvancedAccordion = document.getElementById('cmp-advanced-accordion');
 	let cmpQueue = Promise.resolve();
 	if (!section || !toggle || !detail || !listEl) return;
 
@@ -248,15 +250,24 @@ function initCmpSection() {
 					{ el: cosmeticToggle, label: cosmeticLabel, key: 'cmpCosmeticEnabled' },
 					{ el: scrollToggle, label: scrollLabel, key: 'cmpScrollUnlockEnabled' },
 				];
+
+				const setCmpAccordions = (visible) => {
+					const method = visible ? 'remove' : 'add';
+					if (cmpListAccordion) cmpListAccordion.classList[method]('ps-hidden');
+					if (cmpAdvancedAccordion) cmpAdvancedAccordion.classList[method]('ps-hidden');
+				};
+
 				for (const { el, label, key } of layerToggles) {
 					if (!el) continue;
 					const on = key === 'cmpCookieInjectionEnabled' ? data[key] === true : data[key] !== false;
 					el.checked = on;
 					if (label) label.textContent = on ? 'Enabled' : 'Disabled';
+					if (key === 'cmpCookieInjectionEnabled') setCmpAccordions(on);
 					el.addEventListener('change', () => {
 						const v = el.checked;
 						if (label) label.textContent = v ? 'Enabled' : 'Disabled';
 						chrome.storage.local.set({ [key]: v });
+						if (key === 'cmpCookieInjectionEnabled') setCmpAccordions(v);
 					});
 				}
 
