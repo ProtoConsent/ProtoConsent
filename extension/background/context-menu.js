@@ -19,6 +19,8 @@ const MENU_SETTINGS   = "pc-settings";
 
 const SIGNAL_KEYS = ["gpcEnabled", "chStrippingEnabled", "paramStrippingEnabled", "paramStrippingSitesEnabled"];
 
+if (chrome.contextMenus) {
+
 function setupMenus() {
   chrome.contextMenus.removeAll(() => {
     const create = (props) => {
@@ -176,6 +178,9 @@ chrome.storage.onChanged.addListener((changes) => {
   if (relevant.some(k => k in changes)) refreshMenuState();
 });
 
+setupMenus();
+}
+
 export function whitelistAllForSite(tabId, site) {
   if (!site || !isValidHostname(site)) return Promise.resolve({ ok: false });
   const blocked = tabBlockedDomains.get(tabId) || {};
@@ -238,5 +243,3 @@ export function clearWhitelistAll() {
     });
   });
 }
-
-setupMenus();
