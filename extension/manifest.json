@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ProtoConsent",
-  "description": "A browser-side consent control panel that enforces your data-use preferences per site and purpose.",
+  "description": "Privacy organized by purpose. Block ads, trackers and banners per site. Two modes, conditional GPC, 40+ blocklists, open source.",
   "version": "0.7.1",
 
   "icons": {
