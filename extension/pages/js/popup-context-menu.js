@@ -184,7 +184,7 @@
     items[next].focus();
   }
 
-  function showMenu(x, y) {
+  function showMenu(x, y, viaKeyboard) {
     var keys = ["operatingMode", "cmpAutoResponse", "enhancedCosmeticEnabled"].concat(SIGNAL_KEYS);
     chrome.storage.local.get(keys, function (data) {
       buildMenu(data);
@@ -199,8 +199,10 @@
       menu.style.left = x + "px";
       menu.style.top = y + "px";
       menu.style.visibility = "visible";
-      var first = menu.querySelector(".pc-ctx-item");
-      if (first) first.focus();
+      if (viaKeyboard) {
+        var first = menu.querySelector(".pc-ctx-item");
+        if (first) first.focus();
+      }
     });
   }
 
@@ -211,7 +213,8 @@
   document.addEventListener("contextmenu", function (e) {
     e.preventDefault();
     hideMenu();
-    showMenu(e.clientX, e.clientY);
+    var viaKeyboard = e.clientX === 0 && e.clientY === 0;
+    showMenu(e.clientX, e.clientY, viaKeyboard);
   });
 
   document.addEventListener("click", function () { hideMenu(); });
