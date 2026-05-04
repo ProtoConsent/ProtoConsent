@@ -548,7 +548,7 @@ function renderEnhancedLists() {
 
     var typeGroups = [
       { label: "Blocking", icon: GRID_ICONS + "blocking.svg", grouped: coreActive ? ["ProtoConsent Core"] : [], ids: blockingLists, detail: stats.totalDomains.toLocaleString() + " domains" },
-      { label: "Enhanced", icon: "../icons/purposes/enhanced.svg", grouped: [], ids: enhancedLists, detail: enhancedEnabled + " active" },
+      { label: "Enhanced", icon: GRID_ICONS + "optional.svg", grouped: [], ids: enhancedLists, detail: enhancedEnabled + " active" },
       { label: "Cosmetic", icon: GRID_ICONS + "cosmetic.svg", grouped: [], ids: cosmeticLists, detail: stats.cosmeticRules.toLocaleString() + " rules" },
       { label: "Banners", icon: GRID_ICONS + "banners.svg", grouped: cmpActive ? ["ProtoConsent Banners"] : [], ids: bannerLists, detail: stats.cmpTemplates.toLocaleString() + " templates" },
       { label: "Detection", icon: GRID_ICONS + "detection.svg", grouped: [], ids: detectionLists, detail: stats.paramsTotal.toLocaleString() + " params \u00b7 " + stats.infoDomains.toLocaleString() + " entries" },
@@ -647,7 +647,7 @@ function renderEnhancedLists() {
   var enhancedMetric = enhancedEnabled > 0
     ? enhancedEnabled + " active"
     : "None active";
-  var en = createGridCard({ id: "ep-card-enhanced", iconSrc: "../icons/purposes/enhanced.svg", title: "Enhanced", metric: enhancedMetric });
+  var en = createGridCard({ id: "ep-card-enhanced", iconSrc: GRID_ICONS + "optional.svg", title: "Enhanced", metric: enhancedMetric });
   var enBody = en.body;
   var disclaimer = document.createElement("div");
   disclaimer.className = "ep-optional-disclaimer";

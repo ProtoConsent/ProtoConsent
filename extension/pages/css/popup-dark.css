@@ -20,7 +20,7 @@ html.pc-dark body {
 
 /* --- Icon inversion (dark-on-alpha PNGs/SVGs) --- */
 html.pc-dark .pc-purpose-icon-img,
-html.pc-dark .pc-grid-card-icon-img:not(#ep-card-enhanced .pc-grid-card-icon-img),
+html.pc-dark .pc-grid-card-icon-img,
 html.pc-dark .pc-declaration-icon,
 html.pc-dark .pc-mode-tab-label {
   filter: brightness(0) invert(1);
