@@ -101,7 +101,9 @@ function initDefaultProfile(purposes) {
 			updateCustomPresetCard();
 		} else {
 			togglesContainer.classList.add('ps-hidden');
-			chrome.storage.local.set({ defaultProfile: value }, notifyBackground);
+			chrome.storage.local.remove("defaultPurposes", () => {
+				chrome.storage.local.set({ defaultProfile: value }, notifyBackground);
+			});
 		}
 	});
 
