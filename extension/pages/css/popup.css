@@ -484,20 +484,29 @@ body {
 }
 
 .pc-tcf-pending {
-  font-size: var(--pc-font-sm);
-  color: #92400e;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 6px;
-  padding: 4px 8px;
-  margin: 4px 0;
+  color: var(--pc-text-muted);
+  font-weight: 600;
+}
+
+.pc-tcf-info {
+  font-size: 11px;
+  color: var(--pc-text-muted);
+  padding: 6px 10px;
+  border-left: 3px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  margin-bottom: 10px;
+  border-radius: 2px;
+  line-height: 1.4;
 }
 
 .pc-tcf-note {
-  font-size: var(--pc-font-sm);
-  font-style: italic;
-  color: #64748b;
-  margin-top: 8px;
+  font-size: 11px;
+  color: var(--pc-text-muted);
+  padding: 6px 10px;
+  border-left: 3px solid #d4a017;
+  background: rgba(212, 160, 23, 0.08);
+  margin-bottom: 10px;
+  border-radius: 2px;
   line-height: 1.4;
 }
 

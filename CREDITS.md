@@ -172,6 +172,8 @@ in the extension but are compiled from upstream open-source projects.
 
 | Source | Authors | License | Files |
 |--------|---------|---------|-------|
+| [EasyList](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `easylist_cosmetic.json` |
+| [EasyList Cookie](https://easylist.to/) | EasyList authors | GPL-3.0+ / CC BY-SA 3.0+ | `easylist_cookie_cosmetic.json` |
 | [Web Annoyances Ultralist](https://github.com/LanikSJ/webannoyances) | yourduskquibbles, LanikSJ | CC BY-SA 4.0 | `webannoyances_cosmetic.json` |
 
 36 regions: Albanian, Arabic, Bulgarian, Chinese, Czech/Slovak, German, Spanish, Estonian,

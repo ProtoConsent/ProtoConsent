@@ -244,12 +244,17 @@ html.pc-dark .pc-tcf-provider {
   color: #CED4DA;
 }
 html.pc-dark .pc-tcf-pending {
-  color: #FFD43B;
-  background: #3a2f18;
-  border-color: #5a4520;
+  color: #868E96;
+}
+html.pc-dark .pc-tcf-info {
+  color: #868E96;
+  background: rgba(59, 130, 246, 0.12);
+  border-left-color: #3b82f6;
 }
 html.pc-dark .pc-tcf-note {
   color: #868E96;
+  background: rgba(212, 160, 23, 0.12);
+  border-left-color: #d4a017;
 }
 html.pc-dark .pc-tcf-accepted {
   color: #51CF66;

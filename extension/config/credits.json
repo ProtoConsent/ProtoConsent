@@ -75,6 +75,8 @@
     {
       "title": "Cosmetic filtering",
       "entries": [
+        { "name": "EasyList", "url": "https://easylist.to/", "by": "EasyList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
+        { "name": "EasyList Cookie", "url": "https://easylist.to/", "by": "EasyList authors", "license": "GPL-3.0+ / CC BY-SA 3.0+" },
         { "name": "Web Annoyances Ultralist", "url": "https://github.com/LanikSJ/webannoyances", "by": "yourduskquibbles, LanikSJ", "license": "CC BY-SA 4.0" }
       ]
     },

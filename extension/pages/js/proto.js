@@ -447,38 +447,61 @@ function _fillGpcBody(body, resp) {
 }
 
 function _fillBannersBody(body, resp, tcfData) {
-  // CMP Detection
   var cd = resp.cmpDetect;
-  if (cd && cd.detected && cd.detected.length > 0) {
-    for (var i = 0; i < cd.detected.length; i++) {
-      var line = document.createElement("div"); line.style.fontWeight = "600";
-      line.textContent = cd.detected[i].cmpId + " (" + (cd.detected[i].showing ? "showing" : "present") + ")";
-      body.appendChild(line);
+  var hasCmpDetect = cd && cd.detected && cd.detected.length > 0;
+  var hasActions = resp.cmp && (resp.cmp.selectorCount > 0 || resp.cmp.scrollUnlock || resp.cmp.cookieCount > 0);
+
+  // Block 1: Blue info (CMP detection + auto-response actions)
+  if (hasCmpDetect || hasActions) {
+    var infoBlock = document.createElement("div");
+    infoBlock.className = "pc-tcf-info";
+    if (hasCmpDetect) {
+      for (var i = 0; i < cd.detected.length; i++) {
+        var line = document.createElement("div");
+        line.style.fontWeight = "600";
+        line.textContent = cd.detected[i].cmpId + " (" + (cd.detected[i].showing ? "showing" : "present") + ")";
+        infoBlock.appendChild(line);
+      }
     }
-  }
-  // TCF consent status
-  if (tcfData) {
-    var provEl = document.createElement("div"); provEl.style.marginTop = "4px";
-    var details = [];
-    if (tcfData.cmpId && _protoCmpNames[tcfData.cmpId]) {
-      details.push("<strong>Managed by</strong> " + _protoCmpNames[tcfData.cmpId]);
-    } else {
-      details.push("<strong>Consent banner detected</strong>");
-    }
-    // Concatenate auto-response actions if present
-    if (resp.cmp) {
+    if (hasActions) {
       var actions = [];
       if (resp.cmp.selectorCount > 0) actions.push("Cosmetic hiding: " + resp.cmp.selectorCount + " selectors");
       if (resp.cmp.scrollUnlock) actions.push("Scroll unlock: active");
       if (resp.cmp.cookieCount > 0) actions.push("Cookies injected: " + resp.cmp.cookieCount);
-      if (actions.length > 0) details.push(actions.join(", "));
+      var actLine = document.createElement("div");
+      actLine.textContent = actions.join(", ");
+      infoBlock.appendChild(actLine);
     }
-    provEl.innerHTML = details.join(" - ");
-    body.appendChild(provEl);
+    body.appendChild(infoBlock);
+  }
+
+  // Block 2: Yellow note (TCF provider + enforcement)
+  if (tcfData) {
     var consents = tcfData.purposeConsents || {};
     var ids = Object.keys(consents).sort(function (a, b) { return Number(a) - Number(b); });
-    if (ids.length > 0) {
-      var grid = document.createElement("div"); grid.className = "pc-tcf-purposes";
+    var hasPurposes = ids.length > 0;
+
+    var note = document.createElement("div");
+    note.className = "pc-tcf-note";
+    var provLine = document.createElement("div");
+    provLine.style.fontWeight = "600";
+    if (tcfData.cmpId && _protoCmpNames[tcfData.cmpId]) {
+      provLine.textContent = "Managed by " + _protoCmpNames[tcfData.cmpId];
+    } else {
+      provLine.textContent = "Consent banner detected";
+    }
+    note.appendChild(provLine);
+    var noteLine = document.createElement("div");
+    noteLine.textContent = hasPurposes
+      ? "ProtoConsent enforces your preferences at the network level regardless of CMP consent state."
+      : "Banner not responded. ProtoConsent enforces your preferences at the network level regardless.";
+    note.appendChild(noteLine);
+    body.appendChild(note);
+
+    // Block 3: Purpose grid
+    var grid = document.createElement("div");
+    grid.className = "pc-tcf-purposes";
+    if (hasPurposes) {
       for (var j = 0; j < ids.length; j++) {
         var row = document.createElement("div"); row.className = "pc-tcf-purpose-row";
         var check = document.createElement("span");
@@ -488,16 +511,30 @@ function _fillBannersBody(body, resp, tcfData) {
         label.textContent = _iabPurposeNames[ids[j]] || ("Purpose " + ids[j]);
         row.appendChild(check); row.appendChild(label); grid.appendChild(row);
       }
-      body.appendChild(grid);
+    } else {
+      for (var k = 1; k <= 11; k++) {
+        var pRow = document.createElement("div"); pRow.className = "pc-tcf-purpose-row pc-tcf-pending-row";
+        var pCheck = document.createElement("span");
+        pCheck.className = "pc-tcf-pending";
+        pCheck.textContent = "?";
+        var pLabel = document.createElement("span");
+        pLabel.textContent = _iabPurposeNames[k] || ("Purpose " + k);
+        pRow.appendChild(pCheck); pRow.appendChild(pLabel); grid.appendChild(pRow);
+      }
     }
+    body.appendChild(grid);
   }
+
   if (!body.hasChildNodes()) body.textContent = "No banners detected";
 }
 
 function _fillCosmeticBody(body, resp) {
   if (!resp.cosmetic || !resp.cosmetic.domain) { body.textContent = "No cosmetic filters applied"; return; }
   var c = resp.cosmetic;
-  var d1 = document.createElement("div"); d1.innerHTML = "<strong>" + (c.siteRules || 0) + " rules</strong> applied on " + c.domain; body.appendChild(d1);
+  var info = document.createElement("div");
+  info.className = "pc-tcf-info";
+  info.innerHTML = "<strong>" + (c.siteRules || 0) + " rules</strong> applied on " + c.domain;
+  body.appendChild(info);
 }
 
 function _fillTrackersBody(body, resp) {
@@ -532,7 +569,11 @@ function _fillTrackersBody(body, resp) {
       if (cname) found.push({ host: hosts[j], tracker: cname });
     }
   }
-  if (found.length === 0) { body.textContent = "No CNAME-cloaked trackers detected"; return; }
+  if (found.length === 0) {
+    var empty = document.createElement("div"); empty.className = "pc-tcf-info";
+    empty.textContent = "No CNAME-cloaked trackers detected"; body.appendChild(empty); return;
+  }
+  var info = document.createElement("div"); info.className = "pc-tcf-info";
   for (var k = 0; k < Math.min(found.length, 10); k++) {
     var row = document.createElement("div"); row.className = "proto-purpose-domain";
     var name = document.createElement("span"); name.className = "proto-purpose-domain-name";
@@ -543,8 +584,9 @@ function _fillTrackersBody(body, resp) {
     cnameIcon.setAttribute("aria-label", "CNAME cloaked: " + found[k].tracker);
     name.appendChild(cnameIcon);
     name.appendChild(document.createTextNode(" " + found[k].host + " \u2192 " + found[k].tracker));
-    row.appendChild(name); body.appendChild(row);
+    row.appendChild(name); info.appendChild(row);
   }
+  body.appendChild(info);
   if (found.length > 10) {
     var more = document.createElement("button"); more.type = "button"; more.className = "pc-bar-link proto-card-more";
     more.textContent = "+" + (found.length - 10) + " more \u2192 Log";
@@ -557,13 +599,16 @@ function _fillCleanLinksBody(body, resp) {
   var strips = resp.paramStrips || {};
   var domains = Object.keys(strips);
   if (domains.length === 0) {
+    var empty = document.createElement("div"); empty.className = "pc-tcf-info";
     if (typeof lastParamStrips === "number" && lastParamStrips > 0) {
-      body.textContent = lastParamStrips + " tracking parameter" + (lastParamStrips > 1 ? "s" : "") + " stripped";
+      empty.textContent = lastParamStrips + " tracking parameter" + (lastParamStrips > 1 ? "s" : "") + " stripped";
     } else {
-      body.textContent = "No parameters stripped";
+      empty.textContent = "No parameters stripped";
     }
+    body.appendChild(empty);
     return;
   }
+  var infoBlock = document.createElement("div"); infoBlock.className = "pc-tcf-info";
   for (var i = 0; i < Math.min(domains.length, 10); i++) {
     var info = strips[domains[i]];
     var params = (typeof info === "object" && info.params) ? info.params : [];
@@ -574,7 +619,7 @@ function _fillCleanLinksBody(body, resp) {
         name.textContent = domains[i];
         var paramSpan = document.createElement("span"); paramSpan.className = "proto-purpose-domain-count";
         paramSpan.textContent = params[k];
-        row.appendChild(name); row.appendChild(paramSpan); body.appendChild(row);
+        row.appendChild(name); row.appendChild(paramSpan); infoBlock.appendChild(row);
       }
     } else {
       var row = document.createElement("div"); row.className = "proto-purpose-domain";
@@ -582,9 +627,10 @@ function _fillCleanLinksBody(body, resp) {
       name.textContent = domains[i];
       var count = document.createElement("span"); count.className = "proto-purpose-domain-count";
       count.textContent = typeof info === "object" ? info.count : info;
-      row.appendChild(name); row.appendChild(count); body.appendChild(row);
+      row.appendChild(name); row.appendChild(count); infoBlock.appendChild(row);
     }
   }
+  body.appendChild(infoBlock);
   if (domains.length > 10) {
     var more = document.createElement("button"); more.type = "button"; more.className = "pc-bar-link proto-card-more";
     more.textContent = "+" + (domains.length - 10) + " more \u2192 Log";
