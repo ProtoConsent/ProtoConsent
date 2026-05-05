@@ -19734,7 +19734,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xing.com/xas/",
+      "urlFilter": "||xcity.org/wp-content/themes/NewsPulse/images/banner300.jpg",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19752,7 +19752,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xinhuanet.com/s?",
+      "urlFilter": "||xcitypass.com/wp-content/themes/NewsPulse/images/banner728.jpg",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19770,7 +19770,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yahoo.com/m/gemini_api/",
+      "urlFilter": "||xing.com/xas/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19788,7 +19788,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yahoo.com/pdarla/",
+      "urlFilter": "||xinhuanet.com/s?",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19806,7 +19806,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yahoo.com/sdarla/",
+      "urlFilter": "||yahoo.com/m/gemini_api/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19824,7 +19824,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yandex.com/ads/system/context.js",
+      "urlFilter": "||yahoo.com/pdarla/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19842,7 +19842,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yimg.com/aaq/benji/benji-",
+      "urlFilter": "||yahoo.com/sdarla/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19860,7 +19860,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ynet.co.il/gpt/",
+      "urlFilter": "||yandex.com/ads/system/context.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19878,7 +19878,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||youswear.com/ads/",
+      "urlFilter": "||yimg.com/aaq/benji/benji-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19896,7 +19896,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||youtube.com/pagead/",
+      "urlFilter": "||ynet.co.il/gpt/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19914,7 +19914,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||youtube.com/youtubei/v1/player/ad_break",
+      "urlFilter": "||youswear.com/ads/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19932,7 +19932,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||zillastream.com/api/spots/",
+      "urlFilter": "||youtube.com/pagead/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19950,7 +19950,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||zmescience.com/o5aTe4Zbho8.js",
+      "urlFilter": "||youtube.com/youtubei/v1/player/ad_break",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19968,7 +19968,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||zmovies.cc/e3cf74305b.php",
+      "urlFilter": "||zillastream.com/api/spots/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -19986,7 +19986,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||breitbart.com/t/assets/js/prebid",
+      "urlFilter": "||zmescience.com/o5aTe4Zbho8.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20004,7 +20004,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||jwplatform.com/libraries/tdeymorh.js",
+      "urlFilter": "||zmovies.cc/e3cf74305b.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20022,7 +20022,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||purexbox.com/javascript/gn/prebid-",
+      "urlFilter": "||breitbart.com/t/assets/js/prebid",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20040,7 +20040,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||blockchain.info/explorer-gateway/advertisements",
+      "urlFilter": "||jwplatform.com/libraries/tdeymorh.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20058,7 +20058,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||caffeine.tv/embed.js",
+      "urlFilter": "||purexbox.com/javascript/gn/prebid-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20076,7 +20076,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cdn.thejournal.ie/media/hpto/",
+      "urlFilter": "||blockchain.info/explorer-gateway/advertisements",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20094,7 +20094,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||delivery.vidible.tv/jsonp/",
+      "urlFilter": "||caffeine.tv/embed.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20112,7 +20112,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||floridasportsman.com/video_iframev9.aspx",
+      "urlFilter": "||cdn.thejournal.ie/media/hpto/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20130,7 +20130,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fwcdn1.com/js/fwn.js",
+      "urlFilter": "||delivery.vidible.tv/jsonp/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20148,7 +20148,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fwcdn1.com/js/storyblock.js",
+      "urlFilter": "||floridasportsman.com/video_iframev9.aspx",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20166,7 +20166,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||g.ibtimes.sg/sys/js/minified-video.js",
+      "urlFilter": "||fwcdn1.com/js/fwn.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20184,7 +20184,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||interestingengineering.com/partial/connatix_desktop.html",
+      "urlFilter": "||fwcdn1.com/js/storyblock.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20202,7 +20202,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||playbuzz.com/embed/",
+      "urlFilter": "||g.ibtimes.sg/sys/js/minified-video.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20220,7 +20220,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||playbuzz.com/player/",
+      "urlFilter": "||interestingengineering.com/partial/connatix_desktop.html",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20238,7 +20238,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||playwire.com/bolt/js/",
+      "urlFilter": "||playbuzz.com/embed/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20256,7 +20256,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sportrecs.com/redirect/embed/",
+      "urlFilter": "||playbuzz.com/player/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20274,7 +20274,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ultimedia.com/js/common/smart.js",
+      "urlFilter": "||playwire.com/bolt/js/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20292,7 +20292,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||usatoday.com/gcdn/ads/",
+      "urlFilter": "||sportrecs.com/redirect/embed/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20310,7 +20310,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||wowroms.com/images/iptvsmarters.app.jpg",
+      "urlFilter": "||ultimedia.com/js/common/smart.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20328,7 +20328,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||www-idm.com/wp-content/uploads/2022/02/bitcoin.png",
+      "urlFilter": "||usatoday.com/gcdn/ads/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20346,7 +20346,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||youtube.com/get_video_info?*adunit",
+      "urlFilter": "||wowroms.com/images/iptvsmarters.app.jpg",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20364,7 +20364,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||raw.githubusercontent.com/easylist/easylist/master/docs/1x1.gif",
+      "urlFilter": "||www-idm.com/wp-content/uploads/2022/02/bitcoin.png",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20382,7 +20382,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||raw.githubusercontent.com/easylist/easylist/master/docs/2x2.png",
+      "urlFilter": "||youtube.com/get_video_info?*adunit",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20400,7 +20400,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||1069jp.com/js/script_",
+      "urlFilter": "||raw.githubusercontent.com/easylist/easylist/master/docs/1x1.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20418,7 +20418,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||18porn.sex/ptr18.js",
+      "urlFilter": "||raw.githubusercontent.com/easylist/easylist/master/docs/2x2.png",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20436,7 +20436,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||18pussy.porn/ab/",
+      "urlFilter": "||1069jp.com/js/script_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20454,7 +20454,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||18teensex.tv/player/html.php",
+      "urlFilter": "||18porn.sex/ptr18.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20472,7 +20472,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||1av.to/assets/ad/",
+      "urlFilter": "||18pussy.porn/ab/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20490,7 +20490,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||2watchmygf.com/spot/",
+      "urlFilter": "||18teensex.tv/player/html.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20508,7 +20508,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||3movs.com/2ff/",
+      "urlFilter": "||1av.to/assets/ad/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20526,7 +20526,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||3movs.xxx/2ff/",
+      "urlFilter": "||2watchmygf.com/spot/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20544,7 +20544,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||3prn.com/even/ok.js",
+      "urlFilter": "||3movs.com/2ff/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20562,7 +20562,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||429men.com/zdoink/",
+      "urlFilter": "||3movs.xxx/2ff/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20580,7 +20580,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||4tube.com/assets/abpe-",
+      "urlFilter": "||3prn.com/even/ok.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20598,7 +20598,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||4tube.com/assets/adf-",
+      "urlFilter": "||429men.com/zdoink/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20616,7 +20616,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||4tube.com/assets/adn-",
+      "urlFilter": "||4tube.com/assets/abpe-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20634,7 +20634,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||4tube.com/assets/padb-",
+      "urlFilter": "||4tube.com/assets/adf-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20652,7 +20652,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||4tube.com/nyordo.js",
+      "urlFilter": "||4tube.com/assets/adn-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20670,7 +20670,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||4wank.com/bump/",
+      "urlFilter": "||4tube.com/assets/padb-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20688,7 +20688,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||4wank.net/bump/",
+      "urlFilter": "||4tube.com/nyordo.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20706,7 +20706,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||777av.cc/og/",
+      "urlFilter": "||4wank.com/bump/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20724,7 +20724,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||8boobs.com/flr.js",
+      "urlFilter": "||4wank.net/bump/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20742,7 +20742,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||8muses.com/banner/",
+      "urlFilter": "||777av.cc/og/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20760,7 +20760,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||absoluporn.com/code/script/",
+      "urlFilter": "||8boobs.com/flr.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20778,7 +20778,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ad69.com/analytics/",
+      "urlFilter": "||8muses.com/banner/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20796,7 +20796,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adult-sex-games.com/images/adult-games/",
+      "urlFilter": "||absoluporn.com/code/script/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20814,7 +20814,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adult-sex-games.com/images/promo/",
+      "urlFilter": "||ad69.com/analytics/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20832,7 +20832,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adultasianporn.com/puty3s/",
+      "urlFilter": "||adult-sex-games.com/images/adult-games/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20850,7 +20850,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adultfilmdatabase.com/graphics/porndude.png",
+      "urlFilter": "||adult-sex-games.com/images/promo/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20868,7 +20868,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||agedbitch.com/gds/",
+      "urlFilter": "||adultasianporn.com/puty3s/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20886,7 +20886,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||akiba-online.com/data/siropu/",
+      "urlFilter": "||adultfilmdatabase.com/graphics/porndude.png",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20904,7 +20904,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||alrincon.com/nbk/",
+      "urlFilter": "||agedbitch.com/gds/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20922,7 +20922,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||amateur.tv/misc/mYcLBNp7fx.js",
+      "urlFilter": "||akiba-online.com/data/siropu/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20940,7 +20940,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||amateur8.com/frd5/",
+      "urlFilter": "||alrincon.com/nbk/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20958,7 +20958,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||analsexstars.com/og/",
+      "urlFilter": "||amateur.tv/misc/mYcLBNp7fx.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20976,7 +20976,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||anybunny.tv/js/main.ex.js",
+      "urlFilter": "||amateur8.com/frd5/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -20994,7 +20994,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||anyporn.com/aa/",
+      "urlFilter": "||analsexstars.com/og/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21012,7 +21012,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||anysex.com/*/js|",
+      "urlFilter": "||anybunny.tv/js/main.ex.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21030,7 +21030,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||anysex.com/*/script|",
+      "urlFilter": "||anyporn.com/aa/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21048,7 +21048,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||apbood.boodstream.com/v*/ad/",
+      "urlFilter": "||anysex.com/*/js|",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21066,7 +21066,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||api.adultdeepfakes.cam/banners",
+      "urlFilter": "||anysex.com/*/script|",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21084,7 +21084,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||api.redgifs.com/v2/gifs/promoted",
+      "urlFilter": "||apbood.boodstream.com/v*/ad/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21102,7 +21102,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||asiandolls.co.uk/images/banners/",
+      "urlFilter": "||api.adultdeepfakes.cam/banners",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21120,7 +21120,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||atube.xxx/static/js/abb.js",
+      "urlFilter": "||api.redgifs.com/v2/gifs/promoted",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21138,7 +21138,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||avn.com/server/",
+      "urlFilter": "||asiandolls.co.uk/images/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21156,7 +21156,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||babepedia.com/iStripper/",
+      "urlFilter": "||atube.xxx/static/js/abb.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21174,7 +21174,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||babepedia.com/iStripper2023/",
+      "urlFilter": "||avn.com/server/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21192,7 +21192,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||babepedia.com/iStripper2024/",
+      "urlFilter": "||babepedia.com/iStripper/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21210,7 +21210,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||babesandstars.com/img/banners/",
+      "urlFilter": "||babepedia.com/iStripper2023/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21228,7 +21228,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||babesmachine.com/images/babesmachine.com/friendimages/",
+      "urlFilter": "||babepedia.com/iStripper2024/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21246,7 +21246,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||badjojo.com/d5",
+      "urlFilter": "||babesandstars.com/img/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21264,7 +21264,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||between-legs.com/banners2/",
+      "urlFilter": "||babesmachine.com/images/babesmachine.com/friendimages/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21282,7 +21282,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bigdick.tube/tpnxa/",
+      "urlFilter": "||badjojo.com/d5",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21300,7 +21300,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bigtitsgallery.net/qbztdpxulhkoicd.php",
+      "urlFilter": "||between-legs.com/banners2/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21318,7 +21318,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bigtitslust.com/lap70/s/s/suo.php",
+      "urlFilter": "||bigdick.tube/tpnxa/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21336,7 +21336,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bionestraff.pro/300x250.php",
+      "urlFilter": "||bigtitsgallery.net/qbztdpxulhkoicd.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21354,7 +21354,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bodsforthemods.com/srennab/",
+      "urlFilter": "||bigtitslust.com/lap70/s/s/suo.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21372,7 +21372,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bootyheroes.com//static/assets/img/banners/",
+      "urlFilter": "||bionestraff.pro/300x250.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21390,7 +21390,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||boyfriend.show/widgets/Spot",
+      "urlFilter": "||bodsforthemods.com/srennab/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21408,7 +21408,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||boyfriendtv.com/ads/",
+      "urlFilter": "||bootyheroes.com//static/assets/img/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21426,7 +21426,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||boyfriendtv.com/bftv/b/",
+      "urlFilter": "||boyfriend.show/widgets/Spot",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21444,7 +21444,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||boyfriendtv.com/bftv/paysite/",
+      "urlFilter": "||boyfriendtv.com/ads/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21462,7 +21462,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||boyfriendtv.com/bftv/www/js/*.min.js?url=",
+      "urlFilter": "||boyfriendtv.com/bftv/b/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21480,7 +21480,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||boysfood.com/d5.html",
+      "urlFilter": "||boyfriendtv.com/bftv/paysite/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21498,7 +21498,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bravoteens.com/ta/",
+      "urlFilter": "||boyfriendtv.com/bftv/www/js/*.min.js?url=",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21516,7 +21516,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bravotube.net/cc/",
+      "urlFilter": "||boysfood.com/d5.html",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21534,7 +21534,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bravotube.net/js/clickback.js",
+      "urlFilter": "||bravoteens.com/ta/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21552,7 +21552,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bunnylust.com/sponsors/",
+      "urlFilter": "||bravotube.net/cc/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21570,7 +21570,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||buondua.com/templatesygfo76jp36enw15_/",
+      "urlFilter": "||bravotube.net/js/clickback.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21588,7 +21588,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cambay.tv/contents/other/player/",
+      "urlFilter": "||bunnylust.com/sponsors/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21606,7 +21606,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||camcaps.ac/33a9020b46.php",
+      "urlFilter": "||buondua.com/templatesygfo76jp36enw15_/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21624,7 +21624,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||camcaps.io/024569284e.php",
+      "urlFilter": "||cambay.tv/contents/other/player/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21642,7 +21642,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||camcaps.to/400514f2db.php",
+      "urlFilter": "||camcaps.ac/33a9020b46.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21660,7 +21660,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||camhub.cc/static/js/bgscript.js",
+      "urlFilter": "||camcaps.io/024569284e.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21678,7 +21678,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cams.imagetwist.com/in/?track=",
+      "urlFilter": "||camcaps.to/400514f2db.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21696,7 +21696,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||camvideos.tv/tpd.png",
+      "urlFilter": "||camhub.cc/static/js/bgscript.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21714,7 +21714,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cdn.sinparty.com/site/banner.html",
+      "urlFilter": "||cams.imagetwist.com/in/?track=",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21732,7 +21732,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cdn3x.com/xxxdan/js/xxxdan.vast.",
+      "urlFilter": "||camvideos.tv/tpd.png",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21750,7 +21750,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||celeb.gate.cc/assets/bilder/bann",
+      "urlFilter": "||cdn.sinparty.com/site/banner.html",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21768,7 +21768,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cheerpantyhose.com/cds/",
+      "urlFilter": "||cdn3x.com/xxxdan/js/xxxdan.vast.",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21786,7 +21786,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cherrynudes.com/t33638ba5008.js",
+      "urlFilter": "||celeb.gate.cc/assets/bilder/bann",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21804,7 +21804,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||chikiporn.com/sqkqzwrecy/",
+      "urlFilter": "||cheerpantyhose.com/cds/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21822,7 +21822,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||clicknplay.to/q3gSxw5.js",
+      "urlFilter": "||cherrynudes.com/t33638ba5008.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21840,7 +21840,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cloud.hentai-moon.com/contents/hdd337st/",
+      "urlFilter": "||chikiporn.com/sqkqzwrecy/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21858,7 +21858,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cover.ydgal.com/axfile/",
+      "urlFilter": "||clicknplay.to/q3gSxw5.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21876,7 +21876,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||crossdresserhub.com/*.php",
+      "urlFilter": "||cloud.hentai-moon.com/contents/hdd337st/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21894,7 +21894,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cumlouder.com/nnubb.js",
+      "urlFilter": "||cover.ydgal.com/axfile/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21912,7 +21912,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cuntlick.net/banner/",
+      "urlFilter": "||crossdresserhub.com/*.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21930,7 +21930,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||cutegurlz.com/promos-royal-slider/aff/",
+      "urlFilter": "||cumlouder.com/nnubb.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21948,7 +21948,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dads-banging-teens.com/polished-",
+      "urlFilter": "||cuntlick.net/banner/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21966,7 +21966,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||daftporn.com/nb_",
+      "urlFilter": "||cutegurlz.com/promos-royal-slider/aff/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -21984,7 +21984,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dailyporn.club/at/code.php",
+      "urlFilter": "||dads-banging-teens.com/polished-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22002,7 +22002,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dailyporn.club/nba/",
+      "urlFilter": "||daftporn.com/nb_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22020,7 +22020,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||darknessporn.com/prrls/",
+      "urlFilter": "||dailyporn.club/at/code.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22038,7 +22038,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dcraddock.uk/frame/",
+      "urlFilter": "||dailyporn.club/nba/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22056,7 +22056,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dcraddock.uk/images/b/",
+      "urlFilter": "||darknessporn.com/prrls/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22074,7 +22074,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||deepxtube.com/zips/",
+      "urlFilter": "||dcraddock.uk/frame/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22092,7 +22092,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||definebabe.com/sponsor_",
+      "urlFilter": "||dcraddock.uk/images/b/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22110,7 +22110,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||depvailon.com/sponsored.html",
+      "urlFilter": "||deepxtube.com/zips/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22128,7 +22128,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dirtyvideo.fun/js/script_",
+      "urlFilter": "||definebabe.com/sponsor_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22146,7 +22146,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dixyporn.com/include/",
+      "urlFilter": "||depvailon.com/sponsored.html",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22164,7 +22164,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dofap.com/banners/",
+      "urlFilter": "||dirtyvideo.fun/js/script_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22182,7 +22182,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||doseofporn.com/img/jerk.gif",
+      "urlFilter": "||dixyporn.com/include/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22200,7 +22200,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||doseofporn.com/t63fd79f7055.js",
+      "urlFilter": "||dofap.com/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22218,7 +22218,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dpfantasy.org/k2s.gif",
+      "urlFilter": "||doseofporn.com/img/jerk.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22236,7 +22236,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dporn.com/edraovnjqohv/",
+      "urlFilter": "||doseofporn.com/t63fd79f7055.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22254,7 +22254,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dporn.com/tpnxa/",
+      "urlFilter": "||dpfantasy.org/k2s.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22272,7 +22272,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dragonthumbs.com/adcode.js",
+      "urlFilter": "||dporn.com/edraovnjqohv/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22290,7 +22290,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||drivevideo.xyz/advert/",
+      "urlFilter": "||dporn.com/tpnxa/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22308,7 +22308,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||drtuber.com/footer_",
+      "urlFilter": "||dragonthumbs.com/adcode.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22326,7 +22326,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ea-tube.com/i2/",
+      "urlFilter": "||drivevideo.xyz/advert/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22344,7 +22344,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||easypic.com/js/easypicads.js",
+      "urlFilter": "||drtuber.com/footer_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22362,7 +22362,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||easyporn.xxx/tmp/",
+      "urlFilter": "||ea-tube.com/i2/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22380,7 +22380,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||empflix.com/mew.php",
+      "urlFilter": "||easypic.com/js/easypicads.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22398,7 +22398,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||enporn.org/system/theme/AnyPorn/js/popcode.min.js",
+      "urlFilter": "||easyporn.xxx/tmp/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22416,7 +22416,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||entensity.net/crap/",
+      "urlFilter": "||empflix.com/mew.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22434,7 +22434,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||enter.javhd.com/track/",
+      "urlFilter": "||enporn.org/system/theme/AnyPorn/js/popcode.min.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22452,7 +22452,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||epicgfs.com/pocoloco_epic.js",
+      "urlFilter": "||entensity.net/crap/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22470,7 +22470,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||eporner.com/dot/",
+      "urlFilter": "||enter.javhd.com/track/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22488,7 +22488,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||eporner.com/event.php",
+      "urlFilter": "||epicgfs.com/pocoloco_epic.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22506,7 +22506,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||eporner.com/xhr/vast/",
+      "urlFilter": "||eporner.com/dot/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22524,7 +22524,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||erowall.com/126.js",
+      "urlFilter": "||eporner.com/event.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22542,7 +22542,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||erowall.com/tf558550ef6e.js",
+      "urlFilter": "||eporner.com/xhr/vast/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22560,7 +22560,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||escortdirectory.com//images/",
+      "urlFilter": "||erowall.com/126.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22578,7 +22578,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||exgirl.net/wp-content/themes/retrotube/assets/img/banners/",
+      "urlFilter": "||erowall.com/tf558550ef6e.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22596,7 +22596,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||extremescatporn.com/static/images/banners/",
+      "urlFilter": "||escortdirectory.com//images/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22614,7 +22614,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fakings.com/tools/get_banner.php",
+      "urlFilter": "||exgirl.net/wp-content/themes/retrotube/assets/img/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22632,7 +22632,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||familyporner.com/prerolls/",
+      "urlFilter": "||extremescatporn.com/static/images/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22650,7 +22650,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fapclub.sex/js/hr.js",
+      "urlFilter": "||fakings.com/tools/get_banner.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22668,7 +22668,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fapnado.com/api/",
+      "urlFilter": "||familyporner.com/prerolls/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22686,7 +22686,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fapnado.com/bump",
+      "urlFilter": "||fapclub.sex/js/hr.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22704,7 +22704,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fappenist.com/fojytyzzkm.php",
+      "urlFilter": "||fapnado.com/api/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22722,7 +22722,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||faptor.com/api/",
+      "urlFilter": "||fapnado.com/bump",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22740,7 +22740,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||faptor.com/bump/",
+      "urlFilter": "||fappenist.com/fojytyzzkm.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22758,7 +22758,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fastfuckgames.com/aff.htm",
+      "urlFilter": "||faptor.com/api/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22776,7 +22776,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fennyboy.com/js/dabt.js",
+      "urlFilter": "||faptor.com/bump/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22794,7 +22794,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fennyboy.com/negco-",
+      "urlFilter": "||fastfuckgames.com/aff.htm",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22812,7 +22812,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||fetishshrine.com/js/customscript.js",
+      "urlFilter": "||fennyboy.com/js/dabt.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22830,7 +22830,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||footztube.com/b_",
+      "urlFilter": "||fennyboy.com/negco-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22848,7 +22848,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||footztube.com/f_",
+      "urlFilter": "||fetishshrine.com/js/customscript.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22866,7 +22866,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||for-iwara-tools.tyamahori.com/ninjaFillter/",
+      "urlFilter": "||footztube.com/b_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22884,7 +22884,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||freelivesex.tv/imgs/ad/",
+      "urlFilter": "||footztube.com/f_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22902,7 +22902,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||freeones.com/build/freeones/adWidget.",
+      "urlFilter": "||for-iwara-tools.tyamahori.com/ninjaFillter/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22920,7 +22920,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||freeones.com/static-assets/istripper/",
+      "urlFilter": "||freelivesex.tv/imgs/ad/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22938,7 +22938,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||freepornxxx.mobi/popcode.min.js",
+      "urlFilter": "||freeones.com/build/freeones/adWidget.",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22956,7 +22956,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||freepublicporn.com/prerolls/",
+      "urlFilter": "||freeones.com/static-assets/istripper/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22974,7 +22974,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||freeteen.sex/ab/",
+      "urlFilter": "||freepornxxx.mobi/popcode.min.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -22992,7 +22992,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||freeuseporn.com/bnrmanage/",
+      "urlFilter": "||freepublicporn.com/prerolls/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23010,7 +23010,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||frprn.com/even/ok.js",
+      "urlFilter": "||freeteen.sex/ab/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23028,7 +23028,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ftopx.com/*/topaddsk3.html",
+      "urlFilter": "||freeuseporn.com/bnrmanage/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23046,7 +23046,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ftopx.com/345.js",
+      "urlFilter": "||frprn.com/even/ok.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23064,7 +23064,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ftopx.com/345.php",
+      "urlFilter": "||ftopx.com/*/topaddsk3.html",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23082,7 +23082,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ftopx.com/isttf558550ef6e.js",
+      "urlFilter": "||ftopx.com/345.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23100,7 +23100,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ftopx.com/tf558550ef6e.js",
+      "urlFilter": "||ftopx.com/345.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23118,7 +23118,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||galleries-pornstar.com/thumb_top/",
+      "urlFilter": "||ftopx.com/isttf558550ef6e.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23136,7 +23136,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gamcore.com/ajax/abc?",
+      "urlFilter": "||ftopx.com/tf558550ef6e.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23154,7 +23154,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gamcore.com/js/ipp.js",
+      "urlFilter": "||galleries-pornstar.com/thumb_top/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23172,7 +23172,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gamcore.com/z0mb24.js",
+      "urlFilter": "||gamcore.com/ajax/abc?",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23190,7 +23190,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gay.bingo/agent.php",
+      "urlFilter": "||gamcore.com/js/ipp.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23208,7 +23208,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gay4porn.com/ai/",
+      "urlFilter": "||gamcore.com/z0mb24.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23226,7 +23226,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gaygo.tv/gtv/frms/",
+      "urlFilter": "||gay.bingo/agent.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23244,7 +23244,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gayporntube.com/spots.php?",
+      "urlFilter": "||gay4porn.com/ai/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23262,7 +23262,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gays-cruising.com/nb/",
+      "urlFilter": "||gaygo.tv/gtv/frms/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23280,7 +23280,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gaystream.pw/juicy.js",
+      "urlFilter": "||gayporntube.com/spots.php?",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23298,7 +23298,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gaystream.pw/pemsrv.js",
+      "urlFilter": "||gays-cruising.com/nb/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23316,7 +23316,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gaystream.pw/pushtop.js",
+      "urlFilter": "||gaystream.pw/juicy.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23334,7 +23334,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gelbooru.com/extras/",
+      "urlFilter": "||gaystream.pw/pemsrv.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23352,7 +23352,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||giftornado.com/d2.js",
+      "urlFilter": "||gaystream.pw/pushtop.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23370,7 +23370,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||giftornado.com/js/cam.js",
+      "urlFilter": "||gelbooru.com/extras/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23388,7 +23388,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||girlsofdesire.org/blr8",
+      "urlFilter": "||giftornado.com/d2.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23406,7 +23406,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||haes.tech/js/script_",
+      "urlFilter": "||giftornado.com/js/cam.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23424,7 +23424,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hanime.xxx/wp-content/cache/wpfc-minified/fggil735/fa9yi.js",
+      "urlFilter": "||girlsofdesire.org/blr8",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23442,7 +23442,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hdporn24.org/vcrtlrvw/",
+      "urlFilter": "||haes.tech/js/script_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23460,7 +23460,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hdpornfree.xxx/rek/",
+      "urlFilter": "||hanime.xxx/wp-content/cache/wpfc-minified/fggil735/fa9yi.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23478,7 +23478,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hdpornmax.com/tmp/",
+      "urlFilter": "||hdporn24.org/vcrtlrvw/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23496,7 +23496,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hdtube.porn/fork/",
+      "urlFilter": "||hdpornfree.xxx/rek/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23514,7 +23514,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hdtube.porn/rods/",
+      "urlFilter": "||hdpornmax.com/tmp/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23532,7 +23532,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hellporno.com/_a_xb/",
+      "urlFilter": "||hdtube.porn/fork/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23550,7 +23550,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentai2w.com/ark2023/",
+      "urlFilter": "||hdtube.porn/rods/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23568,7 +23568,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaianimezone.com/kbgl/",
+      "urlFilter": "||hellporno.com/_a_xb/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23586,7 +23586,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaiasmr.moe/b4b8.js",
+      "urlFilter": "||hentai2w.com/ark2023/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23604,7 +23604,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaibooty.com/uploads/banners/",
+      "urlFilter": "||hentaianimezone.com/kbgl/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23622,7 +23622,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaicdn.com/cdn/v2.assets/js/exc",
+      "urlFilter": "||hentaiasmr.moe/b4b8.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23640,7 +23640,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaidude.xxx/wp-content/plugins/script-manager/",
+      "urlFilter": "||hentaibooty.com/uploads/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23658,7 +23658,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaifox.com/js/ajs.js",
+      "urlFilter": "||hentaicdn.com/cdn/v2.assets/js/exc",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23676,7 +23676,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaifox.com/js/slider.js",
+      "urlFilter": "||hentaidude.xxx/wp-content/plugins/script-manager/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23694,7 +23694,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaihere.com/arkNVB/",
+      "urlFilter": "||hentaifox.com/js/ajs.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23712,7 +23712,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaini.com/img/ads/",
+      "urlFilter": "||hentaifox.com/js/slider.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23730,7 +23730,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentairider.com/banners/",
+      "urlFilter": "||hentaihere.com/arkNVB/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23748,7 +23748,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hentaiworld.tv/banners-script.js",
+      "urlFilter": "||hentaini.com/img/ads/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23766,7 +23766,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||herexxxtube.com/tmp/",
+      "urlFilter": "||hentairider.com/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23784,7 +23784,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hitomi.la/ebJqXsy/",
+      "urlFilter": "||hentaiworld.tv/banners-script.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23802,7 +23802,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hitprn.com/c_",
+      "urlFilter": "||herexxxtube.com/tmp/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23820,7 +23820,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hitslut.b-cdn.net/*.gif",
+      "urlFilter": "||hitomi.la/ebJqXsy/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23838,7 +23838,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hoes.tube/ai/",
+      "urlFilter": "||hitprn.com/c_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23856,7 +23856,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||home-xxx-videos.com/snowy-",
+      "urlFilter": "||hitslut.b-cdn.net/*.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23874,7 +23874,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||homemade.xxx/player/html.php?aid=",
+      "urlFilter": "||hoes.tube/ai/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23892,7 +23892,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||homeprivatevids.com/js/580eka426.js",
+      "urlFilter": "||home-xxx-videos.com/snowy-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23910,7 +23910,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hornygamer.com/includes/gamefile/sw3d_hornygamer.gif",
+      "urlFilter": "||homemade.xxx/player/html.php?aid=",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23928,7 +23928,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hornygamer.com/play_horny_games/",
+      "urlFilter": "||homeprivatevids.com/js/580eka426.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23946,7 +23946,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hornyjourney.com/fr.js",
+      "urlFilter": "||hornygamer.com/includes/gamefile/sw3d_hornygamer.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23964,7 +23964,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hot-sex-tube.com/sp.js",
+      "urlFilter": "||hornygamer.com/play_horny_games/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -23982,7 +23982,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hotgirlclub.com/assets/vendors/",
+      "urlFilter": "||hornyjourney.com/fr.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24000,7 +24000,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hotmovs.com/fzzgbzhfm/",
+      "urlFilter": "||hot-sex-tube.com/sp.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24018,7 +24018,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hotmovs.com/suhum/",
+      "urlFilter": "||hotgirlclub.com/assets/vendors/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24036,7 +24036,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hottystop.com/f9de7147b187.js",
+      "urlFilter": "||hotmovs.com/fzzgbzhfm/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24054,7 +24054,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hottystop.com/t33638ba5008.js",
+      "urlFilter": "||hotmovs.com/suhum/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24072,7 +24072,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hqbang.com/api/",
+      "urlFilter": "||hottystop.com/f9de7147b187.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24090,7 +24090,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hqporn.su/myvids/",
+      "urlFilter": "||hottystop.com/t33638ba5008.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24108,7 +24108,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hqpornstream.com/pub/",
+      "urlFilter": "||hqbang.com/api/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24126,7 +24126,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hypnohub.net/assets/hub.js",
+      "urlFilter": "||hqporn.su/myvids/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24144,7 +24144,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||iceporn.com/player_right_ntv_",
+      "urlFilter": "||hqpornstream.com/pub/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24162,7 +24162,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imagepost.com/stuff/",
+      "urlFilter": "||hypnohub.net/assets/hub.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24180,7 +24180,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imagetwist.com/img/1001505_banner.png",
+      "urlFilter": "||iceporn.com/player_right_ntv_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24198,7 +24198,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imageweb.ws/whaledate.gif",
+      "urlFilter": "||imagepost.com/stuff/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24216,7 +24216,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imgbox.com/images/tpd.png",
+      "urlFilter": "||imagetwist.com/img/1001505_banner.png",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24234,7 +24234,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imgderviches.work/exclusive/bayou_",
+      "urlFilter": "||imageweb.ws/whaledate.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24252,7 +24252,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imgdrive.net/xb02673583fb.js",
+      "urlFilter": "||imgbox.com/images/tpd.png",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24270,7 +24270,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imgtaxi.com/frame.php",
+      "urlFilter": "||imgderviches.work/exclusive/bayou_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24288,7 +24288,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imhentai.xxx/js/slider.js",
+      "urlFilter": "||imgdrive.net/xb02673583fb.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24306,7 +24306,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imhentai.xxx/js/slider_",
+      "urlFilter": "||imgtaxi.com/frame.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24324,7 +24324,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||inporn.com/8kl7mzfgy6",
+      "urlFilter": "||imhentai.xxx/js/slider.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24342,7 +24342,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||internationalsexguide.nl/banners/",
+      "urlFilter": "||imhentai.xxx/js/slider_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24360,7 +24360,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||internationalsexguide.nl/forum/clientscript/PopUnderISG.js",
+      "urlFilter": "||inporn.com/8kl7mzfgy6",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24378,7 +24378,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||interracial-girls.com/chaturbate/",
+      "urlFilter": "||internationalsexguide.nl/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24396,7 +24396,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||interracial-girls.com/i/",
+      "urlFilter": "||internationalsexguide.nl/forum/clientscript/PopUnderISG.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24414,7 +24414,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||intporn.com/js/siropu/",
+      "urlFilter": "||interracial-girls.com/chaturbate/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24432,7 +24432,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||intporn.com/lj.js",
+      "urlFilter": "||interracial-girls.com/i/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24450,7 +24450,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||inxxx.com/api/get-spot/",
+      "urlFilter": "||intporn.com/js/siropu/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24468,7 +24468,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||jav-bukkake.net/images/download-bukkake.jpg",
+      "urlFilter": "||intporn.com/lj.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24486,7 +24486,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||jav.sb/videojs/300.php",
+      "urlFilter": "||inxxx.com/api/get-spot/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24504,7 +24504,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javenglish.net/tcads.js",
+      "urlFilter": "||jav-bukkake.net/images/download-bukkake.jpg",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24522,7 +24522,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javfor.tv/av/js/aapp.js",
+      "urlFilter": "||jav.sb/videojs/300.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24540,7 +24540,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javgg.me/wp-content/plugins/1shortlink/js/shorten.js",
+      "urlFilter": "||javenglish.net/tcads.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24558,7 +24558,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javhub.net/av/js/aapp.js",
+      "urlFilter": "||javfor.tv/av/js/aapp.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24576,7 +24576,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javhub.net/av/js/cpp.js",
+      "urlFilter": "||javgg.me/wp-content/plugins/1shortlink/js/shorten.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24594,7 +24594,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javhub.net/ps/UJXTsc.js",
+      "urlFilter": "||javhub.net/av/js/aapp.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24612,7 +24612,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javideo.net/js/popup",
+      "urlFilter": "||javhub.net/av/js/cpp.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24630,7 +24630,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javlibrary.com/js/bnr_",
+      "urlFilter": "||javhub.net/ps/UJXTsc.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24648,7 +24648,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javmost.com/src/jpm.js",
+      "urlFilter": "||javideo.net/js/popup",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24666,7 +24666,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javpornclub.com/images/banners/takefile72890.gif",
+      "urlFilter": "||javlibrary.com/js/bnr_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24684,7 +24684,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javslon.com/clacunder.js",
+      "urlFilter": "||javmost.com/src/jpm.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24702,7 +24702,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||javynow.com/images/caribian.jpg",
+      "urlFilter": "||javpornclub.com/images/banners/takefile72890.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24720,7 +24720,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||jennylist.xyz/t63fd79f7055.js",
+      "urlFilter": "||javslon.com/clacunder.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24738,7 +24738,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||jizzberry.com/65",
+      "urlFilter": "||javynow.com/images/caribian.jpg",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24756,7 +24756,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||justfullporn.net/a554739c4f.php",
+      "urlFilter": "||jennylist.xyz/t63fd79f7055.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24774,7 +24774,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||justthegays.com/agent.php",
+      "urlFilter": "||jizzberry.com/65",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24792,7 +24792,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||justthegays.com/api/spots/",
+      "urlFilter": "||justfullporn.net/a554739c4f.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24810,7 +24810,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||justthegays.com/api/users/",
+      "urlFilter": "||justthegays.com/agent.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24828,7 +24828,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||justusboys.com/advertising/",
+      "urlFilter": "||justthegays.com/api/spots/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24846,7 +24846,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||jzzo.com/_ad",
+      "urlFilter": "||justthegays.com/api/users/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24864,7 +24864,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||kawai-jav.com/en/load-ads?",
+      "urlFilter": "||justusboys.com/advertising/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24882,7 +24882,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||kawai-jav.com/public/upload/ads/",
+      "urlFilter": "||jzzo.com/_ad",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24900,7 +24900,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||kbjfree.com/assets/scripts/popad.js",
+      "urlFilter": "||kawai-jav.com/en/load-ads?",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24918,7 +24918,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||kindgirls.com/banners2/",
+      "urlFilter": "||kawai-jav.com/public/upload/ads/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24936,7 +24936,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||kompoz2.com/js/take.max.js",
+      "urlFilter": "||kbjfree.com/assets/scripts/popad.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24954,7 +24954,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||kurakura21.space/js/baf.js",
+      "urlFilter": "||kindgirls.com/banners2/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24972,7 +24972,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||lesbianstate.com/ai/",
+      "urlFilter": "||kompoz2.com/js/take.max.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -24990,7 +24990,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||letsporn.com/sda/",
+      "urlFilter": "||kurakura21.space/js/baf.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25008,7 +25008,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||lewdspot.com/img/aff_",
+      "urlFilter": "||lesbianstate.com/ai/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25026,7 +25026,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||lolhentai.net/tceb29242cf7.js",
+      "urlFilter": "||letsporn.com/sda/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25044,7 +25044,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||lustfulmatures.com/sod/",
+      "urlFilter": "||lewdspot.com/img/aff_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25062,7 +25062,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||lustypuppy.com/includes/popunder.js",
+      "urlFilter": "||lolhentai.net/tceb29242cf7.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25080,7 +25080,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||manga18fx.com/tkmo2023/",
+      "urlFilter": "||lustfulmatures.com/sod/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25098,7 +25098,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||manhwa18.cc/main2023/",
+      "urlFilter": "||lustypuppy.com/includes/popunder.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25116,7 +25116,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mansurfer.com/flash_promo/",
+      "urlFilter": "||manga18fx.com/tkmo2023/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25134,7 +25134,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||manysex.com/ha10y0dcss",
+      "urlFilter": "||manhwa18.cc/main2023/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25152,7 +25152,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||manysex.tube/soc/roll.js",
+      "urlFilter": "||mansurfer.com/flash_promo/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25170,7 +25170,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||marawaresearch.com/js/wosevu.js",
+      "urlFilter": "||manysex.com/ha10y0dcss",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25188,7 +25188,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mature-chicks.com/floral-truth-c224/",
+      "urlFilter": "||manysex.tube/soc/roll.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25206,7 +25206,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||maturesimages.com/erd/",
+      "urlFilter": "||marawaresearch.com/js/wosevu.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25224,7 +25224,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||matureworld.ws/images/banners/",
+      "urlFilter": "||mature-chicks.com/floral-truth-c224/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25242,7 +25242,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||megatube.xxx/atrm/",
+      "urlFilter": "||maturesimages.com/erd/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25260,7 +25260,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||milffox.com/ai/",
+      "urlFilter": "||matureworld.ws/images/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25278,7 +25278,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||milfnut.net/assets/jquery/",
+      "urlFilter": "||megatube.xxx/atrm/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25296,7 +25296,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||milfz.club/qpvtishridusvt.php",
+      "urlFilter": "||milffox.com/ai/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25314,7 +25314,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||milkmanbook.com/dat/promo/",
+      "urlFilter": "||milfnut.net/assets/jquery/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25332,7 +25332,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||missav.to/bn/",
+      "urlFilter": "||milfz.club/qpvtishridusvt.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25350,7 +25350,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||missav.to/page/300.html",
+      "urlFilter": "||milkmanbook.com/dat/promo/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25368,7 +25368,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||momcool.com/ftu/",
+      "urlFilter": "||missav.to/bn/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25386,7 +25386,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||momvids.com/player/html.php?aid=",
+      "urlFilter": "||missav.to/page/300.html",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25404,7 +25404,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||monsnode.com/ad_star_",
+      "urlFilter": "||momcool.com/ftu/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25422,7 +25422,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mopoga.com/img/aff_",
+      "urlFilter": "||momvids.com/player/html.php?aid=",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25440,7 +25440,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mylistcrawler.com/wp-content/plugins/elfsight-popup-cc/",
+      "urlFilter": "||monsnode.com/ad_star_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25458,7 +25458,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mylust.com/092-",
+      "urlFilter": "||mopoga.com/img/aff_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25476,7 +25476,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mylust.com/assets/script.js",
+      "urlFilter": "||mylistcrawler.com/wp-content/plugins/elfsight-popup-cc/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25494,7 +25494,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||myreadingmanga.info/wp-admin/*.php",
+      "urlFilter": "||mylust.com/092-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25512,7 +25512,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mysexgames.com/pix/ads/",
+      "urlFilter": "||mylust.com/assets/script.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25530,7 +25530,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mysexgames.com/pix/best-sex-games/",
+      "urlFilter": "||myreadingmanga.info/wp-admin/*.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25548,7 +25548,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mysexgames.com/plop.js",
+      "urlFilter": "||mysexgames.com/pix/ads/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25566,7 +25566,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||myvideos.club/api/",
+      "urlFilter": "||mysexgames.com/pix/best-sex-games/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25584,7 +25584,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||naughtyblog.org/wp-content/images/k2s/",
+      "urlFilter": "||mysexgames.com/plop.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25602,7 +25602,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nsfwalbum.com/efds435m432.js",
+      "urlFilter": "||myvideos.club/api/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25620,7 +25620,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nudepatch.net/dynbak.min.js",
+      "urlFilter": "||naughtyblog.org/wp-content/images/k2s/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25638,7 +25638,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nudepatch.net/edaea0fd3b2c.j",
+      "urlFilter": "||nsfwalbum.com/efds435m432.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25656,7 +25656,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nvdst.com/adx_",
+      "urlFilter": "||nudepatch.net/dynbak.min.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25674,7 +25674,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nylons-models.com/cross/",
+      "urlFilter": "||nudepatch.net/edaea0fd3b2c.j",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25692,7 +25692,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nylons-porno.com/poj/",
+      "urlFilter": "||nvdst.com/adx_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25710,7 +25710,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nylonsbeauty.com/med/",
+      "urlFilter": "||nylons-models.com/cross/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25728,7 +25728,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nylonsporno.com/ed/",
+      "urlFilter": "||nylons-porno.com/poj/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25746,7 +25746,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||oldies.name/oldn/",
+      "urlFilter": "||nylonsbeauty.com/med/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25764,7 +25764,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||onscreens.me/js/ca.",
+      "urlFilter": "||nylonsporno.com/ed/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25782,7 +25782,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||oppai.stream/assets/rekl/",
+      "urlFilter": "||oldies.name/oldn/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25800,7 +25800,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||orgyxxxhub.com/js/965eka57.js",
+      "urlFilter": "||onscreens.me/js/ca.",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25818,7 +25818,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||orgyxxxhub.com/js/arjlk.js",
+      "urlFilter": "||oppai.stream/assets/rekl/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25836,7 +25836,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||orgyxxxhub.com/js/wcwov.js",
+      "urlFilter": "||orgyxxxhub.com/js/965eka57.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25854,7 +25854,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||otomi-games.com/wp-content/uploads/*-Ad-728-",
+      "urlFilter": "||orgyxxxhub.com/js/arjlk.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25872,7 +25872,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pantyhosecool.com/stig/",
+      "urlFilter": "||orgyxxxhub.com/js/wcwov.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25890,7 +25890,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pantyhosepornstars.com/mze/",
+      "urlFilter": "||otomi-games.com/wp-content/uploads/*-Ad-728-",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25908,7 +25908,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pantyhoseposing.com/ed/",
+      "urlFilter": "||pantyhosecool.com/stig/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25926,7 +25926,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pantyhoseshow.com/fd/",
+      "urlFilter": "||pantyhosepornstars.com/mze/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25944,7 +25944,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pantyhoseteases.com/mass/",
+      "urlFilter": "||pantyhoseposing.com/ed/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25962,7 +25962,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||phonerotica.com/resources/img/banners/",
+      "urlFilter": "||pantyhoseshow.com/fd/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25980,7 +25980,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||picshick.com/b9ng.js",
+      "urlFilter": "||pantyhoseteases.com/mass/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -25998,7 +25998,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pisshamster.com/prerolls/",
+      "urlFilter": "||phonerotica.com/resources/img/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26016,7 +26016,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pleasuregirl.net/bload",
+      "urlFilter": "||picshick.com/b9ng.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26034,7 +26034,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||plibcdn.com/templates/base_master/js/jquery.shows2.min.js",
+      "urlFilter": "||pisshamster.com/prerolls/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26052,7 +26052,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||porn-star.com/buttons/",
+      "urlFilter": "||pleasuregirl.net/bload",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26070,7 +26070,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornalin.com/skd",
+      "urlFilter": "||plibcdn.com/templates/base_master/js/jquery.shows2.min.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26088,7 +26088,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||porndoe.com/banner/",
+      "urlFilter": "||porn-star.com/buttons/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26106,7 +26106,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||porndoe.com/wp-contents/channel?",
+      "urlFilter": "||pornalin.com/skd",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26124,7 +26124,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornerbros.com/lolaso/",
+      "urlFilter": "||porndoe.com/banner/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26142,7 +26142,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornforrelax.com/kiadtgyzi/",
+      "urlFilter": "||porndoe.com/wp-contents/channel?",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26160,7 +26160,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||porngals4.com/img/b/",
+      "urlFilter": "||pornerbros.com/lolaso/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26178,7 +26178,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||porngames.tv/js/hs43jgM.js",
+      "urlFilter": "||pornforrelax.com/kiadtgyzi/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26196,7 +26196,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||porngo.tube/tdkfiololwb/",
+      "urlFilter": "||porngals4.com/img/b/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26214,7 +26214,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornhat.com/banner/",
+      "urlFilter": "||porngames.tv/js/hs43jgM.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26232,7 +26232,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornicom.com/jsb/",
+      "urlFilter": "||porngo.tube/tdkfiololwb/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26250,7 +26250,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornj.com/wimtvggp/",
+      "urlFilter": "||pornhat.com/banner/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26268,7 +26268,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornjam.com/assets/js/renderer.",
+      "urlFilter": "||pornicom.com/jsb/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26286,7 +26286,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornjv.com/doe/",
+      "urlFilter": "||pornj.com/wimtvggp/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26304,7 +26304,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornktube.tv/js/kt.js",
+      "urlFilter": "||pornjam.com/assets/js/renderer.",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26322,7 +26322,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornmix.org/cs/",
+      "urlFilter": "||pornjv.com/doe/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26340,7 +26340,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||porno666.com/code/script/",
+      "urlFilter": "||pornktube.tv/js/kt.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26358,7 +26358,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornogramxxx.com/out/",
+      "urlFilter": "||pornmix.org/cs/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26376,7 +26376,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornohans.net/static/exo",
+      "urlFilter": "||porno666.com/code/script/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26394,7 +26394,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornpapa.com/extension/",
+      "urlFilter": "||pornogramxxx.com/out/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26412,7 +26412,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornpics.de/api/banner/",
+      "urlFilter": "||pornohans.net/static/exo",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26430,7 +26430,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornpoppy.com/jss/external_pop.js",
+      "urlFilter": "||pornpapa.com/extension/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26448,7 +26448,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornsex.rocks/league.aspx",
+      "urlFilter": "||pornpics.de/api/banner/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26466,7 +26466,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornstargold.com/9f3e5bbb8645.js",
+      "urlFilter": "||pornpoppy.com/jss/external_pop.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26484,7 +26484,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornstargold.com/af8b32fc37c0.js",
+      "urlFilter": "||pornsex.rocks/league.aspx",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26502,7 +26502,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornstargold.com/e7e5ed47e8b4.js",
+      "urlFilter": "||pornstargold.com/9f3e5bbb8645.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26520,7 +26520,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornstargold.com/tf2b6c6c9a44/",
+      "urlFilter": "||pornstargold.com/af8b32fc37c0.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26538,7 +26538,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornv.xxx/static/js/abb.js",
+      "urlFilter": "||pornstargold.com/e7e5ed47e8b4.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26556,7 +26556,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornve.com/img/300x250g.gif",
+      "urlFilter": "||pornstargold.com/tf2b6c6c9a44/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26574,7 +26574,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornxbox.com/cs/",
+      "urlFilter": "||pornv.xxx/static/js/abb.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26592,7 +26592,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornxp.com/2.js",
+      "urlFilter": "||pornve.com/img/300x250g.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26610,7 +26610,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornxp.com/sp/",
+      "urlFilter": "||pornxbox.com/cs/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26628,7 +26628,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornxp.net/spnbf.js",
+      "urlFilter": "||pornxp.com/2.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26646,7 +26646,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pornyhd.com/hillpop.php",
+      "urlFilter": "||pornxp.com/sp/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26664,7 +26664,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pregchan.com/.static/pages/dlsite.html",
+      "urlFilter": "||pornxp.net/spnbf.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26682,7 +26682,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||projectjav.com/scripts/projectjav_newpu.js",
+      "urlFilter": "||pornyhd.com/hillpop.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26700,7 +26700,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ps0z.com/300x250b",
+      "urlFilter": "||pregchan.com/.static/pages/dlsite.html",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26718,7 +26718,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||punishworld.com/prerolls/",
+      "urlFilter": "||projectjav.com/scripts/projectjav_newpu.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26736,7 +26736,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||puporn.com/xahnqhalt/",
+      "urlFilter": "||ps0z.com/300x250b",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26754,7 +26754,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pussycatxx.com/tab49fb22988.js",
+      "urlFilter": "||punishworld.com/prerolls/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26772,7 +26772,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pussyspace.com/fub",
+      "urlFilter": "||puporn.com/xahnqhalt/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26790,7 +26790,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||rabbitsreviews.com/banners/",
+      "urlFilter": "||pussycatxx.com/tab49fb22988.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26808,7 +26808,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||rat.xxx/sofa/",
+      "urlFilter": "||pussyspace.com/fub",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26826,7 +26826,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||rat.xxx/wwp2/",
+      "urlFilter": "||rabbitsreviews.com/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26844,7 +26844,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||realgfporn.com/js/bbbasdffdddf.php",
+      "urlFilter": "||rat.xxx/sofa/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26862,7 +26862,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||redgifs.com/assets/js/goCtrl",
+      "urlFilter": "||rat.xxx/wwp2/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26880,7 +26880,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||redtube.com/_xa/ads",
+      "urlFilter": "||realgfporn.com/js/bbbasdffdddf.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26898,7 +26898,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||redtube.fm/advertisment.htm",
+      "urlFilter": "||redgifs.com/assets/js/goCtrl",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26916,7 +26916,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||redtube.fm/lcgldrbboxj.php",
+      "urlFilter": "||redtube.com/_xa/ads",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26934,7 +26934,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||rintor.space/t2632cd43215.js",
+      "urlFilter": "||redtube.fm/advertisment.htm",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26952,7 +26952,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ruedux.com/code/script/",
+      "urlFilter": "||redtube.fm/lcgldrbboxj.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26970,7 +26970,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||rule34.xxx/images/r34_doll.png",
+      "urlFilter": "||rintor.space/t2632cd43215.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -26988,7 +26988,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||rule34.xxx/x/cookiefreead.js",
+      "urlFilter": "||ruedux.com/code/script/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27006,7 +27006,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||rule34.xyz/api/v2/infrastructure/dynamic-meta/user",
+      "urlFilter": "||rule34.xxx/images/r34_doll.png",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27024,7 +27024,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||rusdosug.com/Fotos/Banners/",
+      "urlFilter": "||rule34.xxx/x/cookiefreead.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27042,7 +27042,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||scatxxxporn.com/static/images/banners/",
+      "urlFilter": "||rule34.xyz/api/v2/infrastructure/dynamic-meta/user",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27060,7 +27060,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||schoolasiagirls.net/ban/",
+      "urlFilter": "||rusdosug.com/Fotos/Banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27078,7 +27078,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sdhentai.com/marketing/",
+      "urlFilter": "||scatxxxporn.com/static/images/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27096,7 +27096,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||see.xxx/pccznwlnrs/",
+      "urlFilter": "||schoolasiagirls.net/ban/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27114,7 +27114,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||service.iwara.tv/z/z.php",
+      "urlFilter": "||sdhentai.com/marketing/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27132,7 +27132,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sex-techniques-and-positions.com/banners",
+      "urlFilter": "||see.xxx/pccznwlnrs/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27150,7 +27150,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sex3.com/ee/s/s/im.php",
+      "urlFilter": "||service.iwara.tv/z/z.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27168,7 +27168,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sex3.com/ee/s/s/js/ssu",
+      "urlFilter": "||sex-techniques-and-positions.com/banners",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27186,7 +27186,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sex3.com/ee/s/s/su",
+      "urlFilter": "||sex3.com/ee/s/s/im.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27204,7 +27204,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sexcelebrity.net/contents/restfiles/player/",
+      "urlFilter": "||sex3.com/ee/s/s/js/ssu",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27222,7 +27222,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sexpin.net/ads*.htm",
+      "urlFilter": "||sex3.com/ee/s/s/su",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27240,7 +27240,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sextubebox.com/js/239eka836.js",
+      "urlFilter": "||sexcelebrity.net/contents/restfiles/player/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27258,7 +27258,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sextubebox.com/js/580eka426.js",
+      "urlFilter": "||sexpin.net/ads*.htm",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27276,7 +27276,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sextvx.com/*/ads/web/",
+      "urlFilter": "||sextubebox.com/js/239eka836.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27294,7 +27294,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sexvid.pro/knxx/",
+      "urlFilter": "||sextubebox.com/js/580eka426.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27312,7 +27312,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sexvid.pro/rrt/",
+      "urlFilter": "||sextvx.com/*/ads/web/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27330,7 +27330,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sexvid.xxx/ghjk/",
+      "urlFilter": "||sexvid.pro/knxx/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27348,7 +27348,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||simpcity.network/smp/",
+      "urlFilter": "||sexvid.pro/rrt/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27366,7 +27366,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||simply-hentai.com/prod/",
+      "urlFilter": "||sexvid.xxx/ghjk/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27384,7 +27384,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sleazyneasy.com/contents/images-banners/",
+      "urlFilter": "||simpcity.network/smp/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27402,7 +27402,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sleazyneasy.com/jsb/",
+      "urlFilter": "||simply-hentai.com/prod/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27420,7 +27420,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||smutgamer.com/ta2b8ed9c305.js",
+      "urlFilter": "||sleazyneasy.com/contents/images-banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27438,7 +27438,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||smutty.com/n.js",
+      "urlFilter": "||sleazyneasy.com/jsb/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27456,7 +27456,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||starwank.com/api/",
+      "urlFilter": "||smutgamer.com/ta2b8ed9c305.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27474,7 +27474,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||stream-69.com/code/script/",
+      "urlFilter": "||smutty.com/n.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27492,7 +27492,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||striptube.net/images/",
+      "urlFilter": "||starwank.com/api/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27510,7 +27510,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||striptube.net/te9e85dc6853.js",
+      "urlFilter": "||stream-69.com/code/script/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27528,7 +27528,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sunporno.com/api/cams/get-spot-js-full-content/",
+      "urlFilter": "||striptube.net/images/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27546,7 +27546,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sunporno.com/api/spots/",
+      "urlFilter": "||striptube.net/te9e85dc6853.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27564,7 +27564,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sunporno.com/blb.php",
+      "urlFilter": "||sunporno.com/api/cams/get-spot-js-full-content/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27582,7 +27582,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sunporno.com/sunstatic/frms/",
+      "urlFilter": "||sunporno.com/api/spots/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27600,7 +27600,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tbib.org/tbib.",
+      "urlFilter": "||sunporno.com/blb.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27618,7 +27618,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||teenporno.xxx/ab/",
+      "urlFilter": "||sunporno.com/sunstatic/frms/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27636,7 +27636,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||thegay.porn/gdtatrco/",
+      "urlFilter": "||tbib.org/tbib.",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27654,7 +27654,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||thehun.net/banners/",
+      "urlFilter": "||teenporno.xxx/ab/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27672,7 +27672,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||thenipslip.com/b6c0cc29df5a.js",
+      "urlFilter": "||thegay.porn/gdtatrco/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27690,7 +27690,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||thisvid.com/enblk/",
+      "urlFilter": "||thehun.net/banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27708,7 +27708,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||thumbzilla.com/_xa/ads",
+      "urlFilter": "||thenipslip.com/b6c0cc29df5a.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27726,7 +27726,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tits-guru.com/js/istripper4.js",
+      "urlFilter": "||thisvid.com/enblk/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27744,7 +27744,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||titsintops.com/phpBB2/nb/",
+      "urlFilter": "||thumbzilla.com/_xa/ads",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27762,7 +27762,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tktube.com/adlib/",
+      "urlFilter": "||tits-guru.com/js/istripper4.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27780,7 +27780,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tnaflix.com/azUhsbtsuzm?",
+      "urlFilter": "||titsintops.com/phpBB2/nb/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27798,7 +27798,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tnaflix.com/js/mew.js?",
+      "urlFilter": "||tktube.com/adlib/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27816,7 +27816,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||topescort.com/static/bn/",
+      "urlFilter": "||tnaflix.com/azUhsbtsuzm?",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27834,7 +27834,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tranny.one/bhb.php",
+      "urlFilter": "||tnaflix.com/js/mew.js?",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27852,7 +27852,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tranny.one/trannystatic/ads/",
+      "urlFilter": "||topescort.com/static/bn/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27870,7 +27870,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||trannygem.com/ai",
+      "urlFilter": "||tranny.one/bhb.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27888,7 +27888,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tsmodelstube.com/fun/",
+      "urlFilter": "||tranny.one/trannystatic/ads/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27906,7 +27906,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tubator.com/lookout/ex_rendr3.js",
+      "urlFilter": "||trannygem.com/ai",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27924,7 +27924,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tube.hentaistream.com/wp-includes/js/pop4.js",
+      "urlFilter": "||tsmodelstube.com/fun/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27942,7 +27942,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tuberel.com/looppy/",
+      "urlFilter": "||tubator.com/lookout/ex_rendr3.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27960,7 +27960,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tubev.sex/td24f164e52654fc593c6952240be1dc210935fe/",
+      "urlFilter": "||tube.hentaistream.com/wp-includes/js/pop4.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27978,7 +27978,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||turboviplay.com/ads_gala.js",
+      "urlFilter": "||tuberel.com/looppy/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -27996,7 +27996,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||txxx.com/api/input.php?",
+      "urlFilter": "||tubev.sex/td24f164e52654fc593c6952240be1dc210935fe/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28014,7 +28014,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||upornia.com/yxpffpuqtjc/",
+      "urlFilter": "||turboviplay.com/ads_gala.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28032,7 +28032,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||urgayporn.com/bn/",
+      "urlFilter": "||txxx.com/api/input.php?",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28050,7 +28050,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||uviu.com/_xd/",
+      "urlFilter": "||upornia.com/yxpffpuqtjc/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28068,7 +28068,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||veo-hentai.com/wp-content/plugins/veohentai/popunder-unificado.js",
+      "urlFilter": "||urgayporn.com/bn/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28086,7 +28086,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||videosection.com/adv-agent.php",
+      "urlFilter": "||uviu.com/_xd/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28104,7 +28104,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||vietpub.com/banner/",
+      "urlFilter": "||veo-hentai.com/wp-content/plugins/veohentai/popunder-unificado.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28122,7 +28122,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||vikiporn.com/contents/images-banners/",
+      "urlFilter": "||videosection.com/adv-agent.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28140,7 +28140,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||vikiporn.com/js/customscript.js",
+      "urlFilter": "||vietpub.com/banner/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28158,7 +28158,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||vipergirls.to/clientscript/popcode_",
+      "urlFilter": "||vikiporn.com/contents/images-banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28176,7 +28176,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||vipergirls.to/clientscript/poptrigger_",
+      "urlFilter": "||vikiporn.com/js/customscript.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28194,7 +28194,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||viptube.com/player_right_ntv_",
+      "urlFilter": "||vipergirls.to/clientscript/popcode_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28212,7 +28212,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||voyeurhit.com/ffpqvfaczp/",
+      "urlFilter": "||vipergirls.to/clientscript/poptrigger_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28230,7 +28230,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||warashi-asian-pornstars.fr/wapdb-img/ep/",
+      "urlFilter": "||viptube.com/player_right_ntv_",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28248,7 +28248,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||watch-my-gf.com/list/",
+      "urlFilter": "||voyeurhit.com/ffpqvfaczp/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28266,7 +28266,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||watchmygf.mobi/best.js",
+      "urlFilter": "||warashi-asian-pornstars.fr/wapdb-img/ep/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28284,7 +28284,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||wcareviews.com/bh/",
+      "urlFilter": "||watch-my-gf.com/list/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28302,7 +28302,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||wcareviews.com/bv/",
+      "urlFilter": "||watchmygf.mobi/best.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28320,7 +28320,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||weescorts.com/html5banners/",
+      "urlFilter": "||wcareviews.com/bh/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28338,7 +28338,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||wetpussygames.com/t78d42b806a3.js",
+      "urlFilter": "||wcareviews.com/bv/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28356,7 +28356,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||wwwxxx.uno/pop-code.js",
+      "urlFilter": "||weescorts.com/html5banners/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28374,7 +28374,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||wwwxxx.uno/taco-code.js",
+      "urlFilter": "||wetpussygames.com/t78d42b806a3.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28392,7 +28392,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||x-hd.video/vcrtlrvw/",
+      "urlFilter": "||wwwxxx.uno/pop-code.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28410,7 +28410,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||x1hub.com/alexia_anders_jm.gif",
+      "urlFilter": "||wwwxxx.uno/taco-code.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28428,7 +28428,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xanimu.com/prerolls/",
+      "urlFilter": "||x-hd.video/vcrtlrvw/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28446,7 +28446,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xcity.org/tc2ca02c24c5.js",
+      "urlFilter": "||x1hub.com/alexia_anders_jm.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28464,7 +28464,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xfree.com/api/banner/",
+      "urlFilter": "||xanimu.com/prerolls/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28482,7 +28482,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xgirls.agency/pg/c/",
+      "urlFilter": "||xcity.org/tc2ca02c24c5.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28500,7 +28500,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xgroovy.com/65",
+      "urlFilter": "||xfree.com/api/banner/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28518,7 +28518,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xgroovy.com/bid?",
+      "urlFilter": "||xgirls.agency/pg/c/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28536,7 +28536,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xgroovy.com/static/js/script.js",
+      "urlFilter": "||xgroovy.com/65",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28554,7 +28554,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xhand.com/player/html.php?aid=",
+      "urlFilter": "||xgroovy.com/bid?",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28572,7 +28572,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xhcdn.com/site/*/ntvb.gif",
+      "urlFilter": "||xgroovy.com/static/js/script.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28590,7 +28590,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xjav.tube/ps/Hij2yp.js",
+      "urlFilter": "||xhand.com/player/html.php?aid=",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28608,7 +28608,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xmilf.com/0eckuwtxfr/",
+      "urlFilter": "||xhcdn.com/site/*/ntvb.gif",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28626,7 +28626,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xnxx.tv/zoneload/",
+      "urlFilter": "||xjav.tube/ps/Hij2yp.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28644,7 +28644,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xnxxporn.video/nb39.12/",
+      "urlFilter": "||xmilf.com/0eckuwtxfr/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28662,7 +28662,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xozilla.com/player/html.php",
+      "urlFilter": "||xnxx.tv/zoneload/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28680,7 +28680,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xpaja.net/views/images/ads/",
+      "urlFilter": "||xnxxporn.video/nb39.12/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28698,7 +28698,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xpics.me/everyone.",
+      "urlFilter": "||xozilla.com/player/html.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28716,7 +28716,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xrares.com/xopind.js",
+      "urlFilter": "||xpaja.net/views/images/ads/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28734,7 +28734,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xvideos.com/zoneload/",
+      "urlFilter": "||xpics.me/everyone.",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28752,7 +28752,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xvideos.es/zoneload/",
+      "urlFilter": "||xrares.com/xopind.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28770,7 +28770,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xvideos.name/istripper.jpg",
+      "urlFilter": "||xvideos.com/zoneload/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28788,7 +28788,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xxxbox.me/vcrtlrvw",
+      "urlFilter": "||xvideos.es/zoneload/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28806,7 +28806,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xxxdessert.com/34l329_fe.js",
+      "urlFilter": "||xvideos.name/istripper.jpg",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28824,7 +28824,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xxxfetish24.com/helper/tos.js",
+      "urlFilter": "||xxxbox.me/vcrtlrvw",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28842,7 +28842,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xxxshake.com/assets/f_load.js",
+      "urlFilter": "||xxxdessert.com/34l329_fe.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28860,7 +28860,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xxxshake.com/static/js/script.js",
+      "urlFilter": "||xxxfetish24.com/helper/tos.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28878,7 +28878,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xxxvogue.net/_ad",
+      "urlFilter": "||xxxshake.com/assets/f_load.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28896,7 +28896,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||xxxxsx.com/sw.js",
+      "urlFilter": "||xxxshake.com/static/js/script.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28914,7 +28914,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yespornpleasexxx.com/wp-content/litespeed/js/",
+      "urlFilter": "||xxxvogue.net/_ad",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28932,7 +28932,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||you-porn.com/_xa/ads",
+      "urlFilter": "||xxxxsx.com/sw.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28950,7 +28950,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||youporn.com/_xa/ads",
+      "urlFilter": "||yespornpleasexxx.com/wp-content/litespeed/js/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28968,7 +28968,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yourlust.com/assets/script.js",
+      "urlFilter": "||you-porn.com/_xa/ads",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -28986,7 +28986,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yourlust.com/js/scripts.js",
+      "urlFilter": "||youporn.com/_xa/ads",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -29004,7 +29004,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yporn.tv/grqoqoswxd.php",
+      "urlFilter": "||yourlust.com/assets/script.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -29022,7 +29022,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||zazzybabes.com/istr/t2eff4d92a2d.js",
+      "urlFilter": "||yourlust.com/js/scripts.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -29040,7 +29040,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||zbporn.com/ttt/",
+      "urlFilter": "||yporn.tv/grqoqoswxd.php",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -29058,7 +29058,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||zzup.com/ad.php",
+      "urlFilter": "||zazzybabes.com/istr/t2eff4d92a2d.js",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -29076,7 +29076,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||thegay.com/static/tf/videos.gjmpa.json",
+      "urlFilter": "||zbporn.com/ttt/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
@@ -29089,6 +29089,42 @@
   },
   {
     "id": 1617,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||zzup.com/ad.php",
+      "resourceTypes": [
+        "script",
+        "xmlhttprequest",
+        "image",
+        "sub_frame",
+        "ping",
+        "other"
+      ]
+    }
+  },
+  {
+    "id": 1618,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||thegay.com/static/tf/videos.gjmpa.json",
+      "resourceTypes": [
+        "script",
+        "xmlhttprequest",
+        "image",
+        "sub_frame",
+        "ping",
+        "other"
+      ]
+    }
+  },
+  {
+    "id": 1619,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29110,7 +29146,7 @@
     }
   },
   {
-    "id": 1618,
+    "id": 1620,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29131,7 +29167,7 @@
     }
   },
   {
-    "id": 1619,
+    "id": 1621,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29152,7 +29188,7 @@
     }
   },
   {
-    "id": 1620,
+    "id": 1622,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29173,7 +29209,7 @@
     }
   },
   {
-    "id": 1621,
+    "id": 1623,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29194,7 +29230,7 @@
     }
   },
   {
-    "id": 1622,
+    "id": 1624,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29215,7 +29251,7 @@
     }
   },
   {
-    "id": 1623,
+    "id": 1625,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29236,7 +29272,7 @@
     }
   },
   {
-    "id": 1624,
+    "id": 1626,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29257,7 +29293,7 @@
     }
   },
   {
-    "id": 1625,
+    "id": 1627,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29278,7 +29314,7 @@
     }
   },
   {
-    "id": 1626,
+    "id": 1628,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29299,7 +29335,7 @@
     }
   },
   {
-    "id": 1627,
+    "id": 1629,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29320,7 +29356,7 @@
     }
   },
   {
-    "id": 1628,
+    "id": 1630,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29342,7 +29378,7 @@
     }
   },
   {
-    "id": 1629,
+    "id": 1631,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29363,7 +29399,7 @@
     }
   },
   {
-    "id": 1630,
+    "id": 1632,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29384,7 +29420,7 @@
     }
   },
   {
-    "id": 1631,
+    "id": 1633,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29405,7 +29441,7 @@
     }
   },
   {
-    "id": 1632,
+    "id": 1634,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29426,7 +29462,7 @@
     }
   },
   {
-    "id": 1633,
+    "id": 1635,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29444,7 +29480,7 @@
     }
   },
   {
-    "id": 1634,
+    "id": 1636,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29462,7 +29498,7 @@
     }
   },
   {
-    "id": 1635,
+    "id": 1637,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29483,7 +29519,7 @@
     }
   },
   {
-    "id": 1636,
+    "id": 1638,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29504,7 +29540,7 @@
     }
   },
   {
-    "id": 1637,
+    "id": 1639,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29527,7 +29563,7 @@
     }
   },
   {
-    "id": 1638,
+    "id": 1640,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29551,7 +29587,7 @@
     }
   },
   {
-    "id": 1639,
+    "id": 1641,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29572,7 +29608,7 @@
     }
   },
   {
-    "id": 1640,
+    "id": 1642,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29593,7 +29629,7 @@
     }
   },
   {
-    "id": 1641,
+    "id": 1643,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29616,7 +29652,7 @@
     }
   },
   {
-    "id": 1642,
+    "id": 1644,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29637,7 +29673,7 @@
     }
   },
   {
-    "id": 1643,
+    "id": 1645,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29662,7 +29698,7 @@
     }
   },
   {
-    "id": 1644,
+    "id": 1646,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29687,7 +29723,7 @@
     }
   },
   {
-    "id": 1645,
+    "id": 1647,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29709,7 +29745,7 @@
     }
   },
   {
-    "id": 1646,
+    "id": 1648,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29731,7 +29767,7 @@
     }
   },
   {
-    "id": 1647,
+    "id": 1649,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29752,7 +29788,7 @@
     }
   },
   {
-    "id": 1648,
+    "id": 1650,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29774,7 +29810,7 @@
     }
   },
   {
-    "id": 1649,
+    "id": 1651,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29797,7 +29833,7 @@
     }
   },
   {
-    "id": 1650,
+    "id": 1652,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29821,7 +29857,7 @@
     }
   },
   {
-    "id": 1651,
+    "id": 1653,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29839,7 +29875,7 @@
     }
   },
   {
-    "id": 1652,
+    "id": 1654,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29864,7 +29900,7 @@
     }
   },
   {
-    "id": 1653,
+    "id": 1655,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29886,7 +29922,7 @@
     }
   },
   {
-    "id": 1654,
+    "id": 1656,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29907,7 +29943,7 @@
     }
   },
   {
-    "id": 1655,
+    "id": 1657,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29925,7 +29961,7 @@
     }
   },
   {
-    "id": 1656,
+    "id": 1658,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29946,7 +29982,7 @@
     }
   },
   {
-    "id": 1657,
+    "id": 1659,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -29989,7 +30025,7 @@
     }
   },
   {
-    "id": 1658,
+    "id": 1660,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30007,7 +30043,7 @@
     }
   },
   {
-    "id": 1659,
+    "id": 1661,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30028,7 +30064,7 @@
     }
   },
   {
-    "id": 1660,
+    "id": 1662,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30051,7 +30087,7 @@
     }
   },
   {
-    "id": 1661,
+    "id": 1663,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30069,7 +30105,7 @@
     }
   },
   {
-    "id": 1662,
+    "id": 1664,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30095,7 +30131,7 @@
     }
   },
   {
-    "id": 1663,
+    "id": 1665,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30116,7 +30152,7 @@
     }
   },
   {
-    "id": 1664,
+    "id": 1666,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30137,7 +30173,7 @@
     }
   },
   {
-    "id": 1665,
+    "id": 1667,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30158,7 +30194,7 @@
     }
   },
   {
-    "id": 1666,
+    "id": 1668,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30179,7 +30215,7 @@
     }
   },
   {
-    "id": 1667,
+    "id": 1669,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30200,7 +30236,7 @@
     }
   },
   {
-    "id": 1668,
+    "id": 1670,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30221,7 +30257,7 @@
     }
   },
   {
-    "id": 1669,
+    "id": 1671,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30242,7 +30278,7 @@
     }
   },
   {
-    "id": 1670,
+    "id": 1672,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30263,7 +30299,7 @@
     }
   },
   {
-    "id": 1671,
+    "id": 1673,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30281,7 +30317,7 @@
     }
   },
   {
-    "id": 1672,
+    "id": 1674,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30302,7 +30338,7 @@
     }
   },
   {
-    "id": 1673,
+    "id": 1675,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30323,7 +30359,7 @@
     }
   },
   {
-    "id": 1674,
+    "id": 1676,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30346,7 +30382,7 @@
     }
   },
   {
-    "id": 1675,
+    "id": 1677,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30369,7 +30405,7 @@
     }
   },
   {
-    "id": 1676,
+    "id": 1678,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30390,7 +30426,7 @@
     }
   },
   {
-    "id": 1677,
+    "id": 1679,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30408,7 +30444,7 @@
     }
   },
   {
-    "id": 1678,
+    "id": 1680,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30435,7 +30471,7 @@
     }
   },
   {
-    "id": 1679,
+    "id": 1681,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30453,7 +30489,7 @@
     }
   },
   {
-    "id": 1680,
+    "id": 1682,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30471,7 +30507,7 @@
     }
   },
   {
-    "id": 1681,
+    "id": 1683,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30492,7 +30528,7 @@
     }
   },
   {
-    "id": 1682,
+    "id": 1684,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30513,7 +30549,7 @@
     }
   },
   {
-    "id": 1683,
+    "id": 1685,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30534,7 +30570,7 @@
     }
   },
   {
-    "id": 1684,
+    "id": 1686,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30555,7 +30591,7 @@
     }
   },
   {
-    "id": 1685,
+    "id": 1687,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30576,7 +30612,7 @@
     }
   },
   {
-    "id": 1686,
+    "id": 1688,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30597,7 +30633,7 @@
     }
   },
   {
-    "id": 1687,
+    "id": 1689,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30618,7 +30654,7 @@
     }
   },
   {
-    "id": 1688,
+    "id": 1690,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30640,7 +30676,7 @@
     }
   },
   {
-    "id": 1689,
+    "id": 1691,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30661,7 +30697,7 @@
     }
   },
   {
-    "id": 1690,
+    "id": 1692,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30682,7 +30718,7 @@
     }
   },
   {
-    "id": 1691,
+    "id": 1693,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30703,7 +30739,7 @@
     }
   },
   {
-    "id": 1692,
+    "id": 1694,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30724,7 +30760,7 @@
     }
   },
   {
-    "id": 1693,
+    "id": 1695,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30746,7 +30782,7 @@
     }
   },
   {
-    "id": 1694,
+    "id": 1696,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30767,7 +30803,7 @@
     }
   },
   {
-    "id": 1695,
+    "id": 1697,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30788,7 +30824,7 @@
     }
   },
   {
-    "id": 1696,
+    "id": 1698,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30809,7 +30845,7 @@
     }
   },
   {
-    "id": 1697,
+    "id": 1699,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30830,7 +30866,7 @@
     }
   },
   {
-    "id": 1698,
+    "id": 1700,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30851,7 +30887,7 @@
     }
   },
   {
-    "id": 1699,
+    "id": 1701,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30869,7 +30905,7 @@
     }
   },
   {
-    "id": 1700,
+    "id": 1702,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30890,7 +30926,7 @@
     }
   },
   {
-    "id": 1701,
+    "id": 1703,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30911,7 +30947,7 @@
     }
   },
   {
-    "id": 1702,
+    "id": 1704,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30932,7 +30968,7 @@
     }
   },
   {
-    "id": 1703,
+    "id": 1705,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30953,7 +30989,7 @@
     }
   },
   {
-    "id": 1704,
+    "id": 1706,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30974,7 +31010,7 @@
     }
   },
   {
-    "id": 1705,
+    "id": 1707,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -30995,7 +31031,7 @@
     }
   },
   {
-    "id": 1706,
+    "id": 1708,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31016,7 +31052,7 @@
     }
   },
   {
-    "id": 1707,
+    "id": 1709,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31034,7 +31070,7 @@
     }
   },
   {
-    "id": 1708,
+    "id": 1710,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31052,7 +31088,7 @@
     }
   },
   {
-    "id": 1709,
+    "id": 1711,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31073,7 +31109,7 @@
     }
   },
   {
-    "id": 1710,
+    "id": 1712,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31094,7 +31130,7 @@
     }
   },
   {
-    "id": 1711,
+    "id": 1713,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31118,7 +31154,7 @@
     }
   },
   {
-    "id": 1712,
+    "id": 1714,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31139,7 +31175,7 @@
     }
   },
   {
-    "id": 1713,
+    "id": 1715,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31160,7 +31196,7 @@
     }
   },
   {
-    "id": 1714,
+    "id": 1716,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31181,7 +31217,7 @@
     }
   },
   {
-    "id": 1715,
+    "id": 1717,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31202,7 +31238,7 @@
     }
   },
   {
-    "id": 1716,
+    "id": 1718,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31223,7 +31259,7 @@
     }
   },
   {
-    "id": 1717,
+    "id": 1719,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31244,7 +31280,7 @@
     }
   },
   {
-    "id": 1718,
+    "id": 1720,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31265,7 +31301,7 @@
     }
   },
   {
-    "id": 1719,
+    "id": 1721,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31286,7 +31322,7 @@
     }
   },
   {
-    "id": 1720,
+    "id": 1722,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31304,7 +31340,7 @@
     }
   },
   {
-    "id": 1721,
+    "id": 1723,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31325,7 +31361,7 @@
     }
   },
   {
-    "id": 1722,
+    "id": 1724,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31346,7 +31382,7 @@
     }
   },
   {
-    "id": 1723,
+    "id": 1725,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31367,7 +31403,7 @@
     }
   },
   {
-    "id": 1724,
+    "id": 1726,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31388,7 +31424,7 @@
     }
   },
   {
-    "id": 1725,
+    "id": 1727,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31416,7 +31452,7 @@
     }
   },
   {
-    "id": 1726,
+    "id": 1728,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31437,7 +31473,7 @@
     }
   },
   {
-    "id": 1727,
+    "id": 1729,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31458,7 +31494,7 @@
     }
   },
   {
-    "id": 1728,
+    "id": 1730,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31479,7 +31515,7 @@
     }
   },
   {
-    "id": 1729,
+    "id": 1731,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31500,7 +31536,7 @@
     }
   },
   {
-    "id": 1730,
+    "id": 1732,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31521,7 +31557,7 @@
     }
   },
   {
-    "id": 1731,
+    "id": 1733,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31542,7 +31578,7 @@
     }
   },
   {
-    "id": 1732,
+    "id": 1734,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31563,7 +31599,7 @@
     }
   },
   {
-    "id": 1733,
+    "id": 1735,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31584,7 +31620,7 @@
     }
   },
   {
-    "id": 1734,
+    "id": 1736,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31605,7 +31641,7 @@
     }
   },
   {
-    "id": 1735,
+    "id": 1737,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31626,7 +31662,7 @@
     }
   },
   {
-    "id": 1736,
+    "id": 1738,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31647,7 +31683,7 @@
     }
   },
   {
-    "id": 1737,
+    "id": 1739,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31668,7 +31704,7 @@
     }
   },
   {
-    "id": 1738,
+    "id": 1740,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31689,7 +31725,7 @@
     }
   },
   {
-    "id": 1739,
+    "id": 1741,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31710,7 +31746,7 @@
     }
   },
   {
-    "id": 1740,
+    "id": 1742,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31731,7 +31767,7 @@
     }
   },
   {
-    "id": 1741,
+    "id": 1743,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31752,7 +31788,7 @@
     }
   },
   {
-    "id": 1742,
+    "id": 1744,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31773,7 +31809,7 @@
     }
   },
   {
-    "id": 1743,
+    "id": 1745,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31794,7 +31830,7 @@
     }
   },
   {
-    "id": 1744,
+    "id": 1746,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31812,7 +31848,7 @@
     }
   },
   {
-    "id": 1745,
+    "id": 1747,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31833,7 +31869,7 @@
     }
   },
   {
-    "id": 1746,
+    "id": 1748,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31854,7 +31890,7 @@
     }
   },
   {
-    "id": 1747,
+    "id": 1749,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31875,7 +31911,7 @@
     }
   },
   {
-    "id": 1748,
+    "id": 1750,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31896,7 +31932,7 @@
     }
   },
   {
-    "id": 1749,
+    "id": 1751,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31917,7 +31953,7 @@
     }
   },
   {
-    "id": 1750,
+    "id": 1752,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31938,7 +31974,7 @@
     }
   },
   {
-    "id": 1751,
+    "id": 1753,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31959,7 +31995,7 @@
     }
   },
   {
-    "id": 1752,
+    "id": 1754,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -31980,7 +32016,7 @@
     }
   },
   {
-    "id": 1753,
+    "id": 1755,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32001,7 +32037,7 @@
     }
   },
   {
-    "id": 1754,
+    "id": 1756,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32022,7 +32058,7 @@
     }
   },
   {
-    "id": 1755,
+    "id": 1757,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32043,7 +32079,7 @@
     }
   },
   {
-    "id": 1756,
+    "id": 1758,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32064,7 +32100,7 @@
     }
   },
   {
-    "id": 1757,
+    "id": 1759,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32087,7 +32123,7 @@
     }
   },
   {
-    "id": 1758,
+    "id": 1760,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32108,7 +32144,7 @@
     }
   },
   {
-    "id": 1759,
+    "id": 1761,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32129,7 +32165,7 @@
     }
   },
   {
-    "id": 1760,
+    "id": 1762,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32150,7 +32186,7 @@
     }
   },
   {
-    "id": 1761,
+    "id": 1763,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32171,7 +32207,7 @@
     }
   },
   {
-    "id": 1762,
+    "id": 1764,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32189,7 +32225,7 @@
     }
   },
   {
-    "id": 1763,
+    "id": 1765,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32207,7 +32243,7 @@
     }
   },
   {
-    "id": 1764,
+    "id": 1766,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32228,7 +32264,7 @@
     }
   },
   {
-    "id": 1765,
+    "id": 1767,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32246,7 +32282,7 @@
     }
   },
   {
-    "id": 1766,
+    "id": 1768,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32264,7 +32300,7 @@
     }
   },
   {
-    "id": 1767,
+    "id": 1769,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32285,7 +32321,7 @@
     }
   },
   {
-    "id": 1768,
+    "id": 1770,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32307,7 +32343,7 @@
     }
   },
   {
-    "id": 1769,
+    "id": 1771,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32328,7 +32364,7 @@
     }
   },
   {
-    "id": 1770,
+    "id": 1772,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32349,7 +32385,7 @@
     }
   },
   {
-    "id": 1771,
+    "id": 1773,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32370,7 +32406,7 @@
     }
   },
   {
-    "id": 1772,
+    "id": 1774,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32391,7 +32427,7 @@
     }
   },
   {
-    "id": 1773,
+    "id": 1775,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32409,7 +32445,7 @@
     }
   },
   {
-    "id": 1774,
+    "id": 1776,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32431,7 +32467,7 @@
     }
   },
   {
-    "id": 1775,
+    "id": 1777,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32452,7 +32488,7 @@
     }
   },
   {
-    "id": 1776,
+    "id": 1778,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32473,7 +32509,7 @@
     }
   },
   {
-    "id": 1777,
+    "id": 1779,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32494,7 +32530,7 @@
     }
   },
   {
-    "id": 1778,
+    "id": 1780,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32515,7 +32551,7 @@
     }
   },
   {
-    "id": 1779,
+    "id": 1781,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32536,7 +32572,7 @@
     }
   },
   {
-    "id": 1780,
+    "id": 1782,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32557,7 +32593,7 @@
     }
   },
   {
-    "id": 1781,
+    "id": 1783,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32578,7 +32614,7 @@
     }
   },
   {
-    "id": 1782,
+    "id": 1784,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32599,7 +32635,7 @@
     }
   },
   {
-    "id": 1783,
+    "id": 1785,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32624,7 +32660,7 @@
     }
   },
   {
-    "id": 1784,
+    "id": 1786,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32645,7 +32681,7 @@
     }
   },
   {
-    "id": 1785,
+    "id": 1787,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32666,7 +32702,7 @@
     }
   },
   {
-    "id": 1786,
+    "id": 1788,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32687,7 +32723,7 @@
     }
   },
   {
-    "id": 1787,
+    "id": 1789,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32708,7 +32744,7 @@
     }
   },
   {
-    "id": 1788,
+    "id": 1790,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32729,7 +32765,7 @@
     }
   },
   {
-    "id": 1789,
+    "id": 1791,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32750,7 +32786,7 @@
     }
   },
   {
-    "id": 1790,
+    "id": 1792,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32771,7 +32807,7 @@
     }
   },
   {
-    "id": 1791,
+    "id": 1793,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32792,7 +32828,7 @@
     }
   },
   {
-    "id": 1792,
+    "id": 1794,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32813,7 +32849,7 @@
     }
   },
   {
-    "id": 1793,
+    "id": 1795,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32834,7 +32870,7 @@
     }
   },
   {
-    "id": 1794,
+    "id": 1796,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32855,7 +32891,7 @@
     }
   },
   {
-    "id": 1795,
+    "id": 1797,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32876,7 +32912,7 @@
     }
   },
   {
-    "id": 1796,
+    "id": 1798,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32897,7 +32933,7 @@
     }
   },
   {
-    "id": 1797,
+    "id": 1799,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32918,7 +32954,7 @@
     }
   },
   {
-    "id": 1798,
+    "id": 1800,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32936,7 +32972,7 @@
     }
   },
   {
-    "id": 1799,
+    "id": 1801,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32957,7 +32993,7 @@
     }
   },
   {
-    "id": 1800,
+    "id": 1802,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32975,7 +33011,7 @@
     }
   },
   {
-    "id": 1801,
+    "id": 1803,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -32996,7 +33032,7 @@
     }
   },
   {
-    "id": 1802,
+    "id": 1804,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33017,7 +33053,7 @@
     }
   },
   {
-    "id": 1803,
+    "id": 1805,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33038,7 +33074,7 @@
     }
   },
   {
-    "id": 1804,
+    "id": 1806,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33060,7 +33096,7 @@
     }
   },
   {
-    "id": 1805,
+    "id": 1807,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33084,7 +33120,7 @@
     }
   },
   {
-    "id": 1806,
+    "id": 1808,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33105,7 +33141,7 @@
     }
   },
   {
-    "id": 1807,
+    "id": 1809,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33123,7 +33159,7 @@
     }
   },
   {
-    "id": 1808,
+    "id": 1810,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33144,7 +33180,7 @@
     }
   },
   {
-    "id": 1809,
+    "id": 1811,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33165,7 +33201,7 @@
     }
   },
   {
-    "id": 1810,
+    "id": 1812,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33186,7 +33222,7 @@
     }
   },
   {
-    "id": 1811,
+    "id": 1813,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33207,7 +33243,7 @@
     }
   },
   {
-    "id": 1812,
+    "id": 1814,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33228,7 +33264,7 @@
     }
   },
   {
-    "id": 1813,
+    "id": 1815,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33249,7 +33285,7 @@
     }
   },
   {
-    "id": 1814,
+    "id": 1816,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33270,7 +33306,7 @@
     }
   },
   {
-    "id": 1815,
+    "id": 1817,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33288,7 +33324,7 @@
     }
   },
   {
-    "id": 1816,
+    "id": 1818,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33309,7 +33345,7 @@
     }
   },
   {
-    "id": 1817,
+    "id": 1819,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33330,7 +33366,7 @@
     }
   },
   {
-    "id": 1818,
+    "id": 1820,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33351,7 +33387,7 @@
     }
   },
   {
-    "id": 1819,
+    "id": 1821,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33373,7 +33409,7 @@
     }
   },
   {
-    "id": 1820,
+    "id": 1822,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33394,7 +33430,7 @@
     }
   },
   {
-    "id": 1821,
+    "id": 1823,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33416,7 +33452,7 @@
     }
   },
   {
-    "id": 1822,
+    "id": 1824,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33434,7 +33470,7 @@
     }
   },
   {
-    "id": 1823,
+    "id": 1825,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33455,7 +33491,7 @@
     }
   },
   {
-    "id": 1824,
+    "id": 1826,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33473,7 +33509,7 @@
     }
   },
   {
-    "id": 1825,
+    "id": 1827,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33494,7 +33530,7 @@
     }
   },
   {
-    "id": 1826,
+    "id": 1828,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33515,7 +33551,7 @@
     }
   },
   {
-    "id": 1827,
+    "id": 1829,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33536,7 +33572,7 @@
     }
   },
   {
-    "id": 1828,
+    "id": 1830,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33554,7 +33590,7 @@
     }
   },
   {
-    "id": 1829,
+    "id": 1831,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33575,7 +33611,7 @@
     }
   },
   {
-    "id": 1830,
+    "id": 1832,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33596,7 +33632,7 @@
     }
   },
   {
-    "id": 1831,
+    "id": 1833,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33617,7 +33653,7 @@
     }
   },
   {
-    "id": 1832,
+    "id": 1834,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33638,7 +33674,7 @@
     }
   },
   {
-    "id": 1833,
+    "id": 1835,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33656,7 +33692,7 @@
     }
   },
   {
-    "id": 1834,
+    "id": 1836,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33677,7 +33713,7 @@
     }
   },
   {
-    "id": 1835,
+    "id": 1837,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33698,7 +33734,7 @@
     }
   },
   {
-    "id": 1836,
+    "id": 1838,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33716,7 +33752,7 @@
     }
   },
   {
-    "id": 1837,
+    "id": 1839,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33738,7 +33774,7 @@
     }
   },
   {
-    "id": 1838,
+    "id": 1840,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33759,7 +33795,7 @@
     }
   },
   {
-    "id": 1839,
+    "id": 1841,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33777,7 +33813,7 @@
     }
   },
   {
-    "id": 1840,
+    "id": 1842,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33798,7 +33834,7 @@
     }
   },
   {
-    "id": 1841,
+    "id": 1843,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33820,7 +33856,7 @@
     }
   },
   {
-    "id": 1842,
+    "id": 1844,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33841,7 +33877,7 @@
     }
   },
   {
-    "id": 1843,
+    "id": 1845,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33862,7 +33898,7 @@
     }
   },
   {
-    "id": 1844,
+    "id": 1846,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33883,7 +33919,7 @@
     }
   },
   {
-    "id": 1845,
+    "id": 1847,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33904,7 +33940,7 @@
     }
   },
   {
-    "id": 1846,
+    "id": 1848,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33925,7 +33961,7 @@
     }
   },
   {
-    "id": 1847,
+    "id": 1849,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33946,7 +33982,7 @@
     }
   },
   {
-    "id": 1848,
+    "id": 1850,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33967,7 +34003,7 @@
     }
   },
   {
-    "id": 1849,
+    "id": 1851,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -33988,7 +34024,7 @@
     }
   },
   {
-    "id": 1850,
+    "id": 1852,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34009,7 +34045,7 @@
     }
   },
   {
-    "id": 1851,
+    "id": 1853,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34030,7 +34066,7 @@
     }
   },
   {
-    "id": 1852,
+    "id": 1854,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34048,7 +34084,7 @@
     }
   },
   {
-    "id": 1853,
+    "id": 1855,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34066,7 +34102,7 @@
     }
   },
   {
-    "id": 1854,
+    "id": 1856,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34084,7 +34120,7 @@
     }
   },
   {
-    "id": 1855,
+    "id": 1857,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34102,7 +34138,7 @@
     }
   },
   {
-    "id": 1856,
+    "id": 1858,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34120,7 +34156,7 @@
     }
   },
   {
-    "id": 1857,
+    "id": 1859,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34142,7 +34178,7 @@
     }
   },
   {
-    "id": 1858,
+    "id": 1860,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34160,7 +34196,7 @@
     }
   },
   {
-    "id": 1859,
+    "id": 1861,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34178,7 +34214,7 @@
     }
   },
   {
-    "id": 1860,
+    "id": 1862,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34208,7 +34244,7 @@
     }
   },
   {
-    "id": 1861,
+    "id": 1863,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34226,7 +34262,7 @@
     }
   },
   {
-    "id": 1862,
+    "id": 1864,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34247,7 +34283,7 @@
     }
   },
   {
-    "id": 1863,
+    "id": 1865,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34265,7 +34301,7 @@
     }
   },
   {
-    "id": 1864,
+    "id": 1866,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34283,7 +34319,7 @@
     }
   },
   {
-    "id": 1865,
+    "id": 1867,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34304,7 +34340,7 @@
     }
   },
   {
-    "id": 1866,
+    "id": 1868,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34325,7 +34361,7 @@
     }
   },
   {
-    "id": 1867,
+    "id": 1869,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34346,7 +34382,7 @@
     }
   },
   {
-    "id": 1868,
+    "id": 1870,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34364,7 +34400,7 @@
     }
   },
   {
-    "id": 1869,
+    "id": 1871,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34385,7 +34421,7 @@
     }
   },
   {
-    "id": 1870,
+    "id": 1872,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34406,7 +34442,7 @@
     }
   },
   {
-    "id": 1871,
+    "id": 1873,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34427,7 +34463,7 @@
     }
   },
   {
-    "id": 1872,
+    "id": 1874,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34445,7 +34481,7 @@
     }
   },
   {
-    "id": 1873,
+    "id": 1875,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34463,7 +34499,7 @@
     }
   },
   {
-    "id": 1874,
+    "id": 1876,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34481,7 +34517,7 @@
     }
   },
   {
-    "id": 1875,
+    "id": 1877,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34499,7 +34535,7 @@
     }
   },
   {
-    "id": 1876,
+    "id": 1878,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34517,7 +34553,7 @@
     }
   },
   {
-    "id": 1877,
+    "id": 1879,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34535,7 +34571,7 @@
     }
   },
   {
-    "id": 1878,
+    "id": 1880,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34553,7 +34589,7 @@
     }
   },
   {
-    "id": 1879,
+    "id": 1881,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34571,7 +34607,7 @@
     }
   },
   {
-    "id": 1880,
+    "id": 1882,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34589,7 +34625,7 @@
     }
   },
   {
-    "id": 1881,
+    "id": 1883,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34607,7 +34643,7 @@
     }
   },
   {
-    "id": 1882,
+    "id": 1884,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34628,7 +34664,7 @@
     }
   },
   {
-    "id": 1883,
+    "id": 1885,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34649,7 +34685,7 @@
     }
   },
   {
-    "id": 1884,
+    "id": 1886,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34670,7 +34706,7 @@
     }
   },
   {
-    "id": 1885,
+    "id": 1887,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34688,7 +34724,7 @@
     }
   },
   {
-    "id": 1886,
+    "id": 1888,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34706,7 +34742,7 @@
     }
   },
   {
-    "id": 1887,
+    "id": 1889,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34772,7 +34808,7 @@
     }
   },
   {
-    "id": 1888,
+    "id": 1890,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34790,7 +34826,7 @@
     }
   },
   {
-    "id": 1889,
+    "id": 1891,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34808,7 +34844,7 @@
     }
   },
   {
-    "id": 1890,
+    "id": 1892,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34826,7 +34862,7 @@
     }
   },
   {
-    "id": 1891,
+    "id": 1893,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34844,7 +34880,7 @@
     }
   },
   {
-    "id": 1892,
+    "id": 1894,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34862,7 +34898,7 @@
     }
   },
   {
-    "id": 1893,
+    "id": 1895,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34883,7 +34919,7 @@
     }
   },
   {
-    "id": 1894,
+    "id": 1896,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34904,7 +34940,7 @@
     }
   },
   {
-    "id": 1895,
+    "id": 1897,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34925,7 +34961,7 @@
     }
   },
   {
-    "id": 1896,
+    "id": 1898,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34943,7 +34979,7 @@
     }
   },
   {
-    "id": 1897,
+    "id": 1899,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34964,7 +35000,7 @@
     }
   },
   {
-    "id": 1898,
+    "id": 1900,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -34982,7 +35018,7 @@
     }
   },
   {
-    "id": 1899,
+    "id": 1901,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35000,7 +35036,7 @@
     }
   },
   {
-    "id": 1900,
+    "id": 1902,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35018,7 +35054,7 @@
     }
   },
   {
-    "id": 1901,
+    "id": 1903,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35039,7 +35075,7 @@
     }
   },
   {
-    "id": 1902,
+    "id": 1904,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35057,7 +35093,7 @@
     }
   },
   {
-    "id": 1903,
+    "id": 1905,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35105,7 +35141,7 @@
     }
   },
   {
-    "id": 1904,
+    "id": 1906,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35153,7 +35189,7 @@
     }
   },
   {
-    "id": 1905,
+    "id": 1907,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35286,7 +35322,7 @@
     }
   },
   {
-    "id": 1906,
+    "id": 1908,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35307,7 +35343,7 @@
     }
   },
   {
-    "id": 1907,
+    "id": 1909,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35328,7 +35364,7 @@
     }
   },
   {
-    "id": 1908,
+    "id": 1910,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35393,7 +35429,7 @@
     }
   },
   {
-    "id": 1909,
+    "id": 1911,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35414,7 +35450,7 @@
     }
   },
   {
-    "id": 1910,
+    "id": 1912,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35432,7 +35468,7 @@
     }
   },
   {
-    "id": 1911,
+    "id": 1913,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35455,7 +35491,7 @@
     }
   },
   {
-    "id": 1912,
+    "id": 1914,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35481,7 +35517,7 @@
     }
   },
   {
-    "id": 1913,
+    "id": 1915,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35499,7 +35535,7 @@
     }
   },
   {
-    "id": 1914,
+    "id": 1916,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35520,7 +35556,7 @@
     }
   },
   {
-    "id": 1915,
+    "id": 1917,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35577,7 +35613,7 @@
     }
   },
   {
-    "id": 1916,
+    "id": 1918,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35614,7 +35650,7 @@
     }
   },
   {
-    "id": 1917,
+    "id": 1919,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35658,7 +35694,7 @@
     }
   },
   {
-    "id": 1918,
+    "id": 1920,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35723,7 +35759,7 @@
     }
   },
   {
-    "id": 1919,
+    "id": 1921,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35746,7 +35782,7 @@
     }
   },
   {
-    "id": 1920,
+    "id": 1922,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35767,7 +35803,7 @@
     }
   },
   {
-    "id": 1921,
+    "id": 1923,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35805,7 +35841,7 @@
     }
   },
   {
-    "id": 1922,
+    "id": 1924,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35830,7 +35866,7 @@
     }
   },
   {
-    "id": 1923,
+    "id": 1925,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35853,7 +35889,7 @@
     }
   },
   {
-    "id": 1924,
+    "id": 1926,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35874,7 +35910,7 @@
     }
   },
   {
-    "id": 1925,
+    "id": 1927,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35899,7 +35935,7 @@
     }
   },
   {
-    "id": 1926,
+    "id": 1928,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35921,7 +35957,7 @@
     }
   },
   {
-    "id": 1927,
+    "id": 1929,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35942,7 +35978,7 @@
     }
   },
   {
-    "id": 1928,
+    "id": 1930,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35963,7 +35999,7 @@
     }
   },
   {
-    "id": 1929,
+    "id": 1931,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -35984,7 +36020,7 @@
     }
   },
   {
-    "id": 1930,
+    "id": 1932,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36005,7 +36041,7 @@
     }
   },
   {
-    "id": 1931,
+    "id": 1933,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36026,7 +36062,7 @@
     }
   },
   {
-    "id": 1932,
+    "id": 1934,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36047,7 +36083,7 @@
     }
   },
   {
-    "id": 1933,
+    "id": 1935,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36068,7 +36104,7 @@
     }
   },
   {
-    "id": 1934,
+    "id": 1936,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36089,7 +36125,7 @@
     }
   },
   {
-    "id": 1935,
+    "id": 1937,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36110,7 +36146,7 @@
     }
   },
   {
-    "id": 1936,
+    "id": 1938,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36133,7 +36169,7 @@
     }
   },
   {
-    "id": 1937,
+    "id": 1939,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36154,7 +36190,7 @@
     }
   },
   {
-    "id": 1938,
+    "id": 1940,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36175,7 +36211,7 @@
     }
   },
   {
-    "id": 1939,
+    "id": 1941,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36196,7 +36232,7 @@
     }
   },
   {
-    "id": 1940,
+    "id": 1942,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36217,7 +36253,7 @@
     }
   },
   {
-    "id": 1941,
+    "id": 1943,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36238,7 +36274,7 @@
     }
   },
   {
-    "id": 1942,
+    "id": 1944,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36256,7 +36292,7 @@
     }
   },
   {
-    "id": 1943,
+    "id": 1945,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36277,7 +36313,7 @@
     }
   },
   {
-    "id": 1944,
+    "id": 1946,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36298,7 +36334,7 @@
     }
   },
   {
-    "id": 1945,
+    "id": 1947,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36319,7 +36355,7 @@
     }
   },
   {
-    "id": 1946,
+    "id": 1948,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36340,7 +36376,7 @@
     }
   },
   {
-    "id": 1947,
+    "id": 1949,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36361,7 +36397,7 @@
     }
   },
   {
-    "id": 1948,
+    "id": 1950,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36382,7 +36418,7 @@
     }
   },
   {
-    "id": 1949,
+    "id": 1951,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36403,7 +36439,7 @@
     }
   },
   {
-    "id": 1950,
+    "id": 1952,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36424,7 +36460,7 @@
     }
   },
   {
-    "id": 1951,
+    "id": 1953,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36442,7 +36478,7 @@
     }
   },
   {
-    "id": 1952,
+    "id": 1954,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36463,7 +36499,7 @@
     }
   },
   {
-    "id": 1953,
+    "id": 1955,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36481,7 +36517,7 @@
     }
   },
   {
-    "id": 1954,
+    "id": 1956,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36499,7 +36535,7 @@
     }
   },
   {
-    "id": 1955,
+    "id": 1957,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36517,7 +36553,7 @@
     }
   },
   {
-    "id": 1956,
+    "id": 1958,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36535,7 +36571,7 @@
     }
   },
   {
-    "id": 1957,
+    "id": 1959,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36556,7 +36592,7 @@
     }
   },
   {
-    "id": 1958,
+    "id": 1960,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36577,7 +36613,7 @@
     }
   },
   {
-    "id": 1959,
+    "id": 1961,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36601,7 +36637,7 @@
     }
   },
   {
-    "id": 1960,
+    "id": 1962,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36622,7 +36658,7 @@
     }
   },
   {
-    "id": 1961,
+    "id": 1963,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36643,7 +36679,7 @@
     }
   },
   {
-    "id": 1962,
+    "id": 1964,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36664,7 +36700,7 @@
     }
   },
   {
-    "id": 1963,
+    "id": 1965,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36685,7 +36721,7 @@
     }
   },
   {
-    "id": 1964,
+    "id": 1966,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36706,7 +36742,7 @@
     }
   },
   {
-    "id": 1965,
+    "id": 1967,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36727,7 +36763,7 @@
     }
   },
   {
-    "id": 1966,
+    "id": 1968,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36748,7 +36784,7 @@
     }
   },
   {
-    "id": 1967,
+    "id": 1969,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36769,7 +36805,7 @@
     }
   },
   {
-    "id": 1968,
+    "id": 1970,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36790,7 +36826,7 @@
     }
   },
   {
-    "id": 1969,
+    "id": 1971,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36811,7 +36847,7 @@
     }
   },
   {
-    "id": 1970,
+    "id": 1972,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36832,7 +36868,7 @@
     }
   },
   {
-    "id": 1971,
+    "id": 1973,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36853,7 +36889,7 @@
     }
   },
   {
-    "id": 1972,
+    "id": 1974,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36874,7 +36910,7 @@
     }
   },
   {
-    "id": 1973,
+    "id": 1975,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36895,7 +36931,7 @@
     }
   },
   {
-    "id": 1974,
+    "id": 1976,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36916,7 +36952,7 @@
     }
   },
   {
-    "id": 1975,
+    "id": 1977,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36937,7 +36973,7 @@
     }
   },
   {
-    "id": 1976,
+    "id": 1978,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36958,7 +36994,7 @@
     }
   },
   {
-    "id": 1977,
+    "id": 1979,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -36979,7 +37015,7 @@
     }
   },
   {
-    "id": 1978,
+    "id": 1980,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37000,7 +37036,7 @@
     }
   },
   {
-    "id": 1979,
+    "id": 1981,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37021,7 +37057,7 @@
     }
   },
   {
-    "id": 1980,
+    "id": 1982,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37042,7 +37078,7 @@
     }
   },
   {
-    "id": 1981,
+    "id": 1983,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37063,7 +37099,7 @@
     }
   },
   {
-    "id": 1982,
+    "id": 1984,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37084,7 +37120,7 @@
     }
   },
   {
-    "id": 1983,
+    "id": 1985,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37105,7 +37141,7 @@
     }
   },
   {
-    "id": 1984,
+    "id": 1986,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37126,7 +37162,7 @@
     }
   },
   {
-    "id": 1985,
+    "id": 1987,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37144,7 +37180,7 @@
     }
   },
   {
-    "id": 1986,
+    "id": 1988,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37165,7 +37201,7 @@
     }
   },
   {
-    "id": 1987,
+    "id": 1989,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37186,7 +37222,7 @@
     }
   },
   {
-    "id": 1988,
+    "id": 1990,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37204,7 +37240,7 @@
     }
   },
   {
-    "id": 1989,
+    "id": 1991,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37225,7 +37261,7 @@
     }
   },
   {
-    "id": 1990,
+    "id": 1992,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37246,7 +37282,7 @@
     }
   },
   {
-    "id": 1991,
+    "id": 1993,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37267,7 +37303,7 @@
     }
   },
   {
-    "id": 1992,
+    "id": 1994,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37285,7 +37321,7 @@
     }
   },
   {
-    "id": 1993,
+    "id": 1995,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37306,7 +37342,7 @@
     }
   },
   {
-    "id": 1994,
+    "id": 1996,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37324,7 +37360,7 @@
     }
   },
   {
-    "id": 1995,
+    "id": 1997,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37345,7 +37381,7 @@
     }
   },
   {
-    "id": 1996,
+    "id": 1998,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37366,7 +37402,7 @@
     }
   },
   {
-    "id": 1997,
+    "id": 1999,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37387,7 +37423,7 @@
     }
   },
   {
-    "id": 1998,
+    "id": 2000,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37408,7 +37444,7 @@
     }
   },
   {
-    "id": 1999,
+    "id": 2001,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37426,7 +37462,7 @@
     }
   },
   {
-    "id": 2000,
+    "id": 2002,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37447,7 +37483,7 @@
     }
   },
   {
-    "id": 2001,
+    "id": 2003,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37468,7 +37504,7 @@
     }
   },
   {
-    "id": 2002,
+    "id": 2004,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37489,7 +37525,7 @@
     }
   },
   {
-    "id": 2003,
+    "id": 2005,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37510,7 +37546,7 @@
     }
   },
   {
-    "id": 2004,
+    "id": 2006,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37531,7 +37567,7 @@
     }
   },
   {
-    "id": 2005,
+    "id": 2007,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37552,7 +37588,7 @@
     }
   },
   {
-    "id": 2006,
+    "id": 2008,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37573,7 +37609,7 @@
     }
   },
   {
-    "id": 2007,
+    "id": 2009,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37594,7 +37630,7 @@
     }
   },
   {
-    "id": 2008,
+    "id": 2010,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37615,7 +37651,7 @@
     }
   },
   {
-    "id": 2009,
+    "id": 2011,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37636,7 +37672,7 @@
     }
   },
   {
-    "id": 2010,
+    "id": 2012,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37657,7 +37693,7 @@
     }
   },
   {
-    "id": 2011,
+    "id": 2013,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37678,7 +37714,7 @@
     }
   },
   {
-    "id": 2012,
+    "id": 2014,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37699,7 +37735,7 @@
     }
   },
   {
-    "id": 2013,
+    "id": 2015,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37720,7 +37756,7 @@
     }
   },
   {
-    "id": 2014,
+    "id": 2016,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37742,7 +37778,7 @@
     }
   },
   {
-    "id": 2015,
+    "id": 2017,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37760,7 +37796,7 @@
     }
   },
   {
-    "id": 2016,
+    "id": 2018,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37781,7 +37817,7 @@
     }
   },
   {
-    "id": 2017,
+    "id": 2019,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37802,7 +37838,7 @@
     }
   },
   {
-    "id": 2018,
+    "id": 2020,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37820,7 +37856,7 @@
     }
   },
   {
-    "id": 2019,
+    "id": 2021,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37841,7 +37877,7 @@
     }
   },
   {
-    "id": 2020,
+    "id": 2022,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37862,7 +37898,7 @@
     }
   },
   {
-    "id": 2021,
+    "id": 2023,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37883,7 +37919,7 @@
     }
   },
   {
-    "id": 2022,
+    "id": 2024,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37904,7 +37940,7 @@
     }
   },
   {
-    "id": 2023,
+    "id": 2025,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37925,7 +37961,7 @@
     }
   },
   {
-    "id": 2024,
+    "id": 2026,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37943,7 +37979,7 @@
     }
   },
   {
-    "id": 2025,
+    "id": 2027,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37964,7 +38000,7 @@
     }
   },
   {
-    "id": 2026,
+    "id": 2028,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -37985,7 +38021,7 @@
     }
   },
   {
-    "id": 2027,
+    "id": 2029,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38006,7 +38042,7 @@
     }
   },
   {
-    "id": 2028,
+    "id": 2030,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38028,7 +38064,7 @@
     }
   },
   {
-    "id": 2029,
+    "id": 2031,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38049,7 +38085,7 @@
     }
   },
   {
-    "id": 2030,
+    "id": 2032,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38070,7 +38106,7 @@
     }
   },
   {
-    "id": 2031,
+    "id": 2033,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38091,7 +38127,7 @@
     }
   },
   {
-    "id": 2032,
+    "id": 2034,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38112,7 +38148,7 @@
     }
   },
   {
-    "id": 2033,
+    "id": 2035,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38133,7 +38169,7 @@
     }
   },
   {
-    "id": 2034,
+    "id": 2036,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38154,7 +38190,7 @@
     }
   },
   {
-    "id": 2035,
+    "id": 2037,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38175,7 +38211,7 @@
     }
   },
   {
-    "id": 2036,
+    "id": 2038,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38196,7 +38232,7 @@
     }
   },
   {
-    "id": 2037,
+    "id": 2039,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38217,7 +38253,7 @@
     }
   },
   {
-    "id": 2038,
+    "id": 2040,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38238,7 +38274,7 @@
     }
   },
   {
-    "id": 2039,
+    "id": 2041,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38259,7 +38295,7 @@
     }
   },
   {
-    "id": 2040,
+    "id": 2042,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38280,7 +38316,7 @@
     }
   },
   {
-    "id": 2041,
+    "id": 2043,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38301,7 +38337,7 @@
     }
   },
   {
-    "id": 2042,
+    "id": 2044,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38322,7 +38358,7 @@
     }
   },
   {
-    "id": 2043,
+    "id": 2045,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38343,7 +38379,7 @@
     }
   },
   {
-    "id": 2044,
+    "id": 2046,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38364,7 +38400,7 @@
     }
   },
   {
-    "id": 2045,
+    "id": 2047,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38385,7 +38421,7 @@
     }
   },
   {
-    "id": 2046,
+    "id": 2048,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38406,7 +38442,7 @@
     }
   },
   {
-    "id": 2047,
+    "id": 2049,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38427,7 +38463,7 @@
     }
   },
   {
-    "id": 2048,
+    "id": 2050,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38448,7 +38484,7 @@
     }
   },
   {
-    "id": 2049,
+    "id": 2051,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38469,7 +38505,7 @@
     }
   },
   {
-    "id": 2050,
+    "id": 2052,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38490,7 +38526,7 @@
     }
   },
   {
-    "id": 2051,
+    "id": 2053,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38511,7 +38547,7 @@
     }
   },
   {
-    "id": 2052,
+    "id": 2054,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38532,7 +38568,7 @@
     }
   },
   {
-    "id": 2053,
+    "id": 2055,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38553,7 +38589,7 @@
     }
   },
   {
-    "id": 2054,
+    "id": 2056,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38571,7 +38607,7 @@
     }
   },
   {
-    "id": 2055,
+    "id": 2057,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38603,7 +38639,7 @@
     }
   },
   {
-    "id": 2056,
+    "id": 2058,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38621,7 +38657,7 @@
     }
   },
   {
-    "id": 2057,
+    "id": 2059,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38639,7 +38675,7 @@
     }
   },
   {
-    "id": 2058,
+    "id": 2060,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38660,7 +38696,7 @@
     }
   },
   {
-    "id": 2059,
+    "id": 2061,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38678,7 +38714,7 @@
     }
   },
   {
-    "id": 2060,
+    "id": 2062,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38705,7 +38741,7 @@
     }
   },
   {
-    "id": 2061,
+    "id": 2063,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38739,7 +38775,7 @@
     }
   },
   {
-    "id": 2062,
+    "id": 2064,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38760,7 +38796,7 @@
     }
   },
   {
-    "id": 2063,
+    "id": 2065,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38781,7 +38817,7 @@
     }
   },
   {
-    "id": 2064,
+    "id": 2066,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38802,7 +38838,7 @@
     }
   },
   {
-    "id": 2065,
+    "id": 2067,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38823,7 +38859,7 @@
     }
   },
   {
-    "id": 2066,
+    "id": 2068,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38844,7 +38880,7 @@
     }
   },
   {
-    "id": 2067,
+    "id": 2069,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38865,7 +38901,7 @@
     }
   },
   {
-    "id": 2068,
+    "id": 2070,
     "priority": 2,
     "action": {
       "type": "allow"
@@ -38883,7 +38919,7 @@
     }
   },
   {
-    "id": 2069,
+    "id": 2071,
     "priority": 2,
     "action": {
       "type": "allow"

@@ -1,10 +1,10 @@
 {
-  "version": "2026-05-01",
+  "version": "2026-05-04",
   "type": "cmp_site",
-  "generated": "2026-05-01T20:38:48.706Z",
+  "generated": "2026-05-04T21:10:25.981Z",
   "source": "Autoconsent (duckduckgo/autoconsent) MPL-2.0",
-  "autoconsent_tree_hash": "8c56f529f8fde728",
-  "cmp_count": 233,
+  "autoconsent_tree_hash": "b75ba8a8d877d9e9",
+  "cmp_count": 234,
   "signatures": {
     "abconcerts_be": {
       "selector": "dialog.cookie-consent",
@@ -1327,6 +1327,20 @@
           "#lanyard_root div[role='dialog']"
         ]
       }
+    },
+    "kickstarter_com": {
+      "selector": "#react-consent-modal",
+      "detectors": {
+        "present": [
+          "#react-consent-modal .flex.flex-column"
+        ],
+        "showing": [
+          "#react-consent-modal .flex.flex-column"
+        ]
+      },
+      "domains": [
+        "kickstarter.com"
+      ]
     },
     "klaro": {
       "selector": ".klaro",

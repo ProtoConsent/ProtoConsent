@@ -1,10 +1,10 @@
 {
-  "version": "2026-05-01",
+  "version": "2026-05-04",
   "type": "cmp_detectors",
-  "generated": "2026-05-01T20:38:48.713Z",
+  "generated": "2026-05-04T21:10:26.001Z",
   "source": "Autoconsent (duckduckgo/autoconsent) MPL-2.0",
-  "autoconsent_tree_hash": "8c56f529f8fde728",
-  "cmp_count": 287,
+  "autoconsent_tree_hash": "b75ba8a8d877d9e9",
+  "cmp_count": 288,
   "detectors": {
     "abc": {
       "present": [
@@ -1244,6 +1244,17 @@
       ],
       "showing": [
         "#lanyard_root div[role='dialog']"
+      ]
+    },
+    "kickstarter_com": {
+      "present": [
+        "#react-consent-modal .flex.flex-column"
+      ],
+      "showing": [
+        "#react-consent-modal .flex.flex-column"
+      ],
+      "domains": [
+        "kickstarter.com"
       ]
     },
     "klaro": {
