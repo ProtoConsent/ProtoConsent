@@ -282,6 +282,11 @@ export async function loadRegionalLanguagesConfig() {
 }
 
 // Enhanced lists catalog - merged from local fallback + remote config/enhanced-lists.json
+// Per-source regional entries are synthesized from regional-languages.json (CDN or bundled).
+const RL_REMOTE_URL = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/config/regional-languages.json";
+const RL_REMOTE_FALLBACK = "https://raw.githubusercontent.com/ProtoConsent/data/main/config/regional-languages.json";
+const CDN_REGIONAL_BASE = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/enhanced/regional/";
+
 export function loadEnhancedListsCatalog(options) {
   const forceRefresh = options && options.forceRefresh;
 
@@ -334,33 +339,81 @@ export function loadEnhancedListsCatalog(options) {
       });
   });
 
-  const promise = Promise.all([localPromise, remotePromise]).then(([local, remote]) => {
+  // Fetch fresh regional-languages.json from CDN for version metadata
+  const rlRemotePromise = consentPromise.then(consented => {
+    if (!consented) return null;
+    return fetch(RL_REMOTE_URL, { credentials: "omit", cache: "no-store" })
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => fetch(RL_REMOTE_FALLBACK, { credentials: "omit" }).then(r => r.ok ? r.json() : null).catch(() => null));
+  });
+
+  const promise = Promise.all([localPromise, remotePromise, rlRemotePromise]).then(async ([local, remote, rlRemote]) => {
     setCatalogLastFetched(Date.now());
     setCatalogPromise(null);
     setCatalogLocalCount(Object.keys(local).length);
     setCatalogRemoteCount(remote ? Object.keys(remote).length : 0);
 
+    let merged;
     if (!remote) {
       setCatalogSource("local");
-      setEnhancedListsCatalog(local);
-      return local;
+      merged = local;
+    } else {
+      setCatalogSource("merged");
+      setCatalogError(null);
+      setCatalogLastRemoteFetch(Date.now());
+      merged = Object.create(null);
+      for (const id of Object.keys(local)) {
+        merged[id] = local[id];
+      }
+      for (const id of Object.keys(remote)) {
+        if (DEPRECATED_LIST_IDS.has(id)) continue;
+        if (merged[id]) {
+          const entry = Object.create(null);
+          Object.assign(entry, merged[id], remote[id]);
+          merged[id] = entry;
+        } else {
+          merged[id] = remote[id];
+        }
+      }
     }
 
-    setCatalogSource("merged");
-    setCatalogError(null);
-    setCatalogLastRemoteFetch(Date.now());
-    const merged = Object.create(null);
-    for (const id of Object.keys(local)) {
-      merged[id] = local[id];
+    // Synthesize per-source regional entries from regional-languages.json
+    let rlConfig = rlRemote || regionalLanguagesConfig;
+    if (!rlConfig) {
+      try {
+        const r = await fetch(chrome.runtime.getURL("config/regional-languages.json"));
+        if (r.ok) rlConfig = await r.json();
+      } catch (_) {}
     }
-    for (const id of Object.keys(remote)) {
-      if (DEPRECATED_LIST_IDS.has(id)) continue;
-      if (merged[id]) {
-        const entry = Object.create(null);
-        Object.assign(entry, merged[id], remote[id]);
-        merged[id] = entry;
-      } else {
-        merged[id] = remote[id];
+    if (rlConfig) {
+      setRegionalLanguagesConfig(rlConfig);
+      for (const [region, def] of Object.entries(rlConfig)) {
+        if (!def.sources) continue;
+        for (const src of def.sources) {
+          if (!src.slug) continue;
+          for (const type of ["blocking", "cosmetic"]) {
+            const id = "regional_" + region + "_" + src.slug + "_" + type;
+            merged[id] = {
+              name: src.name,
+              description: "Regional " + type + " filters from " + src.name,
+              source: src.url,
+              license: "GPL-3.0-or-later",
+              category: null,
+              preset: "basic",
+              type: type === "cosmetic" ? "cosmetic" : null,
+              region: region,
+              flag: def.flag || null,
+              source_slug: src.slug,
+              source_name: src.name,
+              fetch_url: CDN_REGIONAL_BASE + "regional_" + region + "_" + src.slug + "_" + type + ".json",
+              version: src[type + "_version"] || null,
+              domain_count: type === "blocking" ? (src.blocking_domains || 0) : 0,
+              path_rule_count: type === "blocking" ? (src.blocking_paths || 0) : 0,
+              generic_count: type === "cosmetic" ? (src.cosmetic_generic || 0) : 0,
+              domain_rule_count: type === "cosmetic" ? (src.cosmetic_domain_rules || 0) : 0,
+            };
+          }
+        }
       }
     }
 

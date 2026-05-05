@@ -4,14 +4,14 @@
     "flag": ["AL", "XK"],
     "languages": ["sq"],
     "sources": [
-      { "name": "Adblock List for Albania", "url": "https://github.com/AnXh3L0/blocklist" }
+      { "name": "Adblock List for Albania", "url": "https://github.com/AnXh3L0/blocklist", "slug": "albanian" }
     ]
   },
   "ar": {
     "label": "Arabic",
     "languages": ["ar"],
     "sources": [
-      { "name": "AdGuard Arabic", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Arabic", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "bg": {
@@ -19,7 +19,7 @@
     "flag": "BG",
     "languages": ["bg"],
     "sources": [
-      { "name": "AdGuard Bulgarian", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Bulgarian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "cn": {
@@ -27,8 +27,8 @@
     "flag": "CN",
     "languages": ["zh", "zh-CN", "zh-TW"],
     "sources": [
-      { "name": "EasyList China", "url": "https://easylist.to/" },
-      { "name": "AdGuard Chinese", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "EasyList China", "url": "https://easylist.to/", "slug": "easylist" },
+      { "name": "AdGuard Chinese", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "cs": {
@@ -36,7 +36,7 @@
     "flag": ["CZ", "SK"],
     "languages": ["cs", "sk"],
     "sources": [
-      { "name": "AdGuard Czech/Slovak", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Czech/Slovak", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "de": {
@@ -44,8 +44,8 @@
     "flag": "DE",
     "languages": ["de"],
     "sources": [
-      { "name": "EasyList Germany", "url": "https://easylist.to/" },
-      { "name": "AdGuard German", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "EasyList Germany", "url": "https://easylist.to/", "slug": "easylist" },
+      { "name": "AdGuard German", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "es": {
@@ -53,8 +53,8 @@
     "flag": ["ES", "AR", "MX", "CO"],
     "languages": ["es"],
     "sources": [
-      { "name": "EasyList Spanish", "url": "https://easylist.to/" },
-      { "name": "AdGuard Spanish/Portuguese", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "EasyList Spanish", "url": "https://easylist.to/", "slug": "easylist" },
+      { "name": "AdGuard Spanish/Portuguese", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "et": {
@@ -62,7 +62,7 @@
     "flag": "EE",
     "languages": ["et"],
     "sources": [
-      { "name": "AdGuard Estonian", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Estonian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "fa": {
@@ -70,7 +70,7 @@
     "flag": "IR",
     "languages": ["fa"],
     "sources": [
-      { "name": "AdGuard Persian", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Persian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "fi": {
@@ -78,7 +78,7 @@
     "flag": "FI",
     "languages": ["fi"],
     "sources": [
-      { "name": "AdGuard Finnish", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Finnish", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "fr": {
@@ -86,7 +86,7 @@
     "flag": "FR",
     "languages": ["fr"],
     "sources": [
-      { "name": "AdGuard French", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard French", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "gr": {
@@ -94,7 +94,7 @@
     "flag": ["GR", "CY"],
     "languages": ["el"],
     "sources": [
-      { "name": "Greek AdBlock Filter", "url": "https://github.com/kargig/greek-adblockplus-filter" }
+      { "name": "Greek AdBlock Filter", "url": "https://github.com/kargig/greek-adblockplus-filter", "slug": "greek_abp" }
     ]
   },
   "he": {
@@ -102,8 +102,8 @@
     "flag": "IL",
     "languages": ["he", "iw"],
     "sources": [
-      { "name": "EasyList Hebrew", "url": "https://easylist.to/" },
-      { "name": "EasyList Hebrew uBO supplement", "url": "https://github.com/easylist/EasyListHebrew" }
+      { "name": "EasyList Hebrew", "url": "https://easylist.to/", "slug": "easylist" },
+      { "name": "EasyList Hebrew uBO supplement", "url": "https://github.com/easylist/EasyListHebrew", "slug": "easylist_ubo" }
     ]
   },
   "hi": {
@@ -111,8 +111,8 @@
     "flag": "IN",
     "languages": ["hi", "as", "bn", "gu", "kn", "ml", "mr", "ne", "pa", "ta", "te"],
     "sources": [
-      { "name": "AdGuard Hindi", "url": "https://github.com/AdguardTeam/AdguardFilters" },
-      { "name": "IndianList", "url": "https://github.com/mediumkreation/IndianList" }
+      { "name": "AdGuard Hindi", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" },
+      { "name": "IndianList", "url": "https://github.com/mediumkreation/IndianList", "slug": "indianlist" }
     ]
   },
   "hr": {
@@ -120,7 +120,7 @@
     "flag": ["RS", "HR"],
     "languages": ["sr", "hr", "bs"],
     "sources": [
-      { "name": "AdGuard Serbo-Croatian", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Serbo-Croatian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "hu": {
@@ -128,7 +128,7 @@
     "flag": "HU",
     "languages": ["hu"],
     "sources": [
-      { "name": "AdGuard Hungarian", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Hungarian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "id": {
@@ -136,7 +136,7 @@
     "flag": "ID",
     "languages": ["id"],
     "sources": [
-      { "name": "AdGuard Indonesian", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Indonesian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "is": {
@@ -144,7 +144,7 @@
     "flag": "IS",
     "languages": ["is"],
     "sources": [
-      { "name": "Icelandic ABP List", "url": "https://github.com/brave/adblock-lists" }
+      { "name": "Icelandic ABP List", "url": "https://github.com/brave/adblock-lists", "slug": "icelandic_abp" }
     ]
   },
   "it": {
@@ -152,7 +152,7 @@
     "flag": "IT",
     "languages": ["it"],
     "sources": [
-      { "name": "EasyList Italy", "url": "https://easylist.to/" }
+      { "name": "EasyList Italy", "url": "https://easylist.to/", "slug": "easylist" }
     ]
   },
   "ja": {
@@ -160,7 +160,7 @@
     "flag": "JP",
     "languages": ["ja"],
     "sources": [
-      { "name": "AdGuard Japanese", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Japanese", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "ko": {
@@ -168,8 +168,8 @@
     "flag": "KR",
     "languages": ["ko"],
     "sources": [
-      { "name": "AdGuard Korean", "url": "https://github.com/AdguardTeam/AdguardFilters" },
-      { "name": "List-KR", "url": "https://github.com/List-KR/List-KR" }
+      { "name": "AdGuard Korean", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" },
+      { "name": "List-KR", "url": "https://github.com/List-KR/List-KR", "slug": "list_kr" }
     ]
   },
   "lt": {
@@ -177,7 +177,7 @@
     "flag": "LT",
     "languages": ["lt"],
     "sources": [
-      { "name": "EasyList Lithuania", "url": "https://easylist.to/" }
+      { "name": "EasyList Lithuania", "url": "https://easylist.to/", "slug": "easylist" }
     ]
   },
   "lv": {
@@ -185,7 +185,7 @@
     "flag": "LV",
     "languages": ["lv"],
     "sources": [
-      { "name": "AdGuard Latvian", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Latvian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "mk": {
@@ -193,7 +193,7 @@
     "flag": "MK",
     "languages": ["mk"],
     "sources": [
-      { "name": "AdGuard Macedonian", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Macedonian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "nl": {
@@ -201,8 +201,8 @@
     "flag": "NL",
     "languages": ["nl"],
     "sources": [
-      { "name": "EasyList Dutch", "url": "https://easylist.to/" },
-      { "name": "AdGuard Dutch", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "EasyList Dutch", "url": "https://easylist.to/", "slug": "easylist" },
+      { "name": "AdGuard Dutch", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "no": {
@@ -210,8 +210,8 @@
     "flag": ["NO", "DK", "IS"],
     "languages": ["no", "nb", "nn", "da", "is", "fo"],
     "sources": [
-      { "name": "AdGuard Nordic", "url": "https://github.com/AdguardTeam/AdguardFilters" },
-      { "name": "Dandelion Sprout's Nordic Filters", "url": "https://github.com/DandelionSprout/adfilt" }
+      { "name": "AdGuard Nordic", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" },
+      { "name": "Dandelion Sprout's Nordic Filters", "url": "https://github.com/DandelionSprout/adfilt", "slug": "dandelion" }
     ]
   },
   "pl": {
@@ -219,7 +219,7 @@
     "flag": "PL",
     "languages": ["pl"],
     "sources": [
-      { "name": "EasyList Polish", "url": "https://easylist.to/" }
+      { "name": "EasyList Polish", "url": "https://easylist.to/", "slug": "easylist" }
     ]
   },
   "pt": {
@@ -227,8 +227,8 @@
     "flag": ["PT", "BR"],
     "languages": ["pt", "pt-BR", "pt-PT"],
     "sources": [
-      { "name": "EasyList Portuguese", "url": "https://easylist.to/" },
-      { "name": "AdGuard Spanish/Portuguese", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "EasyList Portuguese", "url": "https://easylist.to/", "slug": "easylist" },
+      { "name": "AdGuard Spanish/Portuguese", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "ro": {
@@ -236,8 +236,8 @@
     "flag": ["RO", "MD"],
     "languages": ["ro"],
     "sources": [
-      { "name": "ROList (AdGuard)", "url": "https://github.com/nicusorsr/rolist-adguard" },
-      { "name": "ROad-Block", "url": "https://github.com/tcptomato/ROad-Block" }
+      { "name": "ROList (AdGuard)", "url": "https://github.com/nicusorsr/rolist-adguard", "slug": "rolist" },
+      { "name": "ROad-Block", "url": "https://github.com/tcptomato/ROad-Block", "slug": "road_block" }
     ]
   },
   "ru": {
@@ -245,8 +245,8 @@
     "flag": "RU",
     "languages": ["ru"],
     "sources": [
-      { "name": "AdGuard Russian", "url": "https://github.com/AdguardTeam/AdguardFilters" },
-      { "name": "RU AdList", "url": "https://github.com/easylist/ruadlist" }
+      { "name": "AdGuard Russian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" },
+      { "name": "RU AdList", "url": "https://github.com/easylist/ruadlist", "slug": "ruadlist" }
     ]
   },
   "sv": {
@@ -254,7 +254,7 @@
     "flag": "SE",
     "languages": ["sv"],
     "sources": [
-      { "name": "AdGuard Swedish", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Swedish", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "si": {
@@ -262,7 +262,7 @@
     "flag": "SI",
     "languages": ["sl"],
     "sources": [
-      { "name": "Slovenian List", "url": "https://github.com/betterwebleon/slovenian-list" }
+      { "name": "Slovenian List", "url": "https://github.com/betterwebleon/slovenian-list", "slug": "slovenian" }
     ]
   },
   "th": {
@@ -270,7 +270,7 @@
     "flag": "TH",
     "languages": ["th"],
     "sources": [
-      { "name": "AdGuard Thai", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Thai", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "tr": {
@@ -278,7 +278,7 @@
     "flag": "TR",
     "languages": ["tr"],
     "sources": [
-      { "name": "AdGuard Turkish", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Turkish", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "uk": {
@@ -286,7 +286,7 @@
     "flag": "UA",
     "languages": ["uk"],
     "sources": [
-      { "name": "AdGuard Ukrainian", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Ukrainian", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   },
   "vi": {
@@ -294,7 +294,7 @@
     "flag": "VN",
     "languages": ["vi"],
     "sources": [
-      { "name": "AdGuard Vietnamese", "url": "https://github.com/AdguardTeam/AdguardFilters" }
+      { "name": "AdGuard Vietnamese", "url": "https://github.com/AdguardTeam/AdguardFilters", "slug": "adguard" }
     ]
   }
 }

@@ -151,7 +151,15 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       if (bg.regionalLanguages.length > 0) {
         lines.push("  languages: " + bg.regionalLanguages.join(", "));
         const regLists = (bg.enhancedListIds || []).filter(function (id) { return id.startsWith("regional_"); });
-        lines.push("  active lists: " + (regLists.length > 0 ? regLists.join(", ") : "(none)"));
+        const regAll = (bg.enhancedAllIds || []).filter(function (id) { return id.startsWith("regional_"); });
+        lines.push("  enabled: " + regLists.length + " / " + regAll.length + " downloaded");
+        if (regLists.length > 0) {
+          lines.push("  active: " + regLists.join(", "));
+        }
+        const disabled = regAll.filter(function (id) { return regLists.indexOf(id) === -1; });
+        if (disabled.length > 0) {
+          lines.push("  disabled: " + disabled.join(", "));
+        }
       } else {
         lines.push("  languages: (none selected)");
       }

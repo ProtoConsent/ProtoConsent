@@ -10,7 +10,7 @@
  // @param {Object} catalog - enhanced-lists.json catalog
  // @returns {string} "off" | "basic" | "full" | "custom"
  
-import { REGIONAL_IDS, WELL_KNOWN_SKIP_DOMAINS } from "./config-bridge.js";
+import { WELL_KNOWN_SKIP_DOMAINS, isRegionalEntry } from "./config-bridge.js";
 import { getLifetimeTotal } from "./tracking.js";
 
 function resolveEnhancedPreset(lists, catalog) {
@@ -19,7 +19,7 @@ function resolveEnhancedPreset(lists, catalog) {
   const allDisabled = downloaded.every(id => !lists[id]?.enabled);
   if (allDisabled) return "off";
   // Exclude regional and optional lists from preset resolution (they are user-managed)
-  const catalogIds = Object.keys(catalog).filter(id => !REGIONAL_IDS.has(id) && catalog[id].preset !== "optional" && catalog[id].version);
+  const catalogIds = Object.keys(catalog).filter(id => !isRegionalEntry(catalog[id]) && catalog[id].preset !== "optional" && catalog[id].version);
   if (catalogIds.length === 0) return "custom";
   const allDownloaded = catalogIds.every(id => !!lists[id]);
   const allEnabled = allDownloaded && catalogIds.every(id => !!lists[id]?.enabled);
@@ -58,7 +58,7 @@ import {
   loadBlocklistsConfig, loadPresetsConfig, loadPurposesConfig,
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
-import { handleRegionalFetch, initRegionalStorageListener } from "./handlers-regional.js";
+import { initRegionalStorageListener } from "./handlers-regional.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
 import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
@@ -99,14 +99,7 @@ export async function handleBridgeQuery(message) {
 export function fetchEnhancedList(listId) {
   return loadEnhancedListsCatalog().then(async (catalog) => {
     const listDef = catalog[listId];
-    if (!listDef || (!listDef.fetch_url && !listDef.fetch_base)) {
-      return { ok: false, error: "Unknown list or no fetch URL" };
-    }
-    // Regional lists: delegated to handlers-regional.js
-    if (listDef.type === "regional_cosmetic" || listDef.type === "regional_blocking") {
-      return new Promise(resolve => handleRegionalFetch(listId, listDef, resolve));
-    }
-    if (!listDef.fetch_url) {
+    if (!listDef || !listDef.fetch_url) {
       return { ok: false, error: "Unknown list or no fetch URL" };
     }
     const fetchUrl = listDef.fetch_url.startsWith("http")
@@ -1067,16 +1060,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return getEnhancedListsFromStorage().then(lists => {
           return new Promise(resolveRL => {
             chrome.storage.local.get(["regionalLanguages"], (rl) => {
-              resolveRL(Array.isArray(rl.regionalLanguages) && rl.regionalLanguages.length > 0);
+              resolveRL(Array.isArray(rl.regionalLanguages) ? rl.regionalLanguages : []);
             });
-          }).then(hasRegionalLangs => {
+          }).then(regionalLangs => {
           for (const [listId, listDef] of Object.entries(catalog)) {
             if (!lists[listId]) continue;
             if (preset === "off") {
               lists[listId].enabled = false;
-            } else if (REGIONAL_IDS.has(listId)) {
-              // Regional lists follow preset only if languages are selected
-              if (hasRegionalLangs) {
+            } else if (isRegionalEntry(listDef)) {
+              // Regional lists follow preset only if their region is selected
+              if (regionalLangs.includes(listDef.region)) {
                 if (preset === "basic") {
                   lists[listId].enabled = listDef.preset === "basic";
                 } else if (preset === "full") {
@@ -1107,7 +1100,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               resolve();
             });
           });
-          }); // end hasRegionalLangs then
+          }); // end regionalLangs then
         });
       });
     });

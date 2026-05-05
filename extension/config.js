@@ -58,10 +58,10 @@ const CMP_IDS = new Set([
   "protoconsent_cmp_signatures",
 ]);
 
-// Regional = the 2 aggregated regional lists shown as individual Enhanced cards.
-const REGIONAL_COSMETIC_ID = "regional_cosmetic";
-const REGIONAL_BLOCKING_ID = "regional_blocking";
-const REGIONAL_IDS = new Set([REGIONAL_COSMETIC_ID, REGIONAL_BLOCKING_ID]);
+// Regional: per-source entries identified by having a `region` field in catalog.
+function isRegionalEntry(catalogDef) {
+  return !!catalogDef?.region;
+}
 
 // Non-purpose categories used by enhanced lists (not part of Consent Commons).
 const ENHANCED_EXTRA_CATEGORIES = {

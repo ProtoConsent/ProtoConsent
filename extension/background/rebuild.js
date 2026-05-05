@@ -819,6 +819,7 @@ async function _rebuildAllDynamicRulesImpl() {
         enhancedCount: Object.values(enhancedListsMeta).filter(l => l.enabled).length,
         enhancedListIds: Object.entries(enhancedListsMeta)
           .filter(([, l]) => l.enabled).map(([id]) => id),
+        enhancedAllIds: Object.keys(enhancedListsMeta),
         enhancedRules: Object.keys(newEnhancedMap).length,
         enhancedPathRules: newRules.filter(r => newEnhancedMap[r.id] && r.condition.urlFilter?.startsWith("||")).length,
         chStripping: globalDeniesAT ? "global" : (chAddSites.length > 0 ? "per-site" : "off"),

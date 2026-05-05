@@ -74,6 +74,9 @@ html.pc-dark .ps-dynamic-grid > .ps-gpc-toggle-row {
   background: linear-gradient(180deg, #252830 0%, #1E212B 100%);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
+html.pc-dark .ps-regional-subtoggle-label {
+  color: #9ca3af;
+}
 html.pc-dark .ps-autorefresh-card {
   background: linear-gradient(180deg, #252830 0%, #1E212B 100%);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
