@@ -23,12 +23,12 @@ const MAX_DISPLAY_RETRIES = 2;
 
 // --- Stats bar + signals bar (collapsible) ---
 
-var _statsBar = null;
-var _signalsBar = null;
+let _statsBar = null;
+let _signalsBar = null;
 
 function ensureBars() {
   if (!_statsBar) {
-    var container = document.getElementById("pc-bar-stats");
+    let container = document.getElementById("pc-bar-stats");
     if (container) {
       _statsBar = createCollapsibleBar("pc-stats-bar", { ariaLabel: "Blocking stats", tint: null });
       _statsBar.setCollapsed("loading...");
@@ -36,7 +36,7 @@ function ensureBars() {
     }
   }
   if (!_signalsBar) {
-    var container = document.getElementById("pc-bar-signals");
+    let container = document.getElementById("pc-bar-signals");
     if (container) {
       _signalsBar = createCollapsibleBar("pc-signals-bar", { ariaLabel: "Privacy signals", tint: "signals" });
       _signalsBar.setCollapsed("Privacy signals");
@@ -109,7 +109,7 @@ async function getBlockedRulesCount() {
       }
       const wlHitDomains = domainsResp?.whitelistHitDomains || {};
       const wlHits = Object.values(wlHitDomains).reduce((s, c) => s + c, 0);
-      var gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + (c && typeof c === "object" ? c.count : (c || 0)), 0);
+      const gpcTotal = Object.values(gpcDomainCounts).reduce((s, c) => s + (c && typeof c === "object" ? c.count : (c || 0)), 0);
       const psData = domainsResp?.paramStrips || {};
       const psTotal = Object.values(psData).reduce((s, d) => s + (d && typeof d === "object" ? d.count : (d || 0)), 0);
       return { blocked, gpc: gpcTotal || gpcDomains.length, ch: 0, paramStrips: psTotal, gpcDomains, gpcDomainCounts, domainHitCount, rulesetHitCount: {}, blockedDomains, pathDetails, whitelistHits: wlHits, whitelistHitDomains: wlHitDomains, hotfixPending, lifetimeBlocked: domainsResp?.lifetimeBlocked || 0 };
@@ -237,23 +237,23 @@ function computeBlockProvenance(coverage, mode) {
 // --- Stats bar rendering ---
 
 function buildStatsCollapsed(blocked) {
-  var frag = document.createDocumentFragment();
-  var fragments = [];
+  const frag = document.createDocumentFragment();
+  const fragments = [];
 
   if (blocked > 0) {
-    var enhancedCount = 0;
-    for (var key in lastPurposeStats) {
+    let enhancedCount = 0;
+    for (const key in lastPurposeStats) {
       if (key.startsWith("enhanced:")) enhancedCount += lastPurposeStats[key];
     }
-    var blockedSpan = document.createElement("span");
+    const blockedSpan = document.createElement("span");
     blockedSpan.appendChild(document.createTextNode(blocked + " blocked"));
     if (enhancedCount > 0) {
-      var epSpan = document.createElement("span");
+      const epSpan = document.createElement("span");
       epSpan.className = "pc-counter-enhanced";
       epSpan.title = enhancedCount + " blocked by Enhanced Protection";
       blockedSpan.appendChild(document.createTextNode(" "));
       epSpan.appendChild(document.createTextNode("("));
-      var epIcon = document.createElement("img");
+      const epIcon = document.createElement("img");
       epIcon.src = ENHANCED_ICON;
       epIcon.width = 12;
       epIcon.height = 12;
@@ -265,9 +265,9 @@ function buildStatsCollapsed(blocked) {
     }
     fragments.push(blockedSpan);
 
-    var estimatedMs = blocked * ESTIMATED_MS_PER_BLOCKED_REQUEST;
+    const estimatedMs = blocked * ESTIMATED_MS_PER_BLOCKED_REQUEST;
     if (estimatedMs >= 100) {
-      var timeSpan = document.createElement("span");
+      const timeSpan = document.createElement("span");
       timeSpan.style.color = "var(--pc-accent)";
       timeSpan.style.fontWeight = "700";
       timeSpan.textContent = "~" + formatEstimatedTime(estimatedMs) + " faster";
@@ -275,7 +275,7 @@ function buildStatsCollapsed(blocked) {
     }
   }
   if (fragments.length > 0) {
-    for (var i = 0; i < fragments.length; i++) {
+    for (let i = 0; i < fragments.length; i++) {
       if (i > 0) frag.appendChild(document.createTextNode(" \u00b7 "));
       frag.appendChild(fragments[i]);
     }
@@ -320,12 +320,12 @@ async function displayBlockedCount() {
       _statsBar.setCollapsed(buildStatsCollapsed(blocked));
 
       // --- Stats bar expanded content ---
-      var expDiv = document.createElement("div");
+      const expDiv = document.createElement("div");
 
       // Scope line (core rules)
-      var scopeText = computeScopeText();
+      const scopeText = computeScopeText();
       if (scopeText) {
-        var scopeLine = document.createElement("span");
+        const scopeLine = document.createElement("span");
         scopeLine.textContent = scopeText;
         scopeLine.style.color = "var(--pc-accent)";
         scopeLine.style.fontWeight = "600";
@@ -333,7 +333,7 @@ async function displayBlockedCount() {
       }
 
       // Enhanced scope
-      var enhancedEl = document.createElement("span");
+      const enhancedEl = document.createElement("span");
       enhancedEl.className = "pc-enhanced-scope";
       enhancedEl.style.fontWeight = "600";
       enhancedEl._sep = scopeText ? " \u00b7 " : "";
@@ -341,9 +341,9 @@ async function displayBlockedCount() {
       buildEnhancedScopeLine(enhancedEl);
 
       // Lifetime total (persistent across sessions) - shown below profile/site row
-      var ltEl = document.getElementById("pc-lifetime-counter");
+      const ltEl = document.getElementById("pc-lifetime-counter");
       if (ltEl) {
-        var ltText = lastLifetimeBlocked > 0
+        const ltText = lastLifetimeBlocked > 0
           ? compactNumber(lastLifetimeBlocked) + " total blocked"
           : "Quick toggles";
         ltEl.textContent = ltText;
@@ -364,7 +364,7 @@ async function displayBlockedCount() {
 
       // Link to Log Domains
       if (blocked > 0 || gpc > 0) {
-        var logLink = document.createElement("button");
+        const logLink = document.createElement("button");
         logLink.type = "button";
         logLink.className = "pc-bar-link";
         logLink.textContent = "\u2192 View blocked domains";
@@ -412,41 +412,41 @@ async function displayBlockedCount() {
 // --- Scope helpers ---
 
 function computeScopeText() {
-  var domainCount = 0;
-  var pathCount = 0;
-  for (var i = 0; i < PURPOSES_TO_SHOW.length; i++) {
-    var pk = PURPOSES_TO_SHOW[i];
+  let domainCount = 0;
+  let pathCount = 0;
+  for (let i = 0; i < PURPOSES_TO_SHOW.length; i++) {
+    const pk = PURPOSES_TO_SHOW[i];
     if (currentPurposesState[pk] !== false) continue;
     if (purposeDomainCounts[pk]) domainCount += purposeDomainCounts[pk];
     if (purposePathCounts[pk]) pathCount += purposePathCounts[pk];
   }
-  var total = domainCount + pathCount;
+  const total = domainCount + pathCount;
   if (total > 0) return "Core \u00b7 " + compactNumber(total) + " rules";
-  var hasBlocked = PURPOSES_TO_SHOW.some(function (pk) { return currentPurposesState[pk] === false; });
+  const hasBlocked = PURPOSES_TO_SHOW.some(function (pk) { return currentPurposesState[pk] === false; });
   return hasBlocked ? "Protection enabled" : "";
 }
 
 function buildEnhancedScopeLine(el) {
   if (typeof epLists !== "undefined" && Object.keys(epLists).length > 0) {
-    var stats = getEnhancedStats();
-    var celIds = typeof epConsentLinkedIds !== "undefined" ? epConsentLinkedIds : new Set();
-    var infoDomains = Object.entries(epLists)
+    const stats = getEnhancedStats();
+    const celIds = typeof epConsentLinkedIds !== "undefined" ? epConsentLinkedIds : new Set();
+    const infoDomains = Object.entries(epLists)
       .filter(function (e) { return (e[1].enabled || celIds.has(e[0])) && e[1].type === "informational"; })
       .reduce(function (sum, e) { return sum + (e[1].domainCount || 0); }, 0);
     renderEnhancedScopeLine(el, stats.enabledCount - stats.infoCount, stats.totalRules, stats.infoCount, infoDomains);
   } else {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, function (resp) {
       if (chrome.runtime.lastError || !resp) return;
-      var lists = resp.lists || {};
-      var celIds = new Set(resp.consentLinkedListIds || []);
-      var active = Object.entries(lists).filter(function (e) { return e[1].enabled || celIds.has(e[0]); }).map(function (e) { return e[1]; });
-      var blocking = active.filter(function (l) { return l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp"; });
-      var cosmetic = active.filter(function (l) { return l.type === "cosmetic"; });
-      var cmp = active.filter(function (l) { return l.type === "cmp"; });
-      var info = active.filter(function (l) { return l.type === "informational"; });
-      var bRules = blocking.reduce(function (s, l) { return s + (l.domainCount || 0); }, 0);
-      var cRules = cosmetic.reduce(function (s, l) { return s + (l.genericCount || 0) + (l.domainRuleCount || 0); }, 0);
-      var cmpT = cmp.reduce(function (s, l) { return s + (l.cmpCount || 0); }, 0);
+      const lists = resp.lists || {};
+      const celIds = new Set(resp.consentLinkedListIds || []);
+      const active = Object.entries(lists).filter(function (e) { return e[1].enabled || celIds.has(e[0]); }).map(function (e) { return e[1]; });
+      const blocking = active.filter(function (l) { return l.type !== "informational" && l.type !== "cosmetic" && l.type !== "cmp"; });
+      const cosmetic = active.filter(function (l) { return l.type === "cosmetic"; });
+      const cmp = active.filter(function (l) { return l.type === "cmp"; });
+      const info = active.filter(function (l) { return l.type === "informational"; });
+      const bRules = blocking.reduce(function (s, l) { return s + (l.domainCount || 0); }, 0);
+      const cRules = cosmetic.reduce(function (s, l) { return s + (l.genericCount || 0) + (l.domainRuleCount || 0); }, 0);
+      const cmpT = cmp.reduce(function (s, l) { return s + (l.cmpCount || 0); }, 0);
       renderEnhancedScopeLine(el, blocking.length + cosmetic.length + cmp.length, bRules + cRules + cmpT,
         info.length, info.reduce(function (s, l) { return s + (l.domainCount || 0); }, 0));
     });
@@ -460,7 +460,7 @@ function formatEstimatedTime(ms) {
 
 function displayPerPurposeStats() {
   // Merge enhanced:* counts into their parent purpose via catalog category
-  var mergedCounts = {};
+  const mergedCounts = {};
   for (const key in lastPurposeStats) {
     if (key.startsWith("enhanced:")) {
       const listId = key.slice(9);
@@ -505,8 +505,8 @@ function displayPerPurposeStats() {
 function displayProtectionScope() {
   // Refresh the stats bar if it exists (scope is inside expanded bar now)
   if (_statsBar) {
-    var scopeText = computeScopeText();
-    var scopeLine = _statsBar._body.querySelector(".pc-scope-line");
+    const scopeText = computeScopeText();
+    const scopeLine = _statsBar._body.querySelector(".pc-scope-line");
     if (scopeLine) {
       scopeLine.textContent = scopeText || "";
       scopeLine.style.display = scopeText ? "" : "none";

@@ -89,7 +89,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // --- Toolbar icon theme ---
 
 function applyThemeIcon(dark) {
-  var suffix = dark ? "_dark" : "";
+  const suffix = dark ? "_dark" : "";
   chrome.action.setIcon({
     path: {
       "16": "icons/protoconsent_icon_16" + suffix + ".png",

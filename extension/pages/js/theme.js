@@ -9,17 +9,17 @@
 // Loaded early in popup.html and purposes-settings.html.
 
 (function () {
-  var mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
 
-  var isThemedPage = /popup\.html|purposes-settings\.html/.test(location.pathname);
+  const isThemedPage = /popup\.html|purposes-settings\.html/.test(location.pathname);
 
   // Prevent light-mode flash while theme loads
   if (isThemedPage) document.documentElement.style.visibility = "hidden";
 
-  var lastDark;
+  let lastDark;
 
   function apply(pref) {
-    var dark = pref === "dark" || (pref !== "light" && mq.matches);
+    const dark = pref === "dark" || (pref !== "light" && mq.matches);
     if (isThemedPage) {
       document.documentElement.classList.toggle("pc-dark", dark);
       document.documentElement.style.visibility = "";

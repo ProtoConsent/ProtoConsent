@@ -53,8 +53,8 @@ async function loadDefaultProfile() {
       defaultPurposes = result.defaultPurposes || null;
       if (!defaultPurposes && presetsConfig[defaultProfile]) {
         defaultPurposes = {};
-        var pp = presetsConfig[defaultProfile].purposes || {};
-        for (var i = 0; i < PURPOSES_TO_SHOW.length; i++) {
+        const pp = presetsConfig[defaultProfile].purposes || {};
+        for (let i = 0; i < PURPOSES_TO_SHOW.length; i++) {
           defaultPurposes[PURPOSES_TO_SHOW[i]] = pp[PURPOSES_TO_SHOW[i]] !== false;
         }
       }

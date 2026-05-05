@@ -310,8 +310,8 @@ function initInterExt() {
 
 	const idEl = document.getElementById('inter-ext-id');
 	if (idEl) {
-		var pill = document.createElement("span"); pill.className = "ps-info-pill"; pill.title = "Other extensions need this ID to connect"; pill.textContent = "\u2139 Info";
-		var label = document.createElement("strong"); label.textContent = "Extension ID:";
+		const pill = document.createElement("span"); pill.className = "ps-info-pill"; pill.title = "Other extensions need this ID to connect"; pill.textContent = "\u2139 Info";
+		const label = document.createElement("strong"); label.textContent = "Extension ID:";
 		idEl.appendChild(pill); idEl.appendChild(document.createTextNode(" ")); idEl.appendChild(label); idEl.appendChild(document.createTextNode(" " + chrome.runtime.id));
 	}
 

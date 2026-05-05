@@ -15,17 +15,17 @@ function renderSignalsBar(observedGpc) {
 
   if (typeof observedGpc === "undefined") observedGpc = lastGpcSignalsSent;
 
-  var summary = buildSignalSummary(observedGpc);
+  const summary = buildSignalSummary(observedGpc);
   _signalsBar.setCollapsed(summary, "Global Privacy Control (GPC), Client Hints stripping, .well-known declaration, TCF banner detection");
 
-  var pillsDiv = document.createElement("div");
+  const pillsDiv = document.createElement("div");
   pillsDiv.className = "pc-scope-indicators";
   pillsDiv.style.gap = "4px 6px";
 
   pillsDiv.appendChild(buildPill("GPC", computeGpcState(observedGpc), function () { navigateToLog("gpc"); }));
   pillsDiv.appendChild(buildPill("CH", computeChState()));
-  var wkState = computeWkState();
-  var wkClick;
+  const wkState = computeWkState();
+  let wkClick;
   if (wkState.state === "active" && typeof toggleSidePanel === "function") {
     wkClick = function () { toggleSidePanel(); };
   } else if (currentDomain && typeof refreshWellKnown === "function") {
@@ -35,11 +35,11 @@ function renderSignalsBar(observedGpc) {
   pillsDiv.appendChild(buildPill("TCF", { state: "disabled", title: "TCF CMP not detected" }));
   updateTcfPill(pillsDiv);
 
-  var wrapper = document.createElement("div");
+  const wrapper = document.createElement("div");
   wrapper.appendChild(pillsDiv);
 
   if (typeof _wkRecheckStatus === "string" && _wkRecheckStatus) {
-    var statusEl = document.createElement("div");
+    const statusEl = document.createElement("div");
     statusEl.className = "pc-wk-recheck-status";
     statusEl.setAttribute("role", "status");
     statusEl.setAttribute("aria-live", "polite");
@@ -51,7 +51,7 @@ function renderSignalsBar(observedGpc) {
 }
 
 function buildSignalSummary(observedGpc) {
-  var main;
+  let main;
   if (observedGpc > 0 && lastGpcDomains.length > 0) {
     main = "GPC to " + pluralize(lastGpcDomains.length, "domain");
   } else if (observedGpc > 0 && expectedGpcEnabled()) {
@@ -63,7 +63,7 @@ function buildSignalSummary(observedGpc) {
   } else {
     main = "Privacy signals";
   }
-  var wk = computeWkState();
+  const wk = computeWkState();
   if (wk.state === "active") main += " \u00B7 Site declaration";
   return main;
 }
@@ -73,8 +73,8 @@ function buildSignalSummary(observedGpc) {
 function computeGpcState(observedGpc) {
   if (!currentDomain) return { state: "disabled", title: "GPC unavailable on this page" };
   if (!gpcGlobalEnabled) return { state: "disabled", title: "GPC globally disabled in Purpose Settings" };
-  var on = expectedGpcEnabled();
-  var tip = on ? "GPC: active - do-not-sell/share signal" : "GPC: inactive";
+  const on = expectedGpcEnabled();
+  let tip = on ? "GPC: active - do-not-sell/share signal" : "GPC: inactive";
   if (observedGpc > 0 && lastGpcDomains.length > 0) {
     tip += "\nSent to " + pluralize(lastGpcDomains.length, "domain") + " (" + pluralize(observedGpc, "request") + ")";
   } else if (observedGpc > 0 && on) {
@@ -88,17 +88,17 @@ function computeGpcState(observedGpc) {
 function computeChState() {
   if (!currentDomain) return { state: "disabled", title: "Client Hints stripping unavailable on this page" };
   if (!chStrippingEnabled) return { state: "disabled", title: "Client Hints stripping globally disabled in Purpose Settings" };
-  var on = currentPurposesState.advanced_tracking === false;
+  const on = currentPurposesState.advanced_tracking === false;
   if (on) {
-    var countStr = lastChStripped > 0 ? " (" + lastChStripped + " requests)" : "";
+    const countStr = lastChStripped > 0 ? " (" + lastChStripped + " requests)" : "";
     return { state: "active", title: "Client Hints: stripping active" + countStr + "\nHigh-entropy fingerprinting headers removed" };
   }
   return { state: "inactive", title: "Client Hints: not stripped\nAdvanced tracking allowed for this site" };
 }
 
 function computeWkState() {
-  var state = typeof _wkIndicatorState !== "undefined" ? _wkIndicatorState : "disabled";
-  var title = typeof _wkIndicatorTitle !== "undefined" ? _wkIndicatorTitle : "WK status unavailable";
+  const state = typeof _wkIndicatorState !== "undefined" ? _wkIndicatorState : "disabled";
+  let title = typeof _wkIndicatorTitle !== "undefined" ? _wkIndicatorTitle : "WK status unavailable";
   if (state !== "active" && currentDomain) title += "\nClick to recheck";
   return { state: state, title: title };
 }
@@ -109,16 +109,16 @@ function updateTcfPill(container) {
     if (!tabs || !tabs[0]) return;
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_GET_TCF", tabId: tabs[0].id }, function (resp) {
       if (chrome.runtime.lastError || !resp || !resp.tcf) return;
-      var tcf = resp.tcf;
-      var pill = container.querySelector('[data-signal="TCF"]');
+      const tcf = resp.tcf;
+      const pill = container.querySelector('[data-signal="TCF"]');
       if (pill) {
         pill.classList.remove("is-disabled");
         pill.classList.add("is-active");
-        var tip = "Cookie banner detected";
+        let tip = "Cookie banner detected";
         if (tcf.purposeConsents) {
-          var total = Object.keys(tcf.purposeConsents).length;
+          const total = Object.keys(tcf.purposeConsents).length;
           if (total > 0) {
-            var accepted = Object.entries(tcf.purposeConsents).filter(function (e) { return e[1]; }).length;
+            const accepted = Object.entries(tcf.purposeConsents).filter(function (e) { return e[1]; }).length;
             tip += " \u00b7 " + accepted + "/" + total + " purposes accepted";
           }
         }
@@ -133,7 +133,7 @@ function updateTcfPill(container) {
 // --- Pill builder ---
 
 function buildPill(label, info, clickHandler) {
-  var pill = document.createElement("div");
+  const pill = document.createElement("div");
   pill.className = "pc-pill-indicator pc-" + label.toLowerCase() + "-indicator";
   pill.setAttribute("data-signal", label);
   pill.setAttribute("role", "status");
@@ -145,7 +145,7 @@ function buildPill(label, info, clickHandler) {
 
   pill.title = info.title || "";
 
-  var dot = document.createElement("span");
+  const dot = document.createElement("span");
   dot.className = "pc-pill-dot pc-" + label.toLowerCase() + "-dot";
   dot.setAttribute("aria-hidden", "true");
   pill.appendChild(dot);
