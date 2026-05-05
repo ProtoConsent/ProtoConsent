@@ -783,6 +783,7 @@ function renderEnhancedLists() {
     if (target) {
       const focusable = target.querySelector("input, button");
       if (focusable) focusable.focus();
+      target.scrollIntoView({ block: "nearest", behavior: "instant" });
     }
     _epFocusListId = null;
   }
@@ -1028,6 +1029,7 @@ function toggleEnhancedList(listId, enabled) {
 }
 
 function fetchEnhancedList(listId, btnEl) {
+  _epFocusListId = listId;
   if (btnEl) {
     btnEl.disabled = true;
     btnEl.textContent = "Downloading...";
