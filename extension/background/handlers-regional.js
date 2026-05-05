@@ -69,7 +69,7 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
   const mergedExceptions = {};
   let totalGenericCount = 0;
   let totalDomainRuleCount = 0;
-  let latestVersion = null;
+  const versions = {};
   const fetchedRegions = [];
 
   for (const region of langs) {
@@ -95,7 +95,7 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
           else mergedExceptions[dom] = [...sels];
         }
       }
-      if (data.version && (!latestVersion || data.version > latestVersion)) latestVersion = data.version;
+      if (data.version) versions[region] = data.version;
     } catch (_) { /* skip failed region */ }
   }
 
@@ -103,16 +103,21 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
     sendResponse({ ok: false, error: "No regional files could be downloaded" }); return;
   }
 
+  const latestVersion = Object.values(versions).reduce((max, v) => v > max ? v : max, null);
+
   await withEnhancedStorageLock(() => {
     return getEnhancedListsFromStorage().then(lists => {
       const existing = lists[listId];
-      if (existing && latestVersion && existing.version === latestVersion) {
+      const existingVersions = existing?.versions || {};
+      const allMatch = Object.entries(versions).every(([r, v]) => existingVersions[r] === v);
+      if (existing && Object.keys(versions).length && allMatch) {
         sendResponse({ ok: true, skipped: true, genericCount: existing.genericCount, domainCount: existing.domainCount });
         return;
       }
       lists[listId] = {
         enabled: existing?.enabled !== undefined ? existing.enabled : true,
         version: latestVersion,
+        versions,
         lastFetched: Date.now(),
         genericCount: totalGenericCount,
         domainCount: Object.keys(mergedDomains).length,
@@ -145,7 +150,7 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
 async function fetchRegionalBlocking(listId, langs, fetchBase, suffix, sendResponse) {
   const allDomains = [];
   const allPathRules = [];
-  let latestVersion = null;
+  const versions = {};
   const fetchedRegions = [];
 
   for (const region of langs) {
@@ -164,7 +169,7 @@ async function fetchRegionalBlocking(listId, langs, fetchBase, suffix, sendRespo
           }
         }
       }
-      if (data.version && (!latestVersion || data.version > latestVersion)) latestVersion = data.version;
+      if (data.version) versions[region] = data.version;
     } catch (_) { /* skip failed region */ }
   }
 
@@ -172,16 +177,21 @@ async function fetchRegionalBlocking(listId, langs, fetchBase, suffix, sendRespo
     sendResponse({ ok: false, error: "No regional files could be downloaded" }); return;
   }
 
+  const latestVersion = Object.values(versions).reduce((max, v) => v > max ? v : max, null);
+
   await withEnhancedStorageLock(() => {
     return getEnhancedListsFromStorage().then(lists => {
       const existing = lists[listId];
-      if (existing && latestVersion && existing.version === latestVersion) {
+      const existingVersions = existing?.versions || {};
+      const allMatch = Object.entries(versions).every(([r, v]) => existingVersions[r] === v);
+      if (existing && Object.keys(versions).length && allMatch) {
         sendResponse({ ok: true, skipped: true, domainCount: existing.domainCount });
         return;
       }
       lists[listId] = {
         enabled: existing?.enabled !== undefined ? existing.enabled : true,
         version: latestVersion,
+        versions,
         lastFetched: Date.now(),
         domainCount: allDomains.length,
         pathRuleCount: allPathRules.length,

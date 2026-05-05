@@ -13,6 +13,7 @@ let epDynamicConsent = false;
 let epConsentEnhancedLink = false;
 let epConsentLinkedIds = new Set();
 let epHasRegionalLanguages = false;
+let epRegionalLanguages = [];
 let _epFocusListId = null; // list to refocus after re-render
 let _celAutoFetchInProgress = false;
 
@@ -36,8 +37,16 @@ function getEnhancedStats() {
   for (const id of Object.keys(epLists)) {
     if (epLists[id].bundled) continue;
     const catalogDef = epCatalog[id];
-    const hasUpdate = catalogDef && catalogDef.version && epLists[id].version &&
-        catalogDef.version > epLists[id].version;
+    let hasUpdate = false;
+    if (catalogDef && REGIONAL_IDS.has(id) && catalogDef.versions) {
+      const storedVersions = epLists[id].versions || {};
+      hasUpdate = epRegionalLanguages.some(lang =>
+        catalogDef.versions[lang] && (!storedVersions[lang] || catalogDef.versions[lang] > storedVersions[lang])
+      );
+    } else {
+      hasUpdate = catalogDef && catalogDef.version && epLists[id].version &&
+          catalogDef.version > epLists[id].version;
+    }
     if (!hasUpdate) continue;
     if (CORE_IDS.has(id)) { coreUpdate = true; continue; }
     if (CMP_IDS.has(id)) { cmpUpdate = true; continue; }
@@ -127,7 +136,8 @@ function refreshEnhancedState() {
     epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
     // Read regional languages to determine if regional lists should be included
     chrome.storage.local.get(["regionalLanguages"], (rl) => {
-      epHasRegionalLanguages = Array.isArray(rl.regionalLanguages) && rl.regionalLanguages.length > 0;
+      epRegionalLanguages = Array.isArray(rl.regionalLanguages) ? rl.regionalLanguages : [];
+      epHasRegionalLanguages = epRegionalLanguages.length > 0;
       renderEnhancedPresets();
       renderEnhancedLists();
       updateEnhancedStatus();
