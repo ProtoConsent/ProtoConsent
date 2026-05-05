@@ -1309,21 +1309,21 @@ function formatRelativeTime(ts) {
   return days + "d ago";
 }
 
-const _MASTER_OFF_TIP = "Disabled - enable via quick toggles in header";
+const MASTER_OFF_TIP = "Disabled - enable via quick toggles in header";
 chrome.storage.onChanged.addListener(function (changes) {
   if ("enhancedCosmeticEnabled" in changes) {
     let off = changes.enhancedCosmeticEnabled.newValue === false;
     const c = document.getElementById("ep-card-cosmetic");
-    if (c) { c.classList.toggle("is-master-off", off); c.title = off ? _MASTER_OFF_TIP : ""; }
+    if (c) { c.classList.toggle("is-master-off", off); c.title = off ? MASTER_OFF_TIP : ""; }
   }
   if ("cmpAutoResponse" in changes) {
     let off = changes.cmpAutoResponse.newValue === false;
     const b = document.getElementById("ep-card-banners");
-    if (b) { b.classList.toggle("is-master-off", off); b.title = off ? _MASTER_OFF_TIP : ""; }
+    if (b) { b.classList.toggle("is-master-off", off); b.title = off ? MASTER_OFF_TIP : ""; }
   }
   if ("paramStrippingEnabled" in changes) {
     let off = changes.paramStrippingEnabled.newValue === false;
     document.querySelectorAll('.ep-list-card[data-list-type="tracking_params"], .ep-list-card[data-list-type="tracking_params_sites"]')
-      .forEach(function (el) { el.classList.toggle("is-master-off", off); el.title = off ? _MASTER_OFF_TIP : ""; });
+      .forEach(function (el) { el.classList.toggle("is-master-off", off); el.title = off ? MASTER_OFF_TIP : ""; });
   }
 });
