@@ -68,7 +68,7 @@ For the full technical architecture, see [architecture.md](architecture.md).
 
 ## 5. Roadmap
 
-**Current focus:** Firefox port, SDK `onchange` API for real-time site adaptation, ecosystem outreach (pilot sites publishing declarations), and store distribution (Chrome and Edge published, Firefox and Opera in review).
+**Current focus:** Per-source regional filter architecture, consent receipt export, and ecosystem outreach (pilot sites publishing declarations). Chrome, Edge, and Firefox published; Opera in review.
 
 **Planned:** Internationalisation, protocol formalisation (the protocol is currently a working draft; formal standardisation is a long-term goal pending real-world adoption).
 
@@ -98,6 +98,7 @@ For the full technical architecture, see [architecture.md](architecture.md).
 | v0.7 | Firefox port with path regex chunking and parameter stripping detection. Settings reorganisation (5 modules, Support tab, About tab with credits). Accessibility quick-toggle menus, cosmetic filtering master switch, card dimming. Right-click contextual menu. Optional lists tier (40 lists total from 10 sources), consent-enhanced link for third-party purpose (Fanboy Social). Regional filters expanded to 36 languages. Autoconsent CMP lists separated with proper attribution. Bundled rulesets refresh |
 | v0.7.1 | Bundled rulesets update (2026-05-04) |
 | v0.7.2 | Firefox AMO compliance (innerHTML removal, data_collection_permissions). Context menu guard for Firefox Android. Focus-visible regression fix |
+| v0.7.5 | Per-source regional filters with individual source toggles (47 sources, 36 languages). Consent-enhanced link extended to Optional tier. Uninstall feedback form |
 | **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | **Documentation** | [Protocol spec](spec/signalling-protocol.md), [.well-known spec](spec/protoconsent-well-known.md), [inter-extension protocol](spec/inter-extension-protocol.md), [CMP auto-response](architecture/cmp-auto-response.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [list catalog](architecture/list-catalog.md) |
 

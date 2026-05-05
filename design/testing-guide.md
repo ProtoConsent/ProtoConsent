@@ -747,15 +747,16 @@ chrome.storage.local.get(["enhancedLists", "enhancedData_protoconsent_core"], r 
 ### 13.10 Regional filter lists
 
 1. Open Purpose Settings and scroll to **Regional Filters** (or click the language badge on a regional card in the Protection popup tab).
-2. Check one or more region checkboxes (e.g. Spanish/Portuguese). Flag icons should appear next to labels.
-3. Return to the Protection popup tab. Regional Cosmetic and Regional Blocking cards should show the selected flag(s) in the header.
-4. Download both regional lists. Verify domain/selector counts update in the card stats.
-5. **Cosmetic test**: visit a regional site (e.g. meneame.net for ES). With Regional Cosmetic enabled, ad containers should be hidden. Toggle off and refresh to confirm they reappear.
-6. **Blocking test**: visit a regional site (e.g. elpais.com for ES). Open the Log tab; blocked domains should show `enhanced: regional_blocking` attribution.
-7. **Preset integration**: select Balanced. Both regional lists should be enabled (if languages are selected). Select Off. Both should disable.
-8. **Language removal**: uncheck all regional languages in Purpose Settings. Regional lists should auto-disable (storage listener). The regional cards should show no flags.
-9. **Rapid toggle**: check and uncheck several languages quickly. Verify no language selections are lost (serialized writes prevent race conditions).
-10. **Re-enable on language selection**: with Balanced or Full preset active, download regional lists, then disable them via the toggle. Go to Purpose Settings and select a language. The disabled regional lists should re-enable automatically (the storage listener detects the language change and re-enables downloaded lists when the preset is not Off).
+2. Check one or more region checkboxes (e.g. German). Flag icons should appear next to labels.
+3. Return to the Protection popup tab. Per-source regional cards should appear (e.g. "EasyList Germany (Blocking)", "AdGuard German (Cosmetic)") for each selected language and source.
+4. Download the regional lists. Verify domain/selector counts update in each card's stats.
+5. **Cosmetic test**: visit a regional site (e.g. meneame.net for ES). With regional cosmetic sources enabled, ad containers should be hidden. Toggle off and refresh to confirm they reappear.
+6. **Blocking test**: visit a regional site (e.g. elpais.com for ES). Open the Log tab; blocked domains should show per-source attribution (e.g. `regional_es_easylist_blocking`).
+7. **Per-source toggles**: for multi-source languages (e.g. German), open Purpose Settings > Regional Filters. Disable one sub-toggle (e.g. AdGuard German). Only that source should be disabled; the other remains active.
+8. **Preset integration**: select Balanced. All regional lists for selected languages should be enabled. Select Off. All should disable.
+9. **Language removal**: uncheck all regional languages in Purpose Settings. Regional lists should auto-disable (storage listener). The regional cards should disappear from the Protection tab.
+10. **Rapid toggle**: check and uncheck several languages quickly. Verify no language selections are lost (serialized writes prevent race conditions).
+11. **Re-enable on language selection**: with Balanced or Full preset active, download regional lists, then disable them via the toggle. Go to Purpose Settings and select a language. The disabled regional lists should re-enable automatically.
 
 ### 13.11 Optional lists
 
