@@ -131,6 +131,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await runMigrations();
   }
 
+  chrome.runtime.setUninstallURL("https://forms.gle/xqzyXKS1jxTJCMzz6");
+
   // Load bundled cosmetic data if not yet downloaded remotely
   await initBundledCosmeticData();
   // Load bundled CMP signatures (always fresh after update)

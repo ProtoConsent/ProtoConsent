@@ -286,15 +286,15 @@ Regional filter lists provide language-specific blocking and cosmetic rules from
 | Ukrainian | `uk` | AdGuard Ukrainian |
 | Vietnamese | `vi` | AdGuard Vietnamese |
 
-Regions with multiple sources merge and deduplicate rules from all sources.
+Regions with multiple sources store each source independently (per-source architecture). Multi-source languages (e.g. German: EasyList Germany + AdGuard German) allow individual source toggles in Purpose Settings.
 
 ### Distribution
 
-The catalog contains 2 regional entries (cosmetic and blocking). Each covers all 36 regions. Individual region files are fetched from CDN when the user downloads. Both entries have Balanced preset, gated by language selection.
+Regional entries are synthesized at runtime from `regional-languages.json` (CDN with bundled fallback). Each source produces two list entries (blocking + cosmetic), yielding 47 sources x 2 types = 94 per-source entries. Entry IDs follow the pattern `regional_{region}_{slug}_{type}` (e.g. `regional_de_easylist_blocking`). All regional entries have Balanced preset, gated by language selection.
 
 ### Language selection
 
-Users select regions in Purpose Settings. The default selection is auto-detected from the browser's UI language. Changing the selection automatically re-fetches regional lists. Regional lists are disabled when all languages are removed.
+Users select regions in Purpose Settings. The default selection is auto-detected from the browser's UI language. Multi-source regions show per-source sub-toggles to disable individual sources while keeping others active. Regional lists are disabled when all languages are removed.
 
 ### Preset integration
 
@@ -302,7 +302,7 @@ Regional lists participate in Balanced/Full presets but are excluded from preset
 
 ### UI
 
-Two cards in the Protection tab (Regional Cosmetic and Regional Blocking) show flag icons for selected languages. Region selection is handled exclusively in Purpose Settings. Flag icons are from [flag-icons](https://github.com/lipis/flag-icons) (MIT license).
+Each per-source regional entry renders as a standard card in the Protection tab, grouped by region. Region selection and per-source toggles are handled in Purpose Settings. Flag icons are from [flag-icons](https://github.com/lipis/flag-icons) (MIT license).
 
 ## 13. Hotfix safelist
 

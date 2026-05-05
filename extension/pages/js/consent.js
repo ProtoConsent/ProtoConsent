@@ -50,7 +50,7 @@ async function loadDefaultProfile() {
   return new Promise((resolve) => {
     chrome.storage.local.get(["defaultProfile", "defaultPurposes", "gpcEnabled", "chStrippingEnabled"], (result) => {
       defaultProfile = result.defaultProfile || "balanced";
-      defaultPurposes = result.defaultPurposes || null;
+      defaultPurposes = (defaultProfile === "custom") ? (result.defaultPurposes || null) : null;
       if (!defaultPurposes && presetsConfig[defaultProfile]) {
         defaultPurposes = {};
         const pp = presetsConfig[defaultProfile].purposes || {};
