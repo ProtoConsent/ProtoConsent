@@ -13,6 +13,20 @@ export const DEPRECATED_LIST_IDS = new Set([
 
 export async function runMigrations() {
   await migrateCmpListIds();
+  await migrateRegionalBlobKeys();
+}
+
+// v0.7.2+: Remove old merged blob keys for regional lists.
+// Per-language keys (enhancedData_<id>_<region>) replace the single blob.
+// storage.js falls back to the blob if per-language keys don't exist yet,
+// so this is safe to run before the first re-fetch.
+async function migrateRegionalBlobKeys() {
+  await new Promise(resolve => {
+    chrome.storage.local.remove([
+      "enhancedData_regional_cosmetic",
+      "enhancedData_regional_blocking",
+    ], resolve);
+  });
 }
 
 // v0.6+: Rename protoconsent_cmp_detectors -> autoconsent_cmp_detectors

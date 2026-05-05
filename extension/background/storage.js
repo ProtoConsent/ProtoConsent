@@ -103,16 +103,70 @@ export function getEnhancedDataFromStorage(listId) {
 }
 
 // Get heavy domain/path data for all enabled enhanced lists.
+// Regional lists are stored per-language; this function merges them
+// transparently so callers see a single object per regional list.
 export function getAllEnhancedDataFromStorage(lists) {
   const enabledIds = Object.entries(lists).filter(([, v]) => v.enabled).map(([k]) => k);
   if (enabledIds.length === 0) return Promise.resolve({});
-  const keys = enabledIds.map(id => "enhancedData_" + id);
+
+  const keys = [];
+  const regionalExpansions = {};
+
+  for (const id of enabledIds) {
+    if (lists[id].regions?.length) {
+      regionalExpansions[id] = lists[id].regions;
+      for (const region of lists[id].regions) {
+        keys.push("enhancedData_" + id + "_" + region);
+      }
+      keys.push("enhancedData_" + id); // fallback: old blob key
+    } else {
+      keys.push("enhancedData_" + id);
+    }
+  }
+
   return new Promise((resolve) => {
     chrome.storage.local.get(keys, (result) => {
       const out = {};
       for (const id of enabledIds) {
-        const data = result["enhancedData_" + id];
-        if (data) out[id] = data;
+        if (regionalExpansions[id]) {
+          const isCosmetic = lists[id].type === "cosmetic";
+          const merged = isCosmetic
+            ? { generic: [], domains: {}, exceptions: {} }
+            : { domains: [], pathRules: [] };
+          let hasPerLang = false;
+          for (const region of regionalExpansions[id]) {
+            const data = result["enhancedData_" + id + "_" + region];
+            if (!data) continue;
+            hasPerLang = true;
+            if (isCosmetic) {
+              if (data.generic) merged.generic.push(...data.generic);
+              if (data.domains && typeof data.domains === "object") {
+                for (const [dom, sels] of Object.entries(data.domains)) {
+                  if (merged.domains[dom]) merged.domains[dom] = merged.domains[dom].concat(sels);
+                  else merged.domains[dom] = sels;
+                }
+              }
+              if (data.exceptions && typeof data.exceptions === "object") {
+                for (const [dom, sels] of Object.entries(data.exceptions)) {
+                  if (merged.exceptions[dom]) merged.exceptions[dom] = merged.exceptions[dom].concat(sels);
+                  else merged.exceptions[dom] = [...sels];
+                }
+              }
+            } else {
+              if (data.domains) merged.domains.push(...data.domains);
+              if (data.pathRules) merged.pathRules.push(...data.pathRules);
+            }
+          }
+          if (hasPerLang) {
+            out[id] = merged;
+          } else {
+            const blob = result["enhancedData_" + id];
+            if (blob) out[id] = blob;
+          }
+        } else {
+          const data = result["enhancedData_" + id];
+          if (data) out[id] = data;
+        }
       }
       resolve(out);
     });

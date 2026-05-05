@@ -12,6 +12,7 @@ import {
 } from "./storage.js";
 import { rebuildAllDynamicRules } from "./rebuild.js";
 import { fetchAndEnableRegionalList } from "./auto-refresh.js";
+import { fetchEnhancedList } from "./handlers.js";
 
 const CDN_PREFIX = "https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/";
 const RAW_PREFIX = "https://raw.githubusercontent.com/ProtoConsent/data/main/";
@@ -64,13 +65,12 @@ export async function handleRegionalFetch(listId, listDef, sendResponse) {
 // --- Cosmetic ---
 
 async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendResponse) {
-  const mergedGeneric = [];
-  const mergedDomains = {};
-  const mergedExceptions = {};
-  let totalGenericCount = 0;
-  let totalDomainRuleCount = 0;
   const versions = {};
   const fetchedRegions = [];
+  let totalGenericCount = 0;
+  let totalDomainCount = 0;
+  let totalDomainRuleCount = 0;
+  const storageUpdates = {};
 
   for (const region of langs) {
     const url = fetchBase + "regional_" + region + suffix + ".json";
@@ -78,25 +78,18 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
       const res = await fetchWithFallback(url, { credentials: "omit", cache: "no-store" });
       const data = await res.json();
       fetchedRegions.push(region);
-      if (Array.isArray(data.generic)) mergedGeneric.push(...data.generic);
-      if (data.domains && typeof data.domains === "object") {
-        for (const [dom, sels] of Object.entries(data.domains)) {
-          if (mergedDomains[dom]) mergedDomains[dom] = mergedDomains[dom].concat(sels);
-          else mergedDomains[dom] = sels;
-        }
-      }
+      if (data.version) versions[region] = data.version;
+      storageUpdates["enhancedData_" + listId + "_" + region] = {
+        generic: data.generic || [],
+        domains: data.domains || {},
+        exceptions: data.exceptions || {},
+      };
       totalGenericCount += data.generic_count || (Array.isArray(data.generic) ? data.generic.length : 0);
-      if (data.domains) {
+      if (data.domains && typeof data.domains === "object") {
+        totalDomainCount += Object.keys(data.domains).length;
         for (const sels of Object.values(data.domains)) totalDomainRuleCount += sels.length;
       }
-      if (data.exceptions && typeof data.exceptions === "object") {
-        for (const [dom, sels] of Object.entries(data.exceptions)) {
-          if (mergedExceptions[dom]) mergedExceptions[dom] = mergedExceptions[dom].concat(sels);
-          else mergedExceptions[dom] = [...sels];
-        }
-      }
-      if (data.version) versions[region] = data.version;
-    } catch (_) { /* skip failed region */ }
+    } catch (_) { /* skip failed region - its stored data remains untouched */ }
   }
 
   if (!fetchedRegions.length) {
@@ -114,30 +107,28 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
         sendResponse({ ok: true, skipped: true, genericCount: existing.genericCount, domainCount: existing.domainCount });
         return;
       }
+      const allRegions = Array.from(new Set([...(existing?.regions || []), ...fetchedRegions]));
       lists[listId] = {
         enabled: existing?.enabled !== undefined ? existing.enabled : true,
         version: latestVersion,
-        versions,
+        versions: { ...existingVersions, ...versions },
         lastFetched: Date.now(),
         genericCount: totalGenericCount,
-        domainCount: Object.keys(mergedDomains).length,
+        domainCount: totalDomainCount,
         domainRuleCount: totalDomainRuleCount,
         pathRuleCount: 0,
         type: "cosmetic",
-        regions: fetchedRegions,
+        regions: allRegions,
       };
-      const storageUpdate = {
-        enhancedLists: lists,
-        ["enhancedData_" + listId]: { generic: mergedGeneric, domains: mergedDomains, exceptions: Object.keys(mergedExceptions).length > 0 ? mergedExceptions : {} },
-      };
+      storageUpdates.enhancedLists = lists;
       return new Promise(resolve => {
-        chrome.storage.local.set(storageUpdate, () => {
+        chrome.storage.local.set(storageUpdates, () => {
           if (chrome.runtime.lastError) {
             sendResponse({ ok: false, error: chrome.runtime.lastError.message });
             resolve(); return;
           }
           rebuildAllDynamicRules();
-          sendResponse({ ok: true, genericCount: totalGenericCount, domainCount: Object.keys(mergedDomains).length, regions: fetchedRegions });
+          sendResponse({ ok: true, genericCount: totalGenericCount, domainCount: totalDomainCount, regions: fetchedRegions });
           resolve();
         });
       });
@@ -148,10 +139,9 @@ async function fetchRegionalCosmetic(listId, langs, fetchBase, suffix, sendRespo
 // --- Blocking ---
 
 async function fetchRegionalBlocking(listId, langs, fetchBase, suffix, sendResponse) {
-  const allDomains = [];
-  const allPathRules = [];
   const versions = {};
   const fetchedRegions = [];
+  const storageUpdates = {};
 
   for (const region of langs) {
     const url = fetchBase + "regional_" + region + suffix + ".json";
@@ -159,18 +149,24 @@ async function fetchRegionalBlocking(listId, langs, fetchBase, suffix, sendRespo
       const res = await fetchWithFallback(url, { credentials: "omit", cache: "no-store" });
       const data = await res.json();
       fetchedRegions.push(region);
+      if (data.version) versions[region] = data.version;
+      const domains = [];
+      const pathRules = [];
       if (Array.isArray(data.rules)) {
         for (const rule of data.rules) {
           if (rule.condition?.requestDomains) {
-            for (const d of rule.condition.requestDomains) allDomains.push(d);
+            for (const d of rule.condition.requestDomains) domains.push(d);
           }
           if (rule.condition?.urlFilter) {
-            allPathRules.push({ urlFilter: rule.condition.urlFilter });
+            pathRules.push({ urlFilter: rule.condition.urlFilter });
           }
         }
       }
-      if (data.version) versions[region] = data.version;
-    } catch (_) { /* skip failed region */ }
+      storageUpdates["enhancedData_" + listId + "_" + region] = {
+        domains,
+        pathRules: pathRules.length > 0 ? pathRules : undefined,
+      };
+    } catch (_) { /* skip failed region - its stored data remains untouched */ }
   }
 
   if (!fetchedRegions.length) {
@@ -188,30 +184,27 @@ async function fetchRegionalBlocking(listId, langs, fetchBase, suffix, sendRespo
         sendResponse({ ok: true, skipped: true, domainCount: existing.domainCount });
         return;
       }
+      const allRegions = Array.from(new Set([...(existing?.regions || []), ...fetchedRegions]));
+      const totalDomains = Object.values(storageUpdates).reduce((sum, d) => sum + (d?.domains?.length || 0), 0);
+      const totalPathRules = Object.values(storageUpdates).reduce((sum, d) => sum + (d?.pathRules?.length || 0), 0);
       lists[listId] = {
         enabled: existing?.enabled !== undefined ? existing.enabled : true,
         version: latestVersion,
-        versions,
+        versions: { ...existingVersions, ...versions },
         lastFetched: Date.now(),
-        domainCount: allDomains.length,
-        pathRuleCount: allPathRules.length,
-        regions: fetchedRegions,
+        domainCount: totalDomains,
+        pathRuleCount: totalPathRules,
+        regions: allRegions,
       };
-      const storageUpdate = {
-        enhancedLists: lists,
-        ["enhancedData_" + listId]: {
-          domains: allDomains,
-          pathRules: allPathRules.length > 0 ? allPathRules : undefined,
-        },
-      };
+      storageUpdates.enhancedLists = lists;
       return new Promise(resolve => {
-        chrome.storage.local.set(storageUpdate, () => {
+        chrome.storage.local.set(storageUpdates, () => {
           if (chrome.runtime.lastError) {
             sendResponse({ ok: false, error: chrome.runtime.lastError.message });
             resolve(); return;
           }
           rebuildAllDynamicRules();
-          sendResponse({ ok: true, domainCount: allDomains.length, pathRuleCount: allPathRules.length, regions: fetchedRegions });
+          sendResponse({ ok: true, domainCount: totalDomains, pathRuleCount: totalPathRules, regions: fetchedRegions });
           resolve();
         });
       });
@@ -226,6 +219,36 @@ export function initRegionalStorageListener() {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local" || !changes.regionalLanguages) return;
     const newLangs = changes.regionalLanguages.newValue;
+    const oldLangs = changes.regionalLanguages.oldValue || [];
+
+    // Clean up per-language storage keys for removed languages
+    const removed = Array.isArray(oldLangs) ? oldLangs.filter(l => !Array.isArray(newLangs) || !newLangs.includes(l)) : [];
+    if (removed.length) {
+      const keysToRemove = [];
+      for (const id of REGIONAL_IDS) {
+        for (const lang of removed) keysToRemove.push("enhancedData_" + id + "_" + lang);
+      }
+      chrome.storage.local.remove(keysToRemove);
+      // Clean metadata: remove from regions and versions
+      withEnhancedStorageLock(() => {
+        return getEnhancedListsFromStorage().then(lists => {
+          let changed = false;
+          for (const id of REGIONAL_IDS) {
+            if (!lists[id]) continue;
+            if (lists[id].regions) {
+              lists[id].regions = lists[id].regions.filter(r => !removed.includes(r));
+              changed = true;
+            }
+            if (lists[id].versions) {
+              for (const lang of removed) delete lists[id].versions[lang];
+              changed = true;
+            }
+          }
+          if (!changed) return;
+          return new Promise(resolve => chrome.storage.local.set({ enhancedLists: lists }, resolve));
+        });
+      });
+    }
 
     // Debounce rapid toggles (100ms)
     if (_regionalDebounceTimer) clearTimeout(_regionalDebounceTimer);
@@ -268,10 +291,7 @@ export function initRegionalStorageListener() {
           if (lists[id] && lists[id].enabled) {
             // Already downloaded + enabled: re-fetch with new languages
             if (DEBUG_RULES) console.log("ProtoConsent regional: re-fetching", id);
-            chrome.runtime.sendMessage({
-              type: "PROTOCONSENT_ENHANCED_FETCH",
-              listId: id,
-            }).catch(() => {});
+            fetchEnhancedList(id).catch(() => {});
           } else if (lists[id] && !lists[id].enabled) {
             // Downloaded but disabled: re-enable and re-fetch
             lists[id].enabled = true;
@@ -285,7 +305,7 @@ export function initRegionalStorageListener() {
         if (reEnabled.length) {
           chrome.storage.local.set({ enhancedLists: lists }, () => {
             for (const id of reEnabled) {
-              chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_FETCH", listId: id }).catch(() => {});
+              fetchEnhancedList(id).catch(() => {});
             }
             rebuildAllDynamicRules();
           });
