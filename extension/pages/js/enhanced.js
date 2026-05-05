@@ -491,7 +491,7 @@ function renderEnhancedLists() {
 
   // 1. Overview card (full-width)
   const stats = getEnhancedStats();
-  const enhancedEnabled = enhancedLists.filter(function (id) { return epLists[id] && epLists[id].enabled; }).length;
+  const enhancedEnabled = enhancedLists.filter(function (id) { return epLists[id] && (epLists[id].enabled || epConsentLinkedIds.has(id)); }).length;
   let overviewMetric;
   if (stats.enabledCount > 0) {
     overviewMetric = stats.enabledCount + " active \u00b7 " + stats.totalRules.toLocaleString() + " rules";
@@ -650,8 +650,8 @@ function renderEnhancedLists() {
   disclaimer.textContent = "Community lists for advanced users. May increase blocking aggressiveness or overlap with existing lists.";
   enBody.appendChild(disclaimer);
   enhancedLists.sort(function (a, b) {
-    const ae = epLists[a] && epLists[a].enabled ? 0 : 1;
-    const be = epLists[b] && epLists[b].enabled ? 0 : 1;
+    const ae = (epLists[a] && epLists[a].enabled) || epConsentLinkedIds.has(a) ? 0 : 1;
+    const be = (epLists[b] && epLists[b].enabled) || epConsentLinkedIds.has(b) ? 0 : 1;
     return ae - be || (epCatalog[a].order || 0) - (epCatalog[b].order || 0);
   });
   for (let i = 0; i < enhancedLists.length; i++) {
