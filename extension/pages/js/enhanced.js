@@ -13,6 +13,7 @@ let epDynamicConsent = false;
 let epConsentEnhancedLink = false;
 let epConsentLinkedIds = new Set();
 let epHasRegionalLanguages = false;
+let epRegionalLanguages = [];
 let _epFocusListId = null; // list to refocus after re-render
 let _celAutoFetchInProgress = false;
 
@@ -36,7 +37,8 @@ function getEnhancedStats() {
   for (const id of Object.keys(epLists)) {
     if (epLists[id].bundled) continue;
     const catalogDef = epCatalog[id];
-    const hasUpdate = catalogDef && catalogDef.version && epLists[id].version &&
+    let hasUpdate = false;
+    hasUpdate = catalogDef && catalogDef.version && epLists[id].version &&
         catalogDef.version > epLists[id].version;
     if (!hasUpdate) continue;
     if (CORE_IDS.has(id)) { coreUpdate = true; continue; }
@@ -47,7 +49,7 @@ function getEnhancedStats() {
   if (cmpUpdate) updatesAvailable++;
   if (epHasRegionalLanguages) {
     for (const id of Object.keys(epCatalog)) {
-      if (REGIONAL_IDS.has(id) && !epLists[id]) updatesAvailable++;
+      if (isRegionalEntry(epCatalog[id]) && epRegionalLanguages.includes(epCatalog[id].region) && !epLists[id]) updatesAvailable++;
     }
   }
   const cosmeticRules = cosmeticLists.reduce((sum, l) =>
@@ -84,9 +86,9 @@ function getEnhancedStats() {
     cosmeticRules,
     cmpTemplates,
     totalRules: blockingLists.reduce((sum, l) => sum + (l.domainCount || 0), 0) + cosmeticRules + cmpTemplates,
-    downloadedCount: Object.keys(epLists).filter(id => epLists[id].type !== "revoke" && (!epCatalog[id] || epCatalog[id].preset !== "optional")).length - coreExtraDownloaded - cmpExtraDownloaded,
-    catalogCount: Object.keys(epCatalog).filter(id => epCatalog[id].type !== "revoke" && epCatalog[id].preset !== "optional").length - coreExtraCatalog - cmpExtraCatalog,
-    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id) && !(REGIONAL_IDS.has(id) && !epHasRegionalLanguages) && epCatalog[id].type !== "revoke" && epCatalog[id].preset !== "optional" && !(epPreset === "basic" && epCatalog[id].preset !== "basic"))
+    downloadedCount: Object.keys(epLists).filter(id => !(isRegionalEntry(epCatalog[id]) && !epRegionalLanguages.includes(epCatalog[id]?.region)) && epLists[id].type !== "revoke" && (!epCatalog[id] || epCatalog[id].preset !== "optional")).length - coreExtraDownloaded - cmpExtraDownloaded,
+    catalogCount: Object.keys(epCatalog).filter(id => !(isRegionalEntry(epCatalog[id]) && !epRegionalLanguages.includes(epCatalog[id].region)) && epCatalog[id].type !== "revoke" && epCatalog[id].preset !== "optional").length - coreExtraCatalog - cmpExtraCatalog,
+    notDownloaded: Object.keys(epCatalog).filter(id => !epLists[id] && !isGroupedId(id) && !(isRegionalEntry(epCatalog[id]) && !epRegionalLanguages.includes(epCatalog[id].region)) && epCatalog[id].type !== "revoke" && epCatalog[id].preset !== "optional" && !(epPreset === "basic" && epCatalog[id].preset !== "basic"))
       .concat(coreCatalogIds.length > 0 && !coreDownloadedIds.length ? [coreCatalogIds[0]] : [])
       .concat(cmpCatalogIds.length > 0 && !cmpDownloadedIds.length ? [cmpCatalogIds[0]] : []),
     updatesAvailable,
@@ -127,7 +129,8 @@ function refreshEnhancedState() {
     epConsentLinkedIds = new Set(resp.consentLinkedListIds || []);
     // Read regional languages to determine if regional lists should be included
     chrome.storage.local.get(["regionalLanguages"], (rl) => {
-      epHasRegionalLanguages = Array.isArray(rl.regionalLanguages) && rl.regionalLanguages.length > 0;
+      epRegionalLanguages = Array.isArray(rl.regionalLanguages) ? rl.regionalLanguages : [];
+      epHasRegionalLanguages = epRegionalLanguages.length > 0;
       renderEnhancedPresets();
       renderEnhancedLists();
       updateEnhancedStatus();
@@ -419,11 +422,10 @@ function setEnhancedPreset(preset) {
     // If switching to basic or full, auto-download missing lists
     if (preset === "basic" || preset === "full") {
       chrome.storage.local.get(["regionalLanguages"], (rl) => {
-        const hasLangs = Array.isArray(rl.regionalLanguages) && rl.regionalLanguages.length > 0;
+        const langs = Array.isArray(rl.regionalLanguages) ? rl.regionalLanguages : [];
         const missing = Object.keys(epCatalog).filter(id => {
           if (epLists[id]) return false;
-          // Skip regional lists if no languages selected
-          if (REGIONAL_IDS.has(id) && !hasLangs) return false;
+          if (isRegionalEntry(epCatalog[id]) && !langs.includes(epCatalog[id].region)) return false;
           if (epCatalog[id].preset === "optional") return false;
           if (preset === "basic") return epCatalog[id].preset === "basic";
           return true;
@@ -472,14 +474,13 @@ function renderEnhancedLists() {
     if (listDef.type === "revoke") continue;
     if (listDef.preset === "optional") {
       enhancedLists.push(listId);
-    } else if (listDef.type === "cosmetic" || listDef.type === "regional_cosmetic") {
+    } else if (listDef.type === "cosmetic") {
       cosmeticLists.push(listId);
     } else if (listDef.type === "cmp" || listDef.type === "cmp_detectors" || listDef.type === "cmp_site") {
       bannerLists.push(listId);
     } else if (listDef.type === "informational" || listDef.type === "tracking_params" || listDef.type === "tracking_params_sites") {
       detectionLists.push(listId);
     } else {
-      // default blocking + regional_blocking
       blockingLists.push(listId);
     }
   }
@@ -632,12 +633,8 @@ function renderEnhancedLists() {
   if (coreIds.length > 0) bkBody.appendChild(renderCoreCard(coreIds));
   for (let i = 0; i < blockingLists.length; i++) {
     let lid = blockingLists[i];
-    if (REGIONAL_IDS.has(lid) && typeof renderRegionalCard === "function") {
-      let rc = renderRegionalCard(lid);
-      if (rc) bkBody.appendChild(rc);
-    } else {
-      bkBody.appendChild(_renderEpListCard(lid));
-    }
+    if (isRegionalEntry(epCatalog[lid]) && !epRegionalLanguages.includes(epCatalog[lid].region)) continue;
+    bkBody.appendChild(_renderEpListCard(lid));
   }
   grid.appendChild(bk.card);
   grid.appendChild(bk.body);
@@ -668,12 +665,8 @@ function renderEnhancedLists() {
   const cmBody = cm.body;
   for (let i = 0; i < cosmeticLists.length; i++) {
     let lid = cosmeticLists[i];
-    if (REGIONAL_IDS.has(lid) && typeof renderRegionalCard === "function") {
-      let rc = renderRegionalCard(lid);
-      if (rc) cmBody.appendChild(rc);
-    } else {
-      cmBody.appendChild(_renderEpListCard(lid));
-    }
+    if (isRegionalEntry(epCatalog[lid]) && !epRegionalLanguages.includes(epCatalog[lid].region)) continue;
+    cmBody.appendChild(_renderEpListCard(lid));
   }
   grid.appendChild(cm.card);
   grid.appendChild(cm.body);
@@ -825,6 +818,28 @@ function _renderEpListCard(listId) {
   icon.onerror = function() { this.style.display = "none"; };
   header.appendChild(icon);
 
+  // Regional flag(s)
+  if (listDef.flag) {
+    const flags = Array.isArray(listDef.flag) ? listDef.flag : [listDef.flag];
+    const maxFlags = 2;
+    for (let fi = 0; fi < flags.length && fi < maxFlags; fi++) {
+      const flagImg = document.createElement("img");
+      flagImg.src = "../icons/flags/" + flags[fi].toLowerCase() + ".svg";
+      flagImg.width = 16;
+      flagImg.height = 12;
+      flagImg.alt = flags[fi];
+      flagImg.className = "ep-regional-flag";
+      flagImg.onerror = function() { this.style.display = "none"; };
+      header.appendChild(flagImg);
+    }
+    if (flags.length > maxFlags) {
+      const overflow = document.createElement("span");
+      overflow.className = "ep-regional-flag-text";
+      overflow.textContent = "+" + (flags.length - maxFlags);
+      header.appendChild(overflow);
+    }
+  }
+
   const nameEl = document.createElement("span");
   nameEl.className = "ep-list-name";
   nameEl.title = listDef.name;
@@ -843,7 +858,7 @@ function _renderEpListCard(listId) {
     celIcon.title = "Consent-linked: activated by denied " + (catInfo ? catInfo.label : "purpose");
     header.appendChild(celIcon);
   }
-  if (listDef.type === "cosmetic" || listDef.type === "regional_cosmetic") {
+  if (listDef.type === "cosmetic") {
     const pill = document.createElement("span");
     pill.className = "ep-category-pill ep-cosmetic-pill";
     pill.title = "Cosmetic filtering - hides ad elements on pages";
@@ -1061,10 +1076,10 @@ function downloadAllEnhancedLists(btnEl, filterIds) {
     _downloadEnhancedBatch(btnEl, filterIds);
   } else {
     chrome.storage.local.get(["regionalLanguages"], (rl) => {
-      const hasLangs = Array.isArray(rl.regionalLanguages) && rl.regionalLanguages.length > 0;
+      const langs = Array.isArray(rl.regionalLanguages) ? rl.regionalLanguages : [];
       const notDownloaded = Object.keys(epCatalog).filter(id => {
         if (epLists[id]) return false;
-        if (REGIONAL_IDS.has(id) && !hasLangs) return false;
+        if (isRegionalEntry(epCatalog[id]) && !langs.includes(epCatalog[id].region)) return false;
         if (epCatalog[id].preset === "optional") return false;
         if (epPreset === "basic" && epCatalog[id].preset !== "basic") return false;
         return true;
@@ -1219,14 +1234,12 @@ function updateAllEnhancedLists(btnEl) {
     }
 
     const downloadedIds = Object.keys(epLists);
-    // Also include undownloaded regional lists if languages are set
+    // Include undownloaded per-source regional lists whose language is selected
     const pendingRegional = epHasRegionalLanguages
-      ? Object.keys(epCatalog).filter(id => REGIONAL_IDS.has(id) && !epLists[id])
+      ? Object.keys(epCatalog).filter(id => isRegionalEntry(epCatalog[id]) && epRegionalLanguages.includes(epCatalog[id].region) && !epLists[id])
       : [];
-    // Skip downloaded regional lists when no languages are selected
-    const filtered = epHasRegionalLanguages
-      ? downloadedIds
-      : downloadedIds.filter(id => !REGIONAL_IDS.has(id));
+    // Skip old aggregate regional IDs and per-source entries whose region isn't selected
+    const filtered = downloadedIds.filter(id => !(isRegionalEntry(epCatalog[id]) && !epRegionalLanguages.includes(epCatalog[id]?.region)));
     const allIds = filtered.concat(pendingRegional);
     const total = allIds.length;
     if (btnEl) btnEl.textContent = "Checking…";

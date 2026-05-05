@@ -106,7 +106,9 @@ export function getEnhancedDataFromStorage(listId) {
 export function getAllEnhancedDataFromStorage(lists) {
   const enabledIds = Object.entries(lists).filter(([, v]) => v.enabled).map(([k]) => k);
   if (enabledIds.length === 0) return Promise.resolve({});
+
   const keys = enabledIds.map(id => "enhancedData_" + id);
+
   return new Promise((resolve) => {
     chrome.storage.local.get(keys, (result) => {
       const out = {};

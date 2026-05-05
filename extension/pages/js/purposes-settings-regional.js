@@ -7,7 +7,7 @@
 // config/regional-languages.json and validates against the CDN-authoritative
 // catalog regions array obtained via GET_STATE.
 //
-// Globals: REGIONAL_COSMETIC_ID, REGIONAL_BLOCKING_ID (config.js)
+// Globals: isRegionalEntry (config.js)
 
 // Capture hash before applyHashRoute replaces it with the tab name
 const _regionalScrollTarget = location.hash === '#regional-filters' ? 'regional-filters' : null;
@@ -26,11 +26,11 @@ function initRegionalSection() {
 			.then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }),
 		new Promise(resolve => {
 			chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_STATE" }, (resp) => {
-				if (chrome.runtime.lastError || !resp) resolve(null);
-				else resolve(resp.catalog);
+				if (chrome.runtime.lastError || !resp) resolve({ catalog: null, lists: {} });
+				else resolve({ catalog: resp.catalog, lists: resp.lists || {} });
 			});
 		}),
-	]).then(([rlConfig, catalog]) => {
+	]).then(([rlConfig, { catalog, lists: epLists }]) => {
 		section.classList.remove('ps-hidden');
 
 		// Deferred scroll: applyHashRoute switches tab but replaces hash,
@@ -42,13 +42,14 @@ function initRegionalSection() {
 			}, 50);
 		}
 
-		// Catalog regions (CDN-authoritative): only show regions the catalog says are valid
+		// Catalog regions: collect unique regions from per-source entries
 		let catalogRegions = null;
 		if (catalog) {
-			const def = catalog[REGIONAL_COSMETIC_ID] || catalog[REGIONAL_BLOCKING_ID];
-			if (def && Array.isArray(def.regions)) {
-				catalogRegions = new Set(def.regions);
+			const regions = new Set();
+			for (const def of Object.values(catalog)) {
+				if (def.region) regions.add(def.region);
 			}
+			if (regions.size > 0) catalogRegions = regions;
 		}
 
 		// Valid regions: in config AND in catalog (if available)
@@ -188,6 +189,51 @@ function initRegionalSection() {
 					}));
 				});
 				row.appendChild(cb);
+
+				// Per-source sub-toggles for multi-source regions
+				if (sources && sources.length > 1) {
+					const subContainer = document.createElement('div');
+					subContainer.className = 'ps-regional-sources';
+					subContainer.setAttribute('role', 'group');
+					subContainer.setAttribute('aria-label', rlConfig[code].label + ' filter sources');
+					if (!cb.checked) subContainer.hidden = true;
+
+					for (const src of sources) {
+						const subRow = document.createElement('div');
+						subRow.className = 'ps-regional-subtoggle-row';
+
+						const subLabel = document.createElement('label');
+						subLabel.className = 'ps-regional-subtoggle-label';
+						subLabel.textContent = src.name;
+						subLabel.setAttribute('for', 'rl-src-' + code + '-' + src.slug);
+						subRow.appendChild(subLabel);
+
+						const subCb = document.createElement('input');
+						subCb.type = 'checkbox';
+						subCb.id = 'rl-src-' + code + '-' + src.slug;
+						subCb.className = 'ps-gpc-toggle ps-regional-subtoggle';
+						const bId = 'regional_' + code + '_' + src.slug + '_blocking';
+						const cId = 'regional_' + code + '_' + src.slug + '_cosmetic';
+						const bEnabled = epLists[bId] ? epLists[bId].enabled !== false : true;
+						const cEnabled = epLists[cId] ? epLists[cId].enabled !== false : true;
+						subCb.checked = bEnabled || cEnabled;
+						subCb.setAttribute('aria-label', (subCb.checked ? 'Disable ' : 'Enable ') + src.name);
+						subCb.addEventListener('change', () => {
+							subCb.setAttribute('aria-label', (subCb.checked ? 'Disable ' : 'Enable ') + src.name);
+							chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_TOGGLE", listId: bId, enabled: subCb.checked });
+							chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_TOGGLE", listId: cId, enabled: subCb.checked });
+						});
+						subRow.appendChild(subCb);
+						subContainer.appendChild(subRow);
+					}
+
+					cb.addEventListener('change', () => {
+						subContainer.hidden = !cb.checked;
+					});
+
+					row.appendChild(subContainer);
+				}
+
 				grid.appendChild(row);
 			}
 		});

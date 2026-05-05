@@ -60,8 +60,9 @@ export const CAPABILITIES = {
   protoconsent: { ownBlocking: false, observeExternalBlocks: true, whitelistOverrides: false, enhancedDnr: false },
 };
 
-// SYNC: must match config.js REGIONAL_IDS
-export const REGIONAL_IDS = new Set(["regional_cosmetic", "regional_blocking"]);
+export function isRegionalEntry(catalogEntry) {
+  return !!catalogEntry?.region;
+}
 
 // Domains where .well-known/protoconsent.json fetch is skipped.
 // Browser store pages reject extension requests with CORS errors that

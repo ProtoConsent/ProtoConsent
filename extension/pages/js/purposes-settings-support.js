@@ -129,8 +129,12 @@ function loadTroubleshootInfo(pre) {
 		if (bg.regionalLanguages) {
 			if (bg.regionalLanguages.length > 0) {
 				lines.push('regional: ' + bg.regionalLanguages.join(', '));
-				const regLists = (bg.enhancedListIds || []).filter(id => id.startsWith('regional_'));
-				lines.push('  active lists: ' + (regLists.length > 0 ? regLists.join(', ') : '(none)'));
+				const regEnabled = (bg.enhancedListIds || []).filter(id => id.startsWith('regional_'));
+				const regAll = (bg.enhancedAllIds || []).filter(id => id.startsWith('regional_'));
+				lines.push('  enabled: ' + regEnabled.length + ' / ' + regAll.length + ' downloaded');
+				if (regEnabled.length > 0) {
+					lines.push('  active: ' + regEnabled.join(', '));
+				}
 			} else {
 				lines.push('regional: (none selected)');
 			}

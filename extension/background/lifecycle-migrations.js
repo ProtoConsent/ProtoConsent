@@ -9,10 +9,39 @@
 export const DEPRECATED_LIST_IDS = new Set([
   "protoconsent_cmp_detectors",
   "protoconsent_cmp_signatures_site",
+  "regional_cosmetic",
+  "regional_blocking",
 ]);
 
 export async function runMigrations() {
   await migrateCmpListIds();
+  await migrateRegionalToPerSource();
+}
+
+// v0.8+: Remove old aggregate regional list entries and their storage keys.
+// Per-source entries (regional_{region}_{slug}_{type}) replace the 2 aggregate
+// entries (regional_cosmetic, regional_blocking) and their per-language data keys.
+async function migrateRegionalToPerSource() {
+  const result = await new Promise(r => chrome.storage.local.get(["enhancedLists"], r));
+  const lists = result.enhancedLists;
+  if (!lists) return;
+  const oldIds = ["regional_cosmetic", "regional_blocking"];
+  const hasOld = oldIds.some(id => lists[id]);
+  if (!hasOld) return;
+
+  const keysToRemove = [];
+  for (const id of oldIds) {
+    keysToRemove.push("enhancedData_" + id);
+    if (lists[id]?.regions) {
+      for (const region of lists[id].regions) {
+        keysToRemove.push("enhancedData_" + id + "_" + region);
+      }
+    }
+    delete lists[id];
+  }
+
+  await new Promise(r => chrome.storage.local.set({ enhancedLists: lists }, r));
+  await new Promise(r => chrome.storage.local.remove(keysToRemove, r));
 }
 
 // v0.6+: Rename protoconsent_cmp_detectors -> autoconsent_cmp_detectors

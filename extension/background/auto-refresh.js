@@ -8,7 +8,7 @@
 import { fetchEnhancedList } from "./handlers.js";
 import { loadEnhancedListsCatalog } from "./config-loader.js";
 import { lastCelPendingDownload, setLastCelPendingDownload } from "./state.js";
-import { REGIONAL_IDS, DEBUG_RULES } from "./config-bridge.js";
+import { isRegionalEntry, DEBUG_RULES } from "./config-bridge.js";
 import { getEnhancedListsFromStorage, getEnhancedPresetFromStorage } from "./storage.js";
 
 const ALARM_OWN = "protoconsent_list_refresh";
@@ -78,9 +78,9 @@ export function refreshLists(filter, options) {
         const tasks = [];
 
         for (const [listId, listDef] of Object.entries(catalog)) {
-          if (!listDef.fetch_url && !listDef.fetch_base) continue;
-          // Skip regional lists without detected language
-          if (REGIONAL_IDS.has(listDef.type) && !hasLangs) continue;
+          if (!listDef.fetch_url) continue;
+          // Skip regional lists if their language isn't selected
+          if (isRegionalEntry(listDef) && (!hasLangs || !storage.regionalLanguages.includes(listDef.region))) continue;
 
           const matchesFilter = filter === "all"
             || (filter === "own" && isOwnList(listDef))
