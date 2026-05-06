@@ -16,6 +16,26 @@ let epHasRegionalLanguages = false;
 let epRegionalLanguages = [];
 let _epFocusListId = null; // list to refocus after re-render
 let _celAutoFetchInProgress = false;
+let _fetchPollTimer = null;
+
+function setHeaderDownloadIndicator(active) {
+  const el = document.getElementById("pc-download-indicator");
+  if (el) el.hidden = !active;
+  if (active && !_fetchPollTimer) {
+    _fetchPollTimer = setInterval(_pollActiveFetches, 1500);
+  }
+  if (!active && _fetchPollTimer) {
+    clearInterval(_fetchPollTimer);
+    _fetchPollTimer = null;
+  }
+}
+
+function _pollActiveFetches() {
+  chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_FETCH_COUNT" }, (resp) => {
+    if (chrome.runtime.lastError || !resp) return;
+    if (resp.activeFetches === 0) setHeaderDownloadIndicator(false);
+  });
+}
 
 // --- Shared stats helper ---
 function getEnhancedStats() {
@@ -134,6 +154,8 @@ function refreshEnhancedState() {
       renderEnhancedPresets();
       renderEnhancedLists();
       updateEnhancedStatus();
+      // Show header indicator if background is mid-download
+      if (resp.activeFetches > 0) setHeaderDownloadIndicator(true);
       // Auto-download consent-linked lists not yet downloaded
       const celPending = resp.celPendingDownload || [];
       if (celPending.length > 0 && !_celAutoFetchInProgress) {
@@ -1096,6 +1118,7 @@ function _downloadEnhancedBatch(btnEl, notDownloaded) {
 
   const startDownloads = () => {
     const total = notDownloaded.length;
+    setHeaderDownloadIndicator(true);
     if (btnEl) {
       btnEl.disabled = true;
       btnEl.textContent = "0/" + total + "\u2026";
@@ -1191,6 +1214,7 @@ function _downloadEnhancedBatch(btnEl, notDownloaded) {
         }
         if (completed >= total) {
           _celAutoFetchInProgress = false;
+          setHeaderDownloadIndicator(false);
           if (btnEl) {
             btnEl.disabled = false;
             btnEl.textContent = failed > 0

@@ -96,36 +96,47 @@ export async function handleBridgeQuery(message) {
 // Fetch (download) a single enhanced list by ID.
 // Returns a Promise that resolves with { ok, skipped?, ...counts } or rejects on error.
 // Used by the PROTOCONSENT_ENHANCED_FETCH message handler and by auto-refresh.js.
+let _activeFetchCount = 0;
+export function getActiveFetchCount() { return _activeFetchCount; }
+
 export function fetchEnhancedList(listId) {
+  _activeFetchCount++;
   return loadEnhancedListsCatalog().then(async (catalog) => {
-    const listDef = catalog[listId];
-    if (!listDef || !listDef.fetch_url) {
-      return { ok: false, error: "Unknown list or no fetch URL" };
-    }
-    const fetchUrl = listDef.fetch_url.startsWith("http")
-      ? listDef.fetch_url
-      : chrome.runtime.getURL(listDef.fetch_url);
-    const fallbackUrl = fetchUrl.includes("cdn.jsdelivr.net/gh/")
-      ? fetchUrl.replace("https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/", "https://raw.githubusercontent.com/ProtoConsent/data/main/")
-      : null;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    const fetchOpts = { credentials: "omit", signal: controller.signal, cache: "no-store" };
-    const tryFetch = (url) => fetch(url, fetchOpts).then(res => {
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.json();
-    });
     try {
-      const data = await tryFetch(fetchUrl).catch(err => {
-        if (fallbackUrl && err.name !== "AbortError") return tryFetch(fallbackUrl);
-        throw err;
+      const listDef = catalog[listId];
+      if (!listDef || !listDef.fetch_url) {
+        return { ok: false, error: "Unknown list or no fetch URL" };
+      }
+      const fetchUrl = listDef.fetch_url.startsWith("http")
+        ? listDef.fetch_url
+        : chrome.runtime.getURL(listDef.fetch_url);
+      const fallbackUrl = fetchUrl.includes("cdn.jsdelivr.net/gh/")
+        ? fetchUrl.replace("https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/", "https://raw.githubusercontent.com/ProtoConsent/data/main/")
+        : null;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const fetchOpts = { credentials: "omit", signal: controller.signal, cache: "no-store" };
+      const tryFetch = (url) => fetch(url, fetchOpts).then(res => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
       });
-      clearTimeout(timeoutId);
-      return _storeEnhancedListData(listId, listDef, data);
-    } catch (err) {
-      clearTimeout(timeoutId);
-      return { ok: false, error: err.name === "AbortError" ? "Download timed out" : err.message };
+      try {
+        const data = await tryFetch(fetchUrl).catch(err => {
+          if (fallbackUrl && err.name !== "AbortError") return tryFetch(fallbackUrl);
+          throw err;
+        });
+        clearTimeout(timeoutId);
+        return _storeEnhancedListData(listId, listDef, data);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        return { ok: false, error: err.name === "AbortError" ? "Download timed out" : err.message };
+      }
+    } finally {
+      _activeFetchCount = Math.max(0, _activeFetchCount - 1);
     }
+  }).catch(err => {
+    _activeFetchCount = Math.max(0, _activeFetchCount - 1);
+    return { ok: false, error: err.message || "catalog load failed" };
   });
 }
 
@@ -1022,6 +1033,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "PROTOCONSENT_ENHANCED_GET_FETCH_COUNT") {
+    sendResponse({ activeFetches: _activeFetchCount });
+    return;
+  }
+
   // Enhanced: get current state
   if (message.type === "PROTOCONSENT_ENHANCED_GET_STATE") {
     const forceRefresh = message.forceRefresh === true;
@@ -1044,7 +1060,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         celMode: celData.celMode,
         celCustomPurposes: celData.celCustomPurposes,
         consentLinkedListIds: lastConsentLinkedListIds,
-        celPendingDownload: lastCelPendingDownload });
+        celPendingDownload: lastCelPendingDownload,
+        activeFetches: _activeFetchCount });
     });
     return true;
   }

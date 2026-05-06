@@ -214,6 +214,16 @@ body {
   color: #3b5068;
 }
 
+.pc-download-indicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
 .pc-site {
   flex: 1 1 auto;
   min-width: 0;
