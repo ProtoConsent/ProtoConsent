@@ -113,6 +113,16 @@ export function fetchEnhancedList(listId) {
       const fallbackUrl = fetchUrl.includes("cdn.jsdelivr.net/gh/")
         ? fetchUrl.replace("https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/", "https://raw.githubusercontent.com/ProtoConsent/data/main/")
         : null;
+      // Skip fetch if catalog metadata matches what we already have stored
+      const lists = await getEnhancedListsFromStorage();
+      const existing = lists[listId];
+      if (existing) {
+        const catalogTS = listDef.generated || listDef.version;
+        const localTS = existing.generated || existing.version;
+        if (catalogTS && localTS && catalogTS === localTS) {
+          return { ok: true, skipped: true };
+        }
+      }
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
       const fetchOpts = { credentials: "omit", signal: controller.signal, cache: "no-store" };
