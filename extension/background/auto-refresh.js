@@ -88,11 +88,10 @@ export function refreshLists(filter, options) {
           if (!matchesFilter) continue;
 
           if (initialDownload) {
-            // Only download lists that match the active preset (basic by default)
             if (preset === "off") continue;
             if (listDef.preset === "optional") continue;
             if (preset === "basic" && listDef.preset !== "basic") continue;
-            // "full" or unset: download all non-optional
+            if (lists[listId]) continue; // already downloaded, skip
             tasks.push(() => fetchEnhancedList(listId));
           } else if (lists[listId]) {
             // Only refresh already-downloaded lists
