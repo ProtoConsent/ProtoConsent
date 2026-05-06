@@ -59,7 +59,7 @@ import {
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
 import { initRegionalStorageListener } from "./handlers-regional.js";
-import { rebuildAllDynamicRules } from "./rebuild.js";
+import { rebuildAllDynamicRules, rebuildCategories } from "./rebuild.js";
 import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
 import { scheduleSessionPersist } from "./session.js";
@@ -160,7 +160,7 @@ const _listTypeHandlers = {
     return {
       counts: { genericCount, domainCount, domainRuleCount, pathRuleCount: 0 },
       payload: { generic: data.generic, domains: data.domains, exceptions: data.exceptions || {} },
-      afterWrite: rebuildAllDynamicRules,
+      afterWrite: () => rebuildCategories(new Set(["cosmetic"])),
     };
   },
 
@@ -207,7 +207,7 @@ const _listTypeHandlers = {
     return {
       counts: { paramCount: params.length },
       payload: { params },
-      afterWrite: rebuildAllDynamicRules,
+      afterWrite: () => rebuildCategories(new Set(["enhanced"])),
     };
   },
 
@@ -226,7 +226,7 @@ const _listTypeHandlers = {
     return {
       counts: { paramCount: new Set(Object.values(cleanSites).flat()).size, domainCount: Object.keys(cleanSites).length },
       payload: { sites: cleanSites },
-      afterWrite: rebuildAllDynamicRules,
+      afterWrite: () => rebuildCategories(new Set(["enhanced"])),
     };
   },
 
@@ -261,7 +261,7 @@ const _listTypeHandlers = {
     return {
       counts: { hotfixCount: domains.length, pathRuleCount: pathRules.length, pathExceptionCount: pathExceptions.length },
       payload,
-      afterWrite: rebuildAllDynamicRules,
+      afterWrite: () => rebuildCategories(new Set(["enhanced"])),
     };
   },
 };
@@ -282,7 +282,7 @@ function _handleDefaultBlocking(data) {
   return {
     counts: { domainCount: domains.length, pathRuleCount: pathRules.length },
     payload: { domains, pathRules: pathRules.length > 0 ? pathRules : undefined },
-    afterWrite: rebuildAllDynamicRules,
+    afterWrite: () => rebuildCategories(new Set(["enhanced"])),
   };
 }
 
@@ -586,7 +586,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return new Promise(resolve => {
         chrome.storage.local.set({ cosmeticUserExceptions: exc }, () => {
           if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
-          rebuildAllDynamicRules();
+          rebuildCategories(new Set(["cosmetic"]));
           sendResponse({ ok: true });
           resolve();
         });
@@ -607,7 +607,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return new Promise(resolve => {
         chrome.storage.local.set({ cosmeticUserExceptions: exc }, () => {
           if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
-          rebuildAllDynamicRules();
+          rebuildCategories(new Set(["cosmetic"]));
           sendResponse({ ok: true });
           resolve();
         });
@@ -625,7 +625,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return new Promise(resolve => {
         chrome.storage.local.set({ cosmeticExcludedSites: sites }, () => {
           if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
-          rebuildAllDynamicRules();
+          rebuildCategories(new Set(["cosmetic"]));
           sendResponse({ ok: true });
           resolve();
         });
@@ -643,7 +643,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return new Promise(resolve => {
         chrome.storage.local.set({ cosmeticExcludedSites: filtered }, () => {
           if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
-          rebuildAllDynamicRules();
+          rebuildCategories(new Set(["cosmetic"]));
           sendResponse({ ok: true });
           resolve();
         });
@@ -923,7 +923,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           if (chrome.runtime.lastError) {
             sendResponse({ ok: false, error: chrome.runtime.lastError.message });
           } else {
-            rebuildAllDynamicRules();
+            rebuildCategories(new Set(["whitelist"]));
             sendResponse({ ok: true });
           }
           resolve();
@@ -953,7 +953,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           if (chrome.runtime.lastError) {
             sendResponse({ ok: false, error: chrome.runtime.lastError.message });
           } else {
-            rebuildAllDynamicRules();
+            rebuildCategories(new Set(["whitelist"]));
             sendResponse({ ok: true });
           }
           resolve();
@@ -984,7 +984,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           if (chrome.runtime.lastError) {
             sendResponse({ ok: false, error: chrome.runtime.lastError.message });
           } else {
-            rebuildAllDynamicRules();
+            rebuildCategories(new Set(["whitelist"]));
             sendResponse({ ok: true, whitelist });
           }
           resolve();
@@ -1091,7 +1091,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 resolve();
                 return;
               }
-              rebuildAllDynamicRules();
+              rebuildCategories(new Set(["enhanced"]));
               // Auto-download missing lists for new preset
               if (preset === "basic" || preset === "full") {
                 refreshLists("all", { initialDownload: true });
@@ -1131,7 +1131,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 resolve();
                 return;
               }
-              rebuildAllDynamicRules();
+              rebuildCategories(new Set(["enhanced"]));
               sendResponse({ ok: true });
               resolve();
             });
@@ -1181,7 +1181,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               if (removedType === "cmp") {
                 chrome.storage.local.remove("_cmpSignatures", () => {
                   invalidateCmpSignaturesCache();
-                  rebuildAllDynamicRules();
+                  rebuildCategories(new Set(["cmp"]));
                   sendResponse({ ok: true });
                   resolve();
                 });
@@ -1201,7 +1201,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 });
                 return;
               }
-              rebuildAllDynamicRules();
+              rebuildCategories(new Set(["enhanced"]));
               sendResponse({ ok: true });
               resolve();
             });

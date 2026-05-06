@@ -15,6 +15,17 @@ export const BASE_RULE_ID = 1;
 // Whitelist rules are trimmed if they would exceed the remaining budget.
 export const DYNAMIC_RULE_RESERVE = 100;
 
+// Fixed ID ranges per rule category (enables selective/partial rebuilds).
+export const RULE_RANGES = Object.freeze({
+  overrides:  { start: 1,    end: 499  },
+  whitelist:  { start: 500,  end: 999  },
+  hotfix:     { start: 1000, end: 1499 },
+  enhanced:   { start: 1500, end: 3999 },
+  paramStrip: { start: 4000, end: 4799 },
+  gpc:        { start: 4800, end: 4899 },
+  ch:         { start: 4900, end: 4999 },
+});
+
 // Resource types for blocking rules (not main_frame - that would block the page itself)
 export const BLOCK_RESOURCE_TYPES = [
   "script", "xmlhttprequest", "image", "sub_frame", "ping", "other"

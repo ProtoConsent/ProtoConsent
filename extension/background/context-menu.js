@@ -7,7 +7,7 @@ import {
   tabBlockedDomains,
 } from "./state.js";
 import { withWhitelist, isValidHostname } from "./storage.js";
-import { rebuildAllDynamicRules } from "./rebuild.js";
+import { rebuildAllDynamicRules, rebuildCategories } from "./rebuild.js";
 import { resetBehavioralCounters } from "./blocker-detection.js";
 
 const MENU_MODE       = "pc-mode";
@@ -140,7 +140,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
 
   if (info.menuItemId === MENU_COSMETIC) {
     chrome.storage.local.set({ enhancedCosmeticEnabled: info.checked }, () => {
-      rebuildAllDynamicRules();
+      rebuildCategories(new Set(["cosmetic"]));
       refreshMenuState();
     });
     return;
@@ -150,7 +150,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     const update = {};
     for (const k of SIGNAL_KEYS) { update[k] = info.checked; }
     chrome.storage.local.set(update, () => {
-      rebuildAllDynamicRules();
+      rebuildCategories(new Set(["signals", "paramStrip"]));
       refreshMenuState();
     });
     return;
@@ -201,7 +201,7 @@ export function whitelistAllForSite(tabId, site) {
     return new Promise(resolve => {
       chrome.storage.local.set({ whitelist }, () => {
         if (chrome.runtime.lastError) { resolve(); return; }
-        rebuildAllDynamicRules();
+        rebuildCategories(new Set(["whitelist"]));
         resolve();
       });
     });
@@ -218,7 +218,7 @@ export function removeWhitelistAllForSite(site) {
     return new Promise(resolve => {
       chrome.storage.local.set({ whitelist }, () => {
         if (chrome.runtime.lastError) { resolve(); return; }
-        rebuildAllDynamicRules();
+        rebuildCategories(new Set(["whitelist"]));
         resolve();
       });
     });
@@ -237,7 +237,7 @@ export function clearWhitelistAll() {
     return new Promise(resolve => {
       chrome.storage.local.set({ whitelist }, () => {
         if (chrome.runtime.lastError) { resolve(); return; }
-        rebuildAllDynamicRules();
+        rebuildCategories(new Set(["whitelist"]));
         resolve();
       });
     });
