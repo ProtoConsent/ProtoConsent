@@ -101,7 +101,7 @@ Dynamic rules (5,000 rule pool)
 │ Per-site overrides: max 10 rules (priority 2)│
 │ Enhanced lists:     N rules     (priority 2) │
 │ Whitelist allow:    1+ rules    (priority 3) │
-│ Hotfix allow:       0-1 rules   (priority 3) │
+│ Hotfix/revoke allow: N rules    (priority 3) │
 │ GPC global: 1 rule              (priority 1) │
 │ GPC per-site: max 2 rules       (priority 2) │
 │ CH strip global: 1 rule         (priority 1) │

@@ -38,7 +38,7 @@ import {
 import { updateCmpInjectionData } from "./cmp-injection.js";
 import { consumeCelPendingDownloads } from "./auto-refresh.js";
 import { buildEnhancedRulesIncremental, buildParamStripRulesIncremental } from "./rebuild-enhanced.js";
-import { buildHotfixRules } from "./rebuild-hotfix.js";
+import { buildRevokeRules } from "./rebuild-revoke.js";
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
 export async function rebuildAllDynamicRules() {
@@ -243,7 +243,7 @@ async function _rebuildCategoriesImpl(categories) {
 
     let hfResult = null;
     if (affectedRangeKeys.has("hotfix")) {
-      hfResult = await buildHotfixRules();
+      hfResult = await buildRevokeRules(enhancedListsMeta);
       addRules = addRules.concat(hfResult.rules);
     }
 
@@ -832,7 +832,7 @@ async function _rebuildAllDynamicRulesImpl() {
     } // end can("whitelistOverrides")
 
     // 4b. Hotfix safelist rules: override static rulesets for zombie domains
-    const hotfixResult = await buildHotfixRules();
+    const hotfixResult = await buildRevokeRules(enhancedListsMeta);
     newRules = newRules.concat(hotfixResult.rules);
 
     // 5. Enhanced Protection lists (dynamic block rules, priority 2)
