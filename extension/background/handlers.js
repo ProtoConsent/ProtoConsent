@@ -131,10 +131,18 @@ export function fetchEnhancedList(listId) {
         return res.json();
       });
       try {
-        const data = await tryFetch(fetchUrl).catch(err => {
+        let data = await tryFetch(fetchUrl).catch(err => {
           if (fallbackUrl && err.name !== "AbortError") return tryFetch(fallbackUrl);
           throw err;
         });
+        // If primary CDN returned stale data (matches stored but catalog is newer), try fallback
+        if (fallbackUrl && existing && _isUnchanged(existing, data)) {
+          const catalogTS = listDef.generated || listDef.version;
+          const downloadedTS = data.generated || data.version;
+          if (catalogTS && downloadedTS && catalogTS > downloadedTS) {
+            try { data = await tryFetch(fallbackUrl); } catch (_) { /* keep primary */ }
+          }
+        }
         clearTimeout(timeoutId);
         return _storeEnhancedListData(listId, listDef, data);
       } catch (err) {
