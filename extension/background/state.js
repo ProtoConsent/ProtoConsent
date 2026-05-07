@@ -26,6 +26,13 @@ export const RULE_RANGES = Object.freeze({
   ch:         { start: 4900, end: 4999 },
 });
 
+// Shared range-overflow guard used by all rebuild-*.js builders.
+export function nextIdInRange(currentId, rangeName) {
+  if (currentId > RULE_RANGES[rangeName].end)
+    throw new Error(`Rule ID overflow in range "${rangeName}": nextId=${currentId} exceeds end=${RULE_RANGES[rangeName].end}`);
+  return currentId;
+}
+
 // Resource types for blocking rules (not main_frame - that would block the page itself)
 export const BLOCK_RESOURCE_TYPES = [
   "script", "xmlhttprequest", "image", "sub_frame", "ping", "other"

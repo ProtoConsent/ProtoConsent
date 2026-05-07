@@ -13,7 +13,7 @@
 import { DEBUG_RULES } from "./config-bridge.js";
 import {
   RULE_RANGES, BLOCK_RESOURCE_TYPES,
-  can,
+  can, nextIdInRange,
   setHotfixDomainSet,
 } from "./state.js";
 import { getEnhancedDataFromStorage } from "./storage.js";
@@ -21,12 +21,6 @@ import { updateHotfixListener } from "./tracking.js";
 
 // Internal lists are always processed regardless of .enabled flag.
 const INTERNAL_REVOKE_LISTS = new Set(["protoconsent_hotfix"]);
-
-function nextIdInRange(currentId, rangeName) {
-  if (currentId > RULE_RANGES[rangeName].end)
-    throw new Error(`Rule ID overflow in range "${rangeName}": nextId=${currentId} exceeds end=${RULE_RANGES[rangeName].end}`);
-  return currentId;
-}
 
 /**
  * Build safelist rules from all revoke-type enhanced lists.

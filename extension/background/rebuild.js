@@ -37,7 +37,7 @@ import { buildEnhancedRulesIncremental, buildParamStripRulesIncremental } from "
 import { buildRevokeRules } from "./rebuild-revoke.js";
 import { buildGpcRules, buildChRules, updateGPCContentScript } from "./rebuild-signals.js";
 import { updateCosmeticInjection } from "./rebuild-cosmetic.js";
-import { buildOverrideRules, buildWhitelistRules, getConsentLinkedListIds } from "./rebuild-overrides.js";
+import { buildOverrideRules, buildWhitelistRules } from "./rebuild-overrides.js";
 import { resolveConsentEnhancedLink } from "./rebuild-cel.js";
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
@@ -169,6 +169,23 @@ async function _rebuildCategoriesImpl(categories) {
   let addRules = [];
   let consentLinkedListIds = new Set();
 
+  // Compute permissiveSites once (needed by enhanced + cosmetic)
+  const permissiveSites = [];
+  if (can("ownBlocking")) {
+    for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
+      const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
+      if (PURPOSES_FOR_ENFORCEMENT.every(p => sitePurposes[p])) permissiveSites.push(domain);
+    }
+  }
+
+  // Read param strip prefs once (used in rule building + static rulesets)
+  const paramStrippingEnabled = await new Promise(resolve => {
+    chrome.storage.local.get(["paramStrippingEnabled"], r => resolve(r.paramStrippingEnabled !== false));
+  });
+  const paramStrippingSitesEnabled = await new Promise(resolve => {
+    chrome.storage.local.get(["paramStrippingSitesEnabled"], r => resolve(r.paramStrippingSitesEnabled !== false));
+  });
+
   // --- Build rules for affected ranges ---
 
   if (affectedRangeKeys.has("overrides")) {
@@ -195,15 +212,6 @@ async function _rebuildCategoriesImpl(categories) {
       }));
     });
 
-    // Compute permissiveSites from rulesByDomain
-    const permissiveSites = [];
-    if (can("ownBlocking")) {
-      for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
-        const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
-        if (PURPOSES_FOR_ENFORCEMENT.every(p => sitePurposes[p])) permissiveSites.push(domain);
-      }
-    }
-
     // CEL resolution
     ({ consentLinkedListIds } = await resolveConsentEnhancedLink(enhancedListsMeta, globalPurposes, consentEnhancedLink));
 
@@ -223,12 +231,6 @@ async function _rebuildCategoriesImpl(categories) {
     }
 
     if (affectedRangeKeys.has("paramStrip")) {
-      const paramStrippingEnabled = await new Promise(resolve => {
-        chrome.storage.local.get(["paramStrippingEnabled"], r => resolve(r.paramStrippingEnabled !== false));
-      });
-      const paramStrippingSitesEnabled = await new Promise(resolve => {
-        chrome.storage.local.get(["paramStrippingSitesEnabled"], r => resolve(r.paramStrippingSitesEnabled !== false));
-      });
       const psResult = await buildParamStripRulesIncremental(enhancedListsMeta, paramStrippingEnabled, paramStrippingSitesEnabled);
       addRules = addRules.concat(psResult.rules);
       setDynamicParamStripIds(psResult.paramStripIds);
@@ -265,9 +267,7 @@ async function _rebuildCategoriesImpl(categories) {
   // (only if not already done by the enhanced rebuild above)
   if ((affectedRangeKeys.has("hotfix") && !affectedRangeKeys.has("enhanced"))) {
     // Hotfix-only change: rebuild reverse index + path attribution incrementally
-    const consentLinkedIdsForIndex = await getConsentLinkedListIds(enhancedListsMeta, globalPurposes);
-    const enhancedExclude = undefined; // not needed for index-only rebuild
-    const enhResult = await buildEnhancedRulesIncremental(enhancedListsMeta, consentLinkedIdsForIndex, enhancedExclude);
+    const enhResult = await buildEnhancedRulesIncremental(enhancedListsMeta, consentLinkedListIds, undefined);
     setEnhancedReverseIndex(enhResult.reverseIndex);
     setPathAttributionIndex(enhResult.pathAttrIndex);
   }
@@ -285,12 +285,6 @@ async function _rebuildCategoriesImpl(categories) {
       else disableIds.push(rulesetId);
     }
     if (affectedRangeKeys.has("paramStrip")) {
-      const paramStrippingEnabled = await new Promise(resolve => {
-        chrome.storage.local.get(["paramStrippingEnabled"], r => resolve(r.paramStrippingEnabled !== false));
-      });
-      const paramStrippingSitesEnabled = await new Promise(resolve => {
-        chrome.storage.local.get(["paramStrippingSitesEnabled"], r => resolve(r.paramStrippingSitesEnabled !== false));
-      });
       if (paramStrippingEnabled) enableIds.push("strip_tracking_params");
       else disableIds.push("strip_tracking_params");
       if (paramStrippingEnabled && paramStrippingSitesEnabled) enableIds.push("strip_tracking_params_sites");
@@ -309,10 +303,35 @@ async function _rebuildCategoriesImpl(categories) {
   }
 
   if (DEBUG_RULES) {
-    lastRebuildDebug.selectiveCategories = [...categories];
-    lastRebuildDebug.selectiveRemoved = removeIds.length;
-    lastRebuildDebug.selectiveAdded = addRules.length;
-    lastRebuildDebug.selectiveTs = Date.now();
+    const patch = {
+      selectiveCategories: [...categories],
+      selectiveRemoved: removeIds.length,
+      selectiveAdded: addRules.length,
+      selectiveTs: Date.now(),
+    };
+    if (affectedRangeKeys.has("enhanced") || affectedRangeKeys.has("hotfix")) {
+      patch.enhancedCount = Object.values(enhancedListsMeta).filter(l => l.enabled).length;
+      patch.enhancedListIds = Object.entries(enhancedListsMeta)
+        .filter(([, l]) => l.enabled).map(([id]) => id);
+      patch.enhancedRules = addRules.filter(r => r.priority === 2 && r.action.type === "block").length;
+      patch.consentLinkedListIds = [...consentLinkedListIds];
+    }
+    if (hfResult) {
+      patch.hotfixDomainCount = hfResult.domainCount;
+      patch.hotfixExceptionCount = hfResult.exceptionCount;
+    }
+    if (affectedRangeKeys.has("paramStrip")) {
+      patch.paramStripping = paramStrippingEnabled;
+      patch.paramStrippingSites = paramStrippingSitesEnabled;
+    }
+    if (affectedRangeKeys.has("overrides")) {
+      patch.customSites = Object.keys(rulesByDomain);
+      patch.permissiveSites = permissiveSites.length;
+    }
+    if (affectedRangeKeys.has("whitelist")) {
+      patch.whitelistDomainCount = Object.keys(whitelist).length;
+    }
+    Object.assign(lastRebuildDebug, patch);
   }
 
   // Content script updates only for relevant categories
@@ -321,15 +340,7 @@ async function _rebuildCategoriesImpl(categories) {
       await updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled);
     }
     if (categories.has("cosmetic") || categories.has("enhanced")) {
-      const permissiveSites = [];
-      if (can("ownBlocking")) {
-        for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
-          const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
-          if (PURPOSES_FOR_ENFORCEMENT.every(p => sitePurposes[p])) permissiveSites.push(domain);
-        }
-      }
-      await updateCosmeticInjection(enhancedListsMeta, permissiveSites,
-        await getConsentLinkedListIds(enhancedListsMeta, globalPurposes));
+      await updateCosmeticInjection(enhancedListsMeta, permissiveSites, consentLinkedListIds);
     }
     if (categories.has("cmp")) {
       await updateCmpInjectionData(globalPurposes, gpcEnabled);

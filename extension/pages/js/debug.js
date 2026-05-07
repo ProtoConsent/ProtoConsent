@@ -96,6 +96,15 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("");
     }
 
+    // Last selective rebuild info
+    if (bg && bg.selectiveTs) {
+      lines.push("— last selective rebuild —");
+      lines.push("  categories: " + (bg.selectiveCategories || []).join(", "));
+      lines.push("  removed: " + bg.selectiveRemoved + "  added: " + bg.selectiveAdded);
+      lines.push("  at: " + new Date(bg.selectiveTs).toLocaleTimeString());
+      lines.push("");
+    }
+
     // Override detail
     if (bg && bg.overrideDetails && Object.keys(bg.overrideDetails).length) {
       lines.push("— overrides —");

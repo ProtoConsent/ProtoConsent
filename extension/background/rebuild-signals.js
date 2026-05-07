@@ -3,14 +3,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { DEBUG_RULES, HIGH_ENTROPY_CH } from "./config-bridge.js";
-import { RULE_RANGES, GPC_RESOURCE_TYPES, gpcPurposes, GPC_SCRIPT_ID } from "./state.js";
+import { RULE_RANGES, GPC_RESOURCE_TYPES, gpcPurposes, GPC_SCRIPT_ID, nextIdInRange } from "./state.js";
 import { resolvePurposes } from "./storage.js";
-
-function nextIdInRange(currentId, rangeName) {
-  if (currentId > RULE_RANGES[rangeName].end)
-    throw new Error(`Rule ID overflow in range "${rangeName}": nextId=${currentId} exceeds end=${RULE_RANGES[rangeName].end}`);
-  return currentId;
-}
 
 export function buildGpcRules(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled) {
   const rules = [];

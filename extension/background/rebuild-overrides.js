@@ -4,16 +4,9 @@
 
 import {
   RULE_RANGES, BLOCK_RESOURCE_TYPES, PURPOSES_FOR_ENFORCEMENT,
-  can,
+  can, nextIdInRange,
 } from "./state.js";
 import { resolvePurposes, isValidHostname } from "./storage.js";
-import { resolveConsentEnhancedLink } from "./rebuild-cel.js";
-
-function nextIdInRange(currentId, rangeName) {
-  if (currentId > RULE_RANGES[rangeName].end)
-    throw new Error(`Rule ID overflow in range "${rangeName}": nextId=${currentId} exceeds end=${RULE_RANGES[rangeName].end}`);
-  return currentId;
-}
 
 export function buildOverrideRules(rulesByDomain, blocklists, presets, defaultConfig, globalPurposes) {
   const rules = [];
@@ -120,10 +113,4 @@ export function buildWhitelistRules(whitelist) {
     added++;
   }
   return { rules, whitelistMap, globalDomains, perSite };
-}
-
-// Resolve consent-enhanced-link list IDs from current storage state (shared by builders and post-update).
-export async function getConsentLinkedListIds(enhancedListsMeta, globalPurposes) {
-  const { consentLinkedListIds } = await resolveConsentEnhancedLink(enhancedListsMeta, globalPurposes);
-  return consentLinkedListIds;
 }

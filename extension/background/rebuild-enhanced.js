@@ -10,22 +10,10 @@ import { DEBUG_RULES } from "./config-bridge.js";
 import {
   RULE_RANGES, BLOCK_RESOURCE_TYPES,
   bundledPathAttribution,
-  can,
+  can, nextIdInRange,
 } from "./state.js";
 import { getEnhancedDataFromStorage } from "./storage.js";
 import { parseUrlFilterForAttribution } from "./config-loader.js";
-
-class RangeOverflowError extends Error {
-  constructor(rangeName, nextId) {
-    super(`Rule ID overflow in range "${rangeName}": nextId=${nextId} exceeds end=${RULE_RANGES[rangeName].end}`);
-    this.rangeName = rangeName;
-  }
-}
-
-function nextIdInRange(currentId, rangeName) {
-  if (currentId > RULE_RANGES[rangeName].end) throw new RangeOverflowError(rangeName, currentId);
-  return currentId;
-}
 
 /**
  * Build enhanced blocking rules, reverse index, and path attribution
