@@ -5,7 +5,7 @@
 // Auto-refresh engine for Enhanced lists. Uses chrome.alarms for periodic
 // refresh and provides install/startup hooks for immediate downloads.
 
-import { fetchEnhancedList } from "./handlers.js";
+import { fetchEnhancedList } from "./handlers-enhanced.js";
 import { loadEnhancedListsCatalog } from "./config-loader.js";
 import { lastCelPendingDownload, setLastCelPendingDownload } from "./state.js";
 import { isRegionalEntry, DEBUG_RULES } from "./config-bridge.js";
