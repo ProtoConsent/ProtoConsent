@@ -7,7 +7,7 @@ import {
   can,
 } from "./state.js";
 import { resolvePurposes, isValidHostname } from "./storage.js";
-import { loadEnhancedListsCatalog } from "./config-loader.js";
+import { resolveConsentEnhancedLink } from "./rebuild-cel.js";
 
 function nextIdInRange(currentId, rangeName) {
   if (currentId > RULE_RANGES[rangeName].end)
@@ -18,17 +18,20 @@ function nextIdInRange(currentId, rangeName) {
 export function buildOverrideRules(rulesByDomain, blocklists, presets, defaultConfig, globalPurposes) {
   const rules = [];
   const blockMap = {};
+  const permissiveSites = [];
   let nextId = RULE_RANGES.overrides.start;
 
-  if (!can("ownBlocking")) return { rules, blockMap };
+  if (!can("ownBlocking")) return { rules, blockMap, permissiveSites };
 
   const allowOverrides = {};
   const blockOverrides = {};
   for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
     const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
+    let allAllowed = true;
     for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
       const siteAllows = sitePurposes[purposeKey];
       const globalAllows = globalPurposes[purposeKey];
+      if (!siteAllows) allAllowed = false;
       if (siteAllows === globalAllows) continue;
       if (siteAllows) {
         if (!allowOverrides[purposeKey]) allowOverrides[purposeKey] = [];
@@ -38,6 +41,7 @@ export function buildOverrideRules(rulesByDomain, blocklists, presets, defaultCo
         blockOverrides[purposeKey].push(domain);
       }
     }
+    if (allAllowed) permissiveSites.push(domain);
   }
 
   for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
@@ -76,7 +80,7 @@ export function buildOverrideRules(rulesByDomain, blocklists, presets, defaultCo
       }
     }
   }
-  return { rules, blockMap };
+  return { rules, blockMap, permissiveSites };
 }
 
 export function buildWhitelistRules(whitelist) {
@@ -115,39 +119,11 @@ export function buildWhitelistRules(whitelist) {
     rules.push({ id: wlId, priority: 3, action: { type: "allow" }, condition: { requestDomains: domains, initiatorDomains: [site], resourceTypes: BLOCK_RESOURCE_TYPES } });
     added++;
   }
-  return { rules, whitelistMap };
+  return { rules, whitelistMap, globalDomains, perSite };
 }
 
 // Resolve consent-enhanced-link list IDs from current storage state (shared by builders and post-update).
 export async function getConsentLinkedListIds(enhancedListsMeta, globalPurposes) {
-  const CEL_PURPOSES = new Set(["analytics", "ads", "personalization", "third_parties", "advanced_tracking"]);
-  const consentLinkedListIds = new Set();
-  const celState = await new Promise(resolve => {
-    chrome.storage.local.get(["consentEnhancedLink", "celMode", "celCustomPurposes"], r => resolve({
-      cel: r.consentEnhancedLink === true,
-      mode: r.celMode || "profile",
-      customPurposes: r.celCustomPurposes || null,
-    }));
-  });
-  if (!celState.cel) return consentLinkedListIds;
-  const celCatalog = await loadEnhancedListsCatalog();
-  if (!celCatalog) return consentLinkedListIds;
-  const deniedCategories = new Set();
-  if (celState.mode === "custom") {
-    if (celState.customPurposes && typeof celState.customPurposes === "object") {
-      for (const [purpose, denied] of Object.entries(celState.customPurposes)) {
-        if (denied && CEL_PURPOSES.has(purpose)) deniedCategories.add(purpose);
-      }
-    }
-  } else {
-    for (const [purpose, allowed] of Object.entries(globalPurposes)) {
-      if (!allowed && CEL_PURPOSES.has(purpose)) deniedCategories.add(purpose);
-    }
-  }
-  for (const [listId, listDef] of Object.entries(celCatalog)) {
-    if (listDef.category && CEL_PURPOSES.has(listDef.category) && deniedCategories.has(listDef.category)) {
-      if (enhancedListsMeta[listId]) consentLinkedListIds.add(listId);
-    }
-  }
+  const { consentLinkedListIds } = await resolveConsentEnhancedLink(enhancedListsMeta, globalPurposes);
   return consentLinkedListIds;
 }

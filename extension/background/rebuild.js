@@ -6,33 +6,30 @@
 // declarativeNetRequest rules (static rulesets, dynamic overrides,
 // whitelist, enhanced lists, GPC headers, Client Hints stripping).
 
-import { DEBUG_RULES, loadDebugFlag, initBrowser, getChStrippingEnabled, HIGH_ENTROPY_CH } from "./config-bridge.js";
+import { DEBUG_RULES, loadDebugFlag, initBrowser, getChStrippingEnabled } from "./config-bridge.js";
 import {
-  DYNAMIC_RULE_RESERVE, RULE_RANGES, BLOCK_RESOURCE_TYPES, GPC_RESOURCE_TYPES,
-  PURPOSES_FOR_ENFORCEMENT, gpcPurposes,
+  DYNAMIC_RULE_RESERVE, RULE_RANGES,
+  PURPOSES_FOR_ENFORCEMENT,
   setEnabledBlockRulesets,
   setDynamicBlockRuleMap, setDynamicGpcSetIds, setDynamicChRuleIds,
   setDynamicWhitelistMap, setDynamicEnhancedMap, setDynamicParamStripIds,
   setEnhancedReverseIndex,
   setPathAttributionIndex,
-  bundledPathAttribution,
   setGpcGlobalActive, setGpcAddDomains, setGpcRemoveDomains,
   setLastRebuildDebug, lastRebuildDebug,
   setLastConsentLinkedListIds, setLastCelPendingDownload,
   _rebuildRunning, setRebuildRunning,
   _rebuildQueued, setRebuildQueued,
   setOperatingMode, can,
-  setHotfixDomainSet,
 } from "./state.js";
 import {
   getDefaultProfileConfig, resolvePurposes, getAllRulesFromStorage,
-  getWhitelistFromStorage, isValidHostname,
+  getWhitelistFromStorage,
   getEnhancedListsFromStorage,
-  getEnhancedPresetFromStorage,
 } from "./storage.js";
 import {
   loadBlocklistsConfig, loadPresetsConfig, loadPurposesConfig,
-  loadEnhancedListsCatalog, loadBundledPathAttribution,
+  loadBundledPathAttribution,
 } from "./config-loader.js";
 import { updateCmpInjectionData } from "./cmp-injection.js";
 import { consumeCelPendingDownloads } from "./auto-refresh.js";
@@ -41,6 +38,7 @@ import { buildRevokeRules } from "./rebuild-revoke.js";
 import { buildGpcRules, buildChRules, updateGPCContentScript } from "./rebuild-signals.js";
 import { updateCosmeticInjection } from "./rebuild-cosmetic.js";
 import { buildOverrideRules, buildWhitelistRules, getConsentLinkedListIds } from "./rebuild-overrides.js";
+import { resolveConsentEnhancedLink } from "./rebuild-cel.js";
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
 export async function rebuildAllDynamicRules() {
@@ -106,18 +104,6 @@ const CATEGORY_TO_RANGES = {
   cmp: [],
 };
 
-class RangeOverflowError extends Error {
-  constructor(rangeName, nextId) {
-    super(`Rule ID overflow in range "${rangeName}": nextId=${nextId} exceeds end=${RULE_RANGES[rangeName].end}`);
-    this.rangeName = rangeName;
-  }
-}
-
-function nextIdInRange(currentId, rangeName) {
-  if (currentId > RULE_RANGES[rangeName].end) throw new RangeOverflowError(rangeName, currentId);
-  return currentId;
-}
-
 async function _rebuildCategoriesImpl(categories) {
   if (!chrome.declarativeNetRequest?.updateDynamicRules) return;
   if (!categories || categories.size === 0) {
@@ -181,6 +167,7 @@ async function _rebuildCategoriesImpl(categories) {
     chrome.storage.local.get(["gpcEnabled"], r => resolve(r.gpcEnabled !== false));
   });
   let addRules = [];
+  let consentLinkedListIds = new Set();
 
   // --- Build rules for affected ranges ---
 
@@ -218,30 +205,7 @@ async function _rebuildCategoriesImpl(categories) {
     }
 
     // CEL resolution
-    const CEL_PURPOSES = new Set(["analytics", "ads", "personalization", "third_parties", "advanced_tracking"]);
-    const consentLinkedListIds = new Set();
-    if (consentEnhancedLink.cel) {
-      const celCatalog = await loadEnhancedListsCatalog();
-      if (celCatalog) {
-        const deniedCategories = new Set();
-        if (consentEnhancedLink.mode === "custom") {
-          if (consentEnhancedLink.customPurposes && typeof consentEnhancedLink.customPurposes === "object") {
-            for (const [purpose, denied] of Object.entries(consentEnhancedLink.customPurposes)) {
-              if (denied && CEL_PURPOSES.has(purpose)) deniedCategories.add(purpose);
-            }
-          }
-        } else {
-          for (const [purpose, allowed] of Object.entries(globalPurposes)) {
-            if (!allowed && CEL_PURPOSES.has(purpose)) deniedCategories.add(purpose);
-          }
-        }
-        for (const [listId, listDef] of Object.entries(celCatalog)) {
-          if (listDef.category && CEL_PURPOSES.has(listDef.category) && deniedCategories.has(listDef.category)) {
-            if (enhancedListsMeta[listId]) consentLinkedListIds.add(listId);
-          }
-        }
-      }
-    }
+    ({ consentLinkedListIds } = await resolveConsentEnhancedLink(enhancedListsMeta, globalPurposes, consentEnhancedLink));
 
     let hfResult = null;
     if (affectedRangeKeys.has("hotfix")) {
@@ -316,7 +280,7 @@ async function _rebuildCategoriesImpl(categories) {
     for (const listId of BUNDLED_PATH_LISTS) {
       const rulesetId = listId + "_paths";
       const listMeta = enhancedListsMeta[listId];
-      const isEnabled = can("enhancedDnr") && listMeta?.enabled;
+      const isEnabled = can("enhancedDnr") && (listMeta?.enabled || consentLinkedListIds.has(listId));
       if (isEnabled) enableIds.push(rulesetId);
       else disableIds.push(rulesetId);
     }
@@ -470,184 +434,24 @@ async function _rebuildAllDynamicRulesImpl() {
     else disableIds.push("strip_tracking_params_sites");
 
     // 3. Per-site overrides (priority 2) - standalone only
-    let nextOverrideId = RULE_RANGES.overrides.start;
-    const allowOverrides = {};
-    const blockOverrides = {};
-    const permissiveSites = [];
-
-    if (can("ownBlocking")) {
-    for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
-      const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
-
-      let allAllowed = true;
-      for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
-        const siteAllows = sitePurposes[purposeKey];
-        const globalAllows = globalPurposes[purposeKey];
-        if (!siteAllows) allAllowed = false;
-
-        if (siteAllows === globalAllows) continue;
-
-        if (siteAllows) {
-          if (!allowOverrides[purposeKey]) allowOverrides[purposeKey] = [];
-          allowOverrides[purposeKey].push(domain);
-        } else {
-          if (!blockOverrides[purposeKey]) blockOverrides[purposeKey] = [];
-          blockOverrides[purposeKey].push(domain);
-        }
-      }
-      if (allAllowed) permissiveSites.push(domain);
-    }
-
-    for (const purposeKey of PURPOSES_FOR_ENFORCEMENT) {
-      const domainList = blocklists[purposeKey]?.domains || [];
-      const pathDomainList = blocklists[purposeKey]?.pathDomains || [];
-      const domains = pathDomainList.length ? [...domainList, ...pathDomainList] : domainList;
-      if (!domains.length) continue;
-
-      if (allowOverrides[purposeKey]?.length) {
-        newRules.push({
-          id: nextOverrideId++,
-          priority: 2,
-          action: { type: "allow" },
-          condition: {
-            requestDomains: domains,
-            initiatorDomains: allowOverrides[purposeKey],
-            resourceTypes: BLOCK_RESOURCE_TYPES,
-          },
-        });
-      }
-
-      if (blockOverrides[purposeKey]?.length) {
-        const initiators = blockOverrides[purposeKey];
-        let effectiveDomains = domains;
-        if (pathDomainList.length) {
-          const safePathDomains = pathDomainList.filter(pd =>
-            !initiators.some(id => pd === id || pd.endsWith("." + id) || id.endsWith("." + pd))
-          );
-          effectiveDomains = safePathDomains.length
-            ? [...domainList, ...safePathDomains]
-            : domainList;
-        }
-        if (effectiveDomains.length) {
-          newDynamicBlockMap[nextOverrideId] = purposeKey;
-          newRules.push({
-            id: nextOverrideId++,
-            priority: 2,
-            action: { type: "block" },
-            condition: {
-              requestDomains: effectiveDomains,
-              initiatorDomains: initiators,
-              resourceTypes: BLOCK_RESOURCE_TYPES,
-            },
-          });
-        }
-      }
-    }
-    } // end can("ownBlocking")
+    const overrideResult = buildOverrideRules(rulesByDomain, blocklists, presets, defaultConfig, globalPurposes);
+    newRules = newRules.concat(overrideResult.rules);
+    Object.assign(newDynamicBlockMap, overrideResult.blockMap);
+    const permissiveSites = overrideResult.permissiveSites;
 
     // 4. Whitelist allow rules (priority 3) - standalone only
-    let nextWhitelistId = RULE_RANGES.whitelist.start;
-    const globalWhitelistDomains = [];
-    const perSiteWhitelist = {};
-
-    if (can("whitelistOverrides")) {
-    for (const [domain, siteMap] of Object.entries(whitelist)) {
-      if (!isValidHostname(domain)) continue;
-      for (const site of Object.keys(siteMap)) {
-        if (site === "*") {
-          globalWhitelistDomains.push(domain);
-        } else if (isValidHostname(site)) {
-          if (!perSiteWhitelist[site]) perSiteWhitelist[site] = [];
-          perSiteWhitelist[site].push(domain);
-        }
-      }
-    }
-
-    const maxDynamic = chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES || 5000;
-    const coreRuleCount = newRules.length;
-    const whitelistBudget = maxDynamic - coreRuleCount - DYNAMIC_RULE_RESERVE;
-    const whitelistRulesNeeded = (globalWhitelistDomains.length > 0 ? 1 : 0) +
-      Object.keys(perSiteWhitelist).length;
-
-    if (whitelistRulesNeeded > whitelistBudget) {
-      if (DEBUG_RULES) console.warn("ProtoConsent: whitelist needs " + whitelistRulesNeeded +
-        " rules but budget is " + whitelistBudget +
-        " (core: " + coreRuleCount + ", reserve: " + DYNAMIC_RULE_RESERVE + "). " +
-        "Some per-site whitelist entries will be dropped.");
-    }
-
-    let whitelistRulesAdded = 0;
-
-    if (globalWhitelistDomains.length > 0 && whitelistRulesAdded < whitelistBudget) {
-      const wlId = nextWhitelistId++;
-      newWhitelistMap[wlId] = globalWhitelistDomains;
-      newRules.push({
-        id: wlId,
-        priority: 3,
-        action: { type: "allow" },
-        condition: {
-          requestDomains: globalWhitelistDomains,
-          resourceTypes: BLOCK_RESOURCE_TYPES,
-        },
-      });
-      whitelistRulesAdded++;
-    }
-
-    for (const [site, domains] of Object.entries(perSiteWhitelist)) {
-      if (whitelistRulesAdded >= whitelistBudget) break;
-      const wlId = nextWhitelistId++;
-      newWhitelistMap[wlId] = domains;
-      newRules.push({
-        id: wlId,
-        priority: 3,
-        action: { type: "allow" },
-        condition: {
-          requestDomains: domains,
-          initiatorDomains: [site],
-          resourceTypes: BLOCK_RESOURCE_TYPES,
-        },
-      });
-      whitelistRulesAdded++;
-    }
-    } // end can("whitelistOverrides")
+    const wlResult = buildWhitelistRules(whitelist);
+    newRules = newRules.concat(wlResult.rules);
+    Object.assign(newWhitelistMap, wlResult.whitelistMap);
+    const globalWhitelistDomains = wlResult.globalDomains || [];
+    const perSiteWhitelist = wlResult.perSite || {};
 
     // 4b. Hotfix safelist rules: override static rulesets for zombie domains
     const hotfixResult = await buildRevokeRules(enhancedListsMeta);
     newRules = newRules.concat(hotfixResult.rules);
 
     // 5. Enhanced Protection lists (dynamic block rules, priority 2)
-    // CEL only activates lists whose category is a consent purpose (not security, cosmetic, cmp, etc.)
-    const CEL_PURPOSES = new Set(["analytics", "ads", "personalization", "third_parties", "advanced_tracking"]);
-    const consentLinkedListIds = new Set();
-    const celPendingDownload = [];
-    if (consentEnhancedLink.cel) {
-      const celCatalog = await loadEnhancedListsCatalog();
-      if (celCatalog) {
-        // Custom mode: use user-selected purposes; profile mode: derive from global profile
-        const deniedCategories = new Set();
-        if (consentEnhancedLink.mode === "custom") {
-          if (consentEnhancedLink.customPurposes && typeof consentEnhancedLink.customPurposes === "object") {
-            for (const [purpose, denied] of Object.entries(consentEnhancedLink.customPurposes)) {
-              if (denied && CEL_PURPOSES.has(purpose)) deniedCategories.add(purpose);
-            }
-          }
-          // No stored custom purposes = no CEL activation until user configures
-        } else {
-          for (const [purpose, allowed] of Object.entries(globalPurposes)) {
-            if (!allowed && CEL_PURPOSES.has(purpose)) deniedCategories.add(purpose);
-          }
-        }
-        for (const [listId, listDef] of Object.entries(celCatalog)) {
-          if (listDef.category && CEL_PURPOSES.has(listDef.category) && deniedCategories.has(listDef.category)) {
-            if (enhancedListsMeta[listId]) {
-              consentLinkedListIds.add(listId);
-            } else if (listDef.fetch_url && consentEnhancedLink.sync) {
-              celPendingDownload.push(listId);
-            }
-          }
-        }
-      }
-    }
+    const { consentLinkedListIds, celPendingDownload } = await resolveConsentEnhancedLink(enhancedListsMeta, globalPurposes, consentEnhancedLink);
 
     setLastConsentLinkedListIds([...consentLinkedListIds]);
     setLastCelPendingDownload(celPendingDownload);
@@ -684,127 +488,27 @@ async function _rebuildAllDynamicRulesImpl() {
     const hasDynamicSiteParams = paramResult.hasDynamicSiteParams;
 
     // 6. GPC header rules
-    let nextGpcId = RULE_RANGES.gpc.start;
-    const globalNeedsGPC = gpcEnabled && gpcPurposes.some(p => !globalPurposes[p]);
-
-    if (globalNeedsGPC) {
-      const gpcGlobalId = nextGpcId++;
-      newGpcSetIds.add(gpcGlobalId);
-      newRules.push({
-        id: gpcGlobalId,
-        priority: 1,
-        action: {
-          type: "modifyHeaders",
-          requestHeaders: [
-            { header: "Sec-GPC", operation: "set", value: "1" }
-          ]
-        },
-        condition: {
-          resourceTypes: GPC_RESOURCE_TYPES,
-        },
-      });
-    }
-
-    const gpcAddSites = [];
-    const gpcRemoveSites = [];
-
-    for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
-      const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
-      const siteNeedsGPC = gpcEnabled && gpcPurposes.some(p => !sitePurposes[p]);
-
-      if (siteNeedsGPC === globalNeedsGPC) continue;
-
-      if (siteNeedsGPC) {
-        gpcAddSites.push(domain);
-      } else {
-        gpcRemoveSites.push(domain);
-      }
-    }
-
-    if (gpcAddSites.length > 0) {
-      const gpcAddId = nextGpcId++;
-      newGpcSetIds.add(gpcAddId);
-      newRules.push({
-        id: gpcAddId,
-        priority: 2,
-        action: {
-          type: "modifyHeaders",
-          requestHeaders: [
-            { header: "Sec-GPC", operation: "set", value: "1" }
-          ]
-        },
-        condition: {
-          requestDomains: gpcAddSites,
-          resourceTypes: GPC_RESOURCE_TYPES,
-        },
-      });
-    }
-
-    if (gpcRemoveSites.length > 0) {
-      newRules.push({
-        id: nextGpcId++,
-        priority: 2,
-        action: {
-          type: "modifyHeaders",
-          requestHeaders: [
-            { header: "Sec-GPC", operation: "remove" }
-          ]
-        },
-        condition: {
-          requestDomains: gpcRemoveSites,
-          resourceTypes: GPC_RESOURCE_TYPES,
-        },
-      });
-    }
+    const gpcResult = buildGpcRules(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled);
+    newRules = newRules.concat(gpcResult.rules);
+    for (const id of gpcResult.gpcSetIds) newGpcSetIds.add(id);
+    const globalNeedsGPC = gpcResult.globalNeedsGPC;
+    const gpcAddSites = gpcResult.gpcAddSites;
+    const gpcRemoveSites = gpcResult.gpcRemoveSites;
 
     setGpcGlobalActive(globalNeedsGPC);
     setGpcAddDomains(new Set(gpcAddSites));
     setGpcRemoveDomains(new Set(gpcRemoveSites));
 
     // 6b. Client Hints stripping
-    let nextChId = RULE_RANGES.ch.start;
-    const chHeaders = HIGH_ENTROPY_CH.map(h => ({ header: h, operation: "remove" }));
+    const chResult = buildChRules(rulesByDomain, presets, defaultConfig, globalPurposes, chStrippingEnabled);
+    newRules = newRules.concat(chResult.rules);
+    const newChRuleIds = chResult.chRuleIds;
     const globalDeniesAT = chStrippingEnabled && !globalPurposes.advanced_tracking;
-
     const chAddSites = [];
     const chRemoveSites = [];
-
-    for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
-      const sitePurposes = resolvePurposes(siteConfig, presets, defaultConfig);
-      const siteDeniesAT = chStrippingEnabled && !sitePurposes.advanced_tracking;
-      if (siteDeniesAT === globalDeniesAT) continue;
-      if (siteDeniesAT) chAddSites.push(domain);
-      else chRemoveSites.push(domain);
-    }
-
-    const newChRuleIds = new Set();
-    if (globalDeniesAT) {
-      const chGlobalId = nextChId++;
-      newChRuleIds.add(chGlobalId);
-      const chGlobalRule = {
-        id: chGlobalId,
-        priority: 1,
-        action: { type: "modifyHeaders", requestHeaders: chHeaders },
-        condition: { resourceTypes: GPC_RESOURCE_TYPES },
-      };
-      if (chRemoveSites.length > 0) {
-        chGlobalRule.condition.excludedRequestDomains = chRemoveSites;
-      }
-      newRules.push(chGlobalRule);
-    }
-
-    if (chAddSites.length > 0) {
-      const chPerSiteId = nextChId++;
-      newChRuleIds.add(chPerSiteId);
-      newRules.push({
-        id: chPerSiteId,
-        priority: 2,
-        action: { type: "modifyHeaders", requestHeaders: chHeaders },
-        condition: {
-          requestDomains: chAddSites,
-          resourceTypes: GPC_RESOURCE_TYPES,
-        },
-      });
+    for (const r of chResult.rules) {
+      if (r.condition.excludedRequestDomains) chRemoveSites.push(...r.condition.excludedRequestDomains);
+      if (r.priority === 2 && r.condition.requestDomains) chAddSites.push(...r.condition.requestDomains);
     }
 
     if (DEBUG_RULES) {
