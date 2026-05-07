@@ -220,6 +220,10 @@ export function setCosmeticExcQueue(v) { _cosmeticExcQueue = v; }
 export let _cosmeticSiteQueue = Promise.resolve();
 export function setCosmeticSiteQueue(v) { _cosmeticSiteQueue = v; }
 
+// Serialized user cosmetic rules (element picker) write queue
+export let _cosmeticUserRulesQueue = Promise.resolve();
+export function setCosmeticUserRulesQueue(v) { _cosmeticUserRulesQueue = v; }
+
 // Sequential rebuild guard
 export let _rebuildRunning = false;
 export function setRebuildRunning(v) { _rebuildRunning = v; }

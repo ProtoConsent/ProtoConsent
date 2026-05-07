@@ -12,6 +12,7 @@ import {
   enhancedStorageChain, setEnhancedStorageChain,
   _cosmeticExcQueue, setCosmeticExcQueue,
   _cosmeticSiteQueue, setCosmeticSiteQueue,
+  _cosmeticUserRulesQueue, setCosmeticUserRulesQueue,
 } from "./state.js";
 
 // Validate domain: must look like a hostname
@@ -167,5 +168,18 @@ function getCosmeticExcludedSites() {
 export function withCosmeticExcludedSites(fn) {
   const next = _cosmeticSiteQueue.then(() => getCosmeticExcludedSites().then(fn), () => getCosmeticExcludedSites().then(fn));
   setCosmeticSiteQueue(next);
+  return next;
+}
+
+// Serialized user cosmetic rules (element picker) write queue
+function getCosmeticUserRules() {
+  return new Promise(resolve => {
+    chrome.storage.local.get(["cosmeticUserRules"], r => resolve(r.cosmeticUserRules || {}));
+  });
+}
+
+export function withCosmeticUserRules(fn) {
+  const next = _cosmeticUserRulesQueue.then(() => getCosmeticUserRules().then(fn), () => getCosmeticUserRules().then(fn));
+  setCosmeticUserRulesQueue(next);
   return next;
 }

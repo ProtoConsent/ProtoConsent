@@ -498,12 +498,25 @@
   margin-bottom: 0;
 }
 
-.pc-cosmetic-active td:first-child img {
-  filter: hue-rotate(90deg) saturate(2) brightness(1.2);
-}
-
 .pc-cosmetic-active .pc-cosmetic-sel-cell {
   color: var(--pc-success, #15803d);
+}
+
+.pc-cosmetic-user .pc-cosmetic-sel-cell {
+  color: var(--pc-accent, #2563eb);
+}
+
+.pc-cosmetic-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px !important;
+  padding: 2px 4px !important;
+  margin-right: 0 !important;
+}
+
+.pc-cosmetic-icon-btn img {
+  pointer-events: none;
 }
 
 .pc-cosmetic-excluded td {

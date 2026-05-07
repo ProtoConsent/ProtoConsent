@@ -67,6 +67,15 @@ export async function updateCosmeticInjection(enhancedListsMeta, permissiveSites
       for (const sel of sels) exceptionMap[domain].add(sel);
     }
 
+    // Merge user-picked element rules (element picker)
+    const userRules = await new Promise(resolve =>
+      chrome.storage.local.get(["cosmeticUserRules"], r => resolve(r.cosmeticUserRules || {}))
+    );
+    for (const [domain, sels] of Object.entries(userRules)) {
+      if (!domainMap[domain]) domainMap[domain] = new Set();
+      for (const sel of sels) domainMap[domain].add(sel);
+    }
+
     // Build CSS string: chunk generic selectors into groups of 500
     // Filter out selectors containing { or } to prevent CSS injection
     const allGeneric = [...genericSet].filter(s => !s.includes("{") && !s.includes("}") && !s.includes("<") && !s.includes("url("));

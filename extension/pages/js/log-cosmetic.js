@@ -52,6 +52,7 @@ function renderLogCosmetic() {
         const c = resp?.cosmetic || null;
         const domainSels = c ? (c.domainSelectors || []) : [];
         const genericSels = c ? (c.genericSelectors || []) : [];
+        const userSels = c ? (c.userSelectors || []) : [];
         const domain = c ? c.domain : tabDomain;
 
         if (!domain) {
@@ -65,11 +66,11 @@ function renderLogCosmetic() {
           const notOnPage = (exceptions[domain] || []).filter(s => !allSelectors.includes(s));
           chrome.storage.local.get(["cosmeticExcludedSites"], (r) => {
             const siteExcluded = (r.cosmeticExcludedSites || []).includes(domain);
-            if (!siteExcluded && allSelectors.length === 0 && notOnPage.length === 0) {
+            if (!siteExcluded && allSelectors.length === 0 && notOnPage.length === 0 && userSels.length === 0) {
               container.innerHTML = '<div class="pc-log-empty">No cosmetic filters applied on this page.</div>';
               return;
             }
-            _cosmeticCachedData = { domain, domainSels, genericSels, excludedSet, notOnPage, siteExcluded };
+            _cosmeticCachedData = { domain, domainSels, genericSels, userSels, excludedSet, notOnPage, siteExcluded };
             _renderCosmeticFromCache(container);
           });
         });
@@ -82,9 +83,10 @@ function renderLogCosmetic() {
 }
 
 function _renderCosmeticFromCache(container) {
-  const { domain, domainSels, genericSels, excludedSet, notOnPage, siteExcluded } = _cosmeticCachedData;
+  const { domain, domainSels, genericSels, userSels, excludedSet, notOnPage, siteExcluded } = _cosmeticCachedData;
   const allSelectors = domainSels.concat(genericSels);
   const activeSet = new Set(domainSels);
+  const userSet = new Set(userSels || []);
   container.innerHTML = "";
 
   // Header row: label + site-level button
@@ -93,8 +95,9 @@ function _renderCosmeticFromCache(container) {
 
   const label = document.createElement("div");
   label.className = "pc-log-purpose-label";
-  if (allSelectors.length > 0) {
+  if (allSelectors.length > 0 || userSels.length > 0) {
     let parts = [];
+    if (userSels.length > 0) parts.push(userSels.length + " custom");
     if (domainSels.length > 0) parts.push(domainSels.length + " site");
     if (genericSels.length > 0) parts.push(genericSels.length + (genericSels.length >= 500 ? "+" : "") + " generic");
     if (notOnPage.length > 0) parts.push(notOnPage.length + " excluded");
@@ -139,7 +142,10 @@ function _renderCosmeticFromCache(container) {
   headerRow.appendChild(siteBtn);
   container.appendChild(headerRow);
 
-  const allRows = allSelectors.concat(notOnPage);
+  // Build combined list: user-picked first, then list domain, then generic, then excluded
+  // Remove user selectors from domainSels to avoid duplication
+  const domainOnly = domainSels.filter(s => !userSet.has(s));
+  const allRows = (userSels || []).concat(domainOnly).concat(genericSels).concat(notOnPage);
   if (allRows.length === 0) return;
 
   // Filter
@@ -190,7 +196,7 @@ function _renderCosmeticFromCache(container) {
   const firstBatch = filtered.slice(0, COSMETIC_PAGE_SIZE);
 
   for (const sel of firstBatch) {
-    tbody.appendChild(buildCosmeticRow(domain, sel, excludedSet.has(sel), activeSet.has(sel)));
+    tbody.appendChild(buildCosmeticRow(domain, sel, excludedSet.has(sel), activeSet.has(sel), userSet.has(sel)));
   }
   table.appendChild(tbody);
   container.appendChild(table);
@@ -206,7 +212,7 @@ function _renderCosmeticFromCache(container) {
       const nextPage = filtered.slice(shown, shown + COSMETIC_PAGE_SIZE);
       const pageFrag = document.createDocumentFragment();
       for (const sel of nextPage) {
-        pageFrag.appendChild(buildCosmeticRow(domain, sel, excludedSet.has(sel), activeSet.has(sel)));
+        pageFrag.appendChild(buildCosmeticRow(domain, sel, excludedSet.has(sel), activeSet.has(sel), userSet.has(sel)));
       }
       tbody.appendChild(pageFrag);
       shown += nextPage.length;
@@ -219,20 +225,21 @@ function _renderCosmeticFromCache(container) {
   }
 }
 
-function buildCosmeticRow(domain, selector, isExcluded, isActive) {
+function buildCosmeticRow(domain, selector, isExcluded, isActive, isUser) {
   const tr = document.createElement("tr");
-  if (isExcluded) tr.className = "pc-cosmetic-excluded";
+  if (isUser) tr.className = "pc-cosmetic-user";
+  else if (isExcluded) tr.className = "pc-cosmetic-excluded";
   else if (isActive) tr.className = "pc-cosmetic-active";
 
   const tdIcon = document.createElement("td");
   tdIcon.className = "pc-log-domains-icon";
   const img = document.createElement("img");
-  img.src = "../icons/grid/cosmetic.svg";
+  img.src = isUser ? "../icons/grid/picker.svg" : "../icons/grid/cosmetic.svg";
   img.width = 14;
   img.height = 14;
-  img.alt = "C";
-  img.title = "Cosmetic filter";
-  img.onerror = function() { tdIcon.textContent = "C"; };
+  img.alt = isUser ? "U" : "C";
+  img.title = isUser ? "User-picked element" : "Cosmetic filter";
+  img.onerror = function() { tdIcon.textContent = isUser ? "U" : "C"; };
   tdIcon.appendChild(img);
   tr.appendChild(tdIcon);
 
@@ -244,23 +251,45 @@ function buildCosmeticRow(domain, selector, isExcluded, isActive) {
 
   const tdAction = document.createElement("td");
   tdAction.className = "pc-log-domains-action";
+  tdAction.style.textAlign = "right";
+  tdAction.style.paddingRight = "2px";
   const btn = document.createElement("button");
   btn.type = "button";
-  if (isExcluded) {
-    btn.className = "pc-log-allow-btn is-allowed";
-    btn.textContent = "Excluded";
+
+  if (isUser) {
+    btn.className = "pc-log-allow-btn pc-cosmetic-icon-btn pc-cosmetic-delete-btn";
+    btn.title = "Remove this custom rule";
+    btn.setAttribute("aria-label", "Remove custom rule: " + selector);
+    btn.appendChild(_cosmeticActionIcon("wrong"));
+    btn.addEventListener("click", () => handleCosmeticUserDelete(domain, selector, btn));
+  } else if (isExcluded) {
+    btn.className = "pc-log-allow-btn pc-cosmetic-icon-btn is-allowed";
     btn.title = "Click to restore this selector (will hide elements again after reload)";
+    btn.setAttribute("aria-label", "Restore excluded selector: " + selector);
+    btn.appendChild(_cosmeticActionIcon("correct"));
     btn.addEventListener("click", () => handleCosmeticRestore(domain, selector, btn));
   } else {
-    btn.className = "pc-log-allow-btn";
-    btn.textContent = "Exclude";
+    btn.className = "pc-log-allow-btn pc-cosmetic-icon-btn";
     btn.title = "Exclude this selector (unhide element after reload)";
+    btn.setAttribute("aria-label", "Exclude selector: " + selector);
+    btn.appendChild(_cosmeticActionIcon("wrong"));
     btn.addEventListener("click", () => handleCosmeticExclude(domain, selector, btn));
   }
   tdAction.appendChild(btn);
   tr.appendChild(tdAction);
 
   return tr;
+}
+
+function _cosmeticActionIcon(name) {
+  const img = document.createElement("img");
+  img.src = "../icons/grid/" + name + ".svg";
+  img.width = 12;
+  img.height = 12;
+  img.alt = "";
+  img.setAttribute("aria-hidden", "true");
+  img.draggable = false;
+  return img;
 }
 
 function handleCosmeticExclude(domain, selector, btn) {
@@ -272,9 +301,11 @@ function handleCosmeticExclude(domain, selector, btn) {
       if (resp?.ok) {
         _cosmeticUserExceptions = null;
         _cosmeticCachedData = null;
-        btn.className = "pc-log-allow-btn is-allowed";
-        btn.textContent = "Excluded";
+        btn.className = "pc-log-allow-btn pc-cosmetic-icon-btn is-allowed";
+        btn.innerHTML = "";
+        btn.appendChild(_cosmeticActionIcon("correct"));
         btn.title = "Click to restore this selector (will hide elements again after reload)";
+        btn.setAttribute("aria-label", "Restore excluded selector: " + selector);
         btn.disabled = false;
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
@@ -295,13 +326,32 @@ function handleCosmeticRestore(domain, selector, btn) {
       if (resp?.ok) {
         _cosmeticUserExceptions = null;
         _cosmeticCachedData = null;
-        btn.className = "pc-log-allow-btn";
-        btn.textContent = "Exclude";
+        btn.className = "pc-log-allow-btn pc-cosmetic-icon-btn";
+        btn.innerHTML = "";
+        btn.appendChild(_cosmeticActionIcon("wrong"));
         btn.title = "Exclude this selector (unhide element after reload)";
+        btn.setAttribute("aria-label", "Exclude selector: " + selector);
         btn.disabled = false;
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
         newBtn.addEventListener("click", () => handleCosmeticExclude(domain, selector, newBtn));
+      } else {
+        btn.disabled = false;
+      }
+    }
+  );
+}
+
+function handleCosmeticUserDelete(domain, selector, btn) {
+  btn.disabled = true;
+  chrome.runtime.sendMessage(
+    { type: "PROTOCONSENT_PICKER_DELETE", domain, selector },
+    (resp) => {
+      void chrome.runtime.lastError;
+      if (resp?.ok) {
+        _cosmeticUserExceptions = null;
+        _cosmeticCachedData = null;
+        renderLogCosmetic();
       } else {
         btn.disabled = false;
       }

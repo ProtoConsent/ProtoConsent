@@ -11,6 +11,7 @@ const LT_TOGGLES = [
   { id: "banners", icon: "banners.svg", key: "cmpAutoResponse", tooltip: "Cookie banner management", defaultOn: true },
   { id: "cosmetic", icon: "cosmetic.svg", key: "enhancedCosmeticEnabled", tooltip: "Cosmetic filters (hide ads, banners, annoyances)", defaultOn: true, needsRebuild: true },
   { id: "signals", icon: "gpc.svg", keys: ["gpcEnabled", "chStrippingEnabled", "paramStrippingEnabled", "paramStrippingSitesEnabled"], tooltip: "Privacy signals (GPC, Client Hints, URL params)", defaultOn: true },
+  { id: "picker", icon: "picker.svg", tooltip: "Pick element to hide (manage in Log > Cosmetic)", isAction: true },
   { id: "api", icon: "api.svg", key: "interExtEnabled", tooltip: "Inter-extension API", defaultOn: false },
   { id: "theme", icon: "theme-auto.svg", key: "theme", tooltip: "Theme", isTheme: true },
 ];
@@ -37,9 +38,10 @@ function _renderLifetimeToggles() {
   if (!container) return;
   container.innerHTML = "";
 
-  const allKeys = [];
+  const allKeys = ["enhancedCosmeticEnabled"];
   for (let i = 0; i < LT_TOGGLES.length; i++) {
     const t = LT_TOGGLES[i];
+    if (t.isAction) continue; // actions don't read storage
     if (t.keys) { for (let k = 0; k < t.keys.length; k++) allKeys.push(t.keys[k]); }
     else allKeys.push(t.key);
   }
@@ -70,7 +72,14 @@ function _buildLtPill(toggle, data) {
   dot.setAttribute("aria-hidden", "true");
   pill.appendChild(dot);
 
-  if (toggle.isTheme) {
+  if (toggle.isAction) {
+    const cosmeticOn = data.enhancedCosmeticEnabled !== false;
+    pill.disabled = !cosmeticOn;
+    pill.classList.toggle("is-active", cosmeticOn);
+    pill.title = cosmeticOn ? toggle.tooltip : "Enable cosmetic filters first";
+    dot.style.backgroundColor = cosmeticOn ? "var(--pc-accent, #3b82f6)" : "";
+    pill.addEventListener("click", function () { _triggerAction(toggle); });
+  } else if (toggle.isTheme) {
     _applyThemeState(pill, data.theme || "auto");
     pill.addEventListener("click", function () { _cycleTheme(pill); });
   } else if (toggle.keys) {
@@ -121,6 +130,17 @@ function _toggleSingleKey(pill, toggle) {
   if (toggle.needsRebuild) {
     chrome.runtime.sendMessage({ type: "PROTOCONSENT_RULES_UPDATED" });
   }
+  // Cosmetic toggle affects picker pill
+  if (toggle.key === "enhancedCosmeticEnabled") {
+    var pp = document.querySelector('[data-toggle="picker"]');
+    if (pp) {
+      pp.disabled = !newVal;
+      pp.classList.toggle("is-active", newVal);
+      pp.title = newVal ? "Pick element to hide (manage in Log > Cosmetic)" : "Enable cosmetic filters first";
+      var d = pp.querySelector(".pc-lt-dot");
+      if (d) d.style.backgroundColor = newVal ? "var(--pc-accent, #3b82f6)" : "";
+    }
+  }
 }
 
 function _toggleSignalsGroup(pill, toggle) {
@@ -137,11 +157,10 @@ function _toggleSignalsGroup(pill, toggle) {
 const THEME_CYCLE = ["auto", "light", "dark"];
 
 function _applyThemeState(pill, theme) {
-  pill.classList.remove("is-theme", "is-theme-light", "is-theme-dark");
+  pill.classList.remove("is-theme", "is-theme-light", "is-theme-dark", "is-active");
   if (theme === "light") pill.classList.add("is-theme-light");
   else if (theme === "dark") pill.classList.add("is-theme-dark");
   else pill.classList.add("is-theme");
-  pill.classList.add("is-active");
   const iconFile = theme === "light" ? "theme-light.svg" : theme === "dark" ? "theme-dark.svg" : "theme-auto.svg";
   const img = pill.querySelector("img");
   if (img) img.src = GRID_ICONS_PATH + iconFile;
@@ -156,4 +175,14 @@ function _cycleTheme(pill) {
     chrome.storage.local.set({ theme: next });
     _applyThemeState(pill, next);
   });
+}
+
+function _triggerAction(toggle) {
+  if (toggle.id === "picker") {
+    chrome.runtime.sendMessage({ type: "PROTOCONSENT_PICKER_START" }, function (resp) {
+      void chrome.runtime.lastError;
+    });
+    // Close popup so the page is visible for picking
+    window.close();
+  }
 }

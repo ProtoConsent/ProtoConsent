@@ -59,6 +59,7 @@ import {
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
 import { initRegionalStorageListener } from "./handlers-regional.js";
+import { handlePickerMessage } from "./handlers-picker.js";
 import { rebuildAllDynamicRules, rebuildCategories } from "./rebuild.js";
 import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
@@ -536,6 +537,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         siteRules: message.siteRules || 0,
         genericSelectors: message.genericSelectors || [],
         domainSelectors: message.domainSelectors || [],
+        userSelectors: message.userSelectors || [],
         ts: Date.now(),
       });
       scheduleSessionPersist();
@@ -547,6 +549,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             siteRules: message.siteRules || 0,
             genericSelectors: message.genericSelectors || [],
             domainSelectors: message.domainSelectors || [],
+            userSelectors: message.userSelectors || [],
             tabId,
           });
         } catch (_) {}
@@ -677,6 +680,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     });
     return true;
   }
+
+  // Element picker handlers (start, save, delete)
+  const pickerHandled = handlePickerMessage(message, _sender, sendResponse);
+  if (pickerHandled) return true;
 
   // Popup requests CMP auto-response state for a tab
   if (message.type === "PROTOCONSENT_GET_CMP") {

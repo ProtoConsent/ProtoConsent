@@ -77,3 +77,7 @@ html.pc-dark .pc-cosmetic-excluded td {
 html.pc-dark .pc-cosmetic-active .pc-cosmetic-sel-cell {
   color: #51CF66;
 }
+
+html.pc-dark .pc-cosmetic-user .pc-cosmetic-sel-cell {
+  color: #74C0FC;
+}

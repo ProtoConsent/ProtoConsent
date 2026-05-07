@@ -979,7 +979,10 @@ body {
   transition: opacity 0.15s ease;
 }
 
-.pc-lt-pill.is-active img {
+.pc-lt-pill.is-active img,
+.pc-lt-pill.is-theme img,
+.pc-lt-pill.is-theme-light img,
+.pc-lt-pill.is-theme-dark img {
   opacity: 1;
 }
 
@@ -1008,7 +1011,7 @@ body {
 }
 
 .pc-lt-pill.is-theme-dark .pc-lt-dot {
-  background-color: #6366f1;
+  background-color: #94a3b8;
 }
 
 /* Footer */

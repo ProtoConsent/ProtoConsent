@@ -14,7 +14,7 @@
   const host = location.hostname.replace(/^www\./, "");
 
   try {
-    chrome.storage.local.get(["_cosmeticCSS", "_cosmeticDomains", "_cosmeticExceptions"], (r) => {
+    chrome.storage.local.get(["_cosmeticCSS", "_cosmeticDomains", "_cosmeticExceptions", "cosmeticUserRules"], (r) => {
     if (chrome.runtime.lastError) return;
     if (!r._cosmeticCSS && !r._cosmeticDomains) return;
 
@@ -77,6 +77,22 @@
       }
     }
 
+    // Identify which domain selectors are user-picked
+    let appliedUserRules = [];
+    if (r.cosmeticUserRules) {
+      const userSet = new Set();
+      let h = host;
+      while (h) {
+        if (r.cosmeticUserRules[h]) {
+          for (const s of r.cosmeticUserRules[h]) userSet.add(s);
+        }
+        const dot = h.indexOf(".");
+        if (dot === -1) break;
+        h = h.slice(dot + 1);
+      }
+      if (userSet.size > 0) appliedUserRules = [...userSet];
+    }
+
     if (!text) return;
     const s = document.createElement("style");
     s.textContent = text;
@@ -92,6 +108,7 @@
           siteRules: siteRuleCount,
           genericSelectors: appliedGeneric,
           domainSelectors: appliedDomain,
+          userSelectors: appliedUserRules,
         }, () => { void chrome.runtime.lastError; });
       } catch (_) {}
     }
