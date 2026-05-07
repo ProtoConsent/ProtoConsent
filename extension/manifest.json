@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ProtoConsent",
   "description": "Privacy organized by purpose. Block ads, trackers and banners per site. Two modes, conditional GPC, 40+ blocklists, open source.",
-  "version": "0.7.5",
+  "version": "0.7.6",
 
   "icons": {
     "16": "icons/protoconsent_icon_16.png",

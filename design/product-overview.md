@@ -99,6 +99,7 @@ For the full technical architecture, see [architecture.md](architecture.md).
 | v0.7.1 | Bundled rulesets update (2026-05-04) |
 | v0.7.2 | Firefox AMO compliance (innerHTML removal, data_collection_permissions). Context menu guard for Firefox Android. Focus-visible regression fix |
 | v0.7.5 | Per-source regional filters with individual source toggles (47 sources, 36 languages). Consent-enhanced link extended to Optional tier. Uninstall feedback form |
+| v0.7.6 | Element picker for user-defined cosmetic hiding rules. Selective rebuild engine (per-category DNR rebuild). Handler module split (handlers.js split into picker, cosmetic, whitelist, enhanced modules). Early-return bug fix in validation paths |
 | **Website** | [Online validator](https://protoconsent.org/validate.html) for .well-known declarations, live SDK demo on [protoconsent.org](https://protoconsent.org/), full-featured demo on [demo.protoconsent.org](https://demo.protoconsent.org) |
 | **Documentation** | [Protocol spec](spec/signalling-protocol.md), [.well-known spec](spec/protoconsent-well-known.md), [inter-extension protocol](spec/inter-extension-protocol.md), [CMP auto-response](architecture/cmp-auto-response.md), [design-rationale.md](design-rationale.md), [architecture overview](architecture.md), [testing guide](testing-guide.md), [list catalog](architecture/list-catalog.md) |
 
