@@ -13,7 +13,7 @@ body {
   font-family: "Segoe UI Variable", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: var(--pc-font);
   color: var(--pc-text);
-  background: #fdfefe;
+  background: var(--pc-bg);
 }
 
 /* Thin scrollbar matching popup palette (Chromium only) */
