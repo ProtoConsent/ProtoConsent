@@ -7,6 +7,7 @@
 // document_start.
 
 import { gpcPurposes } from "./state.js";
+import { DEBUG_RULES } from "./config-bridge.js";
 
 // ---------------------------------------------------------------------------
 // TC String generator (IAB TCF v2.2)
@@ -179,6 +180,6 @@ export async function updateCmpInjectionData(globalPurposes, gpcEnabled) {
       _tcString: tcString,
     });
   } catch (e) {
-    console.error("ProtoConsent: failed to update CMP injection data:", e);
+    if (DEBUG_RULES) console.error("ProtoConsent: failed to update CMP injection data:", e);
   }
 }

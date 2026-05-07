@@ -132,7 +132,13 @@ function forceRequiredPurposes() {
 
 // Init currentPurposesState for this domain, resolving profile inheritance
 function initStateForDomain() {
-  if (!currentDomain) return;
+  if (!currentDomain) {
+    // No domain: show default profile state (read-only visual)
+    applyPresetToCurrentDomain();
+    syncProfileDropdown(currentProfile);
+    forceRequiredPurposes();
+    return;
+  }
 
   const existing = allRules[currentDomain];
 
@@ -245,6 +251,10 @@ function createPurposeItemElement(purposeKey, cfg) {
 
   if (isRequired) {
     checkboxEl.checked = true;
+    checkboxEl.disabled = true;
+  }
+
+  if (!currentDomain) {
     checkboxEl.disabled = true;
   }
 
@@ -399,10 +409,11 @@ function createPurposeItemElement(purposeKey, cfg) {
 
 // Render purposes list
 function renderPurposesList() {
-  if (!currentDomain) return;
-
   const listEl = document.getElementById("pc-purposes-list");
+  // Preserve any existing warning banners (e.g. unsupported page)
+  const warnings = listEl.querySelectorAll(".pc-unsupported-msg");
   listEl.innerHTML = "";
+  warnings.forEach(w => listEl.appendChild(w));
 
   PURPOSES_TO_SHOW.forEach((purposeKey) => {
     const cfg = purposesConfig[purposeKey];

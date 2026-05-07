@@ -59,7 +59,7 @@ import {
   loadEnhancedListsCatalog,
 } from "./config-loader.js";
 import { initRegionalStorageListener } from "./handlers-regional.js";
-import { rebuildAllDynamicRules } from "./rebuild.js";
+import { rebuildAllDynamicRules, rebuildCategories } from "./rebuild.js";
 import { invalidateCmpSignaturesCache } from "./cmp-injection.js";
 import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
 import { scheduleSessionPersist } from "./session.js";
@@ -96,36 +96,70 @@ export async function handleBridgeQuery(message) {
 // Fetch (download) a single enhanced list by ID.
 // Returns a Promise that resolves with { ok, skipped?, ...counts } or rejects on error.
 // Used by the PROTOCONSENT_ENHANCED_FETCH message handler and by auto-refresh.js.
-export function fetchEnhancedList(listId) {
+let _activeFetchCount = 0;
+export function getActiveFetchCount() { return _activeFetchCount; }
+
+export function fetchEnhancedList(listId, listsCache) {
+  _activeFetchCount++;
   return loadEnhancedListsCatalog().then(async (catalog) => {
-    const listDef = catalog[listId];
-    if (!listDef || !listDef.fetch_url) {
-      return { ok: false, error: "Unknown list or no fetch URL" };
-    }
-    const fetchUrl = listDef.fetch_url.startsWith("http")
-      ? listDef.fetch_url
-      : chrome.runtime.getURL(listDef.fetch_url);
-    const fallbackUrl = fetchUrl.includes("cdn.jsdelivr.net/gh/")
-      ? fetchUrl.replace("https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/", "https://raw.githubusercontent.com/ProtoConsent/data/main/")
-      : null;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    const fetchOpts = { credentials: "omit", signal: controller.signal, cache: "no-store" };
-    const tryFetch = (url) => fetch(url, fetchOpts).then(res => {
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.json();
-    });
     try {
-      const data = await tryFetch(fetchUrl).catch(err => {
-        if (fallbackUrl && err.name !== "AbortError") return tryFetch(fallbackUrl);
-        throw err;
+      const listDef = catalog[listId];
+      if (!listDef || !listDef.fetch_url) {
+        return { ok: false, error: "Unknown list or no fetch URL" };
+      }
+      const fetchUrl = listDef.fetch_url.startsWith("http")
+        ? listDef.fetch_url
+        : chrome.runtime.getURL(listDef.fetch_url);
+      const fallbackUrl = fetchUrl.includes("cdn.jsdelivr.net/gh/")
+        ? fetchUrl.replace("https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/", "https://raw.githubusercontent.com/ProtoConsent/data/main/")
+        : null;
+      // Skip fetch if catalog metadata matches what we already have stored
+      const lists = listsCache || await getEnhancedListsFromStorage();
+      const existing = lists[listId];
+      if (existing) {
+        const catalogTS = listDef.generated || listDef.version;
+        const localTS = existing.generated || existing.version;
+        if (catalogTS && localTS && catalogTS === localTS) {
+          return { ok: true, skipped: true };
+        }
+      }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const fetchOpts = { credentials: "omit", signal: controller.signal, cache: "no-store" };
+      const tryFetch = (url) => fetch(url, fetchOpts).then(res => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
       });
-      clearTimeout(timeoutId);
-      return _storeEnhancedListData(listId, listDef, data);
-    } catch (err) {
-      clearTimeout(timeoutId);
-      return { ok: false, error: err.name === "AbortError" ? "Download timed out" : err.message };
+      try {
+        let data = await tryFetch(fetchUrl).catch(err => {
+          if (fallbackUrl && err.name !== "AbortError") return tryFetch(fallbackUrl);
+          throw err;
+        });
+        // If primary CDN returned stale data (matches stored but catalog is newer), try fallback
+        if (fallbackUrl && existing && _isUnchanged(existing, data)) {
+          const catalogTS = listDef.generated || listDef.version;
+          const downloadedTS = data.generated || data.version;
+          if (catalogTS && downloadedTS && catalogTS > downloadedTS) {
+            const ctrl2 = new AbortController();
+            const tid2 = setTimeout(() => ctrl2.abort(), 15000);
+            try {
+              data = await fetch(fallbackUrl, { credentials: "omit", signal: ctrl2.signal, cache: "no-store" }).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+            } catch (_) { /* keep primary */ }
+            clearTimeout(tid2);
+          }
+        }
+        clearTimeout(timeoutId);
+        return _storeEnhancedListData(listId, listDef, data);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        return { ok: false, error: err.name === "AbortError" ? "Download timed out" : err.message };
+      }
+    } finally {
+      _activeFetchCount = Math.max(0, _activeFetchCount - 1);
     }
+  }).catch(err => {
+    _activeFetchCount = Math.max(0, _activeFetchCount - 1);
+    return { ok: false, error: err.message || "catalog load failed" };
   });
 }
 
@@ -160,7 +194,7 @@ const _listTypeHandlers = {
     return {
       counts: { genericCount, domainCount, domainRuleCount, pathRuleCount: 0 },
       payload: { generic: data.generic, domains: data.domains, exceptions: data.exceptions || {} },
-      afterWrite: rebuildAllDynamicRules,
+      afterWrite: () => rebuildCategories(new Set(["cosmetic"])),
     };
   },
 
@@ -207,7 +241,7 @@ const _listTypeHandlers = {
     return {
       counts: { paramCount: params.length },
       payload: { params },
-      afterWrite: rebuildAllDynamicRules,
+      afterWrite: () => rebuildCategories(new Set(["enhanced"])),
     };
   },
 
@@ -226,7 +260,7 @@ const _listTypeHandlers = {
     return {
       counts: { paramCount: new Set(Object.values(cleanSites).flat()).size, domainCount: Object.keys(cleanSites).length },
       payload: { sites: cleanSites },
-      afterWrite: rebuildAllDynamicRules,
+      afterWrite: () => rebuildCategories(new Set(["enhanced"])),
     };
   },
 
@@ -234,13 +268,6 @@ const _listTypeHandlers = {
     if (!data.revocations || !Array.isArray(data.revocations))
       throw new Error("Invalid revoke format: missing revocations array");
     const domains = data.revocations.filter(d => typeof d === "string" && d.length > 0);
-    const pathRules = [];
-    if (Array.isArray(data.path_additions)) {
-      for (const pa of data.path_additions) {
-        if (pa && typeof pa.urlFilter === "string" && pa.urlFilter.length > 0)
-          pathRules.push({ urlFilter: pa.urlFilter });
-      }
-    }
     const pathExceptions = [];
     if (Array.isArray(data.path_exceptions)) {
       for (const pe of data.path_exceptions) {
@@ -253,15 +280,14 @@ const _listTypeHandlers = {
         }
       }
     }
-    if (!domains.length && !pathRules.length && !pathExceptions.length)
+    if (!domains.length && !pathExceptions.length)
       return { counts: { hotfixCount: 0 }, payload: null };
     const payload = { domains };
-    if (pathRules.length) payload.pathRules = pathRules;
     if (pathExceptions.length) payload.pathExceptions = pathExceptions;
     return {
-      counts: { hotfixCount: domains.length, pathRuleCount: pathRules.length, pathExceptionCount: pathExceptions.length },
+      counts: { hotfixCount: domains.length, pathExceptionCount: pathExceptions.length },
       payload,
-      afterWrite: rebuildAllDynamicRules,
+      afterWrite: () => rebuildCategories(new Set(["enhanced"])),
     };
   },
 };
@@ -282,7 +308,7 @@ function _handleDefaultBlocking(data) {
   return {
     counts: { domainCount: domains.length, pathRuleCount: pathRules.length },
     payload: { domains, pathRules: pathRules.length > 0 ? pathRules : undefined },
-    afterWrite: rebuildAllDynamicRules,
+    afterWrite: () => rebuildCategories(new Set(["enhanced"])),
   };
 }
 
@@ -586,7 +612,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return new Promise(resolve => {
         chrome.storage.local.set({ cosmeticUserExceptions: exc }, () => {
           if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
-          rebuildAllDynamicRules();
+          rebuildCategories(new Set(["cosmetic"]));
           sendResponse({ ok: true });
           resolve();
         });
@@ -607,7 +633,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return new Promise(resolve => {
         chrome.storage.local.set({ cosmeticUserExceptions: exc }, () => {
           if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
-          rebuildAllDynamicRules();
+          rebuildCategories(new Set(["cosmetic"]));
           sendResponse({ ok: true });
           resolve();
         });
@@ -625,7 +651,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return new Promise(resolve => {
         chrome.storage.local.set({ cosmeticExcludedSites: sites }, () => {
           if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
-          rebuildAllDynamicRules();
+          rebuildCategories(new Set(["cosmetic"]));
           sendResponse({ ok: true });
           resolve();
         });
@@ -643,7 +669,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return new Promise(resolve => {
         chrome.storage.local.set({ cosmeticExcludedSites: filtered }, () => {
           if (chrome.runtime.lastError) { sendResponse({ ok: false }); resolve(); return; }
-          rebuildAllDynamicRules();
+          rebuildCategories(new Set(["cosmetic"]));
           sendResponse({ ok: true });
           resolve();
         });
@@ -923,7 +949,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           if (chrome.runtime.lastError) {
             sendResponse({ ok: false, error: chrome.runtime.lastError.message });
           } else {
-            rebuildAllDynamicRules();
+            rebuildCategories(new Set(["whitelist"]));
             sendResponse({ ok: true });
           }
           resolve();
@@ -953,7 +979,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           if (chrome.runtime.lastError) {
             sendResponse({ ok: false, error: chrome.runtime.lastError.message });
           } else {
-            rebuildAllDynamicRules();
+            rebuildCategories(new Set(["whitelist"]));
             sendResponse({ ok: true });
           }
           resolve();
@@ -984,7 +1010,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           if (chrome.runtime.lastError) {
             sendResponse({ ok: false, error: chrome.runtime.lastError.message });
           } else {
-            rebuildAllDynamicRules();
+            rebuildCategories(new Set(["whitelist"]));
             sendResponse({ ok: true, whitelist });
           }
           resolve();
@@ -1022,6 +1048,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "PROTOCONSENT_ENHANCED_GET_FETCH_COUNT") {
+    sendResponse({ activeFetches: _activeFetchCount });
+    return;
+  }
+
   // Enhanced: get current state
   if (message.type === "PROTOCONSENT_ENHANCED_GET_STATE") {
     const forceRefresh = message.forceRefresh === true;
@@ -1044,7 +1075,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         celMode: celData.celMode,
         celCustomPurposes: celData.celCustomPurposes,
         consentLinkedListIds: lastConsentLinkedListIds,
-        celPendingDownload: lastCelPendingDownload });
+        celPendingDownload: lastCelPendingDownload,
+        activeFetches: _activeFetchCount });
     });
     return true;
   }
@@ -1091,7 +1123,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 resolve();
                 return;
               }
-              rebuildAllDynamicRules();
+              rebuildCategories(new Set(["enhanced"]));
               // Auto-download missing lists for new preset
               if (preset === "basic" || preset === "full") {
                 refreshLists("all", { initialDownload: true });
@@ -1131,7 +1163,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 resolve();
                 return;
               }
-              rebuildAllDynamicRules();
+              rebuildCategories(new Set(["enhanced"]));
               sendResponse({ ok: true });
               resolve();
             });
@@ -1181,7 +1213,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               if (removedType === "cmp") {
                 chrome.storage.local.remove("_cmpSignatures", () => {
                   invalidateCmpSignaturesCache();
-                  rebuildAllDynamicRules();
+                  rebuildCategories(new Set(["cmp"]));
                   sendResponse({ ok: true });
                   resolve();
                 });
@@ -1201,7 +1233,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 });
                 return;
               }
-              rebuildAllDynamicRules();
+              rebuildCategories(new Set(["enhanced"]));
               sendResponse({ ok: true });
               resolve();
             });

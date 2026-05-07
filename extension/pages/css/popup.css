@@ -13,7 +13,7 @@ body {
   font-family: "Segoe UI Variable", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: var(--pc-font);
   color: var(--pc-text);
-  background: #fdfefe;
+  background: var(--pc-bg);
 }
 
 /* Thin scrollbar matching popup palette (Chromium only) */
@@ -212,6 +212,24 @@ body {
   font-weight: 700;
   letter-spacing: 0.03em;
   color: #3b5068;
+}
+
+.pc-download-indicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  border: 2px solid #d1d5db;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: pc-spin 0.8s linear infinite;
+}
+
+@keyframes pc-spin {
+  to { transform: translateY(-50%) rotate(360deg); }
 }
 
 .pc-site {
@@ -793,6 +811,19 @@ body {
 }
 
 .pc-purpose-item.is-required .pc-purpose-toggle {
+  cursor: not-allowed;
+}
+
+.pc-toggle-checkbox:disabled + .pc-purpose-header .pc-purpose-toggle {
+  cursor: not-allowed;
+}
+
+.pc-toggle-checkbox:disabled + .pc-purpose-header .pc-toggle-switch {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pc-toggle-checkbox:disabled + .pc-purpose-header .pc-toggle-label {
   cursor: not-allowed;
 }
 

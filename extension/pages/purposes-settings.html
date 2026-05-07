@@ -386,7 +386,7 @@
 		</section>
 		<section class="ps-section">
 			<div class="ps-section-head">
-				<h2>Debug logging</h2>
+				<h2>Troubleshooting</h2>
 			</div>
 			<p class="ps-enhanced-desc">Enable debug logging to collect detailed diagnostics. When enabled, a Debug tab appears in the popup's Log panel.</p>
 			<div class="ps-gpc-toggle-row">
@@ -396,16 +396,14 @@
 				<label class="ps-gpc-toggle-label" for="ps-debug-toggle" id="ps-debug-label">Disabled</label>
 				<input type="checkbox" id="ps-debug-toggle" class="ps-gpc-toggle" aria-label="Debug logging">
 			</div>
-		</section>
-		<section class="ps-section">
-			<div class="ps-section-head">
-				<h2>Troubleshooting information</h2>
+			<p id="ps-troubleshoot-hint" class="ps-enhanced-desc" style="margin-top:1rem">Enable debug mode above for advanced troubleshooting information.</p>
+			<div id="ps-troubleshoot-wrap" hidden>
+				<p class="ps-enhanced-desc" style="margin-top:1rem">Technical snapshot useful when reporting an issue. Click Copy to include it in your bug report.</p>
+				<div class="ps-about-links">
+					<button id="ps-troubleshoot-copy" class="ps-data-btn" type="button" aria-live="polite">Copy</button>
+				</div>
+				<pre id="ps-troubleshoot-info" class="ps-troubleshoot-pre" aria-label="Troubleshooting output" tabindex="0">Loading...</pre>
 			</div>
-			<p class="ps-enhanced-desc">Technical information useful when reporting an issue. Click Copy to include it in your bug report.</p>
-			<div class="ps-about-links">
-				<button id="ps-troubleshoot-copy" class="ps-data-btn" type="button" aria-live="polite">Copy</button>
-			</div>
-			<pre id="ps-troubleshoot-info" class="ps-troubleshoot-pre" aria-label="Troubleshooting output" tabindex="0">Loading...</pre>
 		</section>
 		</div>
 

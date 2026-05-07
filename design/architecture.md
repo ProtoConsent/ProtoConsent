@@ -101,7 +101,7 @@ Dynamic rules (5,000 rule pool)
 │ Per-site overrides: max 10 rules (priority 2)│
 │ Enhanced lists:     N rules     (priority 2) │
 │ Whitelist allow:    1+ rules    (priority 3) │
-│ Hotfix allow:       0-1 rules   (priority 3) │
+│ Hotfix/revoke allow: N rules    (priority 3) │
 │ GPC global: 1 rule              (priority 1) │
 │ GPC per-site: max 2 rules       (priority 2) │
 │ CH strip global: 1 rule         (priority 1) │
@@ -120,6 +120,8 @@ Dynamic rules (5,000 rule pool)
 - **Consent-enhanced link**: when active, lists whose category matches a denied consent purpose are included in the rebuild even if the user has not manually enabled them. This is a runtime overlay computed fresh on each rebuild, not a persistent storage change.
 
 This design supports hundreds of custom sites and multiple enhanced lists within Chrome’s 5,000 dynamic rule limit.
+
+*Selective rebuild* (`rebuildCategories(categories)`) is an optimization that only recomputes and replaces dynamic rules within the affected ID ranges (overrides, whitelist, hotfix, enhanced, paramStrip, gpc, ch). Each range is a fixed numeric interval defined in `RULE_RANGES`. If a `RangeOverflowError` occurs (more rules generated than the range can hold) or any unexpected error is thrown, the function falls back silently to a full `rebuildAllDynamicRules()`. This is by design: partial rebuilds are a performance optimization, not a correctness requirement, so falling back to the full rebuild guarantees consistent state.
 
 *Whitelist allow rules* let users unblock specific domains that were caught by the static rulesets. These rules use priority 3, so they always win over both static blocks (priority 1) and per-site overrides (priority 2). Each entry can be scoped per site or global. Global entries are batched into a single rule; per-site entries are grouped by site, one rule per unique site. Domain validation prevents invalid hostnames from entering storage or DNR rules, and storage writes are serialized to avoid concurrent conflicts.
 

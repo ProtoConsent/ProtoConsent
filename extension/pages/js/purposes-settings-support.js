@@ -7,11 +7,22 @@
 function initSupportSection() {
 	const toggle = document.getElementById('ps-debug-toggle');
 	const label = document.getElementById('ps-debug-label');
+	const wrap = document.getElementById('ps-troubleshoot-wrap');
+	const hint = document.getElementById('ps-troubleshoot-hint');
+	const pre = document.getElementById('ps-troubleshoot-info');
+
+	function setDebugUI(on) {
+		label.textContent = on ? 'Enabled' : 'Disabled';
+		if (wrap) wrap.hidden = !on;
+		if (hint) hint.hidden = on;
+		if (on && pre) loadTroubleshootInfo(pre);
+	}
+
 	if (toggle && label) {
 		chrome.storage.local.get('debug', (d) => {
 			const on = d.debug === true;
 			toggle.checked = on;
-			label.textContent = on ? 'Enabled' : 'Disabled';
+			setDebugUI(on);
 		});
 		toggle.addEventListener('change', () => {
 			const on = toggle.checked;
@@ -20,13 +31,11 @@ function initSupportSection() {
 			} else {
 				chrome.storage.local.remove('debug');
 			}
-			label.textContent = on ? 'Enabled' : 'Disabled';
+			setDebugUI(on);
 		});
 	}
 
-	const pre = document.getElementById('ps-troubleshoot-info');
 	const copyBtn = document.getElementById('ps-troubleshoot-copy');
-	if (pre) loadTroubleshootInfo(pre);
 	if (copyBtn && pre) {
 		let copyTimer = 0;
 		copyBtn.addEventListener('click', () => {
@@ -88,6 +97,13 @@ function loadTroubleshootInfo(pre) {
 				bg.gpcGlobal + ' GPC global, ' + bg.gpcPerSite + ' GPC per-site)');
 			if (bg.error) lines.push('  ERROR: ' + bg.error);
 			if (bg.rulesetError) lines.push('  RULESET ERROR: ' + bg.rulesetError);
+			lines.push('');
+		}
+
+		if (bg.selectiveTs) {
+			lines.push('last selective rebuild: ' + (bg.selectiveCategories || []).join(', '));
+			lines.push('  removed: ' + bg.selectiveRemoved + '  added: ' + bg.selectiveAdded +
+				'  at: ' + new Date(bg.selectiveTs).toLocaleTimeString());
 			lines.push('');
 		}
 

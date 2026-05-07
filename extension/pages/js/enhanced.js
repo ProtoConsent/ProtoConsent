@@ -16,6 +16,29 @@ let epHasRegionalLanguages = false;
 let epRegionalLanguages = [];
 let _epFocusListId = null; // list to refocus after re-render
 let _celAutoFetchInProgress = false;
+let _fetchPollTimer = null;
+let _batchInProgress = false;
+
+function setHeaderDownloadIndicator(active) {
+  const el = document.getElementById("pc-download-indicator");
+  if (el) el.hidden = !active;
+  if (active && !_fetchPollTimer) {
+    _fetchPollTimer = setInterval(_pollActiveFetches, 1500);
+  }
+  if (!active && _fetchPollTimer) {
+    clearInterval(_fetchPollTimer);
+    _fetchPollTimer = null;
+  }
+}
+
+function _pollActiveFetches() {
+  // Don't turn off the spinner while a UI-initiated batch is running
+  if (_batchInProgress) return;
+  chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_FETCH_COUNT" }, (resp) => {
+    if (chrome.runtime.lastError || !resp) return;
+    if (resp.activeFetches === 0) setHeaderDownloadIndicator(false);
+  });
+}
 
 // --- Shared stats helper ---
 function getEnhancedStats() {
@@ -38,8 +61,9 @@ function getEnhancedStats() {
     if (epLists[id].bundled) continue;
     const catalogDef = epCatalog[id];
     let hasUpdate = false;
-    hasUpdate = catalogDef && catalogDef.version && epLists[id].version &&
-        catalogDef.version > epLists[id].version;
+    const catTS = catalogDef && (catalogDef.generated || catalogDef.version);
+    const localTS = epLists[id].generated || epLists[id].version;
+    hasUpdate = catTS && localTS && catTS > localTS;
     if (!hasUpdate) continue;
     if (CORE_IDS.has(id)) { coreUpdate = true; continue; }
     if (CMP_IDS.has(id)) { cmpUpdate = true; continue; }
@@ -134,6 +158,8 @@ function refreshEnhancedState() {
       renderEnhancedPresets();
       renderEnhancedLists();
       updateEnhancedStatus();
+      // Show header indicator if background is mid-download
+      if (resp.activeFetches > 0) setHeaderDownloadIndicator(true);
       // Auto-download consent-linked lists not yet downloaded
       const celPending = resp.celPendingDownload || [];
       if (celPending.length > 0 && !_celAutoFetchInProgress) {
@@ -996,11 +1022,13 @@ function _renderEpListCard(listId) {
     stats.textContent = parts.join(" \u00b7 ");
     info.appendChild(stats);
 
-    if (listData.version && listDef.version && listDef.version > listData.version) {
+    const remoteTS = listDef && (listDef.generated || listDef.version);
+    const localTS = listData.generated || listData.version;
+    if (remoteTS && localTS && remoteTS > localTS) {
       const updateBadge = document.createElement("span");
       updateBadge.className = "ep-update-badge";
       updateBadge.textContent = "Update available";
-      updateBadge.title = "Remote version: " + listDef.version + " (installed: " + listData.version + ")";
+      updateBadge.title = "Remote: " + remoteTS + " (installed: " + localTS + ")";
       info.appendChild(updateBadge);
     }
   }
@@ -1096,6 +1124,8 @@ function _downloadEnhancedBatch(btnEl, notDownloaded) {
 
   const startDownloads = () => {
     const total = notDownloaded.length;
+    _batchInProgress = true;
+    setHeaderDownloadIndicator(true);
     if (btnEl) {
       btnEl.disabled = true;
       btnEl.textContent = "0/" + total + "\u2026";
@@ -1191,6 +1221,8 @@ function _downloadEnhancedBatch(btnEl, notDownloaded) {
         }
         if (completed >= total) {
           _celAutoFetchInProgress = false;
+          _batchInProgress = false;
+          setHeaderDownloadIndicator(false);
           if (btnEl) {
             btnEl.disabled = false;
             btnEl.textContent = failed > 0

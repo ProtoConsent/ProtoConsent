@@ -33,7 +33,7 @@ function pooled(tasks, limit) {
     const i = idx++;
     return tasks[i]().then(r => { results[i] = r; }).catch(e => {
       results[i] = { ok: false, error: e.message };
-      console.warn("ProtoConsent: list download failed:", e.message);
+      if (DEBUG_RULES) console.warn("ProtoConsent: list download failed:", e.message);
     }).then(next);
   }
   const workers = [];
@@ -93,10 +93,10 @@ export function refreshLists(filter, options) {
             if (listDef.preset === "optional") continue;
             if (preset === "basic" && listDef.preset !== "basic") continue;
             // "full" or unset: download all non-optional
-            tasks.push(() => fetchEnhancedList(listId));
+            tasks.push(() => fetchEnhancedList(listId, lists));
           } else if (lists[listId]) {
             // Only refresh already-downloaded lists
-            tasks.push(() => fetchEnhancedList(listId));
+            tasks.push(() => fetchEnhancedList(listId, lists));
           }
         }
 
@@ -110,7 +110,7 @@ export function refreshLists(filter, options) {
           const skipped = results.filter(r => r && r.skipped).length;
           const failed = results.filter(r => r && !r.ok);
           if (DEBUG_RULES) console.log("ProtoConsent auto-refresh: done -", ok, "ok,", skipped, "skipped,", failed.length, "failed");
-          if (failed.length > 0) {
+          if (DEBUG_RULES && failed.length > 0) {
             console.warn("ProtoConsent auto-refresh failures:", failed.map(f => f.error).join(", "));
           }
           // Consume any CEL-pending downloads that were queued during rebuild
@@ -120,7 +120,7 @@ export function refreshLists(filter, options) {
       });
     });
   }).catch(e => {
-    console.warn("ProtoConsent auto-refresh error:", e);
+    if (DEBUG_RULES) console.warn("ProtoConsent auto-refresh error:", e);
   }).finally(() => {
     _refreshRunning = false;
   });
@@ -196,7 +196,7 @@ export function checkOverdueRefresh() {
         else if (extOverdue) return refreshLists("external");
       });
     }).catch(e => {
-      console.warn("ProtoConsent: overdue refresh check failed:", e);
+      if (DEBUG_RULES) console.warn("ProtoConsent: overdue refresh check failed:", e);
     });
   });
 }

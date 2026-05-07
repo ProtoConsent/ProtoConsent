@@ -304,36 +304,66 @@ Regional lists participate in Balanced/Full presets but are excluded from preset
 
 Each per-source regional entry renders as a standard card in the Protection tab, grouped by region. Region selection and per-source toggles are handled in Purpose Settings. Flag icons are from [flag-icons](https://github.com/lipis/flag-icons) (MIT license).
 
-## 13. Hotfix safelist
+## 13. Safelist (revoke) lists
 
-The data repo produces `protoconsent_hotfix.json` listing domains that should no longer be blocked but are still present in the frozen extension bundle. These domains are blocked by static rulesets (priority 1) until the next extension release.
+Lists with `type: "revoke"` generate **priority-3 ALLOW rules** that override both static blocks (priority 1) and enhanced dynamic blocks (priority 2). They never block — they only safelist.
 
-The hotfix neutralizes them with a single DNR allow rule at priority 3, overriding both static blocks (priority 1) and enhanced dynamic blocks (priority 2). This is a **core list** - always active when downloaded, regardless of preset or enabled state. It has no UI toggle and does not appear as a toggleable card in the Protection tab.
+All revoke lists share the `hotfix` rule range (IDs 1000–1499, budget 500 rules). The rebuild iterates all revoke lists and generates rules sequentially.
 
-| Property | Value |
-| --- | --- |
-| Catalog ID | `protoconsent_hotfix` |
-| Display name | ProtoConsent Hotfix |
-| Type | `revoke` |
-| Preset | `basic` |
-| Source | [ProtoConsent/data](https://github.com/ProtoConsent/data) |
-| License | GPL-3.0+ |
-| CDN URL | `enhanced/protoconsent/protoconsent_hotfix.json` |
+### Internal vs. user-toggleable
 
-JSON format:
+| List | Behavior | UI |
+| --- | --- | --- |
+| `protoconsent_hotfix` | **Internal** — always active, cannot be disabled | Shown in Exceptions accordion (domain count) |
+| Any other revoke list | Respects `.enabled` flag from user toggle | Standard card in Protection tab |
+
+### JSON format (source in data repo)
 
 ```json
 {
-  "version": "2026-04-27",
-  "generated": "2026-04-27T06:11:25.598Z",
-  "revocation_count": 1,
-  "revocations": ["example-domain.com"]
+  "version": "2026-05-07",
+  "generated": "2026-05-07T04:47:26.184Z",
+  "revocations": ["domain1.com", "domain2.com"],
+  "revocation_count": 2,
+  "path_exceptions": [
+    { "urlFilter": "||cdn.example.com/analytics.js", "firstParty": true },
+    { "urlFilter": "||tracker.com/pixel.js", "initiatorDomains": ["site.com"] }
+  ],
+  "path_exception_count": 2
 }
 ```
 
-The rebuild inserts a single allow rule with `requestDomains` containing all revoked domains. The extension also maintains a runtime `hotfixDomainSet` to track which requests match hotfix domains (for observability in the debug panel and whitelist log).
+### Storage format (after handler processing)
 
-In the UI, the Exceptions accordion in the Overview section of the Protection tab shows the domain count. The Exceptions grid card lists individual domains when expanded.
+```json
+{
+  "domains": ["domain1.com", "domain2.com"],
+  "pathExceptions": [
+    { "urlFilter": "||cdn.example.com/analytics.js", "firstParty": true },
+    { "urlFilter": "||tracker.com/pixel.js", "initiatorDomains": ["site.com"] }
+  ]
+}
+```
+
+### DNR rules generated
+
+- **Domain revocations** → one rule per list with `requestDomains` (allow all resource types)
+- **Path exceptions** → one rule per entry with `urlFilter` + optional `initiatorDomains` scope
+
+All rules are `{ priority: 3, action: { type: "allow" } }`.
+
+### Adding a new revoke list
+
+1. Create `enhanced/protoconsent/protoconsent_<name>.json` in data repo with the source format above.
+2. Add to `LIST_CATALOG` in `scripts/generate-manifest.js` with `type: "revoke"`.
+3. Add to `extension/config/enhanced-lists.json` with `type: "revoke"` and `fetch_url`.
+4. The extension will download, store, and include it in the next rebuild automatically.
+
+If the list should be **internal** (not user-toggleable), add its ID to `INTERNAL_REVOKE_LISTS` in `rebuild-revoke.js`.
+
+### Runtime tracking
+
+The extension maintains a combined `hotfixDomainSet` (union of all active revoke list domains) and a `webRequest.onCompleted` listener that records which safelisted domains were actually loaded per tab. This powers the debug panel and whitelist log.
 
 ## 14. Adding a new list
 
@@ -344,3 +374,5 @@ Adding a third-party list requires entries in 3 files:
 3. **`extension/config/enhanced-lists.json`** in the extension repo - same metadata plus `fetch_url` (local catalog fallback).
 
 Run the workflow manually to generate JSON and update the catalog. The UI renders whatever the catalog contains.
+
+For **revoke (safelist)** lists, see [section 13](#13-safelist-revoke-lists) — the process is the same but use `type: "revoke"` and the revocations JSON format instead of domains/pathRules.

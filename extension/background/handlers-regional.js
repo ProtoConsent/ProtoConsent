@@ -11,7 +11,7 @@ import { loadEnhancedListsCatalog } from "./config-loader.js";
 import {
   getEnhancedListsFromStorage, getEnhancedPresetFromStorage, withEnhancedStorageLock,
 } from "./storage.js";
-import { rebuildAllDynamicRules } from "./rebuild.js";
+import { rebuildCategories } from "./rebuild.js";
 import { fetchEnhancedList } from "./handlers.js";
 
 let _regionalDebounceTimer = null;
@@ -74,7 +74,7 @@ export function initRegionalStorageListener() {
           if (dataKeysToRemove.length > 0) {
             await new Promise(r => chrome.storage.local.remove(dataKeysToRemove, r));
           }
-          rebuildAllDynamicRules();
+          rebuildCategories(new Set(["enhanced"]));
         }
       });
 
