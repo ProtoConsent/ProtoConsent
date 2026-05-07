@@ -28,7 +28,7 @@ import {
 import {
   getDefaultProfileConfig, resolvePurposes, getAllRulesFromStorage,
   getWhitelistFromStorage, isValidHostname,
-  getEnhancedListsFromStorage, getAllEnhancedDataFromStorage, getEnhancedDataFromStorage,
+  getEnhancedListsFromStorage, getEnhancedDataFromStorage,
   getEnhancedPresetFromStorage,
 } from "./storage.js";
 import {
@@ -39,6 +39,7 @@ import {
 import { updateCmpInjectionData } from "./cmp-injection.js";
 import { updateHotfixListener } from "./tracking.js";
 import { consumeCelPendingDownloads } from "./auto-refresh.js";
+import { buildEnhancedRulesIncremental, buildHotfixRulesIncremental, buildParamStripRulesIncremental } from "./rebuild-enhanced.js";
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
 export async function rebuildAllDynamicRules() {
@@ -196,7 +197,6 @@ async function _rebuildCategoriesImpl(categories) {
 
   if (affectedRangeKeys.has("hotfix") || affectedRangeKeys.has("enhanced") || affectedRangeKeys.has("paramStrip")) {
     await loadBundledPathAttribution();
-    const enhancedData = await getAllEnhancedDataFromStorage(enhancedListsMeta);
 
     const consentEnhancedLink = await new Promise(resolve => {
       chrome.storage.local.get(["consentEnhancedLink", "dynamicListsConsent", "celMode", "celCustomPurposes"], r => resolve({
@@ -241,32 +241,28 @@ async function _rebuildCategoriesImpl(categories) {
         }
       }
     }
-    if (consentLinkedListIds.size > 0) {
-      const missingIds = [...consentLinkedListIds].filter(id => !enhancedData[id]);
-      if (missingIds.length > 0) {
-        const keys = missingIds.map(id => "enhancedData_" + id);
-        const extraData = await new Promise(resolve => {
-          chrome.storage.local.get(keys, result => {
-            const out = {};
-            for (const id of missingIds) {
-              if (result["enhancedData_" + id]) out[id] = result["enhancedData_" + id];
-            }
-            resolve(out);
-          });
-        });
-        Object.assign(enhancedData, extraData);
-      }
-    }
 
+    let hfResult = null;
     if (affectedRangeKeys.has("hotfix")) {
-      const hfRules = _buildHotfixRulesForCategory(enhancedData);
-      addRules = addRules.concat(hfRules.rules);
+      hfResult = await buildHotfixRulesIncremental();
+      addRules = addRules.concat(hfResult.rules);
     }
 
     if (affectedRangeKeys.has("enhanced")) {
-      const enhRules = _buildEnhancedRulesForCategory(enhancedListsMeta, enhancedData, permissiveSites, consentLinkedListIds);
-      addRules = addRules.concat(enhRules.rules);
-      setDynamicEnhancedMap(enhRules.enhancedMap);
+      const enhancedExclude = permissiveSites.length > 0 ? permissiveSites : undefined;
+      const enhResult = await buildEnhancedRulesIncremental(enhancedListsMeta, consentLinkedListIds, enhancedExclude);
+      addRules = addRules.concat(enhResult.rules);
+      setDynamicEnhancedMap(enhResult.enhancedMap);
+      setEnhancedReverseIndex(enhResult.reverseIndex);
+      // Merge hotfix path attribution entries if hotfix was also rebuilt
+      if (affectedRangeKeys.has("hotfix") && hfResult) {
+        for (const entry of hfResult.pathAttrEntries) {
+          let arr = enhResult.pathAttrIndex.get(entry.host);
+          if (!arr) { arr = []; enhResult.pathAttrIndex.set(entry.host, arr); }
+          arr.push({ prefix: entry.prefix, source: entry.source });
+        }
+      }
+      setPathAttributionIndex(enhResult.pathAttrIndex);
     }
 
     if (affectedRangeKeys.has("paramStrip")) {
@@ -276,9 +272,9 @@ async function _rebuildCategoriesImpl(categories) {
       const paramStrippingSitesEnabled = await new Promise(resolve => {
         chrome.storage.local.get(["paramStrippingSitesEnabled"], r => resolve(r.paramStrippingSitesEnabled !== false));
       });
-      const psRules = _buildParamStripRulesForCategory(enhancedListsMeta, enhancedData, paramStrippingEnabled, paramStrippingSitesEnabled);
-      addRules = addRules.concat(psRules.rules);
-      setDynamicParamStripIds(psRules.paramStripIds);
+      const psResult = await buildParamStripRulesIncremental(enhancedListsMeta, paramStrippingEnabled, paramStrippingSitesEnabled);
+      addRules = addRules.concat(psResult.rules);
+      setDynamicParamStripIds(psResult.paramStripIds);
     }
   }
 
@@ -309,61 +305,26 @@ async function _rebuildCategoriesImpl(categories) {
   }
 
   // Update enhanced reverse index and path attribution when enhanced data changed
-  if (affectedRangeKeys.has("enhanced") || affectedRangeKeys.has("hotfix")) {
-    const enhancedData = await getAllEnhancedDataFromStorage(enhancedListsMeta);
-    const BUNDLED_PATH_LISTS = ["easyprivacy", "easylist"];
-    const consentLinkedIdsForIndex = affectedRangeKeys.has("enhanced")
-      ? await _getConsentLinkedListIds(enhancedListsMeta, globalPurposes)
-      : new Set();
-
-    const newEnhancedReverseIndex = new Map();
-    const indexedHasCategory = new Set();
-    for (const [listId, listData] of Object.entries(enhancedData)) {
-      const listMeta = enhancedListsMeta[listId];
-      if (listMeta && listMeta.type) continue;
-      const hasCategory = !!(listMeta && listMeta.category);
-      if (listData.domains?.length) {
-        for (const d of listData.domains) {
-          if (indexedHasCategory.has(d) && !hasCategory) continue;
-          newEnhancedReverseIndex.set(d, listId);
-          if (hasCategory) indexedHasCategory.add(d);
-        }
-      }
-    }
-    setEnhancedReverseIndex(newEnhancedReverseIndex);
-
-    const newPathAttrIndex = new Map();
-    function addPathEntry(host, prefix, source) {
-      let arr = newPathAttrIndex.get(host);
-      if (!arr) { arr = []; newPathAttrIndex.set(host, arr); }
-      arr.push({ prefix, source });
-    }
-    for (const [listId, hostMap] of bundledPathAttribution) {
-      const lm = enhancedListsMeta[listId];
-      if (!(can("enhancedDnr") && (lm?.enabled || consentLinkedIdsForIndex.has(listId)))) continue;
-      for (const [host, entries] of hostMap) {
-        for (const e of entries) addPathEntry(host, e.prefix, e.source);
-      }
-    }
-    for (const [listId, listData] of Object.entries(enhancedData)) {
-      const lm = enhancedListsMeta[listId];
-      if (lm?.type) continue;
-      if (BUNDLED_PATH_LISTS.includes(listId)) continue;
-      if (!lm?.enabled && !consentLinkedIdsForIndex.has(listId)) continue;
-      if (listData.pathRules?.length) {
-        for (const pr of listData.pathRules) {
-          const p = parseUrlFilterForAttribution(pr.urlFilter);
-          if (p) addPathEntry(p.hostname, p.prefix, "enhanced:" + listId);
-        }
-      }
-    }
-    if (enhancedData["protoconsent_hotfix"]?.pathRules?.length) {
-      for (const pr of enhancedData["protoconsent_hotfix"].pathRules) {
+  // (only if not already done by the enhanced rebuild above)
+  if ((affectedRangeKeys.has("hotfix") && !affectedRangeKeys.has("enhanced"))) {
+    // Hotfix-only change: rebuild reverse index + path attribution incrementally
+    const consentLinkedIdsForIndex = await _getConsentLinkedListIds(enhancedListsMeta, globalPurposes);
+    const enhancedExclude = undefined; // not needed for index-only rebuild
+    const enhResult = await buildEnhancedRulesIncremental(enhancedListsMeta, consentLinkedIdsForIndex, enhancedExclude);
+    setEnhancedReverseIndex(enhResult.reverseIndex);
+    // Merge hotfix path attribution
+    const hotfixData = await getEnhancedDataFromStorage("protoconsent_hotfix");
+    if (hotfixData?.pathRules?.length) {
+      for (const pr of hotfixData.pathRules) {
         const p = parseUrlFilterForAttribution(pr.urlFilter);
-        if (p) addPathEntry(p.hostname, p.prefix, "enhanced:protoconsent_hotfix");
+        if (p) {
+          let arr = enhResult.pathAttrIndex.get(p.hostname);
+          if (!arr) { arr = []; enhResult.pathAttrIndex.set(p.hostname, arr); }
+          arr.push({ prefix: p.prefix, source: "enhanced:protoconsent_hotfix" });
+        }
       }
     }
-    setPathAttributionIndex(newPathAttrIndex);
+    setPathAttributionIndex(enhResult.pathAttrIndex);
   }
 
   // Update static rulesets when enhanced or signals categories change
@@ -415,7 +376,6 @@ async function _rebuildCategoriesImpl(categories) {
       await updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled);
     }
     if (categories.has("cosmetic") || categories.has("enhanced")) {
-      const enhancedData = await getAllEnhancedDataFromStorage(enhancedListsMeta);
       const permissiveSites = [];
       if (can("ownBlocking")) {
         for (const [domain, siteConfig] of Object.entries(rulesByDomain)) {
@@ -423,7 +383,7 @@ async function _rebuildCategoriesImpl(categories) {
           if (PURPOSES_FOR_ENFORCEMENT.every(p => sitePurposes[p])) permissiveSites.push(domain);
         }
       }
-      await updateCosmeticInjection(enhancedListsMeta, enhancedData, permissiveSites,
+      await updateCosmeticInjection(enhancedListsMeta, permissiveSites,
         await _getConsentLinkedListIds(enhancedListsMeta, globalPurposes));
     }
     if (categories.has("cmp")) {
@@ -537,204 +497,6 @@ function _buildWhitelistRulesForCategory(whitelist) {
     added++;
   }
   return { rules, whitelistMap };
-}
-
-function _buildHotfixRulesForCategory(enhancedData) {
-  const rules = [];
-  let nextId = RULE_RANGES.hotfix.start;
-
-  if (!can("ownBlocking")) { setHotfixDomainSet(new Set()); return { rules }; }
-
-  const hotfixData = enhancedData["protoconsent_hotfix"];
-  if (hotfixData?.domains?.length) {
-    nextIdInRange(nextId, "hotfix");
-    rules.push({ id: nextId++, priority: 3, action: { type: "allow" }, condition: { requestDomains: hotfixData.domains, resourceTypes: BLOCK_RESOURCE_TYPES } });
-    setHotfixDomainSet(new Set(hotfixData.domains));
-  } else {
-    setHotfixDomainSet(new Set());
-  }
-  if (hotfixData?.pathRules?.length && can("enhancedDnr")) {
-    for (const pr of hotfixData.pathRules) {
-      if (!pr.urlFilter) continue;
-      nextIdInRange(nextId, "hotfix");
-      rules.push({ id: nextId++, priority: 2, action: { type: "block" }, condition: { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES } });
-    }
-  }
-  if (hotfixData?.pathExceptions?.length && can("enhancedDnr")) {
-    for (const pe of hotfixData.pathExceptions) {
-      if (!pe.urlFilter) continue;
-      nextIdInRange(nextId, "hotfix");
-      const condition = { urlFilter: pe.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
-      if (Array.isArray(pe.initiatorDomains) && pe.initiatorDomains.length > 0) {
-        condition.initiatorDomains = pe.initiatorDomains;
-      } else if (pe.firstParty) {
-        const hostMatch = pe.urlFilter.match(/^\|\|([a-z0-9][a-z0-9.-]*\.[a-z]{2,})\//i);
-        if (hostMatch) condition.initiatorDomains = [hostMatch[1]];
-      }
-      rules.push({ id: nextId++, priority: 3, action: { type: "allow" }, condition });
-    }
-  }
-  updateHotfixListener();
-  return { rules };
-}
-
-function _buildEnhancedRulesForCategory(enhancedListsMeta, enhancedData, permissiveSites, consentLinkedListIds) {
-  const rules = [];
-  const enhancedMap = {};
-  let nextId = RULE_RANGES.enhanced.start;
-  const takeId = () => { nextIdInRange(nextId, "enhanced"); return nextId++; };
-
-  if (!can("enhancedDnr")) return { rules, enhancedMap };
-
-  const enhancedExclude = permissiveSites.length > 0 ? permissiveSites : undefined;
-  const useDirectUrlFilter = (chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES || 5000) >= 10000;
-  const BUNDLED_PATH_LISTS = ["easyprivacy", "easylist"];
-
-  for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
-    if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
-    if (listMeta.type) continue;
-    const listData = enhancedData[listId];
-    if (!listData) continue;
-
-    if (listData.domains?.length) {
-      const rId = takeId();
-      enhancedMap[rId] = listId;
-      const condition = { requestDomains: listData.domains, resourceTypes: BLOCK_RESOURCE_TYPES };
-      if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-      rules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-    }
-
-    if (listData.pathRules?.length && !BUNDLED_PATH_LISTS.includes(listId)) {
-      if (useDirectUrlFilter) {
-        for (const pr of listData.pathRules) {
-          if (!pr.urlFilter) continue;
-          const rId = takeId();
-          enhancedMap[rId] = listId;
-          const condition = { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
-          if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-          rules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-        }
-      } else {
-        const byDomain = new Map();
-        const ungroupable = [];
-        for (const pr of listData.pathRules) {
-          const m = pr.urlFilter.match(/^\|\|([^/]+)\/(.*)/);
-          if (m) {
-            if (!byDomain.has(m[1])) byDomain.set(m[1], []);
-            byDomain.get(m[1]).push(m[2]);
-          } else {
-            ungroupable.push(pr);
-          }
-        }
-        const REGEX_BYTE_LIMIT = 1800;
-        for (const [domain, paths] of byDomain) {
-          if (paths.length === 1) {
-            const rId = takeId();
-            enhancedMap[rId] = listId;
-            const condition = { urlFilter: `||${domain}/${paths[0]}`, resourceTypes: BLOCK_RESOURCE_TYPES };
-            if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-            rules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-          } else {
-            const escaped = domain.replace(/\./g, "\\.");
-            const prefix = `^https?://(.*\\.)?${escaped}/(`;
-            let chunk = [];
-            let chunkLen = prefix.length + 1;
-            for (const p of paths) {
-              const ep = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-              const added = chunk.length === 0 ? ep.length : ep.length + 1;
-              if (chunkLen + added > REGEX_BYTE_LIMIT) {
-                if (chunk.length > 0) {
-                  const rId = takeId();
-                  enhancedMap[rId] = listId;
-                  const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
-                  if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-                  condition.regexFilter = prefix + chunk.join("|") + ")";
-                  condition.isUrlFilterCaseSensitive = false;
-                  rules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-                  chunk = [];
-                  chunkLen = prefix.length + 1;
-                }
-                if (prefix.length + 1 + ep.length > REGEX_BYTE_LIMIT) {
-                  const rId = takeId();
-                  enhancedMap[rId] = listId;
-                  const condition = { urlFilter: `||${domain}/${p}`, resourceTypes: BLOCK_RESOURCE_TYPES };
-                  if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-                  rules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-                  continue;
-                }
-              }
-              chunk.push(ep);
-              chunkLen += added;
-            }
-            if (chunk.length > 0) {
-              const rId = takeId();
-              enhancedMap[rId] = listId;
-              const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
-              if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-              condition.regexFilter = prefix + chunk.join("|") + ")";
-              condition.isUrlFilterCaseSensitive = false;
-              rules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-            }
-          }
-        }
-        for (const pr of ungroupable) {
-          const rId = takeId();
-          enhancedMap[rId] = listId;
-          const condition = { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
-          if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-          rules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-        }
-      }
-    }
-  }
-  return { rules, enhancedMap };
-}
-
-function _buildParamStripRulesForCategory(enhancedListsMeta, enhancedData, paramStrippingEnabled, paramStrippingSitesEnabled) {
-  const rules = [];
-  const paramStripIds = new Set();
-  let nextId = RULE_RANGES.paramStrip.start;
-
-  if (paramStrippingEnabled) {
-    for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
-      if (listMeta.type !== "tracking_params" || !listMeta.enabled) continue;
-      const listData = enhancedData[listId];
-      if (!listData?.params?.length) continue;
-      nextIdInRange(nextId, "paramStrip");
-      const ruleId = nextId++;
-      paramStripIds.add(ruleId);
-      rules.push({
-        id: ruleId, priority: 2,
-        action: { type: "redirect", redirect: { transform: { queryTransform: { removeParams: listData.params } } } },
-        condition: { urlFilter: "*", resourceTypes: ["main_frame", "sub_frame"] },
-      });
-    }
-  }
-  if (paramStrippingEnabled && paramStrippingSitesEnabled) {
-    for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
-      if (listMeta.type !== "tracking_params_sites" || !listMeta.enabled) continue;
-      const listData = enhancedData[listId];
-      if (!listData?.sites || !Object.keys(listData.sites).length) continue;
-      const groups = new Map();
-      for (const [domain, params] of Object.entries(listData.sites)) {
-        const sorted = [...params].sort();
-        const key = sorted.join("\0");
-        if (!groups.has(key)) groups.set(key, { params: sorted, domains: [] });
-        groups.get(key).domains.push(domain);
-      }
-      for (const g of groups.values()) {
-        nextIdInRange(nextId, "paramStrip");
-        const ruleId = nextId++;
-        paramStripIds.add(ruleId);
-        rules.push({
-          id: ruleId, priority: 2,
-          action: { type: "redirect", redirect: { transform: { queryTransform: { removeParams: g.params } } } },
-          condition: { urlFilter: "*", requestDomains: g.domains, resourceTypes: ["main_frame", "sub_frame"] },
-        });
-      }
-    }
-  }
-  return { rules, paramStripIds };
 }
 
 function _buildGpcRulesForCategory(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled) {
@@ -878,7 +640,6 @@ async function _rebuildAllDynamicRulesImpl() {
       getEnhancedListsFromStorage(),
     ]);
     await loadBundledPathAttribution();
-    const enhancedData = await getAllEnhancedDataFromStorage(enhancedListsMeta);
 
     const gpcEnabled = await new Promise(resolve => {
       chrome.storage.local.get(["gpcEnabled"], r => resolve(r.gpcEnabled !== false));
@@ -1092,57 +853,9 @@ async function _rebuildAllDynamicRulesImpl() {
     } // end can("whitelistOverrides")
 
     // 4b. Hotfix allow rules: override static rulesets for zombie domains
-    let nextHotfixId = RULE_RANGES.hotfix.start;
-    let hotfixDomainCount = 0;
-    if (can("ownBlocking")) {
-      let hotfixData = enhancedData["protoconsent_hotfix"];
-      if (!hotfixData) {
-        hotfixData = await getEnhancedDataFromStorage("protoconsent_hotfix");
-      }
-      if (hotfixData?.domains?.length) {
-        const rId = nextHotfixId++;
-        newRules.push({
-          id: rId,
-          priority: 3,
-          action: { type: "allow" },
-          condition: {
-            requestDomains: hotfixData.domains,
-            resourceTypes: BLOCK_RESOURCE_TYPES,
-          },
-        });
-        hotfixDomainCount = hotfixData.domains.length;
-        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix allow rule for", hotfixDomainCount, "domains");
-        setHotfixDomainSet(new Set(hotfixData.domains));
-      } else {
-        setHotfixDomainSet(new Set());
-      }
-      if (hotfixData?.pathRules?.length && can("enhancedDnr")) {
-        for (const pr of hotfixData.pathRules) {
-          if (!pr.urlFilter) continue;
-          const rId = nextHotfixId++;
-          newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition: { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES } });
-        }
-        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix path block rules:", hotfixData.pathRules.length);
-      }
-      if (hotfixData?.pathExceptions?.length && can("enhancedDnr")) {
-        for (const pe of hotfixData.pathExceptions) {
-          if (!pe.urlFilter) continue;
-          const rId = nextHotfixId++;
-          const condition = { urlFilter: pe.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
-          if (Array.isArray(pe.initiatorDomains) && pe.initiatorDomains.length > 0) {
-            condition.initiatorDomains = pe.initiatorDomains;
-          } else if (pe.firstParty) {
-            const hostMatch = pe.urlFilter.match(/^\|\|([a-z0-9][a-z0-9.-]*\.[a-z]{2,})\//i);
-            if (hostMatch) condition.initiatorDomains = [hostMatch[1]];
-          }
-          newRules.push({ id: rId, priority: 3, action: { type: "allow" }, condition });
-        }
-        if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix path exception rules:", hotfixData.pathExceptions.length);
-      }
-    } else {
-      setHotfixDomainSet(new Set());
-    }
-    updateHotfixListener();
+    const hotfixResult = await buildHotfixRulesIncremental();
+    newRules = newRules.concat(hotfixResult.rules);
+    let hotfixDomainCount = hotfixResult.rules.length > 0 ? hotfixResult.rules[0].condition?.requestDomains?.length || 0 : 0;
 
     // 5. Enhanced Protection lists (dynamic block rules, priority 2)
     // CEL only activates lists whose category is a consent purpose (not security, cosmetic, cmp, etc.)
@@ -1178,23 +891,6 @@ async function _rebuildAllDynamicRulesImpl() {
       }
     }
 
-    if (consentLinkedListIds.size > 0) {
-      const missingIds = [...consentLinkedListIds].filter(id => !enhancedData[id]);
-      if (missingIds.length > 0) {
-        const keys = missingIds.map(id => "enhancedData_" + id);
-        const extraData = await new Promise(resolve => {
-          chrome.storage.local.get(keys, result => {
-            const out = {};
-            for (const id of missingIds) {
-              if (result["enhancedData_" + id]) out[id] = result["enhancedData_" + id];
-            }
-            resolve(out);
-          });
-        });
-        Object.assign(enhancedData, extraData);
-      }
-    }
-
     setLastConsentLinkedListIds([...consentLinkedListIds]);
     setLastCelPendingDownload(celPendingDownload);
 
@@ -1204,121 +900,21 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     const enhancedExclude = permissiveSites.length > 0 ? permissiveSites : undefined;
-
-    const useDirectUrlFilter = (chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES || 5000) >= 10000;
     const BUNDLED_PATH_LISTS = ["easyprivacy", "easylist"];
-    let nextEnhancedId = RULE_RANGES.enhanced.start;
 
-    if (can("enhancedDnr")) {
-    for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
-      if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
-      // Only process blocking lists (no type field); skip special types (cosmetic, cmp, informational, tracking_params, etc.)
-      if (listMeta.type) continue;
-      const listData = enhancedData[listId];
-      if (!listData) continue;
+    // --- Incremental per-list enhanced rules + reverse index + path attribution ---
+    const enhancedResult = await buildEnhancedRulesIncremental(enhancedListsMeta, consentLinkedListIds, enhancedExclude);
+    newRules = newRules.concat(enhancedResult.rules);
+    Object.assign(newEnhancedMap, enhancedResult.enhancedMap);
+    setEnhancedReverseIndex(enhancedResult.reverseIndex);
 
-      if (listData.domains?.length) {
-        const rId = nextEnhancedId++;
-        newEnhancedMap[rId] = listId;
-        const condition = {
-          requestDomains: listData.domains,
-          resourceTypes: BLOCK_RESOURCE_TYPES,
-        };
-        if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-        newRules.push({
-          id: rId,
-          priority: 2,
-          action: { type: "block" },
-          condition,
-        });
-      }
-
-      if (listData.pathRules?.length && !BUNDLED_PATH_LISTS.includes(listId)) {
-        if (useDirectUrlFilter) {
-          for (const pr of listData.pathRules) {
-            if (!pr.urlFilter) continue;
-            const rId = nextEnhancedId++;
-            newEnhancedMap[rId] = listId;
-            const condition = { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
-            if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-            newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-          }
-        } else {
-          const byDomain = new Map();
-          const ungroupable = [];
-          for (const pr of listData.pathRules) {
-            const m = pr.urlFilter.match(/^\|\|([^/]+)\/(.*)/);
-            if (m) {
-              if (!byDomain.has(m[1])) byDomain.set(m[1], []);
-              byDomain.get(m[1]).push(m[2]);
-            } else {
-              ungroupable.push(pr);
-            }
-          }
-
-          const REGEX_BYTE_LIMIT = 1800;
-          for (const [domain, paths] of byDomain) {
-            if (paths.length === 1) {
-              const rId = nextEnhancedId++;
-              newEnhancedMap[rId] = listId;
-              const condition = { urlFilter: `||${domain}/${paths[0]}`, resourceTypes: BLOCK_RESOURCE_TYPES };
-              if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-              newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-            } else {
-              const escaped = domain.replace(/\./g, "\\.");
-              const prefix = `^https?://(.*\\.)?${escaped}/(`;
-              let chunk = [];
-              let chunkLen = prefix.length + 1;
-              for (const p of paths) {
-                const ep = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-                const added = chunk.length === 0 ? ep.length : ep.length + 1;
-                if (chunkLen + added > REGEX_BYTE_LIMIT) {
-                  if (chunk.length > 0) {
-                    const rId = nextEnhancedId++;
-                    newEnhancedMap[rId] = listId;
-                    const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
-                    if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-                    condition.regexFilter = prefix + chunk.join("|") + ")";
-                    condition.isUrlFilterCaseSensitive = false;
-                    newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-                    chunk = [];
-                    chunkLen = prefix.length + 1;
-                  }
-                  if (prefix.length + 1 + ep.length > REGEX_BYTE_LIMIT) {
-                    const rId = nextEnhancedId++;
-                    newEnhancedMap[rId] = listId;
-                    const condition = { urlFilter: `||${domain}/${p}`, resourceTypes: BLOCK_RESOURCE_TYPES };
-                    if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-                    newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-                    continue;
-                  }
-                }
-                chunk.push(ep);
-                chunkLen += added;
-              }
-              if (chunk.length > 0) {
-                const rId = nextEnhancedId++;
-                newEnhancedMap[rId] = listId;
-                const condition = { resourceTypes: BLOCK_RESOURCE_TYPES };
-                if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-                condition.regexFilter = prefix + chunk.join("|") + ")";
-                condition.isUrlFilterCaseSensitive = false;
-                newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-              }
-            }
-          }
-
-          for (const pr of ungroupable) {
-            const rId = nextEnhancedId++;
-            newEnhancedMap[rId] = listId;
-            const condition = { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
-            if (enhancedExclude) condition.excludedInitiatorDomains = enhancedExclude;
-            newRules.push({ id: rId, priority: 2, action: { type: "block" }, condition });
-          }
-        }
-      }
+    // Add hotfix path attribution entries to the path attribution index
+    for (const entry of hotfixResult.pathAttrEntries) {
+      let arr = enhancedResult.pathAttrIndex.get(entry.host);
+      if (!arr) { arr = []; enhancedResult.pathAttrIndex.set(entry.host, arr); }
+      arr.push({ prefix: entry.prefix, source: entry.source });
     }
-    } // end can("enhancedDnr")
+    setPathAttributionIndex(enhancedResult.pathAttrIndex);
 
     // Enable/disable bundled external path rulesets alongside their domain rules
     for (const listId of BUNDLED_PATH_LISTS) {
@@ -1329,130 +925,12 @@ async function _rebuildAllDynamicRulesImpl() {
       else disableIds.push(rulesetId);
     }
 
-    // 5b. URL tracking parameter stripping -- dynamic rules from CDN data
-    let nextParamStripId = RULE_RANGES.paramStrip.start;
-    const paramStripBudget = RULE_RANGES.paramStrip.end - RULE_RANGES.paramStrip.start + 1;
-    let hasDynamicGlobalParams = false;
-    let hasDynamicSiteParams = false;
-    const paramStripRuleIds = new Set();
-
-    if (paramStrippingEnabled) {
-      // Global params from CDN
-      for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
-        if (listMeta.type !== "tracking_params") continue;
-        if (!listMeta.enabled) continue;
-        const listData = enhancedData[listId];
-        if (!listData?.params?.length) continue;
-        if (paramStripRuleIds.size >= paramStripBudget) break;
-        hasDynamicGlobalParams = true;
-        const ruleId = nextParamStripId++;
-        paramStripRuleIds.add(ruleId);
-        newRules.push({
-          id: ruleId,
-          priority: 2,
-          action: {
-            type: "redirect",
-            redirect: { transform: { queryTransform: { removeParams: listData.params } } },
-          },
-          condition: { urlFilter: "*", resourceTypes: ["main_frame", "sub_frame"] },
-        });
-      }
-    }
-
-    if (paramStrippingEnabled && paramStrippingSitesEnabled) {
-      // Per-site params from CDN -- group domains by identical param set
-      for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
-        if (listMeta.type !== "tracking_params_sites") continue;
-        if (!listMeta.enabled) continue;
-        const listData = enhancedData[listId];
-        if (!listData?.sites || !Object.keys(listData.sites).length) continue;
-        hasDynamicSiteParams = true;
-        const groups = new Map(); // paramKey -> { params, domains }
-        for (const [domain, params] of Object.entries(listData.sites)) {
-          const sorted = [...params].sort();
-          const key = sorted.join("\0");
-          if (!groups.has(key)) groups.set(key, { params: sorted, domains: [] });
-          groups.get(key).domains.push(domain);
-        }
-        for (const g of groups.values()) {
-          if (paramStripRuleIds.size >= paramStripBudget) break;
-          const ruleId = nextParamStripId++;
-          paramStripRuleIds.add(ruleId);
-          newRules.push({
-            id: ruleId,
-            priority: 2,
-            action: {
-              type: "redirect",
-              redirect: { transform: { queryTransform: { removeParams: g.params } } },
-            },
-            condition: {
-              urlFilter: "*",
-              requestDomains: g.domains,
-              resourceTypes: ["main_frame", "sub_frame"],
-            },
-          });
-        }
-      }
-    }
-
-    setDynamicParamStripIds(paramStripRuleIds);
-
-    // Build enhanced reverse index for onErrorOccurred attribution (always, both modes)
-    // Prefer lists with a category (purpose) over uncategorized ones.
-    // Only index domain-level rules (full domain blocks); skip pathRules because
-    // they only block specific URL patterns, not the entire domain. Including them
-    // causes false attribution (e.g. a pathRule for ||instagram.com/api/v1/... would
-    // make ALL instagram.com failures be attributed to that list).
-    const newEnhancedReverseIndex = new Map();
-    const indexedHasCategory = new Set();
-    for (const [listId, listData] of Object.entries(enhancedData)) {
-      // Only index blocking lists (no type field); skip special types (cosmetic, cmp, informational, tracking_params, etc.)
-      const listMeta = enhancedListsMeta[listId];
-      if (listMeta && listMeta.type) continue;
-      const hasCategory = !!(listMeta && listMeta.category);
-      if (listData.domains?.length) {
-        for (const d of listData.domains) {
-          if (indexedHasCategory.has(d) && !hasCategory) continue;
-          newEnhancedReverseIndex.set(d, listId);
-          if (hasCategory) indexedHasCategory.add(d);
-        }
-      }
-    }
-    setEnhancedReverseIndex(newEnhancedReverseIndex);
-
-    // Build path attribution index for URL-level attribution of path blocks.
-    const newPathAttrIndex = new Map();
-    function addPathEntry(host, prefix, source) {
-      let arr = newPathAttrIndex.get(host);
-      if (!arr) { arr = []; newPathAttrIndex.set(host, arr); }
-      arr.push({ prefix, source });
-    }
-    for (const [listId, hostMap] of bundledPathAttribution) {
-      const lm = enhancedListsMeta[listId];
-      if (!(can("enhancedDnr") && (lm?.enabled || consentLinkedListIds.has(listId)))) continue;
-      for (const [host, entries] of hostMap) {
-        for (const e of entries) addPathEntry(host, e.prefix, e.source);
-      }
-    }
-    for (const [listId, listData] of Object.entries(enhancedData)) {
-      const lm = enhancedListsMeta[listId];
-      if (lm?.type) continue;
-      if (BUNDLED_PATH_LISTS.includes(listId)) continue;
-      if (!lm?.enabled && !consentLinkedListIds.has(listId)) continue;
-      if (listData.pathRules?.length) {
-        for (const pr of listData.pathRules) {
-          const p = parseUrlFilterForAttribution(pr.urlFilter);
-          if (p) addPathEntry(p.hostname, p.prefix, "enhanced:" + listId);
-        }
-      }
-    }
-    if (enhancedData["protoconsent_hotfix"]?.pathRules?.length) {
-      for (const pr of enhancedData["protoconsent_hotfix"].pathRules) {
-        const p = parseUrlFilterForAttribution(pr.urlFilter);
-        if (p) addPathEntry(p.hostname, p.prefix, "enhanced:protoconsent_hotfix");
-      }
-    }
-    setPathAttributionIndex(newPathAttrIndex);
+    // 5b. URL tracking parameter stripping -- incremental per-list read
+    const paramResult = await buildParamStripRulesIncremental(enhancedListsMeta, paramStrippingEnabled, paramStrippingSitesEnabled);
+    newRules = newRules.concat(paramResult.rules);
+    setDynamicParamStripIds(paramResult.paramStripIds);
+    const hasDynamicGlobalParams = paramResult.hasDynamicGlobalParams;
+    const hasDynamicSiteParams = paramResult.hasDynamicSiteParams;
 
     // 6. GPC header rules
     let nextGpcId = RULE_RANGES.gpc.start;
@@ -1641,9 +1119,9 @@ async function _rebuildAllDynamicRulesImpl() {
           .filter(([id, m]) => m.type === "cmp" && (m.enabled || consentLinkedListIds.has(id)))
           .map(([id]) => id),
         hotfixDomainCount,
-        hotfixPathCount: enhancedData["protoconsent_hotfix"]?.pathRules?.length || 0,
-        hotfixPathExceptionCount: enhancedData["protoconsent_hotfix"]?.pathExceptions?.length || 0,
-        pathAttrIndexSize: newPathAttrIndex.size,
+        hotfixPathCount: hotfixResult.rules.filter(r => r.priority === 2 && r.condition?.urlFilter).length,
+        hotfixPathExceptionCount: hotfixResult.rules.filter(r => r.priority === 3 && r.condition?.urlFilter).length,
+        pathAttrIndexSize: enhancedResult.pathAttrIndex.size,
         ts: Date.now(),
       });
     }
@@ -1712,7 +1190,7 @@ async function _rebuildAllDynamicRulesImpl() {
     }
 
     await updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled);
-    await updateCosmeticInjection(enhancedListsMeta, enhancedData, permissiveSites, consentLinkedListIds);
+    await updateCosmeticInjection(enhancedListsMeta, permissiveSites, consentLinkedListIds);
     await updateCmpInjectionData(globalPurposes, gpcEnabled);
 
   } catch (e) {
@@ -1776,7 +1254,7 @@ async function updateGPCContentScript(rulesByDomain, presets, defaultConfig, glo
 // Register or unregister the cosmetic filtering content script.
 // Compiles generic+domain CSS from active cosmetic lists and stores it
 // in chrome.storage.local for the content script to read at document_start.
-async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissiveSites, consentLinkedListIds) {
+async function updateCosmeticInjection(enhancedListsMeta, permissiveSites, consentLinkedListIds) {
   if (!chrome.scripting?.registerContentScripts) return;
 
   try {
@@ -1789,12 +1267,12 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
       return;
     }
 
-    // Collect all active cosmetic lists
+    // Collect all active cosmetic lists (read individually from storage)
     const activeCosmeticData = [];
     for (const [listId, listMeta] of Object.entries(enhancedListsMeta)) {
       if (listMeta.type !== "cosmetic") continue;
       if (!listMeta.enabled && !consentLinkedListIds.has(listId)) continue;
-      const data = enhancedData[listId];
+      const data = await getEnhancedDataFromStorage(listId);
       if (data) activeCosmeticData.push(data);
     }
 
