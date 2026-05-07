@@ -292,24 +292,23 @@ async function initDomain() {
   if (!tabs || !tabs[0] || !tabs[0].url) {
     currentDomain = null;
     showUnsupportedPage();
-    return;
-  }
-
-  try {
-    const url = new URL(tabs[0].url);
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
+  } else {
+    try {
+      const url = new URL(tabs[0].url);
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        currentDomain = null;
+        showUnsupportedPage();
+      } else {
+        const hostname = url.hostname.replace(/^www\./, "");
+        currentDomain = hostname;
+        currentProtocol = url.protocol;
+        currentHost = url.host;
+        document.getElementById("pc-site-domain").textContent = hostname;
+      }
+    } catch (e) {
       currentDomain = null;
       showUnsupportedPage();
-      return;
     }
-    const hostname = url.hostname.replace(/^www\./, "");
-    currentDomain = hostname;
-    currentProtocol = url.protocol;
-    currentHost = url.host;
-    document.getElementById("pc-site-domain").textContent = hostname;
-  } catch (e) {
-    currentDomain = null;
-    showUnsupportedPage();
   }
 }
 
@@ -377,25 +376,12 @@ function updateTcfIndicator() {
 function showUnsupportedPage() {
   document.getElementById("pc-site-domain").textContent = "—";
   const listEl = document.getElementById("pc-purposes-list");
-  if (!listEl) return;
-  listEl.innerHTML = "";
-
-  const msgEl = document.createElement("div");
-  msgEl.className = "pc-unsupported-msg";
-  msgEl.textContent = "ProtoConsent only works on regular web pages (http/https)";
-  listEl.appendChild(msgEl);
-
-  // Disable profile selector
-  const profileBtn = document.getElementById("pc-profile-btn");
-  if (profileBtn) profileBtn.disabled = true;
-
-  // Hide stat bar and detail on unsupported pages
-  const countEl = document.getElementById("pc-blocked-count");
-  if (countEl) countEl.parentElement.style.display = "none";
-  const scopeEl = document.getElementById("pc-protection-scope");
-  if (scopeEl) scopeEl.style.display = "none";
-
-  updateHeaderControls();
+  if (listEl && !listEl.querySelector(".pc-unsupported-msg")) {
+    const msgEl = document.createElement("div");
+    msgEl.className = "pc-unsupported-msg";
+    msgEl.textContent = "ProtoConsent only works on regular web pages (http/https)";
+    listEl.prepend(msgEl);
+  }
 }
 
 // Simple UI error helper

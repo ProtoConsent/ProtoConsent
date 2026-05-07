@@ -806,6 +806,19 @@ body {
   cursor: not-allowed;
 }
 
+.pc-toggle-checkbox:disabled + .pc-purpose-header .pc-purpose-toggle {
+  cursor: not-allowed;
+}
+
+.pc-toggle-checkbox:disabled + .pc-purpose-header .pc-toggle-switch {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pc-toggle-checkbox:disabled + .pc-purpose-header .pc-toggle-label {
+  cursor: not-allowed;
+}
+
 .pc-purpose-item.is-required .pc-toggle-label {
   cursor: not-allowed;
   color: #6b7280;
