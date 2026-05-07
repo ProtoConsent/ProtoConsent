@@ -58,8 +58,9 @@ function getEnhancedStats() {
     if (epLists[id].bundled) continue;
     const catalogDef = epCatalog[id];
     let hasUpdate = false;
-    hasUpdate = catalogDef && catalogDef.version && epLists[id].version &&
-        catalogDef.version > epLists[id].version;
+    const catTS = catalogDef && (catalogDef.generated || catalogDef.version);
+    const localTS = epLists[id].generated || epLists[id].version;
+    hasUpdate = catTS && localTS && catTS > localTS;
     if (!hasUpdate) continue;
     if (CORE_IDS.has(id)) { coreUpdate = true; continue; }
     if (CMP_IDS.has(id)) { cmpUpdate = true; continue; }
@@ -1018,11 +1019,13 @@ function _renderEpListCard(listId) {
     stats.textContent = parts.join(" \u00b7 ");
     info.appendChild(stats);
 
-    if (listData.version && listDef.version && listDef.version > listData.version) {
+    const remoteTS = listDef && (listDef.generated || listDef.version);
+    const localTS = listData.generated || listData.version;
+    if (remoteTS && localTS && remoteTS > localTS) {
       const updateBadge = document.createElement("span");
       updateBadge.className = "ep-update-badge";
       updateBadge.textContent = "Update available";
-      updateBadge.title = "Remote version: " + listDef.version + " (installed: " + listData.version + ")";
+      updateBadge.title = "Remote: " + remoteTS + " (installed: " + localTS + ")";
       info.appendChild(updateBadge);
     }
   }

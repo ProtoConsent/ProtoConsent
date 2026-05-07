@@ -407,6 +407,7 @@ export function loadEnhancedListsCatalog(options) {
               source_name: src.name,
               fetch_url: CDN_REGIONAL_BASE + "regional_" + region + "_" + src.slug + "_" + type + ".json",
               version: src[type + "_version"] || null,
+              generated: src[type + "_generated"] || null,
               domain_count: type === "blocking" ? (src.blocking_domains || 0) : 0,
               path_rule_count: type === "blocking" ? (src.blocking_paths || 0) : 0,
               generic_count: type === "cosmetic" ? (src.cosmetic_generic || 0) : 0,
