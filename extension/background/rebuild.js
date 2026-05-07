@@ -34,12 +34,11 @@ import {
 import {
   loadBlocklistsConfig, loadPresetsConfig, loadPurposesConfig,
   loadEnhancedListsCatalog, loadBundledPathAttribution,
-  parseUrlFilterForAttribution,
 } from "./config-loader.js";
 import { updateCmpInjectionData } from "./cmp-injection.js";
-import { updateHotfixListener } from "./tracking.js";
 import { consumeCelPendingDownloads } from "./auto-refresh.js";
-import { buildEnhancedRulesIncremental, buildHotfixRulesIncremental, buildParamStripRulesIncremental } from "./rebuild-enhanced.js";
+import { buildEnhancedRulesIncremental, buildParamStripRulesIncremental } from "./rebuild-enhanced.js";
+import { buildHotfixRules } from "./rebuild-hotfix.js";
 
 // Main function: rebuild all DNR enforcement from current storage + blocklists.
 export async function rebuildAllDynamicRules() {
@@ -244,7 +243,7 @@ async function _rebuildCategoriesImpl(categories) {
 
     let hfResult = null;
     if (affectedRangeKeys.has("hotfix")) {
-      hfResult = await buildHotfixRulesIncremental();
+      hfResult = await buildHotfixRules();
       addRules = addRules.concat(hfResult.rules);
     }
 
@@ -254,14 +253,6 @@ async function _rebuildCategoriesImpl(categories) {
       addRules = addRules.concat(enhResult.rules);
       setDynamicEnhancedMap(enhResult.enhancedMap);
       setEnhancedReverseIndex(enhResult.reverseIndex);
-      // Merge hotfix path attribution entries if hotfix was also rebuilt
-      if (affectedRangeKeys.has("hotfix") && hfResult) {
-        for (const entry of hfResult.pathAttrEntries) {
-          let arr = enhResult.pathAttrIndex.get(entry.host);
-          if (!arr) { arr = []; enhResult.pathAttrIndex.set(entry.host, arr); }
-          arr.push({ prefix: entry.prefix, source: entry.source });
-        }
-      }
       setPathAttributionIndex(enhResult.pathAttrIndex);
     }
 
@@ -312,18 +303,6 @@ async function _rebuildCategoriesImpl(categories) {
     const enhancedExclude = undefined; // not needed for index-only rebuild
     const enhResult = await buildEnhancedRulesIncremental(enhancedListsMeta, consentLinkedIdsForIndex, enhancedExclude);
     setEnhancedReverseIndex(enhResult.reverseIndex);
-    // Merge hotfix path attribution
-    const hotfixData = await getEnhancedDataFromStorage("protoconsent_hotfix");
-    if (hotfixData?.pathRules?.length) {
-      for (const pr of hotfixData.pathRules) {
-        const p = parseUrlFilterForAttribution(pr.urlFilter);
-        if (p) {
-          let arr = enhResult.pathAttrIndex.get(p.hostname);
-          if (!arr) { arr = []; enhResult.pathAttrIndex.set(p.hostname, arr); }
-          arr.push({ prefix: p.prefix, source: "enhanced:protoconsent_hotfix" });
-        }
-      }
-    }
     setPathAttributionIndex(enhResult.pathAttrIndex);
   }
 
@@ -852,10 +831,9 @@ async function _rebuildAllDynamicRulesImpl() {
     }
     } // end can("whitelistOverrides")
 
-    // 4b. Hotfix allow rules: override static rulesets for zombie domains
-    const hotfixResult = await buildHotfixRulesIncremental();
+    // 4b. Hotfix safelist rules: override static rulesets for zombie domains
+    const hotfixResult = await buildHotfixRules();
     newRules = newRules.concat(hotfixResult.rules);
-    let hotfixDomainCount = hotfixResult.rules.length > 0 ? hotfixResult.rules[0].condition?.requestDomains?.length || 0 : 0;
 
     // 5. Enhanced Protection lists (dynamic block rules, priority 2)
     // CEL only activates lists whose category is a consent purpose (not security, cosmetic, cmp, etc.)
@@ -907,13 +885,6 @@ async function _rebuildAllDynamicRulesImpl() {
     newRules = newRules.concat(enhancedResult.rules);
     Object.assign(newEnhancedMap, enhancedResult.enhancedMap);
     setEnhancedReverseIndex(enhancedResult.reverseIndex);
-
-    // Add hotfix path attribution entries to the path attribution index
-    for (const entry of hotfixResult.pathAttrEntries) {
-      let arr = enhancedResult.pathAttrIndex.get(entry.host);
-      if (!arr) { arr = []; enhancedResult.pathAttrIndex.set(entry.host, arr); }
-      arr.push({ prefix: entry.prefix, source: entry.source });
-    }
     setPathAttributionIndex(enhancedResult.pathAttrIndex);
 
     // Enable/disable bundled external path rulesets alongside their domain rules
@@ -1118,9 +1089,8 @@ async function _rebuildAllDynamicRulesImpl() {
         cmpLists: Object.entries(enhancedListsMeta)
           .filter(([id, m]) => m.type === "cmp" && (m.enabled || consentLinkedListIds.has(id)))
           .map(([id]) => id),
-        hotfixDomainCount,
-        hotfixPathCount: hotfixResult.rules.filter(r => r.priority === 2 && r.condition?.urlFilter).length,
-        hotfixPathExceptionCount: hotfixResult.rules.filter(r => r.priority === 3 && r.condition?.urlFilter).length,
+        hotfixDomainCount: hotfixResult.domainCount,
+        hotfixExceptionCount: hotfixResult.exceptionCount,
         pathAttrIndexSize: enhancedResult.pathAttrIndex.size,
         ts: Date.now(),
       });

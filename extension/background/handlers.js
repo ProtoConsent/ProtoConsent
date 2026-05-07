@@ -268,13 +268,6 @@ const _listTypeHandlers = {
     if (!data.revocations || !Array.isArray(data.revocations))
       throw new Error("Invalid revoke format: missing revocations array");
     const domains = data.revocations.filter(d => typeof d === "string" && d.length > 0);
-    const pathRules = [];
-    if (Array.isArray(data.path_additions)) {
-      for (const pa of data.path_additions) {
-        if (pa && typeof pa.urlFilter === "string" && pa.urlFilter.length > 0)
-          pathRules.push({ urlFilter: pa.urlFilter });
-      }
-    }
     const pathExceptions = [];
     if (Array.isArray(data.path_exceptions)) {
       for (const pe of data.path_exceptions) {
@@ -287,13 +280,12 @@ const _listTypeHandlers = {
         }
       }
     }
-    if (!domains.length && !pathRules.length && !pathExceptions.length)
+    if (!domains.length && !pathExceptions.length)
       return { counts: { hotfixCount: 0 }, payload: null };
     const payload = { domains };
-    if (pathRules.length) payload.pathRules = pathRules;
     if (pathExceptions.length) payload.pathExceptions = pathExceptions;
     return {
-      counts: { hotfixCount: domains.length, pathRuleCount: pathRules.length, pathExceptionCount: pathExceptions.length },
+      counts: { hotfixCount: domains.length, pathExceptionCount: pathExceptions.length },
       payload,
       afterWrite: () => rebuildCategories(new Set(["enhanced"])),
     };

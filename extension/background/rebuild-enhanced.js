@@ -11,11 +11,9 @@ import {
   RULE_RANGES, BLOCK_RESOURCE_TYPES,
   bundledPathAttribution,
   can,
-  setHotfixDomainSet,
 } from "./state.js";
 import { getEnhancedDataFromStorage } from "./storage.js";
 import { parseUrlFilterForAttribution } from "./config-loader.js";
-import { updateHotfixListener } from "./tracking.js";
 
 class RangeOverflowError extends Error {
   constructor(rangeName, nextId) {
@@ -116,68 +114,6 @@ export async function buildEnhancedRulesIncremental(enhancedListsMeta, consentLi
   }
 
   return { rules, enhancedMap, reverseIndex, pathAttrIndex };
-}
-
-/**
- * Build hotfix rules from protoconsent_hotfix data.
- * Reads only the hotfix list from storage.
- *
- * @returns {{ rules, pathAttrEntries: Array<{host, prefix, source}> }}
- */
-export async function buildHotfixRulesIncremental() {
-  const rules = [];
-  let nextId = RULE_RANGES.hotfix.start;
-  const pathAttrEntries = [];
-
-  if (!can("ownBlocking")) {
-    setHotfixDomainSet(new Set());
-    updateHotfixListener();
-    return { rules, pathAttrEntries };
-  }
-
-  const hotfixData = await getEnhancedDataFromStorage("protoconsent_hotfix");
-
-  if (hotfixData?.domains?.length) {
-    nextIdInRange(nextId, "hotfix");
-    rules.push({ id: nextId++, priority: 3, action: { type: "allow" }, condition: { requestDomains: hotfixData.domains, resourceTypes: BLOCK_RESOURCE_TYPES } });
-    setHotfixDomainSet(new Set(hotfixData.domains));
-    if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix allow rule for", hotfixData.domains.length, "domains");
-  } else {
-    setHotfixDomainSet(new Set());
-  }
-
-  if (hotfixData?.pathRules?.length && can("enhancedDnr")) {
-    for (const pr of hotfixData.pathRules) {
-      if (!pr.urlFilter) continue;
-      nextIdInRange(nextId, "hotfix");
-      rules.push({ id: nextId++, priority: 2, action: { type: "block" }, condition: { urlFilter: pr.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES } });
-    }
-    if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix path block rules:", hotfixData.pathRules.length);
-    // Collect path attribution entries for hotfix
-    for (const pr of hotfixData.pathRules) {
-      const p = parseUrlFilterForAttribution(pr.urlFilter);
-      if (p) pathAttrEntries.push({ host: p.hostname, prefix: p.prefix, source: "enhanced:protoconsent_hotfix" });
-    }
-  }
-
-  if (hotfixData?.pathExceptions?.length && can("enhancedDnr")) {
-    for (const pe of hotfixData.pathExceptions) {
-      if (!pe.urlFilter) continue;
-      nextIdInRange(nextId, "hotfix");
-      const condition = { urlFilter: pe.urlFilter, resourceTypes: BLOCK_RESOURCE_TYPES };
-      if (Array.isArray(pe.initiatorDomains) && pe.initiatorDomains.length > 0) {
-        condition.initiatorDomains = pe.initiatorDomains;
-      } else if (pe.firstParty) {
-        const hostMatch = pe.urlFilter.match(/^\|\|([a-z0-9][a-z0-9.-]*\.[a-z]{2,})\//i);
-        if (hostMatch) condition.initiatorDomains = [hostMatch[1]];
-      }
-      rules.push({ id: nextId++, priority: 3, action: { type: "allow" }, condition });
-    }
-    if (DEBUG_RULES) console.log("ProtoConsent rebuild: hotfix path exception rules:", hotfixData.pathExceptions.length);
-  }
-
-  updateHotfixListener();
-  return { rules, pathAttrEntries };
 }
 
 /**
