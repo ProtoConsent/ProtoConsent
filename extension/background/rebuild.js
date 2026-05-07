@@ -263,15 +263,6 @@ async function _rebuildCategoriesImpl(categories) {
     });
   }
 
-  // Update enhanced reverse index and path attribution when enhanced data changed
-  // (only if not already done by the enhanced rebuild above)
-  if ((affectedRangeKeys.has("hotfix") && !affectedRangeKeys.has("enhanced"))) {
-    // Hotfix-only change: rebuild reverse index + path attribution incrementally
-    const enhResult = await buildEnhancedRulesIncremental(enhancedListsMeta, consentLinkedListIds, undefined);
-    setEnhancedReverseIndex(enhResult.reverseIndex);
-    setPathAttributionIndex(enhResult.pathAttrIndex);
-  }
-
   // Update static rulesets when enhanced or signals categories change
   if (affectedRangeKeys.has("enhanced") || affectedRangeKeys.has("paramStrip")) {
     const enableIds = [];
