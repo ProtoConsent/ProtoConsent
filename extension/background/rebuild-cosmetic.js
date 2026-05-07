@@ -125,7 +125,7 @@ export async function updateCosmeticInjection(enhancedListsMeta, permissiveSites
       id: COSMETIC_SCRIPT_ID,
       matches: ["<all_urls>"],
       excludeMatches: excludeMatches.length > 0 ? excludeMatches : undefined,
-      js: ["cosmetic-inject.js"],
+      js: ["content-scripts/cosmetic-inject.js"],
       runAt: "document_start",
       allFrames: true,
     }]);
