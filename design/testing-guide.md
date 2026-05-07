@@ -676,6 +676,29 @@ chrome.storage.local.get("enhancedLists", r => {
 
 Cosmetic filtering is also affected by the consent-enhanced link: since the list has `category: "ads"`, denying the Ads purpose with the consent link enabled auto-activates EasyList Cosmetic alongside the blocking EasyList.
 
+#### Element picker
+
+The element picker lets users hide individual page elements by clicking them. Hidden elements are stored permanently and survive page reloads.
+
+1. Expand the quick-toggle row in the popup (click the lifetime counter). The picker pill (eyedropper icon) should appear with a blue dot.
+2. Click the picker pill. The popup closes and a dark toolbar appears at the top of the page: "ProtoConsent: click an element to hide it".
+3. Hover over a page element. A blue highlight overlay follows the cursor and the toolbar shows a live selector preview.
+4. Click an element. It disappears immediately. The status line shows "1 hidden | last: .selector".
+5. Click another element. Counter increments to "2 hidden".
+6. Press Escape or click the Done button. The toolbar and highlight disappear.
+7. Reload the page. The hidden elements should remain hidden (persisted via cosmetic rebuild).
+8. Open Log > Cosmetic. User-picked selectors appear with a picker icon. Click the delete button on one, reload the page, and verify the element reappears.
+9. Disable cosmetic filtering via the quick-toggle. The picker pill should become disabled (greyed out, cursor not-allowed). Re-enable cosmetic, picker pill should become active again.
+10. Test on an iframe-heavy page: clicking an iframe shows a yellow warning "Will hide entire iframe, click again to confirm". A second click hides it.
+
+To verify stored user rules:
+
+```js
+chrome.storage.local.get("cosmeticUserRules", r => {
+  console.log('User rules:', JSON.stringify(r.cosmeticUserRules, null, 2));
+})
+```
+
 ### 13.7 Enhanced lists consent gate (sync)
 
 Remote fetching of enhanced lists is enabled by default (`dynamicListsConsent` in `chrome.storage.local`). The sync toggle is available in Purpose Settings.

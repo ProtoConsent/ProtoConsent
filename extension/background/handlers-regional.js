@@ -12,7 +12,7 @@ import {
   getEnhancedListsFromStorage, getEnhancedPresetFromStorage, withEnhancedStorageLock,
 } from "./storage.js";
 import { rebuildCategories } from "./rebuild.js";
-import { fetchEnhancedList } from "./handlers.js";
+import { fetchEnhancedList } from "./handlers-enhanced.js";
 
 let _regionalDebounceTimer = null;
 

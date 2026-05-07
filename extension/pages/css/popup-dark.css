@@ -445,6 +445,15 @@ html.pc-dark .pc-lt-pill .pc-lt-dot {
 html.pc-dark .pc-lt-pill.is-active .pc-lt-dot {
   background-color: #38a169;
 }
+html.pc-dark .pc-lt-pill.is-theme .pc-lt-dot {
+  background-color: #60a5fa;
+}
+html.pc-dark .pc-lt-pill.is-theme-light .pc-lt-dot {
+  background-color: #fbbf24;
+}
+html.pc-dark .pc-lt-pill.is-theme-dark .pc-lt-dot {
+  background-color: #94a3b8;
+}
 html.pc-dark .pc-enhanced-scope {
   color: #FFD43B;
 }

@@ -171,6 +171,7 @@ Hides ad containers and empty banners left after network-level blocking. Purely 
 - **Rebuild**: background compiles selectors into CSS strings stored locally (generic and per-domain)
 - **Injection**: a content script reads compiled CSS at page start and injects a `<style>` element
 - **Validation** (3 levels): converter rejects selectors containing `{`/`}`, background re-filters at compile time, content script re-filters at runtime
+- **Element picker**: users can click page elements to hide them permanently. An on-demand content script overlays a highlight, generates a CSS selector, validates it, and stores it per domain. User-picked rules are merged with list-based selectors during cosmetic rebuild and persist across page reloads. Removable from the Log > Cosmetic view.
 
 ## 3. Data model
 
