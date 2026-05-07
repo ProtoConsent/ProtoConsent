@@ -131,7 +131,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await runMigrations();
   }
 
-  chrome.runtime.setUninstallURL("https://forms.gle/xqzyXKS1jxTJCMzz6");
+  chrome.runtime.setUninstallURL("https://tally.so/r/OD8M7K");
 
   // Load bundled cosmetic data if not yet downloaded remotely
   await initBundledCosmeticData();
