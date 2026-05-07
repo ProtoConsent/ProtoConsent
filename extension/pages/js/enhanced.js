@@ -17,6 +17,7 @@ let epRegionalLanguages = [];
 let _epFocusListId = null; // list to refocus after re-render
 let _celAutoFetchInProgress = false;
 let _fetchPollTimer = null;
+let _batchInProgress = false;
 
 function setHeaderDownloadIndicator(active) {
   const el = document.getElementById("pc-download-indicator");
@@ -31,6 +32,8 @@ function setHeaderDownloadIndicator(active) {
 }
 
 function _pollActiveFetches() {
+  // Don't turn off the spinner while a UI-initiated batch is running
+  if (_batchInProgress) return;
   chrome.runtime.sendMessage({ type: "PROTOCONSENT_ENHANCED_GET_FETCH_COUNT" }, (resp) => {
     if (chrome.runtime.lastError || !resp) return;
     if (resp.activeFetches === 0) setHeaderDownloadIndicator(false);
@@ -1121,6 +1124,7 @@ function _downloadEnhancedBatch(btnEl, notDownloaded) {
 
   const startDownloads = () => {
     const total = notDownloaded.length;
+    _batchInProgress = true;
     setHeaderDownloadIndicator(true);
     if (btnEl) {
       btnEl.disabled = true;
@@ -1217,6 +1221,7 @@ function _downloadEnhancedBatch(btnEl, notDownloaded) {
         }
         if (completed >= total) {
           _celAutoFetchInProgress = false;
+          _batchInProgress = false;
           setHeaderDownloadIndicator(false);
           if (btnEl) {
             btnEl.disabled = false;

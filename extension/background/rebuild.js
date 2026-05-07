@@ -78,11 +78,11 @@ export async function rebuildCategories(categories) {
   try {
     await _rebuildCategoriesImpl(categories);
   } catch (e) {
-    console.warn("ProtoConsent: selective rebuild failed, falling back to full:", e.message);
+    if (DEBUG_RULES) console.warn("ProtoConsent: selective rebuild failed, falling back to full:", e.message);
     try {
       await _rebuildAllDynamicRulesImpl();
     } catch (e2) {
-      console.error("ProtoConsent: full rebuild fallback also failed:", e2.message);
+      if (DEBUG_RULES) console.error("ProtoConsent: full rebuild fallback also failed:", e2.message);
     }
   } finally {
     setRebuildRunning(false);
@@ -856,7 +856,7 @@ async function _getConsentLinkedListIds(enhancedListsMeta, globalPurposes) {
 
 async function _rebuildAllDynamicRulesImpl() {
   if (!chrome.declarativeNetRequest?.updateDynamicRules) {
-    console.warn("ProtoConsent: declarativeNetRequest not available in this browser.");
+    if (DEBUG_RULES) console.warn("ProtoConsent: declarativeNetRequest not available in this browser.");
     return;
   }
 
@@ -1693,8 +1693,10 @@ async function _rebuildAllDynamicRulesImpl() {
       setDynamicWhitelistMap(newWhitelistMap);
       setDynamicEnhancedMap(newEnhancedMap);
     } catch (e) {
-      console.error("updateDynamicRules failed:", e.message, "rules:", newRules.length);
-      if (DEBUG_RULES) lastRebuildDebug.error = e.message;
+      if (DEBUG_RULES) {
+        console.error("updateDynamicRules failed:", e.message, "rules:", newRules.length);
+        lastRebuildDebug.error = e.message;
+      }
     }
     try {
       await chrome.declarativeNetRequest.updateEnabledRulesets({
@@ -1702,9 +1704,11 @@ async function _rebuildAllDynamicRulesImpl() {
         disableRulesetIds: disableIds,
       });
     } catch (e) {
-      console.error("updateEnabledRulesets failed:", e.message,
-        "enable:", enableIds, "disable:", disableIds);
-      if (DEBUG_RULES) lastRebuildDebug.rulesetError = e.message;
+      if (DEBUG_RULES) {
+        console.error("updateEnabledRulesets failed:", e.message,
+          "enable:", enableIds, "disable:", disableIds);
+        lastRebuildDebug.rulesetError = e.message;
+      }
     }
 
     await updateGPCContentScript(rulesByDomain, presets, defaultConfig, globalPurposes, gpcEnabled);
@@ -1712,7 +1716,7 @@ async function _rebuildAllDynamicRulesImpl() {
     await updateCmpInjectionData(globalPurposes, gpcEnabled);
 
   } catch (e) {
-    console.error("ProtoConsent: failed to rebuild dynamic rules:", e);
+    if (DEBUG_RULES) console.error("ProtoConsent: failed to rebuild dynamic rules:", e);
   }
 }
 
@@ -1765,7 +1769,7 @@ async function updateGPCContentScript(rulesByDomain, presets, defaultConfig, glo
     }
 
   } catch (e) {
-    console.error("ProtoConsent: failed to update GPC content script:", e);
+    if (DEBUG_RULES) console.error("ProtoConsent: failed to update GPC content script:", e);
   }
 }
 
@@ -1888,6 +1892,6 @@ async function updateCosmeticInjection(enhancedListsMeta, enhancedData, permissi
     lastRebuildDebug.cosmeticDomainCount = Object.keys(cosmeticDomains).length;
 
   } catch (e) {
-    console.error("ProtoConsent: failed to update cosmetic injection:", e);
+    if (DEBUG_RULES) console.error("ProtoConsent: failed to update cosmetic injection:", e);
   }
 }

@@ -99,7 +99,7 @@ export async function handleBridgeQuery(message) {
 let _activeFetchCount = 0;
 export function getActiveFetchCount() { return _activeFetchCount; }
 
-export function fetchEnhancedList(listId) {
+export function fetchEnhancedList(listId, listsCache) {
   _activeFetchCount++;
   return loadEnhancedListsCatalog().then(async (catalog) => {
     try {
@@ -114,7 +114,7 @@ export function fetchEnhancedList(listId) {
         ? fetchUrl.replace("https://cdn.jsdelivr.net/gh/ProtoConsent/data@main/", "https://raw.githubusercontent.com/ProtoConsent/data/main/")
         : null;
       // Skip fetch if catalog metadata matches what we already have stored
-      const lists = await getEnhancedListsFromStorage();
+      const lists = listsCache || await getEnhancedListsFromStorage();
       const existing = lists[listId];
       if (existing) {
         const catalogTS = listDef.generated || listDef.version;
@@ -140,7 +140,12 @@ export function fetchEnhancedList(listId) {
           const catalogTS = listDef.generated || listDef.version;
           const downloadedTS = data.generated || data.version;
           if (catalogTS && downloadedTS && catalogTS > downloadedTS) {
-            try { data = await tryFetch(fallbackUrl); } catch (_) { /* keep primary */ }
+            const ctrl2 = new AbortController();
+            const tid2 = setTimeout(() => ctrl2.abort(), 15000);
+            try {
+              data = await fetch(fallbackUrl, { credentials: "omit", signal: ctrl2.signal, cache: "no-store" }).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+            } catch (_) { /* keep primary */ }
+            clearTimeout(tid2);
           }
         }
         clearTimeout(timeoutId);

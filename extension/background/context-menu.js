@@ -8,6 +8,7 @@ import {
 } from "./state.js";
 import { withWhitelist, isValidHostname } from "./storage.js";
 import { rebuildAllDynamicRules, rebuildCategories } from "./rebuild.js";
+import { DEBUG_RULES } from "./config-bridge.js";
 import { resetBehavioralCounters } from "./blocker-detection.js";
 
 const MENU_MODE       = "pc-mode";
@@ -26,7 +27,7 @@ function setupMenus() {
     const create = (props) => {
       chrome.contextMenus.create(props, () => {
         if (chrome.runtime.lastError) {
-          console.warn("[ProtoConsent] contextMenus.create failed:", props.id, chrome.runtime.lastError.message);
+          if (DEBUG_RULES) console.warn("[ProtoConsent] contextMenus.create failed:", props.id, chrome.runtime.lastError.message);
         }
       });
     };

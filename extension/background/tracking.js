@@ -17,7 +17,7 @@ import {
   pathOnlyUrlFilters,
   hotfixDomainSet, tabHotfixHits,
 } from "./state.js";
-import { getBrowser } from "./config-bridge.js";
+import { getBrowser, DEBUG_RULES } from "./config-bridge.js";
 import { resolvePurposesFromHostname, resolvePurposesFromUrl } from "./config-loader.js";
 import { guessHeuristicPurpose } from "./heuristic.js";
 import { scheduleSessionPersist, updateBadgeForTab } from "./session.js";
@@ -137,7 +137,7 @@ const BLOCKED_ERRORS = new Set([
     { urls: ["<all_urls>"] }
   );
   } catch (e) {
-    console.warn("ProtoConsent: onErrorOccurred listener not available:", e.message);
+    if (DEBUG_RULES) console.warn("ProtoConsent: onErrorOccurred listener not available:", e.message);
   }
 
   // Standard GPC tracking: webRequest.onSendHeaders
@@ -194,7 +194,7 @@ const BLOCKED_ERRORS = new Set([
     ["requestHeaders"]
   );
   } catch (e) {
-    console.warn("ProtoConsent: onSendHeaders listener not available:", e.message);
+    if (DEBUG_RULES) console.warn("ProtoConsent: onSendHeaders listener not available:", e.message);
   }
 
   // Whitelist hit tracking: count successful requests to whitelisted domains
@@ -216,7 +216,7 @@ const BLOCKED_ERRORS = new Set([
       { urls: ["<all_urls>"] }
     );
   } catch (e) {
-    console.warn("ProtoConsent: onCompleted listener not available:", e.message);
+    if (DEBUG_RULES) console.warn("ProtoConsent: onCompleted listener not available:", e.message);
   }
 
 // Param strip detection via webRequest.onBeforeRedirect.
@@ -270,7 +270,7 @@ if (getBrowser() === "firefox") {
       { urls: ["<all_urls>"], types: ["main_frame", "sub_frame"] }
     );
   } catch (e) {
-    console.warn("ProtoConsent: onBeforeRedirect listener not available:", e.message);
+    if (DEBUG_RULES) console.warn("ProtoConsent: onBeforeRedirect listener not available:", e.message);
   }
 }
 
@@ -381,7 +381,7 @@ export function updateHotfixListener() {
   try {
     chrome.webRequest.onCompleted.addListener(_hotfixListener, { urls });
   } catch (e) {
-    console.warn("ProtoConsent: hotfix onCompleted listener failed:", e.message);
+    if (DEBUG_RULES) console.warn("ProtoConsent: hotfix onCompleted listener failed:", e.message);
     _hotfixListener = null;
   }
 }

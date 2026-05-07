@@ -235,7 +235,7 @@ export async function loadPresetsConfig() {
     setPresetsConfig(data);
     return data;
   } catch (e) {
-    console.error("Failed to load presets.json:", e);
+    if (DEBUG_RULES) console.error("Failed to load presets.json:", e);
     return {};
   }
 }
@@ -258,7 +258,7 @@ export async function loadPurposesConfig() {
 
     return data;
   } catch (e) {
-    console.error("Failed to load purposes.json:", e);
+    if (DEBUG_RULES) console.error("Failed to load purposes.json:", e);
     return {};
   }
 }
