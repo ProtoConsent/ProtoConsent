@@ -19,7 +19,7 @@
   <img src="https://img.shields.io/github/license/ProtoConsent/ProtoConsent" alt="GPL-3.0+">
   <img src="https://img.shields.io/badge/manifest-v3-green" alt="Manifest V3">
   <img src="https://img.shields.io/badge/chromium-supported-brightgreen?logo=googlechrome&logoColor=white" alt="Chromium">
-  <img src="https://img.shields.io/badge/firefox-in_review-orange?logo=firefox&logoColor=white" alt="Firefox in review">
+  <a href="https://addons.mozilla.org/addon/protoconsent/"><img src="https://img.shields.io/badge/firefox-available-brightgreen?logo=firefox&logoColor=white" alt="Firefox available"></a>
 </p>
 
 ProtoConsent is a browser extension that lets you control how websites may use your data. You set your preferences once - by purpose - and the extension enforces them across every site you visit.
@@ -31,14 +31,14 @@ No central server, no tracking, no sharing of personal data. Everything stays in
 **Project website:** <https://protoconsent.org> · **Live demo:** <https://demo.protoconsent.org>
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/protoconsent/dkcdkdcclhofocmkecccmikkfmfgfdlb"><img src="design/assets/icons/chrome-badge.png" alt="Available in the Chrome Web Store" height="56"></a>
+  <a href="https://chromewebstore.google.com/detail/protoconsent/dkcdkdcclhofocmkecccmikkfmfgfdlb"><img src="design/assets/icons/chrome-badge.png" alt="ProtoConsent available in the Chrome Web Store" height="56"></a>
   &nbsp;
-  <a href="https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo"><img src="design/assets/icons/edge-addon.png" alt="Get it from Microsoft Edge" height="56"></a>
+  <a href="https://addons.mozilla.org/addon/protoconsent/"><img src="design/assets/icons/firefox-addon.svg" alt="ProtoConsent available on Firefox Add-ons" height="56"></a>
+  &nbsp;
+  <a href="https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo"><img src="design/assets/icons/edge-addon.png" alt="ProtoConsent available in Microsoft Edge Add-ons" height="56"></a>
 </p>
 <p align="center">
   <img src="design/assets/icons/brave.svg" alt="Brave" height="28"> <em>Brave via Chrome Web Store</em>
-  &nbsp;&nbsp;
-  <img src="design/assets/icons/firefox-logo.svg" alt="Firefox" height="28"> <em>Mozilla Firefox - in review</em>
   &nbsp;&nbsp;
   <img src="design/assets/icons/opera.svg" alt="Opera" height="18"> <em>Opera Addons - in review</em>
 </p>
@@ -59,7 +59,7 @@ For a detailed feature breakdown, see [product-overview.md](design/product-overv
 
 ## Getting started
 
-ProtoConsent is available on the [Chrome Web Store](https://chromewebstore.google.com/detail/protoconsent/dkcdkdcclhofocmkecccmikkfmfgfdlb) and the [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo). To try the latest development version:
+ProtoConsent is available on the [Chrome Web Store](https://chromewebstore.google.com/detail/protoconsent/dkcdkdcclhofocmkecccmikkfmfgfdlb), [Firefox Add-ons](https://addons.mozilla.org/addon/protoconsent/), and the [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/protoconsent/djghmcahfjgmeiocpgkdgengofconfoo). To try the latest development version:
 
 1. Clone this repository.
 2. Open `chrome://extensions/` (or `edge://extensions/`) and enable **Developer mode**.

@@ -68,7 +68,7 @@ For the full technical architecture, see [architecture.md](architecture.md).
 
 ## 5. Roadmap
 
-**Current focus:** Per-source regional filter architecture, consent receipt export, and ecosystem outreach (pilot sites publishing declarations). Chrome, Edge, and Firefox published; Opera in review.
+**Current focus:** Consent receipt export, and ecosystem outreach (pilot sites publishing declarations). Chrome, Firefox, and Edge published; Opera in review.
 
 **Planned:** Internationalisation, protocol formalisation (the protocol is currently a working draft; formal standardisation is a long-term goal pending real-world adoption).
 

@@ -326,7 +326,7 @@ New purposes can be added as fields in the site rule without breaking existing p
 
 The inter-extension provider API (§12) is a concrete example: other extensions can query ProtoConsent's consent state without any coupling to its internal data model.
 
-Firefox support is available (submitted to Mozilla Add-ons, in review). The extension architecture (popup, background, local storage, enforcement) maps directly to Firefox's WebExtensions API, with adaptations in manifest format (`browser_specific_settings`, webext polyfills), DNR regex chunking (Firefox limits regex complexity per rule), and side panel replacement (Firefox does not support `chrome.sidePanel`). The same popup UI, data model, and SDK work across browsers.
+Firefox support is available (published on [Mozilla Add-ons](https://addons.mozilla.org/addon/protoconsent/)). ProtoConsent keeps the same core model and enforcement flow across browsers, and applies compatibility guards where browser APIs differ.
 
 The optional SDK and purpose-signalling protocol are documented layers on top of the extension, not hard dependencies. Websites can adopt them at their own pace while the extension continues to work on its own. This lets others adopt parts of ProtoConsent independently.
 
