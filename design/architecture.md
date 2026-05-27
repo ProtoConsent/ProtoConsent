@@ -14,6 +14,14 @@ The extension provides a popup interface to manage profiles and purposes per sit
   - [1. Overview](#1-overview)
   - [Contents](#contents)
   - [2. Components](#2-components)
+    - [2.1 Popup UI](#21-popup-ui)
+    - [2.2 Background script (service worker)](#22-background-script-service-worker)
+    - [2.3 Local storage](#23-local-storage)
+    - [2.4 Enforcement (declarativeNetRequest + GPC)](#24-enforcement-declarativenetrequest--gpc)
+    - [2.5 Content scripts](#25-content-scripts)
+    - [2.6 SDK and inter-extension API](#26-sdk-and-inter-extension-api)
+    - [2.7 Extension pages](#27-extension-pages)
+    - [2.8 Cosmetic filtering](#28-cosmetic-filtering)
   - [3. Data model](#3-data-model)
   - [4. Main flows](#4-main-flows)
     - [Flow 1: Settings change and DNR rebuild](#flow-1-settings-change-and-dnr-rebuild)
@@ -34,7 +42,8 @@ The extension provides a popup interface to manage profiles and purposes per sit
     - [Path‑domain filtering in block overrides](#pathdomain-filtering-in-block-overrides)
   - [9. Extensibility](#9-extensibility)
   - [10. Global Privacy Control (GPC)](#10-global-privacy-control-gpc)
-    - [Relation to the GPC specification](#relation-to-the-gpc-specification)
+      - [GPC signal derivation](#gpc-signal-derivation)
+      - [Relation to the GPC specification](#relation-to-the-gpc-specification)
   - [11. Site declaration behaviour](#11-site-declaration-behaviour)
   - [12. Inter-extension provider API](#12-inter-extension-provider-api)
   - [13. CMP auto-response and banner observation](#13-cmp-auto-response-and-banner-observation)
@@ -336,23 +345,23 @@ ProtoConsent sends the [GPC signal](https://globalprivacycontrol.org/) condition
 
 Each purpose has a GPC trigger flag. When any purpose marked as a GPC trigger is denied for a given site, the extension activates GPC for that site:
 
+
 | Purpose | Triggers GPC | Rationale |
-| --- | --- | --- |
-| functional | No | Core site functionality; denying it does not imply a privacy opt-out. |
-| analytics | No | Site-internal measurement; typically first-party and not covered by GPC's opt-out scope. |
-| ads | Yes | Advertising and remarketing involve cross-site data sharing that GPC was designed to signal against. |
-| personalization | No | User-facing content adaptation; does not inherently involve cross-site tracking. |
-| third_parties | Yes | Data sharing with third parties is a core opt-out scenario for GPC. |
-| advanced_tracking | Yes | Cross-site fingerprinting and device tracking; GPC directly applies. |
+| :--- | :--- | :--- |
+| **functional** | No | Core site functionality; denying it does not imply a privacy opt-out. |
+| **analytics** | No | Site-internal measurement; typically first-party or compliant, and not covered by GPC's opt-out scope. |
+| **ads** | Yes | Advertising and remarketing involve cross-site data sharing that GPC was designed to signal against. |
+| **personalization**| No | User-facing content adaptation; does not inherently involve cross-site tracking. |
+| **third_parties** | Yes | Data sharing with third parties is a core opt-out scenario for GPC. |
+| **advanced_tracking**| Yes | Cross-site fingerprinting and device tracking; GPC directly applies. |
 
 When GPC is active for a site, two signals are sent:
+1. **Sec-GPC: 1 HTTP header**: Injected via `declarativeNetRequest` `modifyHeaders` rules on outgoing requests to the site's domain.
+2. **navigator.globalPrivacyControl = true**: Set via a MAIN-world content script registered at runtime.
 
-1. **`Sec-GPC: 1` HTTP header** - injected via declarativeNetRequest `modifyHeaders` rules on outgoing requests to the site's domain.
-2. **`navigator.globalPrivacyControl = true`** - set via a MAIN-world content script registered at runtime.
+When GPC is not active, neither signal is sent. There is no `Sec-GPC: 0`. The absence of the header means no preference is expressed.
 
-When GPC is not active, neither signal is sent. There is no `Sec-GPC: 0`: absence of the header means no preference expressed.
-
-### GPC signal derivation
+#### GPC signal derivation
 
 ```mermaid
 flowchart TB
@@ -373,20 +382,18 @@ flowchart TB
 ```
 
 The extension maintains up to three dynamic DNR rules for GPC:
+* **Global GPC rule (priority 1)**: Sends `Sec-GPC: 1` to all sites when the default profile triggers it.
+* **Per-site add rule (priority 2)**: Adds GPC for specific sites whose custom profile triggers it, when the global rule does not apply.
+* **Per-site remove rule (priority 2)**: Suppresses GPC for specific sites whose custom profile allows all GPC-triggering purposes, overriding the global rule.
 
-- **Global GPC rule** (priority 1): sends `Sec-GPC: 1` to all sites when the default profile triggers it.
-- **Per-site add rule** (priority 2): adds GPC for specific sites whose custom profile triggers it, when the global rule does not apply.
-- **Per-site remove rule** (priority 2): suppresses GPC for specific sites whose custom profile allows all GPC-triggering purposes, overriding the global rule.
+Per-site GPC overrides use `requestDomains` (the destination URL), not `initiatorDomains` (the page making the request). This means that trusting a site (for example, allowing all purposes on a specific domain) removes the GPC signal from requests to that domain. However, third-party tracking scripts embedded on that page will still carry the global GPC signal if they belong to external ad networks or cross-site trackers. The same applies to cross-origin iframes: an embedded third-party video framework on a trusted page still receives GPC from the global rule.
 
-Per-site GPC overrides use `requestDomains` (the destination URL), not `initiatorDomains` (the page making the request). This means that trusting a site - for example allowing all purposes on elpais.com - removes the GPC signal from requests *to* elpais.com, but third-party requests *from* elpais.com to domains like google-analytics.com still carry the global GPC signal. The same applies to cross-origin iframes: an iframe from youtube.com embedded on a trusted elpais.com page still receives GPC from the global rule.
+Users can disable GPC entirely via a global toggle in Purpose Settings. When turned off, no GPC headers or content scripts are generated regardless of purpose state.
 
-Users can disable GPC entirely via a global toggle in Purpose Settings; when off, no GPC headers or content scripts are generated regardless of purpose state.
+#### Relation to the GPC specification
+The [GPC specification](https://privacycg.github.io/gpc-spec/) defines GPC as a binary signal: the user either expresses a preference to opt out of sale or sharing, or does not. ProtoConsent respects this by sending `Sec-GPC: 1` or nothing.
 
-### Relation to the GPC specification
-
-The [GPC specification](https://privacycg.github.io/gpc-spec/) defines GPC as a binary signal: the user either expresses a preference to opt out of sale/sharing, or does not. ProtoConsent respects this: it sends `Sec-GPC: 1` or nothing.
-
-The difference is in *when* the signal is sent. Most implementations treat GPC as a global preference (always on or always off). ProtoConsent derives the signal from the user's purpose‑level decisions, making it conditional per site. This is compatible with the spec - the spec does not require the signal to be global - but it extends the practical semantics: the GPC signal reflects a structured privacy position, not a blanket opt‑out.
+The difference is in when the signal is sent. Most implementations treat GPC as a permanent global choice (always on or always off). ProtoConsent derives the signal from the user's purpose choices, making it conditional per site. This is fully compatible with the specification, which does not require the signal to be global. It offers a practical way to handle compliance under frameworks like the EU's Digital Omnibus (Art. 88b) without forcing a total blackout of compliant analytics.
 
 ## 11. Site declaration behaviour
 
