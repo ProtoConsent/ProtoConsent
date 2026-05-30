@@ -36,6 +36,7 @@ import { rebuildAllDynamicRules, rebuildCategories } from "./rebuild.js";
 import { decodeCmpCookies, decodeCmpStorage } from "./cmp-cookie-decode.js";
 import { scheduleSessionPersist } from "./session.js";
 import { getBlockerDetectionState, resetBehavioralCounters, dismissBlockerDetection, isBrave } from "./blocker-detection.js";
+import { getErrorLog, clearErrorLog } from "./error-log.js";
 
 // Handle a bridge query from the content script.
 export async function handleBridgeQuery(message) {
@@ -502,6 +503,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           pathOnlyPatterns: pathOnlyUrlFilters.size,
           pathAttrIndexSize: pathAttributionIndex.size,
         };
+        debugData.errors = getErrorLog();
         sendResponse(debugData);
       }).catch(() => sendResponse(debugData));
     };
@@ -537,6 +539,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       })
       .then(data => sendResponse({ data: data || null }))
       .catch(() => sendResponse({ data: null }));
+    return true;
+  }
+
+  // Popup requests clearing the internal error log
+  if (message.type === "PROTOCONSENT_CLEAR_ERRORS") {
+    clearErrorLog();
+    sendResponse({ ok: true });
     return true;
   }
 

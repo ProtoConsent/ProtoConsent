@@ -6,6 +6,8 @@
 // Compares CMP consent vs user-configured purposes to detect conflicts.
 // Also decodes localStorage-based CMP consent (Usercentrics, CCM19, etc.).
 
+import { logError } from "./error-log.js";
+
 // Per-CMP decoders. Each returns { [purpose]: bool } or null on failure.
 const DECODERS = {
   onetrust(raw) {
@@ -131,8 +133,11 @@ export function decodeCmpCookies(cookieDetected, userPurposes) {
 
       const conflicts = findConflicts(decoded, userPurposes);
       results.push({ cmpId, cookieName, decoded, conflicts });
-    } catch (_) {
-      // Decoder threw - skip
+    } catch (e) {
+      // Decoder threw on a malformed value. Log only the CMP and the error
+      // TYPE, never the native message: JSON.parse errors can embed a
+      // fragment of the raw cookie, which must not reach the internal log.
+      logError("cmp-decode:" + decoderName, e && e.name ? e.name : "decode failed");
     }
   }
 

@@ -12,6 +12,7 @@ import "./background/state.js";
 // 2. Session restore (depends on state)
 import { restoreTabDataFromSession } from "./background/session.js";
 import { setSessionRestoreReady } from "./background/state.js";
+import { restoreErrorLog } from "./background/error-log.js";
 
 // 3. Config loaders (depends on state)
 import { loadBlocklistsConfig } from "./background/config-loader.js";
@@ -41,6 +42,9 @@ import "./background/context-menu.js";
 // Restore persisted tab data from session storage on every SW load.
 // Store promise so message handlers can await it before reading tab data.
 setSessionRestoreReady(restoreTabDataFromSession());
+
+// Restore the internal error log so it survives service-worker restarts.
+restoreErrorLog();
 
 // Start loading blocklists early so the reverse hostname index is ready
 // when the first onErrorOccurred event arrives.

@@ -219,7 +219,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     // Dynamic lists catalog
     if (bg) {
       const consent = bg.dynamicListsConsent ? "on" : "off";
-      lines.push("-- dynamic lists: consent " + consent + " --");
+      lines.push("— dynamic lists: consent " + consent + " —");
       lines.push("  source: " + (bg.catalogSource || "none"));
       if (bg.catalogLastFetched) {
         lines.push("  last load: " + new Date(bg.catalogLastFetched).toISOString());
@@ -238,7 +238,7 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     // Consent-Enhanced link
     if (bg) {
       const cel = bg.consentEnhancedLink ? "on" : "off";
-      lines.push("-- consent-enhanced link: " + cel + " --");
+      lines.push("— consent-enhanced link: " + cel + " —");
       if (bg.consentLinkedListIds && bg.consentLinkedListIds.length) {
         lines.push("  linked lists: " + bg.consentLinkedListIds.join(", "));
       } else {
@@ -316,17 +316,25 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
           if (chrome.runtime.lastError) { void chrome.runtime.lastError; }
           if (resp && resp.cmp) {
             const c = resp.cmp;
-            const cmpLines = [];
-            cmpLines.push("— CMP injection (this tab) —");
-            cmpLines.push("  domain: " + c.domain);
-            cmpLines.push("  matched CMPs: " + c.cmpIds.join(", "));
-            cmpLines.push("  cookies: " + c.cookieCount);
-            cmpLines.push("  selectors: " + c.selectorCount);
-            cmpLines.push("  scroll unlock: " + (c.scrollUnlock ? "yes" : "no"));
-            cmpLines.push("  timestamp: " + new Date(c.ts).toLocaleTimeString());
-            cmpLines.push("");
-            const pre = document.querySelector("#pc-log-debug");
-            if (pre) pre.textContent += "\n" + cmpLines.join("\n");
+            chrome.storage.local.get(["cmpAutoResponse", "cmpCookieInjectionEnabled"], (r) => {
+              const masterOn = r.cmpAutoResponse !== false;
+              const injectionOn = r.cmpCookieInjectionEnabled === true;
+              const notes = [];
+              if (!masterOn) notes.push("master switch off");
+              if (!injectionOn) notes.push("cookie injection off");
+              const suffix = notes.length ? " (" + notes.join(", ") + ")" : "";
+              const cmpLines = [];
+              cmpLines.push("— CMP injection (this tab)" + suffix + " —");
+              cmpLines.push("  domain: " + c.domain);
+              cmpLines.push("  matched CMPs: " + c.cmpIds.join(", "));
+              cmpLines.push("  cookies: " + c.cookieCount);
+              cmpLines.push("  selectors: " + c.selectorCount);
+              cmpLines.push("  scroll unlock: " + (c.scrollUnlock ? "yes" : "no"));
+              cmpLines.push("  timestamp: " + new Date(c.ts).toLocaleTimeString());
+              cmpLines.push("");
+              const pre = document.querySelector("#pc-log-debug");
+              if (pre) pre.textContent += "\n" + cmpLines.join("\n");
+            });
           }
         });
         // CMP detection (CSS detectors + cookie observation)
@@ -466,6 +474,19 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
     } else {
       lines.push("— CNAME cloaking: not loaded" + (cnameLoadDiag ? " (" + cnameLoadDiag + ")" : "") + " —");
     }
+
+    const errs = bg && Array.isArray(bg.errors) ? bg.errors : [];
+    lines.push("");
+    if (errs.length) {
+      lines.push("— recent errors (" + errs.length + ") —");
+      for (const e of errs) {
+        const ts = new Date(e.t).toLocaleTimeString();
+        lines.push("  [" + ts + "] " + e.scope + ": " + e.msg);
+      }
+    } else {
+      lines.push("— recent errors: none —");
+    }
+    lines.push("");
 
     content.textContent = lines.join("\n");
 

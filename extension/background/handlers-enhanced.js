@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { isRegionalEntry } from "./config-bridge.js";
+import { logError } from "./error-log.js";
 import { lastConsentLinkedListIds, lastCelPendingDownload } from "./state.js";
 import {
   getEnhancedListsFromStorage, getEnhancedPresetFromStorage,
@@ -91,13 +92,16 @@ export function fetchEnhancedList(listId, listsCache) {
         return _storeEnhancedListData(listId, listDef, data);
       } catch (err) {
         clearTimeout(timeoutId);
-        return { ok: false, error: err.name === "AbortError" ? "Download timed out" : err.message };
+        const msg = err.name === "AbortError" ? "Download timed out" : err.message;
+        logError("list-fetch:" + listId, msg);
+        return { ok: false, error: msg };
       }
     } finally {
       _activeFetchCount = Math.max(0, _activeFetchCount - 1);
     }
   }).catch(err => {
     _activeFetchCount = Math.max(0, _activeFetchCount - 1);
+    logError("list-catalog", err);
     return { ok: false, error: err.message || "catalog load failed" };
   });
 }

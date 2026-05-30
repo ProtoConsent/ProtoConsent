@@ -1,4 +1,4 @@
-// ProtoConsent browser extension
+﻿// ProtoConsent browser extension
 // Copyright (C) 2026 ProtoConsent contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -46,6 +46,15 @@ function initSupportSection() {
 			}).catch(() => {
 				copyBtn.textContent = 'Failed';
 				copyTimer = setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+			});
+		});
+	}
+
+	const clearBtn = document.getElementById('ps-troubleshoot-clear-errors');
+	if (clearBtn && pre) {
+		clearBtn.addEventListener('click', () => {
+			chrome.runtime.sendMessage({ type: 'PROTOCONSENT_CLEAR_ERRORS' }, () => {
+				loadTroubleshootInfo(pre);
 			});
 		});
 	}
@@ -212,6 +221,18 @@ function loadTroubleshootInfo(pre) {
 			}
 			lines.push('');
 		}
+
+		const errs = Array.isArray(bg.errors) ? bg.errors : [];
+		if (errs.length) {
+			lines.push('recent errors (' + errs.length + '):');
+			for (const e of errs) {
+				const ts = new Date(e.t).toLocaleTimeString();
+				lines.push('  [' + ts + '] ' + e.scope + ': ' + e.msg);
+			}
+		} else {
+			lines.push('recent errors: none');
+		}
+		lines.push('');
 
 		pre.textContent = lines.join('\n');
 	});
