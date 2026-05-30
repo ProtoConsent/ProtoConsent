@@ -7,6 +7,7 @@
 // identified by catalog entries with a `region` field.
 
 import { isRegionalEntry, DEBUG_RULES } from "./config-bridge.js";
+import { logError } from "./error-log.js";
 import { loadEnhancedListsCatalog } from "./config-loader.js";
 import {
   getEnhancedListsFromStorage, getEnhancedPresetFromStorage, withEnhancedStorageLock,
@@ -81,7 +82,7 @@ export function initRegionalStorageListener() {
       // Fetch entries that don't exist yet (after lock released)
       if (toFetch.length > 0 && (preset === "basic" || preset === "full")) {
         for (const id of toFetch) {
-          fetchEnhancedList(id).catch(() => {});
+          fetchEnhancedList(id).catch((e) => logError("regional-fetch:" + id, e));
         }
       }
 

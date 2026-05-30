@@ -10,6 +10,7 @@ import { loadEnhancedListsCatalog } from "./config-loader.js";
 import { lastCelPendingDownload, setLastCelPendingDownload } from "./state.js";
 import { isRegionalEntry, DEBUG_RULES } from "./config-bridge.js";
 import { getEnhancedListsFromStorage, getEnhancedPresetFromStorage } from "./storage.js";
+import { logError } from "./error-log.js";
 
 const ALARM_OWN = "protoconsent_list_refresh";
 const ALARM_EXTERNAL = "external_list_refresh";
@@ -33,6 +34,7 @@ function pooled(tasks, limit) {
     const i = idx++;
     return tasks[i]().then(r => { results[i] = r; }).catch(e => {
       results[i] = { ok: false, error: e.message };
+      logError("list-refresh", e);
       if (DEBUG_RULES) console.warn("ProtoConsent: list download failed:", e.message);
     }).then(next);
   }
@@ -120,6 +122,7 @@ export function refreshLists(filter, options) {
       });
     });
   }).catch(e => {
+    logError("auto-refresh", e);
     if (DEBUG_RULES) console.warn("ProtoConsent auto-refresh error:", e);
   }).finally(() => {
     _refreshRunning = false;
@@ -196,6 +199,7 @@ export function checkOverdueRefresh() {
         else if (extOverdue) return refreshLists("external");
       });
     }).catch(e => {
+      logError("overdue-refresh", e);
       if (DEBUG_RULES) console.warn("ProtoConsent: overdue refresh check failed:", e);
     });
   });

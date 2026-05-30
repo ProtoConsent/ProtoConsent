@@ -467,6 +467,18 @@ function renderDebugPanelInner({ blocked, gpc, gpcDomains, domainHitCount, rules
       lines.push("— CNAME cloaking: not loaded" + (cnameLoadDiag ? " (" + cnameLoadDiag + ")" : "") + " —");
     }
 
+    const errs = bg && Array.isArray(bg.errors) ? bg.errors : [];
+    lines.push("");
+    if (errs.length) {
+      lines.push("— recent errors (" + errs.length + ") —");
+      for (const e of errs) {
+        const ts = new Date(e.t).toLocaleTimeString();
+        lines.push("  [" + ts + "] " + e.scope + ": " + e.msg);
+      }
+    } else {
+      lines.push("— recent errors: none —");
+    }
+
     content.textContent = lines.join("\n");
 
     // Block provenance (async append - uses popup.js globals + PROTO_DATA)
